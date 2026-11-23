@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import schemas
@@ -83,7 +84,11 @@ def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
     raw = body.model_dump()
     feats = features.extract(raw)
     if db.get(User, body.user_id) is None:
-        db.add(User(id=body.user_id))
+        try:
+            with db.begin_nested():  # flush ngay để hàng users có trước khi chèn sessions (khoá ngoại)
+                db.add(User(id=body.user_id))
+        except IntegrityError:
+            pass  # request khác vừa tạo cùng user
     sid = "s_" + secrets.token_hex(6)
     db.add(TouchSession(id=sid, user_id=body.user_id, device_id=body.device_id, raw=raw, features=feats))
     db.commit()

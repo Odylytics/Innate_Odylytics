@@ -1,16 +1,28 @@
 import datetime as dt
 import os
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, create_engine
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
-# SQLite khi chạy local; deploy thì đặt DATABASE_URL=postgresql+psycopg://... (Supabase)
+# SQLite khi chạy local; trên Vercel, Neon tự đặt DATABASE_URL (postgres://... hoặc postgresql://...)
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./nhip.db")
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-    pool_pre_ping=True,
-)
+for _prefix in ("postgres://", "postgresql://"):
+    if DATABASE_URL.startswith(_prefix):
+        DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL[len(_prefix):]
+
+if DATABASE_URL.startswith("sqlite"):
+    _connect_args = {"check_same_thread": False}
+else:
+    _connect_args = {"prepare_threshold": None}  # URL pooled của Neon chạy pgbouncer chế độ transaction, không giữ được prepared statement
+
+engine = create_engine(DATABASE_URL, connect_args=_connect_args, pool_pre_ping=True)
+
+if DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def _sqlite_fk(dbapi_conn, _):
+        # SQLite mặc định không kiểm tra khoá ngoại; bật để test bắt được lỗi giống Postgres
+        dbapi_conn.execute("PRAGMA foreign_keys=ON")
+
 SessionLocal = sessionmaker(engine, expire_on_commit=False)
 
 

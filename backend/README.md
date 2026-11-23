@@ -1,6 +1,18 @@
 # Nhịp — Backend API
 
-API chấm điểm rủi ro hành vi (Người 2). FastAPI + SQLAlchemy, SQLite khi chạy local, Postgres (Supabase) khi deploy.
+API chấm điểm rủi ro hành vi (Người 2). FastAPI + SQLAlchemy, SQLite khi chạy local, Postgres (Neon) khi deploy.
+
+## Bản đang chạy
+
+| | |
+|---|---|
+| URL | https://nhip-api-taupe.vercel.app |
+| Swagger | https://nhip-api-taupe.vercel.app/docs → **Authorize** → nhập API key |
+| API key | Lưu ở `backend/.env.deploy-key` trên máy Người 2 (không commit). Hỏi Người 2 khi cần |
+| Hạ tầng | Vercel project `nhip-api`, vùng Singapore (`sin1`); DB Neon `nhip-db` (gói free, Singapore), gắn qua Vercel Marketplace |
+| Độ trễ đo 23/11 | Xử lý phía server 16–21 ms/lần chấm; khứ hồi từ Việt Nam ~125–150 ms |
+
+Deploy lại: `cd backend; vercel deploy --prod`. Xem trạng thái: `/vercel:status` trong Claude Code, hoặc `vercel ls nhip-api`.
 
 ## Chạy
 
@@ -11,15 +23,15 @@ uv run uvicorn app.main:app --reload --port 8000
 ```
 
 - Swagger: http://localhost:8000/docs → bấm **Authorize**, nhập `demo-key`.
-- Kiểm thử: `uv run pytest -q` (5 bài, ~2 giây).
+- Kiểm thử: `uv run pytest -q` (7 bài, ~2 giây). SQLite trong test bật kiểm tra khoá ngoại để giống Postgres.
 
 ### Biến môi trường
 
 | Biến | Mặc định | Ghi chú |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///./nhip.db` | Deploy: `postgresql+psycopg://...` và cài thêm `uv sync --extra postgres` |
-| `NHIP_API_KEYS` | `demo-key` | Nhiều key cách nhau dấu phẩy. **Đổi khi deploy.** |
-| `NHIP_CORS_ORIGINS` | `*` | Deploy: đặt đúng domain Vercel của ví demo + dashboard |
+| `DATABASE_URL` | `sqlite:///./nhip.db` | Trên Vercel do Neon tự đặt; `postgres://` được tự đổi sang driver psycopg |
+| `NHIP_API_KEYS` | `demo-key` | Nhiều key cách nhau dấu phẩy. Bản deploy đã đặt key riêng (Secret trên Vercel) |
+| `NHIP_CORS_ORIGINS` | `*` | Bản deploy đang để `*`. **Đặt đúng domain ví demo + dashboard khi Người 3 deploy frontend** |
 | `NHIP_THRESHOLD_A` | `0.25` | rủi ro < A → `allow` |
 | `NHIP_THRESHOLD_B` | `0.55` | rủi ro > B → `hold`; giữa A và B → `step_up` |
 
@@ -36,6 +48,7 @@ Tất cả `/v1/*` cần header `X-API-Key`.
 | POST | `/v1/users/{user_id}/enroll` | App | Body `{session_id}`. Đánh dấu lượt đăng ký; từ lượt thứ 3 có mẫu chuẩn |
 | GET | `/v1/users/{user_id}` | App | Số lượt đã đăng ký, mẫu chuẩn sẵn sàng chưa, số lần cập nhật |
 | POST | `/v1/sessions/{id}/score` | App | Body `{recipient_is_new, amount}` → điểm + hành động + lý do |
+| GET | `/v1/export?participant_id=` | Người 1 | Xuất phiên có `meta` (dữ liệu thô + đặc trưng + nhãn thu dữ liệu) |
 | GET | `/v1/sessions?flagged=true&limit=50` | Dashboard | Phiên `step_up`/`hold` mới nhất (bỏ `flagged` = tất cả phiên đã chấm) |
 | POST | `/v1/sessions/{id}/label` | Dashboard | Body `{label: "fraud" \| "legit"}` |
 
@@ -65,6 +78,7 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 
 - `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = tâm và kích thước phím (`getBoundingClientRect`).
 - Không gửi `pressure`. Không dựa vào `isTrusted`.
+- **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine` hoặc `impostor` (biết PIN, cố bấm giống chủ). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
 - Server từ chối (422): `t_up < t_down`, số NaN/âm, `user_id` có ký tự lạ, quá nhiều sự kiện.
 
 ### Phản hồi chấm điểm
@@ -117,5 +131,5 @@ Chạy 200 seed với dữ liệu giả: chủ thật được cho qua 95%, ngư
 ## Việc tiếp theo của Người 2
 
 1. Bộ giả lập hacker 4 chiến thuật + `adb shell input tap` (gọi chính API này để sinh phiên bot cho Người 1).
-2. Deploy: API lên nền tảng chạy liên tục + Supabase Postgres; đổi `NHIP_API_KEYS`, `NHIP_CORS_ORIGINS`.
+2. ~~Deploy~~ — xong 23/11. Còn: đặt `NHIP_CORS_ORIGINS` khi có domain frontend.
 3. Tài khoản demo cho giám khảo.
