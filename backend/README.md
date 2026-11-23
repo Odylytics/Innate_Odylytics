@@ -78,7 +78,7 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 
 - `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = tâm và kích thước phím (`getBoundingClientRect`).
 - Không gửi `pressure`. Không dựa vào `isTrusted`.
-- **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine` hoặc `impostor` (biết PIN, cố bấm giống chủ). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
+- **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine`, `impostor` (biết PIN, cố bấm giống chủ) hoặc `bot` (kèm `tactic` 1–4, do [bộ giả lập](../attacker/README.md) gửi). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
 - Server từ chối (422): `t_up < t_down`, số NaN/âm, `user_id` có ký tự lạ, quá nhiều sự kiện.
 
 ### Phản hồi chấm điểm
@@ -130,6 +130,6 @@ Chạy 200 seed với dữ liệu giả: chủ thật được cho qua 95%, ngư
 
 ## Việc tiếp theo của Người 2
 
-1. Bộ giả lập hacker 4 chiến thuật + `adb shell input tap` (gọi chính API này để sinh phiên bot cho Người 1).
+1. ~~Bộ giả lập hacker~~ — xong 23/11, xem [attacker/README.md](../attacker/README.md).
 2. ~~Deploy~~ — xong 23/11. Còn: đặt `NHIP_CORS_ORIGINS` khi có domain frontend.
 3. Tài khoản demo cho giám khảo.

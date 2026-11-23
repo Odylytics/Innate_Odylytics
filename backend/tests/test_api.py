@@ -133,3 +133,11 @@ def test_unflagged_list_skips_unscored_sessions(client):
     r = client.get("/v1/sessions?flagged=false", headers=H)
     assert r.status_code == 200
     assert all(s["action"] is not None for s in r.json())
+
+
+def test_bot_meta_requires_tactic(client):
+    body = bot_session("acc_bot")
+    for meta, code in [({"participant_id": "sim", "sitting": 1, "role": "bot", "tactic": 2}, 200),
+                       ({"participant_id": "sim", "sitting": 1, "role": "bot"}, 422),
+                       ({"participant_id": "p01", "sitting": 1, "role": "genuine", "tactic": 1}, 422)]:
+        assert client.post("/v1/sessions", json=dict(body, meta=meta), headers=H).status_code == code
