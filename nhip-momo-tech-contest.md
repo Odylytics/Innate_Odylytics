@@ -136,15 +136,16 @@ MoMo công bố có PIN, OTP, sinh trắc khuôn mặt (iProov, Flashmask), AI p
 
 | Nhóm | Đặc trưng | Vai trò |
 |---|---|---|
-| Nhịp PIN | Thời gian giữ mỗi phím (4), khoảng cách giữa phím (3), tổng thời gian | Mạnh nhất để phân biệt người với người |
-| Vị trí chạm | Độ lệch so với tâm nút (dx, dy), kích thước vùng chạm | Thói quen bấm lệch riêng |
-| Vuốt & cuộn | Thời gian, độ dài, vận tốc TB/đỉnh, gia tốc, độ cong, điểm bắt đầu | Người vs máy; bổ sung nhận diện |
-| Nhịp phiên | Thời gian đứng im giữa màn hình, thời gian tới thao tác đầu | Bị dẫn dắt / bị điều khiển |
+| Nhịp PIN | Thời gian giữ mỗi phím (4), khoảng cách giữa phím (3), tổng thời gian | **Mạnh nhất khi đi cùng vị trí chạm** — thêm vị trí chạm vào nhịp giảm EER 26–37% (Buschek 2015) |
+| Vị trí chạm | Độ lệch so với tâm nút (dx, dy), kích thước vùng chạm | Thói quen bấm lệch riêng; cũng là tín hiệu người/máy |
+| Vuốt & cuộn | Thời gian, độ dài, vận tốc TB/đỉnh, gia tốc, độ cong, điểm bắt đầu | Tín hiệu **phụ**: 1 lần vuốt ~13% EER, cần 11–12 lần mới xuống 2–3% (Touchalytics) |
+| Cảm biến chuyển động *(mới, tuỳ chọn)* | Gia tốc kế quanh thời điểm chạm (`devicemotion`) | Người vs máy: thêm gia tốc kế nâng tỷ lệ bắt bot từ ~60% lên 80–90% (BeCAPTCHA 2021). iOS cần xin quyền |
+| Nhịp phiên | Thời gian đứng im giữa màn hình, thời gian tới thao tác đầu | Bị dẫn dắt / bị điều khiển — **giả thuyết của đội**, chưa có nghiên cứu học thuật |
 
 Ghi chú kỹ thuật:
 - Bàn phím PIN **tự vẽ trong app** + Pointer Events → lấy được toạ độ, thời điểm nhấn/nhả, kích thước chạm (tránh vấn đề bàn phím ảo trên web di động).
-- Không dựa vào `pressure` (nhiều máy Android trả giá trị cố định).
-- Không dựa vào cờ `isTrusted` để bắt bot (quá dễ) — phát hiện dựa trên nhịp và hình dạng thao tác.
+- Không dựa vào `pressure`: chuẩn W3C Pointer Events quy định máy không đo được áp lực thì trả 0.5 cố định; FETA ghi nhận đa số Android ước lượng áp lực từ kích thước chạm.
+- Không dựa vào cờ `isTrusted` để bắt bot (script tạo được sự kiện giả; mã độc Trợ năng bấm ở tầng hệ thống) — phát hiện dựa trên nhịp và hình dạng thao tác.
 
 ### 5.1 Mô hình 1 — Người hay máy?
 
@@ -156,21 +157,28 @@ Ghi chú kỹ thuật:
   4. Lấy mẫu thời gian từ phân bố của người thật
 - **Mô hình**: LightGBM / Random Forest + đặc trưng "độ tự nhiên" (biến thiên nhịp, độ thẳng vuốt, độ phân tán vị trí chạm).
 - **Báo cáo** tỷ lệ bắt được **theo từng chiến thuật**; thừa nhận chiến thuật 4 khó.
+- **Thêm một nguồn tấn công thật** ngoài bộ giả lập: `adb shell input tap` từ laptop (và nếu kịp, một app dùng `dispatchGesture` của AccessibilityService — đúng cơ chế mã độc dùng). Đây cũng là "bảng điều khiển hacker" trong demo.
+- **Cơ sở**: 4 chiến thuật khớp với tài liệu — (1)(2) bot thủ công trong BeCAPTCHA/Iliou 2021; (3) phát lại có điều chỉnh (ActReal 2026, preprint); (4) lấy mẫu từ phân bố người (Serwadda & Phoha CCS 2013, BeCAPTCHA-Type "Universal"). Bot sinh bằng GAN qua mặt được bộ phát hiện chỉ dùng chạm (~60%) → lý do thêm cảm biến chuyển động.
+- **Nói đúng mức trong pitch**: chưa có bài báo nào đo nhịp/vị trí chạm của mã độc Trợ năng thật. Câu "nhịp quá đều, chạm đúng tâm nút" là **giả thuyết của đội**, kiểm chứng bằng bộ giả lập, không phải kết quả đã công bố.
 
 ### 5.2 Mô hình 2 — Có phải chủ tài khoản? (few-shot)
 
 **Bản 1 — So với mẫu chuẩn (làm trước)**
 - Đăng ký 3–5 lượt → trung bình + độ dao động từng đặc trưng.
-- Điểm = khoảng cách có chuẩn hóa (đặc trưng vốn dao động nhiều thì tính nhẹ đi).
+- Điểm = **scaled Manhattan** (|x − trung bình| / độ lệch chuẩn, cộng lại) — tốt nhất trong 14 bộ phát hiện của Killourhy & Maxion 2009 (EER 9,6%); Zheng 2014 cũng dùng.
 - Dễ giải thích ("PIN chậm hơn 40%").
+- **Kỳ vọng thực tế**: các bài báo đạt EER 3–7% với hàng chục lượt đăng ký; 3–5 lượt trong **một lần ngồi** sẽ kém hơn, và kết quả cùng phiên lạc quan gấp đôi so với khác phiên (Buschek 2015). → Đăng ký chia **≥ 2 lần ngồi** khi có thể; đo và báo đúng số.
 
 **Bản 2 — Mô hình so cặp (pairwise verifier)**
 - Học một mô hình chung: *"hai phiên này có cùng một người không?"*
 - Đầu vào: chênh lệch đặc trưng giữa hai phiên; nhãn: cùng người / khác người.
 - ~25 người × 5 phiên → hàng nghìn cặp.
-- Người dùng mới chỉ cần vài lượt đăng ký.
+- Người dùng mới chỉ cần vài lượt đăng ký (TypeNet: EER 10,7% với 1 lượt → 7,3% với 5 lượt trên điện thoại).
+- **Bắt buộc đánh giá kiểu leave-users-out**: người trong tập kiểm thử không có cặp nào trong tập huấn luyện. 25 người là rất nhỏ (TypeNet học từ >100k người) → chỉ làm nếu bản 1 chạy ổn; nếu không kịp, bỏ khỏi bản nộp.
 
-**Cập nhật theo thời gian:** chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao (tránh kẻ gian "dạy dần" hệ thống).
+**Cập nhật theo thời gian:** chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao **và** PIN đúng trên thiết bị đã biết. Như vậy chưa đủ chống "dạy dần" (Biggio 2012; Lovisotto 2020: tấn công thành công >70% với <10 lần tiêm) → thêm:
+- **Giới hạn độ trôi**: mỗi lần cập nhật chỉ dịch mẫu chuẩn một lượng nhỏ (vd. trung bình trượt với hệ số 0,1), và tổng độ lệch so với mẫu đăng ký gốc có trần.
+- **Kiểm tra hướng trôi**: nếu nhiều lần cập nhật liên tiếp kéo về cùng một hướng → dừng cập nhật, đánh dấu cho vận hành (Lovisotto 2020: bắt >99% sau 2 lần tiêm).
 
 ### 5.3 Mô hình 3 — Hợp nhất rủi ro
 
@@ -181,26 +189,39 @@ rủi ro = w1·(1 − người_hay_máy) + w2·(1 − khớp_chủ)
        + w3·(người nhận mới) + w4·(số tiền bất thường so với lịch sử)
 ```
 
+- **Chuẩn hoá trước khi cộng**: đưa mỗi điểm về [0,1] bằng z-score/tanh rồi mới nhân trọng số — tanh chịu ngoại lệ tốt nhất (Jain, Nandakumar & Ross 2005).
 - 3 vùng: < A → `allow` · A–B → `step_up` · > B → `hold`.
 - Chọn ngưỡng ưu tiên ít làm phiền chủ thật (vd. FRR ≈ 5%), báo FAR tại ngưỡng đó.
-- Lộ trình: thay bằng mô hình có giám sát khi có dữ liệu thật từ đối tác.
+- **A, B là cấu hình chỉnh được** theo đối tác: thay đổi ngưỡng nhỏ ảnh hưởng mạnh tới cả bảo mật lẫn trải nghiệm (Wiefling 2021, 780 người).
+- **Cơ sở**: đây là mô hình *xác thực dựa trên rủi ro* (risk-based authentication) — LinkedIn: kết hợp tín hiệu có trọng số nâng AUC 0,913 → 0,955 (Freeman 2016); người dùng thấy step-up khi rủi ro dễ chịu hơn 2FA luôn bật (Wiefling 2020).
+- **Phần tự mở rộng (nói rõ trong pitch)**: vùng `hold` và tín hiệu "người nhận mới / số tiền bất thường" chưa có nghiên cứu học thuật kiểm chứng (các nghiên cứu RBA dùng IP, trình duyệt; chỉ có tài liệu của hãng như BioCatch).
+- Lộ trình: thay bằng mô hình có giám sát khi có dữ liệu thật từ đối tác (Wiefling 2022, 3,3 triệu người dùng).
 
 ### 5.4 Lớp giải thích
 
-- Lấy 2–3 đặc trưng lệch nhiều nhất (z-score, hoặc SHAP với LightGBM) → câu tiếng Việt theo mẫu.
+- Lấy 2–3 đặc trưng lệch nhiều nhất (z-score cho mô hình 2, TreeSHAP cho LightGBM ở mô hình 1) → câu tiếng Việt theo mẫu.
+- Với hàm hợp nhất ở 5.3, mỗi số hạng `w·giá_trị` **chính là** phần đóng góp → không cần SHAP.
 - LLM chỉ dùng ở dashboard để viết tóm tắt vụ việc cho chuyên viên.
 
 ### 5.5 Đánh giá (làm đúng cách)
 
-- **Tách theo thời gian**: đăng ký bằng phiên trước, kiểm thử bằng phiên sau. Không tách ngẫu nhiên.
-- **Một điện thoại duy nhất** cho mọi người tham gia.
+Căn cứ: FETA (Georgiev 2022) rà 30 bài về chạm — **tất cả** mắc ít nhất một lỗi đánh giá; gộp các lỗi biến EER thật 13,8% thành 4,9%.
+
+- **Tách theo thời gian**: đăng ký bằng phiên trước, kiểm thử bằng phiên sau. Không tách ngẫu nhiên (tách ngẫu nhiên làm EER đẹp hơn ~3,8 điểm).
+- **Một điện thoại duy nhất** cho mọi người tham gia (trộn đời máy làm đẹp số 3,2–5,8 điểm).
+- **Không đưa dữ liệu kẻ gian vào huấn luyện mô hình 2** (làm đẹp số ~2,55 điểm; 80% bài báo mắc lỗi này).
+- **Leave-users-out** cho mô hình so cặp.
 - Báo cáo cả mức phiên đơn lẻ và mức gộp tín hiệu.
 - **Số liệu lên slide:**
-  - EER
-  - FAR khi FRR = 5%
+  - FAR khi FRR = 5% (**số chính** — ISO/IEC 19795-1 ưu tiên sai số tại một điểm vận hành; EER chỉ để so sánh với bài báo)
+  - EER + đường DET, kèm khoảng tin cậy (25 người là ít)
+  - Phân bố lỗi theo từng người (trung bình che giấu người "khó" — Eberz 2017)
   - Tỷ lệ bắt bot theo từng chiến thuật
   - Độ chính xác theo số lượt đăng ký (1 / 3 / 5)
   - Độ trễ API
+- **Bộ dữ liệu công khai để đối chiếu** (kiểm tra giấy phép trước khi dùng, ghi vào README): MobileTouchDB/BioTouchPass2 (217 người, PIN 4 số, EER 2,38%), BB-MAS (117 người), BehavePassDB (81 người, 4 phiên), HuMIdb (600 người, có cảm biến — dùng cho người/máy).
+
+Danh mục paper đầy đủ: [reports/Paper nền tảng cho Nhịp.md](reports/Paper%20nền%20tảng%20cho%20Nhịp.md) · PDF trong `papers/`.
 
 ---
 
@@ -219,26 +240,48 @@ Chuẩn bị: đăng ký và thử cùng tư thế; đặt ngưỡng nghiêng v�
 
 ---
 
-## 7. Kế hoạch 10 ngày — 3 người
+## 7. Phân vai & kế hoạch — build trong 1 ngày
 
-| Ngày | Người 1 — Data & ML | Người 2 — Backend & tấn công | Người 3 — Frontend & sản phẩm |
+### Vai trò (mỗi người sở hữu một phần, chịu trách nhiệm đến lúc nộp)
+
+| | **Người 1 — Data & ML** | **Người 2 — Backend & tấn công** | **Người 3 — App & pitch** (trưởng nhóm) |
 |---|---|---|---|
-| **24–25/11** | Định nghĩa đặc trưng, hàm trích xuất | API + schema dữ liệu, nhận phiên từ SDK | SDK thu tín hiệu, bàn phím PIN, luồng ví demo |
-| **26–28/11** | **Cả đội thu dữ liệu**: ~25 người × 5 phiên (có đồng ý) + lượt "biết PIN, đóng giả chủ". Dựng mô hình 2 bản 1 | Bộ giả lập hacker (4 chiến thuật), sinh dữ liệu bot | Màn hình đăng ký nhịp, màn hình kết quả có lý do |
-| **27/11** | ⚠️ **Đăng ký thi + gửi câu hỏi làm rõ cho BTC trước 23:59** | | |
-| **29/11–1/12** | Mô hình 1, mô hình 2 bản 2, đánh giá, chọn ngưỡng | Ghép mô hình vào API, cập nhật mẫu chuẩn, Swagger, API key | Dashboard vận hành, tóm tắt LLM, bảng điều khiển hacker |
-| **2/12** | Chốt số liệu cho slide | Deploy, giới hạn chi phí, kiểm tra tải, tài khoản demo | Kiểm thử toàn luồng trên điện thoại demo |
-| **3/12** | Slide phần AI | README (thư viện, công cụ AI, nguồn dữ liệu, tài sản có sẵn) | Video 3 phút, PDF hướng dẫn 1 trang. **Nộp trước 23:59** |
+| Sở hữu | Trích xuất đặc trưng, mô hình 1 & 2, hàm hợp nhất, lớp giải thích (lý do), số liệu đánh giá | API chấm điểm, DB, deploy, độ trễ, cập nhật mẫu chuẩn, **bộ giả lập hacker + bảng điều khiển hacker** | SDK thu tín hiệu, bàn phím PIN, ví demo, màn hình đăng ký/kết quả, dashboard; slide, video, PDF 1 trang |
+| Đầu ra cuối ngày | `features.py`, `model1.pkl`, `score()` trả về điểm + 2–3 lý do; bảng số liệu sơ bộ | API online có `/enroll`, `/score`, Swagger, API key demo; bot chạy được cả 4 chiến thuật + 1 nguồn tấn công thật | Ví demo chạy trên điện thoại demo, end-to-end; khung slide 10 trang |
+| Trả lời giám khảo (mục 9) | Câu 1, 2, 3, 4 | Câu 5, 6, 8 | Câu 7 + dẫn dắt toàn bộ demo |
 
-**Mốc sống còn 28/11:** nếu mô hình 2 bản 1 có EER > ~25%, chuyển trọng tâm pitch sang **"người hay máy"** và **"bị dẫn dắt"** (tín hiệu ổn định hơn); "có phải chủ" thành tín hiệu phụ.
+**Làm chung, không giao riêng:** thu dữ liệu; đăng ký thi + gửi câu hỏi cho BTC **trước 23:59 27/11** (Người 3).
 
----
+### Ngày build (D-day)
+
+| Giờ | Người 1 — Data & ML | Người 2 — Backend & tấn công | Người 3 — App & pitch |
+|---|---|---|---|
+| **08:00–09:00** | **Cả đội**: chốt 2 hợp đồng dữ liệu — JSON phiên SDK gửi lên (sự kiện chạm: `t_down`, `t_up`, `x`, `y`, `w`, `h`, `key`) và schema phản hồi API (mục 3). Tạo repo, deploy "hello world" cho API và frontend ngay từ đầu | | |
+| **09:00–12:00** | Hàm trích xuất ~40 đặc trưng từ JSON mẫu; mô hình 2 bản 1 (scaled Manhattan) | FastAPI: nhận phiên, lưu DB, `/enroll`, `/score` (trả số giả trước); deploy | SDK Pointer Events + bàn phím PIN tự vẽ; luồng Trang chủ → Chuyển tiền → Nhập STK → PIN |
+| **12:00–13:00** | **Ghép lần 1 + thu dữ liệu lần ngồi 1**: 3 người × 5 phiên trên **một điện thoại demo** | | |
+| **13:00–17:00** | Mô hình 1 (Random Forest/LightGBM) trên phiên người + phiên bot; hàm hợp nhất (chuẩn hoá tanh, trọng số); câu lý do tiếng Việt từ z-score | Bộ giả lập 4 chiến thuật → sinh phiên bot cho Người 1; **nguồn tấn công thật**: `adb shell input tap` từ laptop vào ví demo; nạp mô hình vào API | Màn hình đăng ký nhịp, màn hình kết quả có lý do; dashboard dạng bảng (phiên đáng ngờ + lý do + nút đúng/sai) |
+| **17:00** | ⚑ **Mốc quyết định**: nếu mô hình 2 không tách nổi 3 người trong đội → pitch tập trung vào **"người hay máy"**, "có phải chủ" thành tín hiệu phụ | | |
+| **17:00–19:00** | **Ghép lần 2 end-to-end + thu dữ liệu lần ngồi 2**: đội làm lại 5 phiên mỗi người + 3–5 bạn bè (có phiếu đồng ý) + lượt "biết PIN, đóng giả chủ" | | |
+| **19:00–21:00** | Đánh giá: tách theo thời gian (lần ngồi 1 đăng ký → lần ngồi 2 kiểm thử), FAR@FRR 5%, EER, tỷ lệ bắt bot từng chiến thuật | Cập nhật mẫu chuẩn có trần độ trôi; đo độ trễ; tài khoản demo; giới hạn chi phí | Chạy thử toàn luồng trên điện thoại demo, sửa lỗi giao diện; chạy thử kịch bản demo mục 6 |
+| **21:00–23:00** | Đưa số liệu sơ bộ vào slide | README nháp (thư viện, công cụ AI, nguồn dữ liệu, tài sản có sẵn) | Khung slide 10 trang + kịch bản video 3 phút |
+
+**Cắt khỏi ngày build** (làm sau nếu kịp, không ảnh hưởng demo): mô hình so cặp (bản 2), tóm tắt LLM ở dashboard, cảm biến gia tốc, kiểm tra hướng trôi.
+
+### Sau ngày build (đến 3/12)
+
+| Mốc | Việc |
+|---|---|
+| Đến 27/11 | Thu đủ ~25 người × ≥ 2 lần ngồi × 5 phiên; **đăng ký thi + câu hỏi cho BTC trước 23:59 27/11** |
+| 28/11–1/12 | Đánh giá lại trên dữ liệu đủ (DET, khoảng tin cậy, phân bố lỗi theo người); phần cắt ở trên nếu kịp |
+| 2/12 | Đóng băng tính năng; kiểm thử tải, sao lưu, hosting chạy liên tục |
+| 3/12 | Slide cuối, video, PDF 1 trang, zip mã nguồn. **Nộp trước 23:59** |
 
 ## 8. Rủi ro & cách xử lý
 
 | Rủi ro | Xử lý |
 |---|---|
-| 3–5 lượt đăng ký không đủ để phân biệt người | Đo sớm (1/3/5 lượt), báo đúng số; mô hình so cặp; mốc chuyển hướng 28/11 |
+| 3–5 lượt đăng ký không đủ để phân biệt người | Đo sớm (1/3/5 lượt), đăng ký chia ≥ 2 lần ngồi, báo đúng số; mốc quyết định 17:00 ngày build → chuyển trọng tâm sang "người hay máy" (không dựa vào "bị dẫn dắt" — chưa có nghiên cứu) |
+| Tín hiệu "bị dẫn dắt" / nạn nhân bị lừa qua điện thoại | Chỉ có tài liệu của hãng (BioCatch…) → trình bày là hướng mở rộng, không đưa vào số liệu chính |
 | Giám khảo căng thẳng trên sân khấu → từ chối nhầm chủ thật | Đăng ký & thử cùng tư thế; ngưỡng nghiêng về `step_up` |
 | Bot tinh vi (chiến thuật 4) qua mặt | Thừa nhận trong pitch; kết hợp nhiều tín hiệu; native SDK có thêm tín hiệu thiết bị |
 | Số liệu đẹp giả do đánh giá sai | Tách theo thời gian, một thiết bị, báo mức phiên đơn lẻ |
