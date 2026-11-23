@@ -244,13 +244,13 @@ Chuẩn bị: đăng ký và thử cùng tư thế; đặt ngưỡng nghiêng v�
 
 ### Vai trò (mỗi người sở hữu một phần, chịu trách nhiệm đến lúc nộp)
 
-| | **Người 1 — Data & ML** | **Người 2 — Backend & tấn công** | **Người 3 — App & pitch** (trưởng nhóm) |
+| | **Người 1 — Data & ML** | **Người 2 — Backend & tấn công** (trưởng nhóm) | **Người 3 — App & pitch** |
 |---|---|---|---|
 | Sở hữu | Trích xuất đặc trưng, mô hình 1 & 2, hàm hợp nhất, lớp giải thích (lý do), số liệu đánh giá | API chấm điểm, DB, deploy, độ trễ, cập nhật mẫu chuẩn, **bộ giả lập hacker + bảng điều khiển hacker** | SDK thu tín hiệu, bàn phím PIN, ví demo, màn hình đăng ký/kết quả, dashboard; slide, video, PDF 1 trang |
 | Đầu ra cuối ngày | `features.py`, `model1.pkl`, `score()` trả về điểm + 2–3 lý do; bảng số liệu sơ bộ | API online có `/enroll`, `/score`, Swagger, API key demo; bot chạy được cả 4 chiến thuật + 1 nguồn tấn công thật | Ví demo chạy trên điện thoại demo, end-to-end; khung slide 10 trang |
 | Trả lời giám khảo (mục 9) | Câu 1, 2, 3, 4 | Câu 5, 6, 8 | Câu 7 + dẫn dắt toàn bộ demo |
 
-**Làm chung, không giao riêng:** thu dữ liệu; đăng ký thi + gửi câu hỏi cho BTC **trước 23:59 27/11** (Người 3).
+**Làm chung, không giao riêng:** thu dữ liệu; đăng ký thi + gửi câu hỏi cho BTC **trước 23:59 27/11** (Người 2 — trưởng nhóm).
 
 ### Ngày build (D-day)
 
