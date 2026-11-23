@@ -157,7 +157,8 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
 @v1.get("/sessions", response_model=list[schemas.SessionSummary], tags=["dashboard"])
 def list_sessions(flagged: bool = True, limit: int = Query(50, ge=1, le=500), db: Session = Depends(get_db)):
     """Danh sách phiên cho dashboard. flagged=true: chỉ phiên step_up/hold."""
-    q = select(TouchSession).where(TouchSession.result.is_not(None))
+    # lọc theo action (cột chuỗi): cột JSON lưu None thành 'null' nên IS NOT NULL không loại được phiên chưa chấm
+    q = select(TouchSession).where(TouchSession.action.is_not(None))
     if flagged:
         q = q.where(TouchSession.action.in_(["step_up", "hold"]))
     rows = db.scalars(q.order_by(TouchSession.created_at.desc()).limit(limit)).all()
@@ -171,6 +172,26 @@ def list_sessions(flagged: bool = True, limit: int = Query(50, ge=1, le=500), db
         "explanation_vi": r.result["explanation_vi"],
         "label": r.label,
     } for r in rows]
+
+
+@v1.get("/export", tags=["data"])
+def export_sessions(participant_id: str | None = None, collected_only: bool = True,
+                    limit: int = Query(5000, ge=1, le=20000), db: Session = Depends(get_db)):
+    """Xuất phiên cho Người 1 (dữ liệu thô + đặc trưng + nhãn thu dữ liệu), cũ nhất trước."""
+    # shortcut: lọc meta bằng Python sau khi lấy; đủ cho vài nghìn phiên, nhiều hơn thì chuyển sang lọc trong SQL
+    rows = db.scalars(select(TouchSession).order_by(TouchSession.created_at).limit(limit)).all()
+    out = []
+    for r in rows:
+        meta = r.raw.get("meta")
+        if collected_only and not meta:
+            continue
+        if participant_id and (meta or {}).get("participant_id") != participant_id:
+            continue
+        out.append({"session_id": r.id, "user_id": r.user_id, "device_id": r.device_id,
+                    "created_at": r.created_at.isoformat(), "meta": meta, "raw": r.raw,
+                    "features": r.features, "is_enrollment": r.is_enrollment, "result": r.result,
+                    "label": r.label})
+    return out
 
 
 @v1.post("/sessions/{session_id}/label", tags=["dashboard"])

@@ -44,14 +44,27 @@ class ScreenVisit(BaseModel):
     t_first_touch: Ms | None = None
 
 
+Ident = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.\-]+$")]
+
+
+class CollectionMeta(BaseModel):
+    """Nhãn thu dữ liệu. user_id = tài khoản bị thao tác; participant_id = người thật đang cầm máy."""
+
+    participant_id: Ident
+    sitting: int = Field(ge=1, le=20)  # lần ngồi thứ mấy (1 = đăng ký, 2+ = kiểm thử theo thời gian)
+    role: Literal["genuine", "impostor"]  # impostor: biết PIN, cố bấm giống chủ tài khoản
+    note: str | None = Field(default=None, max_length=200)
+
+
 class SessionIn(BaseModel):
     """Phiên thao tác do SDK gửi lên. Chỉ thời gian + toạ độ, không có nội dung PIN."""
 
-    user_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.\-]+$")
+    user_id: Ident
     device_id: str = Field(default="unknown", max_length=64)
     pin_taps: list[PinTap] = Field(default_factory=list, max_length=12)
     swipes: list[Swipe] = Field(default_factory=list, max_length=100)
     screens: list[ScreenVisit] = Field(default_factory=list, max_length=50)
+    meta: CollectionMeta | None = None  # chỉ gửi khi thu dữ liệu
 
     model_config = ConfigDict(
         json_schema_extra={
