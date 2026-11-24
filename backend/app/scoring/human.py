@@ -32,6 +32,14 @@ def score(f: dict[str, float]) -> tuple[float, list[str]]:
         # tín hiệu yếu: vuốt người thật cũng rất thẳng (~0.998), nên một mình nó tối đa trừ 0.5
         cues["swipe_perfectly_straight"] = 0.5 * _clip((f["swipe_straight_max"] - 0.999) / 0.0009)
 
+    # shortcut: ngưỡng chưa kiểm chứng trên máy thật (R9). Autofill/danh bạ cũng có thể đặt văn bản không qua phím,
+    # nên chỉ ô số tiền (người thật không autofill số tiền) bị coi là bằng chứng mạnh; ô khác chỉ trừ điểm nhẹ.
+    fl = f.get("fld_amount_set_text")
+    if fl is not None and fl >= 1:
+        cues["text_set_without_keys"] = 0.9
+    elif f.get("fld_set_text_frac", 0) > 0.5:
+        cues["text_set_without_keys"] = 0.4
+
     if not cues:
         return 0.5, ["insufficient_data"]
     return 1 - max(cues.values()), [k for k, v in cues.items() if v >= 0.25]

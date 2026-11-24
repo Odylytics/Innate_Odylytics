@@ -3,9 +3,11 @@ import os
 import secrets
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .db import DATABASE_URL, Base, SessionLocal, TouchSession, User, engine
-from .scoring import explain, features, fusion, human, owner
+from .scoring import explain, features, fusion, human, human_model, owner, replay
 
 def _keys(var: str, default: str = "") -> list[str]:
     return [k.strip() for k in os.environ.get(var, default).split(",") if k.strip()]
@@ -32,6 +34,7 @@ MIN_ENROLL = 3
 EXPORT_BYTE_BUDGET = 3 * 1024 * 1024  # mỗi trang export dừng ở ~3 MB dữ liệu thô: dưới giới hạn phản hồi 4,5 MB của Vercel
 UPDATE_MIN_OWNER = 0.8  # chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao
 UPDATE_MIN_HUMAN = 0.8
+REPLAY_HISTORY = 50  # số phiên gần nhất dùng để so trùng; FPR tăng theo số phiên (E5: PIN 4 số; E5b: người thật, ngoại suy ~0.7% ở 50 với ngưỡng 0.07)
 
 
 @asynccontextmanager
@@ -41,7 +44,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Nhịp API",
+    title="Innate API",
     version="0.1.0",
     description="Chấm điểm rủi ro hành vi cho ví điện tử. Bấm **Authorize** và nhập API key demo.",
     lifespan=lifespan,
@@ -94,6 +97,15 @@ def _enroll_status(db: Session, user: User) -> dict:
     n = len(db.scalars(select(TouchSession.id).where(
         TouchSession.user_id == user.id, TouchSession.is_enrollment)).all())
     return {"user_id": user.id, "enrolled_sessions": n, "template_ready": user.template is not None}
+
+
+_WALLET = (Path(__file__).parent / "static" / "wallet.html").read_text(encoding="utf-8")
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def wallet():
+    """Ví demo + SDK thu tín hiệu (một trang tĩnh)."""
+    return _WALLET
 
 
 @app.get("/health", tags=["system"])
@@ -160,6 +172,18 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
     feats = s.features
 
     h, bot_reasons = human.score(feats)
+    # mô hình học (tuỳ chọn): chỉ thay luật khi luật không có đủ dữ liệu, còn lại lấy điểm bi quan hơn
+    p = human_model.predict(s.raw)
+    if p is not None:
+        h = p if bot_reasons == ["insufficient_data"] else min(h, p)
+        if p < 0.5 and not [r for r in bot_reasons if r in explain._BOT_VI]:
+            bot_reasons = [*bot_reasons, "ml_bot_pattern"]
+    # phát lại: gần như y hệt một phiên cũ của chính tài khoản này (người thật không lặp lại nhịp)
+    past = db.scalars(select(TouchSession.features).where(
+        TouchSession.user_id == s.user_id, TouchSession.id != s.id)
+        .order_by(TouchSession.created_at.desc()).limit(REPLAY_HISTORY)).all()
+    if replay.is_replay(feats, past):
+        h, bot_reasons = min(h, 0.1), [*bot_reasons, "replayed_session"]
     o, z = owner.score(feats, tpl) if tpl else (None, {})
     history = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
         TouchSession.user_id == s.user_id, TouchSession.action == "allow",

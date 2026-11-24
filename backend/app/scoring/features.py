@@ -17,6 +17,11 @@ def _swipe_stats(points: list[dict]) -> tuple[float, float, float, float, float]
     return dur, path, straight, v_mean, v_peak
 
 
+def _key_gaps(events: list[dict]) -> list[float]:
+    ts = sorted(e["t"] for e in events if e["kind"] == "key")
+    return [b - a for a, b in zip(ts, ts[1:])]
+
+
 def extract(raw: dict) -> dict[str, float]:
     """Phiên thô (SessionIn.model_dump()) -> đặc trưng. Thời gian ms, vị trí chạm chuẩn hoá theo kích thước phím."""
     f: dict[str, float] = {}
@@ -44,5 +49,19 @@ def extract(raw: dict) -> dict[str, float]:
     waits = [s["t_first_touch"] - s["t_enter"] for s in raw.get("screens", []) if s.get("t_first_touch") is not None]
     if waits:
         f["screen_first_touch_mean"] = fmean(waits)
+
+    # tóm tắt cách văn bản vào ô (không phải thói quen nên owner.py loại khỏi đặc trưng nhận dạng)
+    chars = {k: sum(e["n"] for fl in raw.get("fields", []) for e in fl["events"] if e["kind"] == k) for k in ("key", "paste", "set_text")}
+    if sum(chars.values()):
+        f["fld_set_text_frac"] = chars["set_text"] / sum(chars.values())
+    amount = [fl for fl in raw.get("fields", []) if fl["name"] == "amount"]
+    if amount:
+        f["fld_amount_set_text"] = float(any(e["kind"] == "set_text" for fl in amount for e in fl["events"]))
+
+    for fld in raw.get("fields", []):
+        gaps = _key_gaps(fld["events"])
+        if len(gaps) >= 3:  # nhịp gõ trong ô; cần >= 3 khoảng cách mới ổn định
+            f[f"fld_{fld['name']}_gap_mean"] = fmean(gaps)
+            f[f"fld_{fld['name']}_gap_std"] = pstdev(gaps)
 
     return f

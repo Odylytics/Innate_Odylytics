@@ -101,7 +101,7 @@ def cmd_adb(args) -> None:
 
 
 def main(argv=None) -> None:
-    p = argparse.ArgumentParser(prog="nhip_attacker", description="Bộ giả lập hacker cho Nhịp")
+    p = argparse.ArgumentParser(prog="nhip_attacker", description="Bộ giả lập hacker cho Innate")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     def api_args(sp):

@@ -1,7 +1,7 @@
 [project]
 name = "nhip-backend"
 version = "0.1.0"
-description = "Nhịp — API chấm điểm rủi ro hành vi"
+description = "Innate — API chấm điểm rủi ro hành vi"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
@@ -9,6 +9,9 @@ dependencies = [
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
 ]
+
+[project.optional-dependencies]
+ml = ["lightgbm>=4.0", "numpy>=1.26"]  # mô hình người/máy; thiếu thì backend dùng luật baseline
 
 [dependency-groups]
 dev = ["pytest>=8", "httpx>=0.27"]

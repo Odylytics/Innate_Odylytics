@@ -1,4 +1,4 @@
-# Paper nền tảng cho Nhịp — Model 2 "Có phải chủ tài khoản?" (plan §5.0, §5.2)
+# Paper nền tảng cho Innate — Model 2 "Có phải chủ tài khoản?" (plan §5.0, §5.2)
 
 Local PDFs: `C:/TuanNghia/Project/Momo_Odylytics/papers/owner-verification/` (14 files, all checked for a `%PDF` header, all < 11 MB).
 All numbers below were read from the downloaded PDF text unless marked otherwise. DOIs marked "(from memory, verify)" were not checked against the publisher page.

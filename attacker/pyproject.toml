@@ -1,7 +1,7 @@
 [project]
 name = "nhip-attacker"
 version = "0.1.0"
-description = "Nhịp — bộ giả lập hacker: sinh phiên bot theo 4 chiến thuật và tấn công thật qua adb"
+description = "Innate — bộ giả lập hacker: sinh phiên bot theo 4 chiến thuật và tấn công thật qua adb"
 requires-python = ">=3.11"
 dependencies = ["httpx>=0.27"]
 

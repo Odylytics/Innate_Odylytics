@@ -1,4 +1,4 @@
-# Nhịp — Bộ giả lập hacker
+# Innate — Bộ giả lập hacker
 
 Người 2. Sinh phiên bot theo 4 chiến thuật (mục 5.1 kế hoạch), đo tỷ lệ bắt theo từng chiến thuật, và tấn công thật lên điện thoại demo qua `adb`.
 
@@ -82,7 +82,7 @@ Chỉ hỗ trợ chiến thuật 1–2 (adb bấm đúng toạ độ). Mỗi l�
 |---|---|---|
 | 1 | 100% (toàn bộ `hold`) | Nhịp đều + đúng tâm |
 | 2 | 100% (toàn bộ `hold`) | Đúng tâm nút vẫn lộ |
-| 3 | 0% | Phát lại phiên của chính chủ: qua cả kiểm tra người/máy lẫn chủ tài khoản |
+| 3 | 0% | Phát lại phiên của chính chủ: qua cả kiểm tra người/máy lẫn chủ tài khoản. **Cập nhật 24/11:** backend đã có kiểm tra phát lại (`scoring/replay.py`); trên dữ liệu giả nó bắt ±5% nhiễu của chiến thuật 3 (xem `research/results/e5_replay.md`) |
 | 4 | 5–30% | Lấy mẫu từ phân bố người: qua kiểm tra người/máy; kiểm tra chủ tài khoản quá dễ dãi |
 
 **Không đưa lên slide** — người là dữ liệu giả. Đo lại khi có dữ liệu thật và mô hình của Người 1.

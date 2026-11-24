@@ -1,4 +1,7 @@
-# Nhịp — Lớp chấm điểm rủi ro hành vi cho ví điện tử
+# Innate — Lớp chấm điểm rủi ro hành vi cho ví điện tử
+
+> **Innate** (bẩm sinh) — PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó. Câu chuyện pitch: [`pitch-story.md`](pitch-story.md).
+> **Định vị (24/11, mới nhất):** Innate là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt: [`positioning.md`](positioning.md). Các con số trong tài liệu này là kế hoạch ban đầu; số đo thật nằm ở `../research/ai-research.md`.
 
 > Kế hoạch dự thi **MoMo Tech Contest 2026** · Chủ đề: An ninh mạng + Chống lừa đảo
 > Đội 3 người · Cập nhật: 23/11/2026
@@ -60,7 +63,7 @@ Hai kịch bản:
 
 ## 3. Sản phẩm
 
-**Nhịp** là lớp chấm điểm rủi ro hành vi dạng **B2B (SDK + API)** cho ví điện tử và ngân hàng. Đối tác nhúng SDK vào app, gọi API ở bước xác nhận giao dịch để nhận điểm rủi ro, hành động đề xuất và lý do.
+**Innate** là lớp chấm điểm rủi ro hành vi dạng **B2B (SDK + API)** cho ví điện tử và ngân hàng. Đối tác nhúng SDK vào app, gọi API ở bước xác nhận giao dịch để nhận điểm rủi ro, hành động đề xuất và lý do.
 
 ### Thành phần bài nộp
 
@@ -89,7 +92,7 @@ Hai kịch bản:
 
 ### Khác gì so với những gì MoMo đã có
 
-MoMo công bố có PIN, OTP, sinh trắc khuôn mặt (iProov, Flashmask), AI phân tích giao dịch và "AI phân tích hành vi" (không nêu rõ có dùng sinh trắc chạm/vuốt). Nhịp khác ở:
+MoMo công bố có PIN, OTP, sinh trắc khuôn mặt (iProov, Flashmask), AI phân tích giao dịch và "AI phân tích hành vi" (không nêu rõ có dùng sinh trắc chạm/vuốt). Innate khác ở:
 
 1. **Minh bạch**: cho người dùng và vận hành thấy *vì sao* phiên bị nghi ngờ.
 2. **Xác thực thêm thay vì chặn cứng**.
@@ -221,7 +224,7 @@ Căn cứ: FETA (Georgiev 2022) rà 30 bài về chạm — **tất cả** mắc
   - Độ trễ API
 - **Bộ dữ liệu công khai để đối chiếu** (kiểm tra giấy phép trước khi dùng, ghi vào README): MobileTouchDB/BioTouchPass2 (217 người, PIN 4 số, EER 2,38%), BB-MAS (117 người), BehavePassDB (81 người, 4 phiên), HuMIdb (600 người, có cảm biến — dùng cho người/máy).
 
-Danh mục paper đầy đủ: [reports/Paper nền tảng cho Nhịp.md](reports/Paper%20nền%20tảng%20cho%20Nhịp.md) · PDF trong `papers/`.
+Danh mục paper đầy đủ: [docs/research/paper-report.md](../research/paper-report.md) · PDF trong [`papers/`](../../papers/).
 
 ---
 
