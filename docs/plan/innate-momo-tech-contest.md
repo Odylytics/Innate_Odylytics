@@ -1,6 +1,6 @@
-# TIBOM — Lớp chấm điểm rủi ro hành vi cho ví điện tử
+# Innate — Lớp chấm điểm rủi ro hành vi cho ví điện tử
 
-> **TIBOM** = Touch Intelligence for Bot & Owner Monitoring (Bot = người hay máy; Owner = có phải chủ tài khoản).
+> **Innate** (bẩm sinh) — PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó. Câu chuyện pitch: [`pitch-story.md`](pitch-story.md).
 
 > Kế hoạch dự thi **MoMo Tech Contest 2026** · Chủ đề: An ninh mạng + Chống lừa đảo
 > Đội 3 người · Cập nhật: 23/11/2026
@@ -62,7 +62,7 @@ Hai kịch bản:
 
 ## 3. Sản phẩm
 
-**TIBOM** là lớp chấm điểm rủi ro hành vi dạng **B2B (SDK + API)** cho ví điện tử và ngân hàng. Đối tác nhúng SDK vào app, gọi API ở bước xác nhận giao dịch để nhận điểm rủi ro, hành động đề xuất và lý do.
+**Innate** là lớp chấm điểm rủi ro hành vi dạng **B2B (SDK + API)** cho ví điện tử và ngân hàng. Đối tác nhúng SDK vào app, gọi API ở bước xác nhận giao dịch để nhận điểm rủi ro, hành động đề xuất và lý do.
 
 ### Thành phần bài nộp
 
@@ -91,7 +91,7 @@ Hai kịch bản:
 
 ### Khác gì so với những gì MoMo đã có
 
-MoMo công bố có PIN, OTP, sinh trắc khuôn mặt (iProov, Flashmask), AI phân tích giao dịch và "AI phân tích hành vi" (không nêu rõ có dùng sinh trắc chạm/vuốt). TIBOM khác ở:
+MoMo công bố có PIN, OTP, sinh trắc khuôn mặt (iProov, Flashmask), AI phân tích giao dịch và "AI phân tích hành vi" (không nêu rõ có dùng sinh trắc chạm/vuốt). Innate khác ở:
 
 1. **Minh bạch**: cho người dùng và vận hành thấy *vì sao* phiên bị nghi ngờ.
 2. **Xác thực thêm thay vì chặn cứng**.

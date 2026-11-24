@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>TIBOM — Ví demo</title>
+<title>Innate — Ví demo</title>
 <style>
 :root{--pink:#a50064;--pink2:#d82d8b;--bg:#eeeef1;--card:#fff;--ink:#222;--mute:#8a8a93;--line:#e7e7ec;--ok:#1aa760;--warn:#f0a020;--bad:#e5484d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -47,7 +47,7 @@ details{margin:4px 12px}summary{color:var(--mute);font-size:13px;cursor:pointer}
 <body>
 <div id="app"></div>
 <script>
-// ---------- TIBOM SDK (thu tín hiệu: chỉ thời gian + toạ độ, không lưu nội dung PIN) ----------
+// ---------- Innate SDK (thu tín hiệu: chỉ thời gian + toạ độ, không lưu nội dung PIN) ----------
 const Nhip = (() => {
   let t0, taps, swipes, screens, cur, down = {}, sw = null;
   const now = () => Math.round((performance.now() - t0) * 10) / 10;
@@ -134,7 +134,7 @@ async function home() {
       <input id="amt" class="amt" inputmode="numeric" placeholder="0₫" value="${form.amount ? money(form.amount) : ""}">
       <div class="chips">${[50000, 100000, 500000, 2000000].map(v => `<span class="chip" data-amt="${v}">${money(v)}</span>`).join("")}</div></div>
     <div class="card"><div class="lbl">Lời nhắn</div><input id="msg" placeholder="Chuyển tiền"></div>
-    <div class="note">${enrolledInfo}<br>Giao diện minh hoạ cho bản thử nghiệm TIBOM, không phải ứng dụng của bất kỳ ví nào.</div>
+    <div class="note">${enrolledInfo}<br>Giao diện minh hoạ cho bản thử nghiệm Innate, không phải ứng dụng của bất kỳ ví nào.</div>
     <details><summary>Cài đặt thu dữ liệu</summary>
       <label>API URL (để trống = tự dò)</label><input id="c_api" value="${store.get("nhip_api", "")}" placeholder="${DEPLOY}">
       <label>API key</label><input id="c_key" value="${cfg().key}">
@@ -187,7 +187,7 @@ function result(r) {
   app.innerHTML = `<div class="bar"><span>Kết quả</span></div>
   <div class="body"><div class="card res"><div class="ico ${r.action}">${t[0]}</div><h1>${t[1]}</h1>
     <div class="amt">${money(form.amount)}</div><div class="mute">đến ${form.acct}</div></div>
-    <div class="card why"><div class="lbl">TIBOM chấm điểm phiên này</div>${r.explanation_vi}
+    <div class="card why"><div class="lbl">Innate chấm điểm phiên này</div>${r.explanation_vi}
       <ul>${r.reasons.map(x => `<li>${x}</li>`).join("")}</ul>
       <div class="mute" style="margin-top:8px">Người thật: ${r.human_score} · Khớp chủ: ${r.owner_match ?? "chưa có mẫu"} · Rủi ro: ${r.risk_score} (${r.risk})</div></div></div>
   <div class="foot"><div class="btn" data-go="home">Xong</div></div>`;

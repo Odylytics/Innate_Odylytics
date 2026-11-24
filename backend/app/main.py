@@ -30,7 +30,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="TIBOM API",
+    title="Innate API",
     version="0.1.0",
     description="Chấm điểm rủi ro hành vi cho ví điện tử. Bấm **Authorize** và nhập API key demo.",
     lifespan=lifespan,

@@ -4,7 +4,7 @@
 
 ## 4 thành phần
 
-| # | Thành phần | Định dạng và giới hạn | Nội dung cho TIBOM | Người phụ trách | Trạng thái |
+| # | Thành phần | Định dạng và giới hạn | Nội dung cho Innate | Người phụ trách | Trạng thái |
 |---|---|---|---|---|---|
 | 1 | **Sản phẩm** | PDF ≤ 1 trang A4. Có link dùng thử online ngay, kèm tài khoản dùng thử nếu cần đăng nhập | Link ví demo (`/`) + Swagger (`/docs`). Ghi user demo, API key demo, PIN demo `159357`, 4 bước dùng | Người 3 | Chưa |
 | 2 | **Mã nguồn** | `.zip` toàn bộ code + `README` | README khai: cách chạy, công nghệ, **tài sản có sẵn, thư viện mã nguồn mở, công cụ AI đã dùng**, nguồn dữ liệu | Người 2 | Chưa |
@@ -16,7 +16,7 @@
 - Dùng thử được **online**, không phụ thuộc máy local của đội.
 - **AI là lõi** tạo ra giá trị, không phải tính năng phụ.
 - Chạy ổn định lúc nộp và **online liên tục đến hết 11/12/2026**.
-- Thuộc ít nhất 1 chủ đề: Trợ lý AI · An ninh mạng · Chống lừa đảo (TIBOM: An ninh mạng + Chống lừa đảo).
+- Thuộc ít nhất 1 chủ đề: Trợ lý AI · An ninh mạng · Chống lừa đảo (Innate: An ninh mạng + Chống lừa đảo).
 
 ## Lưu ý khi đóng `.zip`
 

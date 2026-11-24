@@ -1,6 +1,6 @@
-# TIBOM
+# Innate
 
-**TIBOM** = **T**ouch **I**ntelligence for **B**ot & **O**wner **M**onitoring: chấm điểm hành vi chạm để trả lời hai câu hỏi — thao tác này do *bot* hay người, và người đó có phải *chủ* tài khoản không.
+**Innate** (bẩm sinh): *PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó.* Chấm điểm hành vi chạm để trả lời hai câu hỏi — thao tác này do *bot* hay người, và người đó có phải *chủ* tài khoản không.
 
 Lớp chấm điểm rủi ro hành vi (chạm/PIN) cho ví điện tử. Dự thi MoMo Tech Contest 2026. Đang trong giai đoạn phát triển; bản README nộp bài sẽ thay file này.
 

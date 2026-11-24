@@ -1,7 +1,7 @@
 [project]
 name = "nhip-backend"
 version = "0.1.0"
-description = "TIBOM — API chấm điểm rủi ro hành vi"
+description = "Innate — API chấm điểm rủi ro hành vi"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",

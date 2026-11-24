@@ -1,4 +1,4 @@
-# TIBOM — Bộ giả lập hacker
+# Innate — Bộ giả lập hacker
 
 Người 2. Sinh phiên bot theo 4 chiến thuật (mục 5.1 kế hoạch), đo tỷ lệ bắt theo từng chiến thuật, và tấn công thật lên điện thoại demo qua `adb`.
 

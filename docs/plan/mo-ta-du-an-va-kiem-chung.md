@@ -1,13 +1,13 @@
-# TIBOM — Mô tả dự án và kiểm chứng bằng paper
+# Innate — Mô tả dự án và kiểm chứng bằng paper
 
-> **TIBOM** = Touch Intelligence for Bot & Owner Monitoring.
+> **Innate** (bẩm sinh) — câu chuyện pitch: [`pitch-story.md`](pitch-story.md).
 
 > Cập nhật 24/11/2026. Tài liệu này tóm tắt ý tưởng, hiện trạng mã nguồn, và kết quả đối chiếu các con số trong kế hoạch với paper gốc trong [`papers/`](../../papers/).
-> Kế hoạch đầy đủ: [`tibom-momo-tech-contest.md`](tibom-momo-tech-contest.md). Tổng hợp paper: [`../research/paper-report.md`](../research/paper-report.md).
+> Kế hoạch đầy đủ: [`innate-momo-tech-contest.md`](innate-momo-tech-contest.md). Tổng hợp paper: [`../research/paper-report.md`](../research/paper-report.md).
 
 ## 1. Ý tưởng
 
-**TIBOM** là lớp chấm điểm rủi ro hành vi (B2B SDK + API) cho ví điện tử và ngân hàng. Khi điện thoại bị chiếm quyền, tiền vẫn đi ra bằng đúng app, đúng PIN, đúng thiết bị của nạn nhân, nên xác thực truyền thống coi đó là chính chủ. TIBOM trả lời hai câu hỏi tại bước xác nhận giao dịch:
+**Innate** là lớp chấm điểm rủi ro hành vi (B2B SDK + API) cho ví điện tử và ngân hàng. Khi điện thoại bị chiếm quyền, tiền vẫn đi ra bằng đúng app, đúng PIN, đúng thiết bị của nạn nhân, nên xác thực truyền thống coi đó là chính chủ. Innate trả lời hai câu hỏi tại bước xác nhận giao dịch:
 
 1. Thao tác này do **ngón tay người** hay do **máy** (mã độc Trợ năng, `adb`, script)?
 2. Nếu là người, có **khớp thói quen chủ tài khoản** không?
@@ -61,7 +61,7 @@ Không tải được (paywalled hoặc nguồn chặn tải tự động): Tey 
 **ActReal (Wang 2026, preprint)**: tác nhân cấp hệ thống có đặc quyền có thể sinh đồng thời chạm và cảm biến IMU khớp thời gian. Tỷ lệ tấn công thành công trung bình 77,5% trên các bộ phát hiện dựa vào quỹ đạo chạm/thời gian, và **vẫn 71,1% khi bộ phát hiện dùng cả chạm lẫn IMU**. Nghĩa là mã độc đủ tinh vi sẽ qua mặt được lớp "người hay máy". Đây là rào cản lớn hơn mọi con số EER.
 
 Các điểm khác:
-- Các con số tốt nhất đến từ điều kiện thuận lợi (Zheng: 85 lượt đăng ký, nhiều cảm biến; BioTouchPass2: 217 người, RNN). TIBOM có ~25 người, một điện thoại, 3–5 lượt, **không có áp lực** (Pointer Events trả 0.5). Kỳ vọng thực tế **10–15% EER**.
+- Các con số tốt nhất đến từ điều kiện thuận lợi (Zheng: 85 lượt đăng ký, nhiều cảm biến; BioTouchPass2: 217 người, RNN). Innate có ~25 người, một điện thoại, 3–5 lượt, **không có áp lực** (Pointer Events trả 0.5). Kỳ vọng thực tế **10–15% EER**.
 - Tấn công bắt chước (kịch bản B) có số liệu cụ thể (10–15% EER) và nên nằm trong slide.
 - Với bot chưa từng thấy, bộ phân loại học trên bot sinh sẵn giảm mạnh (BeCAPTCHA, BeCAPTCHA-Type: few-shot là thách thức). Huấn luyện và kiểm thử cùng 4 bộ sinh bot của đội sẽ cho số quá đẹp.
 - Eberz 2017: EER trung bình che lỗi có hệ thống, cần báo phân bố theo từng người.

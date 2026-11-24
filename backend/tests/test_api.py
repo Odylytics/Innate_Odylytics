@@ -145,4 +145,4 @@ def test_bot_meta_requires_tactic(client):
 
 def test_wallet_page_served(client):
     r = client.get("/")
-    assert r.status_code == 200 and "TIBOM SDK" in r.text
+    assert r.status_code == 200 and "Innate SDK" in r.text

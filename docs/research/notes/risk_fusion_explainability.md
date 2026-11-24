@@ -1,11 +1,11 @@
-# Risk fusion, step-up and explanation: supporting papers for TIBOM (plan sections 5.0 notes, 5.3, 5.4)
+# Risk fusion, step-up and explanation: supporting papers for Innate (plan sections 5.0 notes, 5.3, 5.4)
 
 PDF folder: `C:/TuanNghia/Project/Momo_Odylytics/papers/risk-fusion-explainability/`. Every file listed below was checked for a `%PDF` header and is under 40 MB.
 
 ## Q1. Risk-based / adaptive authentication (allow / step_up / hold from behaviour plus context)
 
 ### Takeaway
-Risk-based authentication (RBA) is an established pattern. Implicit signals are scored and an extra factor is requested only when risk is high. That is the same design as TIBOM's 3-zone `allow / step_up / hold`. The literature supports choosing the threshold for low friction on genuine users, then reporting the attack catch rate at that false-positive rate. This is exactly the "FRR ≈ 5%, report FAR" choice in 5.3.
+Risk-based authentication (RBA) is an established pattern. Implicit signals are scored and an extra factor is requested only when risk is high. That is the same design as Innate's 3-zone `allow / step_up / hold`. The literature supports choosing the threshold for low friction on genuine users, then reporting the attack catch rate at that false-positive rate. This is exactly the "FRR ≈ 5%, report FAR" choice in 5.3.
 
 ### Cited Findings
 - **Freeman, D.M., Jain, S., Dürmuth, M., Biggio, B., Giacinto, G. (2016). "Who Are You? A Statistical Approach to Measuring User Authenticity." NDSS 2016. DOI 10.14722/ndss.2016.23240.**
@@ -33,11 +33,11 @@ Risk-based authentication (RBA) is an established pattern. Implicit signals are 
 - **Wiefling, S., Jørgensen, P.R., Thunem, S., Lo Iacono, L. (2022). "Pump Up Password Security! Evaluating and Enhancing Risk-Based Authentication on a Real-World Large-Scale Online Service." ACM TOPS 26(1). DOI 10.1145/3546069. arXiv:2206.15139.**
   - Local PDF: `Wiefling2022_pump-up-password-security.pdf`
   - Backs: large-scale evidence for step-up, and ML-based tuning of RBA parameters. This is the "replace weights with a supervised model later" roadmap.
-  - Findings: 3.3M users and 31.3M logins over more than one year, at Telenor Digital. Provides an ML-based RBA parameter optimisation method and a synthesized open data set. Users "profit from RBA after just a few logins", which is relevant to TIBOM's few-shot enrolment.
+  - Findings: 3.3M users and 31.3M logins over more than one year, at Telenor Digital. Provides an ML-based RBA parameter optimisation method and a synthesized open data set. Users "profit from RBA after just a few logins", which is relevant to Innate's few-shot enrolment.
   - Source: [arXiv](https://arxiv.org/abs/2206.15139)
 
 ### Inferences
-- Freeman 2016 is the closest academic analogue to TIBOM's formula 5.3: a per-user likelihood of the current context, combined with learned weights, then thresholded into step-up. TIBOM adds behavioural scores to the contextual ones.
+- Freeman 2016 is the closest academic analogue to Innate's formula 5.3: a per-user likelihood of the current context, combined with learned weights, then thresholded into step-up. Innate adds behavioural scores to the contextual ones.
 - In all these papers the RBA features are login context (IP, user agent), not transaction context (new payee, unusual amount). Using payee and amount is supported by the fraud literature (Q3), not by the RBA papers.
 
 ### Gaps
@@ -123,7 +123,7 @@ SHAP gives per-feature additive contributions that sum to the model output. Tree
   - Source: [arXiv](https://arxiv.org/abs/2105.06314)
 
 ### Inferences
-- SHAP depends on the background data set (Psychoula). TIBOM should fix and document the background set (for example the user's enrolment sessions) so explanations are stable.
+- SHAP depends on the background data set (Psychoula). Innate should fix and document the background set (for example the user's enrolment sessions) so explanations are stable.
 - A recent preprint warns that applying SMOTE before the train/test split distorts SHAP backgrounds ([arXiv 2604.14231](https://arxiv.org/pdf/2604.14231)). This is relevant if the team oversamples bot sessions. It is a preprint and I did not read it in full.
 
 ### Gaps

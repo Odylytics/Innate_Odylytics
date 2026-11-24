@@ -1,11 +1,11 @@
 # CLAUDE.md
 
-TIBOM — behavioral risk scoring (touch/PIN dynamics) for e-wallets. Entry for MoMo Tech Contest 2026.
+Innate — behavioral risk scoring (touch/PIN dynamics) for e-wallets. Entry for MoMo Tech Contest 2026.
 Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnamese.
 
 ## Naming
-- Project/product name: **TIBOM** = Touch Intelligence for Bot & Owner Monitoring (renamed from "Nhịp" on 24/11/2026). Use TIBOM in all user-facing text, docs, slides.
-- Vietnamese word "nhịp" (rhythm: "nhịp PIN", "nhịp gõ", "đăng ký nhịp") is NOT the old brand; keep it where it means rhythm.
+- Project/product name: **Innate** ("bẩm sinh"). History: "Nhịp" → TIBOM → Innate (24/11/2026). Use Innate in all user-facing text, docs, slides. Pitch line: *PIN can be stolen, innate touch habits are hard to steal* (see `docs/plan/pitch-story.md` for the honest framing).
+- Vietnamese word "nhịp" (rhythm: "nhịp PIN", "nhịp gõ", "đăng ký nhịp") is NOT a brand; keep it where it means rhythm.
 - Technical identifiers still say `nhip` on purpose, to avoid breaking the live deploy: env vars `NHIP_*`, Python package `nhip_attacker`, Vercel project `nhip-api` / URL `nhip-api-taupe.vercel.app`, Neon DB `nhip-db`, localStorage keys `nhip_*`. Rename them together with a redeploy (and a new URL for the submission PDF) if/when wanted.
 
 ## Deadlines (2026)
@@ -18,7 +18,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
   - `app/scoring/`: `features.py` (extract), `human.py` (bot-vs-human, rule baseline), `owner.py` (scaled Manhattan template + drift-capped update), `fusion.py` (weighted risk, thresholds A/B), `explain.py` (Vietnamese reasons).
   - `tests/synth.py` generates fake human sessions for tests.
 - `attacker/nhip_attacker/` — 4-tactic bot simulator (`tactics.py`), CLI (`__main__.py`: `generate`, `report`, `adb`), real-phone attack (`adb.py`).
-- `docs/plan/tibom-momo-tech-contest.md` — the full plan (architecture, models, evaluation, demo script, roles). Source of truth for intent.
+- `docs/plan/innate-momo-tech-contest.md` — the full plan (architecture, models, evaluation, demo script, roles). Source of truth for intent.
 - `docs/plan/mo-ta-du-an-va-kiem-chung.md` — description, state, paper verification, conclusions.
 - `docs/contest/` — rules summary + `submission-checklist.md` (what must be submitted, by 03/12).
 - `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).

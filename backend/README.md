@@ -1,4 +1,4 @@
-# TIBOM — Backend API
+# Innate — Backend API
 
 API chấm điểm rủi ro hành vi (Người 2). FastAPI + SQLAlchemy, SQLite khi chạy local, Postgres (Neon) khi deploy.
 

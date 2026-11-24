@@ -10,7 +10,7 @@
 | ToxicPanda 2.0 (08/2026) | Lớp phủ ngân hàng, điều khiển từ xa, lấy PIN, lạm dụng Trợ năng, thử Wireless Debugging. Mục tiêu là gian lận ngay trên máy nạn nhân (on-device fraud) | [Malwarebytes](https://www.malwarebytes.com/blog/mobile/2026/08/toxicpanda-2-0-can-take-over-your-android-phone-and-banking-apps) |
 | Trojan do Cyfirma báo (11/2025) | Đọc màn hình, bấm nút, điền form "như người dùng" | [Malwarebytes](https://www.malwarebytes.com/blog/news/2025/11/sneaky-new-android-malware-takes-over-your-phone-hiding-in-fake-news-and-id-apps) |
 
-Ý nghĩa: kịch bản A của TIBOM có nền thực tế. Các báo cáo nói kẻ tấn công thao tác trong phiên đang mở nên né được kiểm soát theo thiết bị lạ/vị trí lạ, đúng khe hở mà lớp hành vi muốn lấp. Các nguồn này **không** bàn về phát hiện chạm do máy.
+Ý nghĩa: kịch bản A của Innate có nền thực tế. Các báo cáo nói kẻ tấn công thao tác trong phiên đang mở nên né được kiểm soát theo thiết bị lạ/vị trí lạ, đúng khe hở mà lớp hành vi muốn lấp. Các nguồn này **không** bàn về phát hiện chạm do máy.
 
 ## 2. R1: phân biệt chạm thật và chạm bơm (chưa biết)
 
