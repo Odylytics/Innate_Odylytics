@@ -30,7 +30,7 @@ uv run uvicorn app.main:app --reload --port 8000
 | Biến | Mặc định | Ghi chú |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./nhip.db` | Trên Vercel do Neon tự đặt; `postgres://` được tự đổi sang driver psycopg |
-| `NHIP_API_KEYS` | `demo-key` | Key **SDK** (nằm trong app web): gửi phiên, đăng ký nhịp, chấm điểm. Nhiều key cách nhau dấu phẩy |
+| `NHIP_API_KEYS` | `demo-key` *(chỉ khi DB là SQLite local; nối DB thật mà không đặt thì đóng hết)* | Key **SDK** (nằm trong app web): gửi phiên, đăng ký nhịp, chấm điểm. Nhiều key cách nhau dấu phẩy |
 | `NHIP_OPS_KEYS` | *(trống = đóng)* | Key **dashboard**: xem danh sách phiên, gắn nhãn |
 | `NHIP_ML_KEYS` | *(trống = đóng)* | Key **Người 1**: `/v1/export` |
 | `NHIP_CORS_ORIGINS` | `*` | Bản deploy đang để `*`. **Đặt đúng domain ví demo + dashboard khi Người 3 deploy frontend** |
@@ -50,7 +50,7 @@ Tất cả `/v1/*` cần header `X-API-Key` đúng vai trò ở cột *Quyền*.
 | POST | `/v1/users/{user_id}/enroll` | SDK | Body `{session_id}`. Đánh dấu lượt đăng ký; đủ 3 lượt thì có mẫu chuẩn và **khoá đăng ký** (thêm lượt → 409) |
 | GET | `/v1/users/{user_id}` | App | Số lượt đã đăng ký, mẫu chuẩn sẵn sàng chưa, số lần cập nhật |
 | POST | `/v1/sessions/{id}/score` | App | Body `{recipient_is_new, amount}` → điểm + hành động + lý do |
-| GET | `/v1/export?participant_id=` | ML | Xuất phiên có `meta` (dữ liệu thô + đặc trưng + nhãn thu dữ liệu) |
+| GET | `/v1/export?participant_id=&limit=500&offset=0` | ML | Xuất phiên có `meta` (dữ liệu thô + đặc trưng + nhãn thu dữ liệu), cũ nhất trước, **theo trang**: mỗi trang tối đa `limit` (≤ 2000) phiên và ~3 MB; còn dữ liệu thì header `X-Next-Offset` cho offset trang sau |
 | GET | `/v1/sessions?flagged=true&limit=50` | ops | Phiên `step_up`/`hold` mới nhất (bỏ `flagged` = tất cả phiên đã chấm) |
 | POST | `/v1/sessions/{id}/label` | ops | Body `{label: "fraud" \| "legit"}` |
 
@@ -80,6 +80,7 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 
 - `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = tâm và kích thước phím (`getBoundingClientRect`).
 - Không gửi `pressure`. Không dựa vào `isTrusted`.
+- Giới hạn: ≤ 30 lần vuốt mỗi phiên, ≤ 200 điểm mỗi lần vuốt (~3 giây ở 60 Hz); dài hơn thì SDK cắt bớt.
 - **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine`, `impostor` (biết PIN, cố bấm giống chủ) hoặc `bot` (kèm `tactic` 1–4, do [bộ giả lập](../attacker/README.md) gửi). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
 - Server từ chối (422): `t_up < t_down`, số NaN/âm, `user_id` có ký tự lạ, quá nhiều sự kiện.
 

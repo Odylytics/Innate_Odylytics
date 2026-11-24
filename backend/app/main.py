@@ -1,9 +1,10 @@
+import json
 import os
 import secrets
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Security
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
@@ -11,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import schemas
-from .db import Base, SessionLocal, TouchSession, User, engine
+from .db import DATABASE_URL, Base, SessionLocal, TouchSession, User, engine
 from .scoring import explain, features, fusion, human, owner
 
 def _keys(var: str, default: str = "") -> list[str]:
@@ -20,13 +21,15 @@ def _keys(var: str, default: str = "") -> list[str]:
 
 # Mỗi vai trò một bộ key: key SDK nằm trong app web (ai cũng xem được) nên không được mở dashboard hay export.
 # Key ops/ml không có mặc định: chưa cấu hình thì các route đó đóng.
+# Key SDK chỉ mặc định "demo-key" khi chạy local (SQLite); nối DB thật mà quên đặt biến thì đóng hết, không mở bằng key công khai.
 SCOPE_KEYS = {
-    "sdk": _keys("NHIP_API_KEYS", "demo-key"),  # gửi phiên, đăng ký nhịp, chấm điểm
+    "sdk": _keys("NHIP_API_KEYS", "demo-key" if DATABASE_URL.startswith("sqlite") else ""),  # gửi phiên, đăng ký nhịp, chấm điểm
     "ops": _keys("NHIP_OPS_KEYS"),  # dashboard: xem danh sách, gắn nhãn
     "ml": _keys("NHIP_ML_KEYS"),  # Người 1: xuất dữ liệu
 }
 CORS_ORIGINS = os.environ.get("NHIP_CORS_ORIGINS", "*").split(",")
 MIN_ENROLL = 3
+EXPORT_BYTE_BUDGET = 3 * 1024 * 1024  # mỗi trang export dừng ở ~3 MB dữ liệu thô: dưới giới hạn phản hồi 4,5 MB của Vercel
 UPDATE_MIN_OWNER = 0.8  # chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao
 UPDATE_MIN_HUMAN = 0.8
 
@@ -206,13 +209,18 @@ def list_sessions(flagged: bool = True, limit: int = Query(50, ge=1, le=500), db
 
 
 @v1.get("/export", tags=["data"], dependencies=[ML])
-def export_sessions(participant_id: str | None = None, collected_only: bool = True,
-                    limit: int = Query(5000, ge=1, le=20000), db: Session = Depends(get_db)):
-    """Xuất phiên cho Người 1 (dữ liệu thô + đặc trưng + nhãn thu dữ liệu), cũ nhất trước."""
-    # shortcut: lọc meta bằng Python sau khi lấy; đủ cho vài nghìn phiên, nhiều hơn thì chuyển sang lọc trong SQL
-    rows = db.scalars(select(TouchSession).order_by(TouchSession.created_at).limit(limit)).all()
-    out = []
-    for r in rows:
+def export_sessions(response: Response, participant_id: str | None = None, collected_only: bool = True,
+                    limit: int = Query(500, ge=1, le=2000), offset: int = Query(0, ge=0),
+                    db: Session = Depends(get_db)):
+    """Xuất phiên cho Người 1, cũ nhất trước, theo trang.
+
+    Còn dữ liệu thì header `X-Next-Offset` cho biết offset của trang sau; không có header là hết.
+    """
+    # shortcut: lọc meta bằng Python trên từng trang; trang và ngân sách byte giữ bộ nhớ có giới hạn
+    q = select(TouchSession).order_by(TouchSession.created_at, TouchSession.id).offset(offset).limit(limit)
+    out, size, scanned = [], 0, 0
+    for r in db.scalars(q, execution_options={"yield_per": 100}):  # nạp dần, không .all() cả trang
+        scanned += 1
         meta = r.raw.get("meta")
         if collected_only and not meta:
             continue
@@ -222,6 +230,11 @@ def export_sessions(participant_id: str | None = None, collected_only: bool = Tr
                     "created_at": r.created_at.isoformat(), "meta": meta, "raw": r.raw,
                     "features": r.features, "is_enrollment": r.is_enrollment, "result": r.result,
                     "label": r.label})
+        size += len(json.dumps(r.raw)) + len(json.dumps(r.features))
+        if size >= EXPORT_BYTE_BUDGET:
+            break
+    if scanned == limit or size >= EXPORT_BYTE_BUDGET:
+        response.headers["X-Next-Offset"] = str(offset + scanned)
     return out
 
 

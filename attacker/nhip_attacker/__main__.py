@@ -28,7 +28,11 @@ def _humans(args, c: httpx.Client) -> list[dict]:
         ml_key = args.ml_key or os.environ.get("NHIP_ML_KEY")
         if not ml_key:
             sys.exit("--human-source api cần key quyền ML: đặt NHIP_ML_KEY hoặc --ml-key (hoặc dùng --human-source synth)")
-        rows = c.get("/v1/export", headers={"X-API-Key": ml_key}).raise_for_status().json()
+        rows, offset = [], "0"
+        while offset is not None:  # export trả theo trang; header X-Next-Offset báo còn trang sau
+            r = c.get("/v1/export", params={"offset": offset}, headers={"X-API-Key": ml_key}).raise_for_status()
+            rows += r.json()
+            offset = r.headers.get("X-Next-Offset")
         out = [r["raw"] for r in rows if (r.get("meta") or {}).get("role") == "genuine"]
         if not out:
             sys.exit("API chưa có phiên người thật (meta.role = genuine). Dùng --human-source synth để thử trước")
