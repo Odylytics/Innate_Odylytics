@@ -7,8 +7,10 @@ import math
 import os
 from statistics import fmean
 
-# shortcut: ngưỡng chọn trên dữ liệu GIẢ (research/experiments/e5_replay.py, FPR ~1% với PIN 4 và 6 số); hiệu chỉnh lại trên dữ liệu người thật.
-REPLAY_THRESHOLD = float(os.environ.get("NHIP_REPLAY_THRESHOLD", 0.085))
+# Hiệu chỉnh trên NGƯỜI THẬT (research/experiments/e5b_replay_real.py, StrokePIN): 0.07 -> FPR ~0.1% với 8 phiên cũ, ~0.7% ngoại suy ở 50;
+# bắt 100% phát lại có nhiễu tới ±10%, 29% ở ±15%. Ngưỡng cũ 0.085 (chọn trên dữ liệu giả) bắt 86% ở ±15% nhưng FPR ngoại suy ~3.7%:
+# phiên bị coi là phát lại bị hold thẳng nên nhầm chủ thật đắt hơn bỏ lọt kẻ tấn công nhiễu cao. Hiệu chỉnh lại trên dữ liệu của đội.
+REPLAY_THRESHOLD = float(os.environ.get("NHIP_REPLAY_THRESHOLD", 0.07))
 MIN_FEATURES = 5
 OFFSET_SCALE = 0.4  # độ lệch tâm giữa hai phiên người thật (~0.07 bề rộng phím) đổi sang thang của sai khác tương đối thời gian (~0.15–0.2)
 

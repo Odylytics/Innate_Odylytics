@@ -1,6 +1,7 @@
 # Innate — Lớp chấm điểm rủi ro hành vi cho ví điện tử
 
 > **Innate** (bẩm sinh) — PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó. Câu chuyện pitch: [`pitch-story.md`](pitch-story.md).
+> **Định vị (24/11, mới nhất):** Innate là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt: [`positioning.md`](positioning.md). Các con số trong tài liệu này là kế hoạch ban đầu; số đo thật nằm ở `../research/ai-research.md`.
 
 > Kế hoạch dự thi **MoMo Tech Contest 2026** · Chủ đề: An ninh mạng + Chống lừa đảo
 > Đội 3 người · Cập nhật: 23/11/2026

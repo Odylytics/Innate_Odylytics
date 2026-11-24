@@ -21,7 +21,7 @@ CORS_ORIGINS = os.environ.get("NHIP_CORS_ORIGINS", "*").split(",")
 MIN_ENROLL = 3
 UPDATE_MIN_OWNER = 0.8  # chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao
 UPDATE_MIN_HUMAN = 0.8
-REPLAY_HISTORY = 50  # số phiên gần nhất dùng để so trùng; nhiều hơn thì FPR của PIN 4 số tăng (research/results/e5_replay.md)
+REPLAY_HISTORY = 50  # số phiên gần nhất dùng để so trùng; FPR tăng theo số phiên (E5: PIN 4 số; E5b: người thật, ngoại suy ~0.7% ở 50 với ngưỡng 0.07)
 
 
 @asynccontextmanager

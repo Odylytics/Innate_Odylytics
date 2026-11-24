@@ -2,6 +2,8 @@
 
 > Chốt ngày 24/11/2026. Dùng làm nền cho slide, video và phần trả lời giám khảo. Số liệu lấy từ E9/E4b (dữ liệu người thật công khai, chưa phải dữ liệu của đội); xem [`../research/ai-research.md`](../research/ai-research.md).
 
+> Innate nằm ở đâu trong chồng bảo mật và không làm gì: [`positioning.md`](positioning.md).
+
 ## Câu chốt
 
 > **Giống Face ID ở quy trình đăng ký và đối chiếu, nhưng là tín hiệu rủi ro, không phải chìa khoá.**

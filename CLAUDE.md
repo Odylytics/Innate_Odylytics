@@ -23,6 +23,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
   - `tests/synth.py` generates fake human sessions for tests.
 - `attacker/nhip_attacker/` — 4-tactic bot simulator (`tactics.py`), CLI (`__main__.py`: `generate`, `report`, `adb`), real-phone attack (`adb.py`).
 - `docs/plan/innate-momo-tech-contest.md` — the full plan (architecture, models, evaluation, demo script, roles). Source of truth for intent.
+- `docs/plan/positioning.md` — WHAT Innate is: a human-verification layer (passive behavioral security) at transaction confirmation; complements attestation/auth/fraud engines; AI does 1:1 matching (human-vs-bot, owner, replay). Read before writing any pitch/README text. Do NOT use the phrase "HUMAN Security" (a company name).
 - `docs/plan/mo-ta-du-an-va-kiem-chung.md` — description, state, paper verification, conclusions.
 - `docs/contest/` — rules summary + `submission-checklist.md` (what must be submitted, by 03/12).
 - `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).
@@ -52,6 +53,6 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - Synthetic-human results (attacker README table) must not go on slides; re-measure on real data.
 
 ## Known gaps
-- Replay (tactic 3): caught up to ~±10–15% attacker noise (E5, synthetic); fails at ±20%+. PIN-4 FPR grows with history size (history capped at 50). Threshold needs real-data calibration.
+- Replay (tactic 3): threshold 0.07, calibrated on REAL humans (E5b): catches 100% up to ±10% attacker noise, 29% at ±15%, 0% from ±20%. Human FPR grows with history size (~0.1% at 8 sessions, extrapolated ~0.7% at 50); recalibrate on team data with long histories.
 - `owner.py` score mapping (d=2 → 0.5) is uncalibrated and too lenient (also: owner signal alone is weak, E9/E10b: FAR ~50% at FRR 5%): on synthetic data 56% of real impostor sessions already score >= 0.5 before any poisoning (E7). Calibrate on real data (E3). E7 recommends "freeze + flag" over the per-feature 1 sd cap (not yet applied).
 - Bot model train/test share the same 4 generators; keep `adb`/real malware sessions as an independent test set.

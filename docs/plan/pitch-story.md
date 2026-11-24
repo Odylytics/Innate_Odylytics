@@ -3,6 +3,8 @@
 > **PIN có thể bị đánh cắp. Thói quen chạm bẩm sinh thì rất khó.**
 > Cập nhật 24/11/2026. Dùng cho slide (≤ 10 trang), video (≤ 3 phút) và phần thuyết trình chung kết.
 
+> Định vị sản phẩm (Innate là lớp gì, nằm ở đâu trong chồng bảo mật): [`positioning.md`](positioning.md).
+
 ## Ý chính
 
 Mọi thứ xác thực truyền thống đều là thứ có thể **lấy đi**: PIN nhìn lén được, OTP đọc được, thiết bị chiếm được. Mã độc như RemControl và ToxicPanda 2.0 (2026) lạm dụng quyền Trợ năng để tự bấm chuyển tiền bằng chính app, PIN và thiết bị của nạn nhân. Còn **cách một người chạm**: giữ phím bao lâu, lệch tâm nút về phía nào, vuốt nhanh hay chậm, là thói quen vận động hình thành từ nhỏ, không có file nào để sao chép.

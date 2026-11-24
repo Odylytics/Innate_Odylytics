@@ -145,6 +145,15 @@ Mã: `research/experiments/e5_replay.py`; bảng: `research/results/e5_replay.md
 - **Lỗi phát hiện nhờ thí nghiệm:** với PIN 4 số chỉ có 7 đặc trưng thời gian nên hai phiên thật có thể gần nhau tình cờ; khi so với 200 phiên cũ, tỷ lệ từ chối nhầm chủ lên **7,5%** (PIN 6 số: 0%). Backend đã giảm số phiên so xuống **50** (PIN 4 số còn 3,3%). Ví demo dùng PIN 6 số. Nếu đối tác dùng PIN 4 số, nên tăng ngưỡng hoặc giảm số phiên so thêm.
 - **Giới hạn:** persona giả (độ dao động giữa các phiên do tôi/đội đặt ra), nên ngưỡng 0,085 **phải hiệu chỉnh lại trên dữ liệu người thật**. Chỉ so với phiên cũ **của cùng tài khoản**; phát lại một phiên chưa từng gửi lên máy chủ thì không bị bắt bởi kiểm tra này.
 
+### E5b — hiệu chỉnh kiểm tra phát lại trên người thật (24/11)
+
+Mã: `research/experiments/e5b_replay_real.py`; bảng: `research/results/e5b_replay_real.md`. Người thật StrokePIN (1.842 cặp người–PIN, 4–10 lượt cùng PIN, cả ngồi và đi), dùng chính `replay.distance` của backend; phát lại thích nghi với nhiễu thời gian ±n và toạ độ ±max(0,02; 0,4n) bề rộng phím.
+
+- **Ngưỡng 0,085 (chọn trên người giả ở E5) cho FPR người thật 0,28% → 0,40% → 0,64% khi so với 3 → 5 → 8 phiên cũ**: tăng gần tuyến tính theo số phiên. Ngoại suy tuyến tính tới 50 phiên (backend đang so tới 50) cho **~3,7%**: không đo được vì dữ liệu chỉ có ~9 lượt mỗi cặp, đây là suy đoán. Vì phát lại bị `hold` thẳng nên mức này quá đắt.
+- Phân vị khoảng cách người thật: 0,1% = 0,071; 1% = 0,094; trung vị 0,189. Khoảng cách trung vị của phiên phát lại: ±5% → 0,025; ±10% → 0,050; ±15% → 0,075; ±20% → 0,101.
+- **Đã đổi ngưỡng mặc định sang 0,07** (FPR ~0,1% tại 8 phiên, ~0,7% ngoại suy tại 50). Cái giá: bắt 100% phát lại có nhiễu tới ±10% nhưng chỉ **29% ở ±15%** (ngưỡng cũ: 86%) và 0% từ ±20%. Kẻ tấn công thích nghi thêm nhiễu ≥15% vẫn qua mặt kiểm tra này; lúc đó phiên trông như một người khác và chỉ còn điểm "chủ" (yếu) cản lại.
+- **Giới hạn:** lịch sử trong dữ liệu ngắn (~9 lượt, một đợt thu), nên hiệu ứng nhiều phiên cũ phải đo lại bằng dữ liệu của đội (lịch sử dài, nhiều ngày). Người thật ở đây gõ PIN do người nghiên cứu giao, không phải PIN riêng đã thuộc, nên có thể ít đều hơn hoặc nhiều hơn người dùng thật.
+
 ### E7 — đầu độc mẫu chuẩn (đã chạy, dữ liệu GIẢ)
 
 Mã: `research/experiments/e7_poisoning.py`; bảng: `research/results/e7_poisoning.md`. **Chưa thay đổi `owner.py`**; đây là khuyến nghị để đội quyết.
