@@ -6,6 +6,7 @@ Thí nghiệm AI (chạy cục bộ, không thuộc bản nộp).
 - `experiments/e5_replay.py`: E5, phát hiện phát lại (dữ liệu giả). Cần `numpy`; import trực tiếp `backend/` và `attacker/`.
 - `experiments/e7_poisoning.py`: E7, đầu độc mẫu chuẩn (dữ liệu giả).
 - `experiments/e4_human_bot_lgbm.py`: E4, LightGBM + IsolationForest cho bài người/máy, đánh giá bỏ-một-chiến-thuật (dữ liệu giả). Cần `lightgbm`, `scikit-learn`.
+- `experiments/strokepin_loader.py` + `e9_strokepin_owner.py`: E9, xác minh chủ trên PIN điện thoại thật (StrokePIN, cần `git clone` vào `data/StrokePIN`).
 - `external/`: mã/trọng số của bên thứ ba tải về (gitignored), hiện có TypeFormer (MIT).
 - `models/`: mô hình huấn luyện trên dữ liệu giả, chỉ để tham khảo.
 - `data/`: dữ liệu tải về (gitignored). Link và trạng thái: [`../docs/research/datasets.md`](../docs/research/datasets.md).

@@ -1,14 +1,41 @@
 # Dữ liệu để thử nghiệm
 
-> Kiểm tra link ngày 24/11/2026 (HTTP status thật khi gọi từ máy làm việc). **Giấy phép chưa được xác nhận cho bộ nào**: đọc điều khoản trên trang gốc và ghi vào README trước khi dùng cho bài nộp.
+> Kiểm tra link ngày 24/11/2026 (gọi HTTP thật từ máy làm việc). **Giấy phép phải đọc lại ở trang gốc trước khi dùng cho bài nộp**, và mọi bộ dùng đều phải ghi vào README nộp bài (nguồn + giấy phép + trích dẫn).
+> Dữ liệu tải về đặt ở `research/data/` (gitignored, không commit).
 
-| Bộ dữ liệu | Dùng cho | Link | Trạng thái link | Ghi chú |
+## Dùng được ngay, không cần xin phép
+
+| Bộ dữ liệu | Nội dung | Kích thước | Link tải trực tiếp | Giấy phép |
 |---|---|---|---|---|
-| **CMU DSL-StrongPassword** (51 người × 400 lần gõ một mật khẩu, 31 đặc trưng thời gian) | Thí nghiệm few-shot bài B (đã chạy, E1/E2 proxy) | Trang: https://www.cs.cmu.edu/~keystroke/ · CSV: https://www.cs.cmu.edu/~keystroke/DSL-StrongPasswordData.csv | 200, tải trực tiếp 4,6 MB | Trang không nêu chữ "license"; trích dẫn Killourhy & Maxion 2009. Bàn phím máy tính, không phải PIN điện thoại |
-| **HuMIdb** (600 người, 14 cảm biến, benchmark bot BeCAPTCHA) | Bài A người/máy | https://github.com/BiDAlab/HuMIdb | 200 | Truy cập cần ký thỏa thuận cấp phép rồi gửi email cho nhóm tác giả, nhận tài khoản tải (~5 GB). Quy trình này tôi chỉ thấy qua bản mirror, xác nhận ở trang gốc. **Cần gửi sớm** |
-| **Aalto typing37k** (37.370 người gõ trên điện thoại) | Ước lượng phương sai dân số; kiểm tra sơ bộ | https://userinterfaces.aalto.fi/typing37k/ | 200 | Dữ liệu SQL **4,7 GB nén, 43,4 GB giải nén** (theo trang). Nặng; cân nhắc có cần không |
-| **Touchalytics** (41 người, vuốt/cuộn) | Đặc trưng vuốt | https://www.mariofrank.net/touchalytics/ | 200 (chỉ xác nhận trang, chưa xem link dữ liệu) | |
-| **BB-MAS** (117 người, gõ/vuốt/dáng đi trên nhiều thiết bị) | So sánh phụ | DOI https://doi.org/10.21227/rpaz-0h66 (IEEE DataPort) | 403 khi gọi bằng curl; cần mở bằng trình duyệt, có thể cần tài khoản | |
-| HMOG, KVC, BehavePassDB, MobileTouchDB, FETA | So sánh phụ | Chưa có link xác nhận | Các địa chỉ tôi đoán đều 404 hoặc không truy cập được, nên **không liệt kê** | Tìm trên trang arXiv/bài báo gốc trong `papers/` |
+| **StrokePIN** (Nankai, 2026) ⭐ | **PIN 6 số trên điện thoại**: 97 người, 18.935 lượt nhập, 20 PIN chung cho mọi người, ngồi/đi; toạ độ chạm X/Y, kích thước, áp lực, cảm biến chuyển động | repo ~68 MB | `git clone https://github.com/Litraveler/StrokePIN.git` · trang: https://ieee-dataport.org/documents/strokepin-0 (DOI 10.21227/thft-4721) | **CC BY-NC-SA 4.0** theo README repo và mô tả trang (phi thương mại, ghi nguồn, **chia sẻ phái sinh cùng giấy phép**). Trang IEEE DataPort ghi tiêu đề "Creative Commons Attribution", mâu thuẫn nhẹ: dùng điều khoản chặt hơn |
+| **CMU DSL-StrongPassword** | 51 người × 400 lần gõ một mật khẩu, 31 đặc trưng thời gian (máy tính) | 4,6 MB | https://www.cs.cmu.edu/~keystroke/DSL-StrongPasswordData.csv | Trang không nêu giấy phép; trích dẫn Killourhy & Maxion 2009 |
+| **Touchalytics** (Frank 2013) | 41 người, vuốt/cuộn: toạ độ, áp lực, vùng chạm | **dữ liệu thô 5,2 MB** · đặc trưng 1,6 MB | http://www.mariofrank.net/touchalytics/data.zip · http://www.mariofrank.net/touchalytics/features.zip · [readme](http://www.mariofrank.net/touchalytics/readme_data.txt) | Chưa kiểm |
+| **MOBIKEY** (Sapientia) | 54 người, 3 mật khẩu văn bản trên máy tính bảng Nexus 7, có áp lực và diện tích ngón tay | nhỏ | https://www.ms.sapientia.ro/~manyi/mobikey/data/rawdata.zip · trang: https://www.ms.sapientia.ro/~manyi/mobikey.html | Chưa kiểm |
 
-Dữ liệu tải về đặt ở `research/data/` (đã `.gitignore`, không commit).
+## Nặng, link tải trực tiếp
+
+| Bộ dữ liệu | Nội dung | Kích thước | Link tải trực tiếp (đã kiểm tra: HTTP 200) |
+|---|---|---|---|
+| **Aalto typing37k, bản đã xử lý** | 37.370 người gõ trên điện thoại (dạng SQL) | **0,84 GB** | https://userinterfaces.aalto.fi/typing37k/data/processed_typing_data.zip |
+| **Aalto typing37k, CSV thô + đã xử lý** | Như trên, dạng CSV (dễ dùng với Python) | **5,63 GB** | https://userinterfaces.aalto.fi/typing37k/data/csv_raw_and_processed.zip |
+| **Aalto typing37k, SQL thô** | Dữ liệu gốc | **4,89 GB** (giải nén 43,4 GB) | https://userinterfaces.aalto.fi/typing37k/data/raw_typing_data.zip |
+| Mã thu dữ liệu của Aalto | Công cụ thu keystroke trên web | nhỏ | https://userinterfaces.aalto.fi/typing37k/resources/source_code.zip |
+
+Trang gốc: https://userinterfaces.aalto.fi/typing37k/ (giấy phép chưa kiểm). Máy làm việc hiện còn ~70 GB trống. **Bản CSV đã xử lý 0,84 GB là điểm bắt đầu hợp lý** trước khi lấy bản 5,6 GB.
+
+## Cần thỏa thuận cấp phép (email cho nhóm tác giả)
+
+| Bộ dữ liệu | Nội dung | Quy trình |
+|---|---|---|
+| **HuMIdb** | 600 người, 14 cảm biến, benchmark bot BeCAPTCHA (phục vụ bài người/máy) | https://github.com/BiDAlab/HuMIdb: ký thỏa thuận, gửi email cho `atvs@uam.es`, nhận tài khoản tải |
+| **MobileTouchDB** | 217 người, 94 mẫu điện thoại, chữ số/PIN vẽ bằng tay | https://github.com/BiDAlab/MobileTouchDB: cùng quy trình, cùng email |
+| **TypeNet benchmark** | Embedding keystroke | https://github.com/BiDAlab/TypeNet: cùng quy trình |
+| **BB-MAS** | 117 người, nhiều thiết bị | DOI https://doi.org/10.21227/rpaz-0h66 (IEEE DataPort, cần tài khoản miễn phí; curl bị 403) |
+
+## Không tìm được link xác nhận
+
+HMOG, BehavePassDB, KVC, FETA: các địa chỉ tôi thử đều 404 hoặc không truy cập được, nên không liệt kê. Tìm trên trang bài báo gốc trong `papers/`.
+
+## Ghi chú về dữ liệu bot
+
+Không có bộ dữ liệu công khai nào chứa **mã độc điều khiển chạm thật** trên PIN. Bot phải tự sinh bằng công cụ thật (`adb input`, app `dispatchGesture`), xem R1 trong [`research-plan.md`](research-plan.md).

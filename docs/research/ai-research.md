@@ -82,8 +82,8 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 
 | # | Giả thuyết | Quy trình | Chỉ số | Cần dữ liệu thật? |
 |---|---|---|---|---|
-| E1 | Mahalanobis co rút ≥ scaled Manhattan khi chỉ có 3–5 mẫu (**proxy đã chạy: không, kém hơn**) | Cùng chia dữ liệu; so theo số lượt đăng ký 1/3/5 | EER, FAR@FRR 5% + khoảng tin cậy | Có |
-| E2 | Co rút về dân số tốt hơn sàn σ cố định (**proxy đã chạy: giảm FAR@FRR 5% ~7–11 điểm, EER không đổi**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
+| E1 | Mahalanobis co rút ≥ scaled Manhattan khi chỉ có 3–5 mẫu (**proxy đã chạy: không, kém hơn**; chưa lặp lại trên StrokePIN) | Cùng chia dữ liệu; so theo số lượt đăng ký 1/3/5 | EER, FAR@FRR 5% + khoảng tin cậy | Có |
+| E2 | Co rút về dân số tốt hơn sàn σ cố định (**đã chạy trên DSL và StrokePIN (E9): giảm FAR@FRR 5% 7–16 điểm, EER không đổi**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
 | E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần ngồi 1, kiểm thử lần ngồi 2 | FAR@FRR 5%, đường DET | Có |
 | E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** (**proxy đã chạy: vượt luật với bot đã thấy; sập 0–23% với bot lạ do học tắt; IsolationForest tổng quát hoá tốt hơn**) | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
 | E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật (**đã chạy: bắt 100% ở ±5–10% nhiễu, thua từ ±20%**) | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
@@ -188,6 +188,33 @@ Chi tiết TypeFormer: huấn luyện trên bộ gõ di động Aalto; đầu v�
 4. Khai báo: dùng trọng số này phải ghi vào README nộp bài (tài sản có sẵn + trích dẫn bài báo) và cân nhắc việc Aalto là nguồn dữ liệu huấn luyện.
 
 **Đề xuất E8:** nhúng phiên PIN qua TypeFormer (đệm chuỗi), so với Manhattan + co rút dân số (E2) trên **cùng dữ liệu PIN thật** theo cùng quy trình đánh giá. Chỉ chọn nếu thắng ở FAR@FRR 5%. Bản đầu có thể thử zero-shot trên DSL, nhưng đó là bàn phím máy tính nên chỉ là kiểm tra đường ống.
+
+### E9 — xác minh chủ trên PIN điện thoại THẬT (StrokePIN)
+
+Đây là thí nghiệm đầu tiên trên **dữ liệu người thật, PIN 6 số, có toạ độ chạm**, chạy bằng **chính `features.py` và `owner.py` của backend**. Dữ liệu: StrokePIN (97 người, 17.895 lượt hợp lệ, 20 PIN chung, ngồi/đi; CC BY-NC-SA 4.0; xem `datasets.md`). Mã: `research/experiments/strokepin_loader.py`, `e9_strokepin_owner.py`; bảng: `research/results/e9_strokepin_owner.md`.
+
+Thiết lập: đăng ký k=3 lượt **ngồi**; kiểm thử chủ (cùng tư thế hoặc đổi sang **đi**); kẻ gian **biết PIN** (người khác nhập cùng PIN); điểm gộp mọi cặp (người, PIN); CI 95% bootstrap theo người. Mỗi cặp chỉ có ~5 lượt ngồi, nên k=5 không có lượt ngồi còn lại để kiểm thử cùng tư thế.
+
+**Cùng tư thế (ngồi), k=3, backend hiện tại (sd có sàn):**
+
+| Bộ đặc trưng | EER | FAR @ FRR 5% |
+|---|---|---|
+| Thời gian | 0,201 [0,195, 0,208] | 0,697 |
+| + lệch tâm | 0,166 [0,158, 0,177] | 0,734 |
+| + lệch tâm + kích thước chạm | 0,158 [0,147, 0,167] | 0,718 |
+
+**Đổi tư thế (ngồi → đi), k=3:** EER 0,32–0,36, FAR@FRR 5% 0,84–0,94.
+
+Đọc kết quả:
+- **Tín hiệu "chủ" có thật nhưng yếu với 3 lượt đăng ký:** EER 16–20% khi kẻ gian biết PIN. Ở điểm vận hành FRR 5%, **FAR vẫn 57–73%**: đa số kẻ gian lọt. Nghĩa là điểm "chủ" không thể làm cổng chặn; đúng với thiết kế `step_up` và với việc gộp thêm tín hiệu bot và ngữ cảnh. Con số này là số đo thật đầu tiên, nên thay thế kỳ vọng 10–15% rút ra từ paper.
+- **Đổi tư thế phá gần hết tín hiệu** (EER 0,32–0,40, FAR@5% 0,75–0,94). Đăng ký chỉ khi ngồi rồi nhập khi đi gần như vô dụng; lệch tâm còn làm tệ hơn (0,32 → 0,36). Hệ quả thiết kế: đăng ký phải bao nhiều tư thế/ngữ cảnh, hoặc giảm trọng số điểm "chủ" khi phát hiện đổi tư thế (cảm biến chuyển động).
+- **Lệch tâm và kích thước chạm cải thiện EER** (0,201 → 0,166 → 0,158), khớp với Buschek 2015. **Nhưng chưa cải thiện FAR@FRR 5%** (0,70 → 0,73 → 0,72, CI rộng).
+- **Sd có sàn của `owner.py` hơn hẳn Manhattan scaled thuần** trên PIN thật (EER 0,158 so với 0,227 khi dùng cả ba nhóm đặc trưng). Trên DSL thì hai cách ngang nhau (E1/E2 proxy). Sàn có ích khi chỉ có 3 mẫu và PIN ngắn.
+- **E2 (co rút phương sai về dân số) lặp lại trên dữ liệu thật:** giảm FAR@FRR 5% so với backend hiện tại, ghép cặp theo người: thời gian −0,140 [−0,161, −0,107]; thời gian + lệch tâm + kích thước −0,159 [−0,198, −0,117]; EER gần như không đổi (−0,001 và +0,005). Riêng bộ "thời gian + lệch tâm" EER **tệ hơn** +0,031 [+0,026, +0,037]. Hiệu ứng nhất quán với DSL: cải thiện nằm ở phần đuôi, không phải EER.
+
+**Giới hạn quan trọng, số liệu trên bị thổi phồng ở hai điểm:**
+1. **Khác thiết bị giữa các người.** 94 cặp kích thước phím khác nhau trên 97 người, nên nhiều khả năng mỗi người dùng một điện thoại. Lệch tâm và kích thước chạm vì thế mang cả thông tin **thiết bị**. Trong kịch bản B thật, kẻ gian cầm **đúng điện thoại của nạn nhân**, nên khác biệt này biến mất. Vì vậy cải thiện nhờ lệch tâm/kích thước (0,201 → 0,158) là cận trên; con số sát thực tế hơn là hàng "thời gian" (EER ~0,20).
+2. PIN do người nghiên cứu giao (20 PIN chung, nhiều PIN yếu như 111111, 123456), người dùng không gõ PIN riêng đã thuộc; mỗi cặp chỉ ~5 lượt mỗi tư thế, đăng ký và kiểm thử trong cùng một đợt thu (chưa có khoảng cách nhiều ngày).
 
 ## 7. Thứ tự làm
 
