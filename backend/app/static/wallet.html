@@ -49,11 +49,11 @@ details{margin:4px 12px}summary{color:var(--mute);font-size:13px;cursor:pointer}
 <script>
 // ---------- Innate SDK (thu tín hiệu: chỉ thời gian + toạ độ, không lưu nội dung PIN) ----------
 const Nhip = (() => {
-  let t0, taps, swipes, screens, cur, down = {}, sw = null;
+  let t0, taps, swipes, screens, cur, down = {}, sw = null, fields = {};
   const now = () => Math.round((performance.now() - t0) * 10) / 10;
   const r1 = v => Math.round(v * 10) / 10;
   return {
-    start() { t0 = performance.now(); taps = []; swipes = []; screens = []; cur = null; },
+    start() { t0 = performance.now(); taps = []; swipes = []; screens = []; cur = null; fields = {}; },
     screen(name) { cur = { name, t_enter: now(), t_first_touch: null }; screens.push(cur); },
     // gọi từ pointerdown/up/move của toàn trang
     onDown(e, keyEl) {
@@ -72,9 +72,27 @@ const Nhip = (() => {
     },
     // cuộn trang làm trình duyệt huỷ con trỏ: vẫn giữ lại đường vuốt đã ghi được
     onCancel(e) { delete down[e.pointerId]; if (sw && sw.id === e.pointerId) { if (sw.points.length >= 2 && swipes.length < 100) swipes.push({ points: sw.points }); sw = null; } },
+    // Ô nhập ngoài PIN: chỉ ghi thời gian, loại sự kiện và số ký tự. KHÔNG ghi nội dung.
+    // Bàn phím hệ thống không cho toạ độ chạm; trên web `keydown` hay trả keyCode 229 nên dùng sự kiện `input`.
+    field(el, name) {
+      const evs = (fields[name] = []);
+      const cls = c => (/\d/.test(c) ? "digit" : /\p{L}/u.test(c) ? "letter" : /\s/.test(c) ? "space" : "symbol");
+      el.addEventListener("input", e => {
+        if (evs.length >= 600) return;
+        const it = e.inputType || "", d = e.data || "", t = now();
+        if (it === "insertText") evs.push({ t, kind: "key", n: Math.max(1, d.length), cls: cls(d.slice(-1) || "a") });
+        else if (it === "insertCompositionText") evs.push({ t, kind: "key", n: 1, cls: "letter" }); // IME (vd. Telex): mỗi lần cập nhật = một phím
+        else if (it.startsWith("insertFromPaste") || it === "insertFromDrop" || it === "insertReplacementText") evs.push({ t, kind: "paste", n: Math.max(1, d.length) });
+        else if (it.startsWith("delete")) evs.push({ t, kind: "delete", n: 1 });
+      });
+    },
     clearPin() { taps = []; },
     popTap() { taps.pop(); },
-    payload(user_id, device_id, meta) { const p = { user_id, device_id, pin_taps: taps, swipes, screens }; if (meta) p.meta = meta; return p; },
+    payload(user_id, device_id, meta) {
+      const p = { user_id, device_id, pin_taps: taps, swipes, screens, fields: Object.entries(fields).filter(([, e]) => e.length).map(([name, events]) => ({ name, events })) };
+      if (meta) p.meta = meta;
+      return p;
+    },
   };
 })();
 
@@ -149,6 +167,7 @@ async function home() {
   for (const [id, k] of [["c_api", "nhip_api"], ["c_key", "nhip_key"], ["c_user", "nhip_user"], ["c_who", "nhip_who"], ["c_sit", "nhip_sit"], ["c_role", "nhip_role"]])
     document.getElementById(id).onchange = e => { store.set(k, e.target.value.trim()); if (id === "c_api") BASE = null; if (id === "c_user" || id === "c_api") home(); };
   const amt = document.getElementById("amt");
+  Nhip.field(document.getElementById("acct"), "recipient"); Nhip.field(amt, "amount"); Nhip.field(document.getElementById("msg"), "note");
   amt.oninput = () => { const v = digits(amt.value); amt.value = v ? money(v) : ""; };
   document.getElementById("next").onclick = () => {
     const acct = document.getElementById("acct").value.trim(), a = digits(amt.value);

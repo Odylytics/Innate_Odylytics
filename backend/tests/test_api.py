@@ -181,3 +181,54 @@ def test_replayed_session_is_held_but_new_human_session_is_not(client):
     # phát lại một phiên đã đăng ký, thêm nhiễu nhỏ -> giữ lệnh
     r = _score(client, _post_session(client, _replayed(sessions[0], user, rng)))
     assert r["action"] == "hold" and "replayed_session" in r["reasons"]
+
+
+def _typed(name, rng, n, cls, start=0.0, gap=170.0):
+    t, ev = start, []
+    for _ in range(n):
+        t += max(30.0, rng.gauss(gap, gap * 0.35))
+        ev.append({"t": t, "kind": "key", "n": 1, "cls": cls})
+    return {"name": name, "events": ev}
+
+
+def test_text_set_without_keys_is_flagged_but_typing_and_paste_are_not(client):
+    rng = random.Random(21)
+    user = "fields_user"
+
+    typed = human_session(user, OWNER, rng)
+    typed["fields"] = [_typed("amount", rng, 6, "digit"), _typed("note", rng, 20, "letter", 2000)]
+    r = _score(client, _post_session(client, typed))
+    assert "text_set_without_keys" not in r["reasons"] and r["action"] != "hold"
+
+    pasted = human_session(user, OWNER, rng)  # người nhận dán từ danh bạ: bình thường
+    pasted["fields"] = [{"name": "recipient", "events": [{"t": 900, "kind": "paste", "n": 10}]},
+                        _typed("amount", rng, 6, "digit", 1500)]
+    r = _score(client, _post_session(client, pasted))
+    assert "text_set_without_keys" not in r["reasons"]
+
+    bot = human_session(user, OWNER, rng)  # số tiền đặt thẳng, không có phím (kiểu ACTION_SET_TEXT)
+    bot["fields"] = [{"name": "amount", "events": [{"t": 800, "kind": "set_text", "n": 6}]}]
+    r = _score(client, _post_session(client, bot))
+    assert "text_set_without_keys" in r["reasons"] and r["action"] == "hold"
+
+
+def test_field_events_reject_content_and_bad_kinds(client):
+    rng = random.Random(22)
+    base = human_session("fields_bad", OWNER, rng)
+    base["fields"] = [{"name": "note", "events": [{"t": 1, "kind": "teleport", "n": 1}]}]
+    assert client.post("/v1/sessions", json=base, headers=H).status_code == 422
+    base["fields"] = [{"name": "password", "events": []}]
+    assert client.post("/v1/sessions", json=base, headers=H).status_code == 422
+
+
+def test_field_typing_rhythm_enters_identity_features_only_with_enough_keys():
+    from app.scoring import bot_features, features
+    rng = random.Random(23)
+    s = human_session("u", OWNER, rng)
+    s["fields"] = [_typed("note", rng, 12, "letter"), _typed("amount", rng, 2, "digit")]  # ô số tiền quá ngắn
+    f = features.extract(s)
+    assert "fld_note_gap_mean" in f and "fld_amount_gap_mean" not in f
+    b = bot_features.extract(s)
+    assert b["fld_set_text_frac"] == 0.0 and b["fld_count"] == 2.0
+    s["fields"] = [{"name": "amount", "events": [{"t": 5, "kind": "set_text", "n": 6}]}]
+    assert bot_features.extract(s)["fld_amount_set_text"] == 1.0

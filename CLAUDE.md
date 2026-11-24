@@ -26,6 +26,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - `docs/plan/mo-ta-du-an-va-kiem-chung.md` — description, state, paper verification, conclusions.
 - `docs/contest/` — rules summary + `submission-checklist.md` (what must be submitted, by 03/12).
 - `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).
+- `SessionIn.fields` = text-field events (amount/recipient/note): only time, kind (key/paste/delete/set_text) and char count, NEVER content. `set_text` on `amount` => rule `text_set_without_keys` (unvalidated, R9). Web SDK cannot emit `set_text`.
 - `backend/app/static/wallet.html` — demo wallet + JS SDK (6-digit demo PIN 159357), served at `/`.
 - Not built yet: ops dashboard, trained LightGBM/RF model, real data. Replay check exists (`scoring/replay.py`, wired in `/score`, threshold from SYNTHETIC data, recalibrate on real data).
 

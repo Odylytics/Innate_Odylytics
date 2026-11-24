@@ -55,6 +55,25 @@ Từ một phiên thao tác (chạm PIN, vuốt, nhịp màn hình), cộng ng�
 - Khi **chưa có nhãn gian lận**, giữ trọng số tay nhưng chọn ngưỡng theo FRR 5%. Khi có nhãn từ dashboard, thay bằng hồi quy logistic có ràng buộc đơn điệu [suy luận].
 - Giải thích: mỗi số hạng `w·x` đã là phần đóng góp chính xác nên không cần SHAP. Với LightGBM ở bài A dùng TreeSHAP (tính chính xác, đa thức) để lấy 2–3 đặc trưng lệch nhiều nhất [paper].
 
+## 3b. Tín hiệu ngoài PIN: số tiền, người nhận, nội dung chuyển khoản
+
+Một giao dịch có nhiều chỗ nhập hơn PIN. Mỗi chỗ là một nguồn tín hiệu, và mỗi chỗ có ràng buộc kỹ thuật khác nhau. **Khung mã đã có (24/11):** `SessionIn.fields`, đặc trưng ở `features.py`/`bot_features.py`, luật `text_set_without_keys` ở `human.py`, SDK thu ở `wallet.html`, 3 test. **Chưa có thí nghiệm nào trên dữ liệu ô nhập** và chưa có phiên thật nào; cần R9 trong [`research-plan.md`](research-plan.md). Hợp đồng dữ liệu: [`backend/README.md`](../../backend/README.md).
+
+| Ô nhập | Tín hiệu | Ai nhập bằng gì | Ràng buộc đã biết | Dữ liệu/mô hình để thử |
+|---|---|---|---|---|
+| **Số tiền** | Nhịp gõ từng chữ số; nếu app tự vẽ bàn phím số thì có cả toạ độ chạm như PIN | Người: gõ từng phím. Bot: gõ phím, hoặc đặt thẳng văn bản | Ô số tiền thường dùng bàn phím số tự vẽ: khi đó đủ thông tin như PIN | Cùng phương pháp E1/E2/E9 |
+| **Số tài khoản/số điện thoại người nhận** | Như trên; **dán** (paste) vs gõ; sửa lỗi | Người: gõ hoặc dán từ danh bạ/tin nhắn. Bot: điền thẳng | Bàn phím hệ thống: chỉ có thời gian giữa các lần gõ, **không có toạ độ** | StrokePIN không có; cần thu |
+| **Tên/nội dung chuyển khoản (văn bản tự do tiếng Việt)** | Nhịp gõ văn bản tự do: độ dài chuỗi lớn nên nhiều tín hiệu hơn PIN rất nhiều | Người: gõ; bot: thường đặt thẳng văn bản hoặc gõ rất đều | Bàn phím hệ thống trên web: `keydown` thường trả `keyCode` 229, không đủ để biết phím và không có thời gian nhả đáng tin; native có `TextWatcher` (thời gian thay đổi văn bản) | **Đúng miền của dữ liệu Aalto (gõ tự do trên điện thoại) và mô hình TypeFormer (MIT, có trọng số)**; xem bên dưới |
+
+**Hệ quả cho chọn mô hình:**
+- **TypeFormer hợp với ô văn bản tự do** (nội dung chuyển khoản, tên), không hợp với PIN. Nó học chuỗi gõ dài trên bàn phím điện thoại và cho embedding để xác minh chủ. Với PIN 6 phím thì thống kê (E2/E9) vẫn hợp hơn. Đề xuất E8 chuyển sang ô văn bản tự do: so TypeFormer với baseline thống kê trên dữ liệu Aalto (đã có link, xem `datasets.md`) rồi trên dữ liệu thu của đội.
+- **Tín hiệu người/máy mạnh nhất có thể nằm ở đây:** dịch vụ Trợ năng có API đặt thẳng văn bản vào ô (`ACTION_SET_TEXT`) mà **không phát sự kiện phím**, nên văn bản "xuất hiện" không kèm nhịp gõ. Tôi chưa kiểm chứng việc mã độc cụ thể (RedHook, Gigabud...) dùng cách nào, và cần đo trên máy thật (R9).
+- **Một phiên nhiều ô cho nhiều tín hiệu hơn một PIN,** nên có thể cải thiện điểm "chủ" (điểm yếu lớn nhất ở E9) bằng cách gộp nhiều nguồn: kỳ vọng nhưng **chưa được đo**.
+
+**Quyền riêng tư (quan trọng hơn với ô văn bản):** nội dung chuyển khoản và tên là dữ liệu cá nhân. Giữ nguyên tắc của PIN: **chỉ lưu thời gian và loại ký tự thô** (chữ, số, khoảng trắng, dấu), không lưu nội dung. Nếu dùng mô hình cần mã phím, chỉ dùng mã đã băm thô hoặc lớp ký tự. Ghi rõ trong phiếu đồng ý (R7) vì Luật BVDLCN 2025 coi sinh trắc là nhạy cảm.
+
+**Ràng buộc nền tảng cần nói thật:** trên web di động, bàn phím hệ thống nằm ngoài trang nên SDK không thấy toạ độ chạm trên đó; chỉ có bàn phím tự vẽ (như PIN) cho toạ độ. SDK native cũng không đọc được toạ độ chạm trên bàn phím hệ thống. Đây là lý do nên để app tự vẽ bàn phím số cho số tiền nếu có thể.
+
 ## 4. Kiến trúc AI đề xuất (v1)
 
 ```
@@ -158,14 +177,14 @@ Tỷ lệ bot bị bắt (FRR thật ~5%):
 | Luật baseline (`human.py`) | 1,00 | 1,00 | 0,04 | 0,01 |
 | LightGBM, **thấy cả 4 chiến thuật** khi huấn luyện | 1,00 | 1,00 | 0,85 | 0,97 |
 | LightGBM, **bỏ đúng chiến thuật đó** khỏi huấn luyện | **0,00** | 1,00 | 0,07 | 0,23 |
-| IsolationForest (chỉ huấn luyện trên người), chiến thuật lạ | 1,00 | 1,00 | 0,12 | 0,38 |
-| Bộ kết hợp (LightGBM hoặc IsolationForest), chiến thuật lạ | 1,00 | 1,00 | 0,10 | 0,34 |
+| IsolationForest (chỉ huấn luyện trên người), chiến thuật lạ | 1,00 | 1,00 | 0,12 | 0,47 |
+| Bộ kết hợp (LightGBM hoặc IsolationForest), chiến thuật lạ | 1,00 | 1,00 | 0,11 | 0,41 |
 
 Đọc kết quả:
 - **Khi mô hình đã thấy loại bot**, LightGBM hơn hẳn luật baseline (chiến thuật 3: 0,85 so với 0,04; chiến thuật 4: 0,97 so với 0,01). Con số đẹp này chủ yếu phản ánh việc nó học được **dấu vết của bộ sinh dữ liệu**, nên không dùng cho slide.
 - **Khi gặp bot lạ, LightGBM sập**: bỏ chiến thuật 1 khỏi huấn luyện thì bắt **0%** (AUC 0,50) dù đó là bot ngây thơ nhất. Tôi đã kiểm tra: đó là **học tắt**. Trên dữ liệu giả, người luôn có bước thời gian vuốt đều (`swipe_dt_cv = 0`), còn chiến thuật 2 có nhiễu nên `swipe_dt_cv > 0`; cây chọn đúng điều kiện đó để tách hoàn toàn chiến thuật 2. Chiến thuật 1 cũng có `swipe_dt_cv = 0` nên bị xếp là người (P(người) = 0,971 cố định). Đây là rủi ro thật với dữ liệu thật: bot do script sinh ra khác người ở những chi tiết tầm thường, mô hình học chi tiết đó và không tổng quát hoá.
-- **IsolationForest (chỉ học từ người) tổng quát hoá tốt hơn với bot lạ** (chiến thuật 1, 2: 100% dù chưa từng thấy; chiến thuật 4: 38–45%). Vì vậy giữ nó trong bộ kết hợp. Bộ kết hợp về cơ bản bằng mô hình tốt hơn trong hai mô hình ở từng trường hợp.
-- **Chiến thuật 3, 4 (bot giống người) vẫn khó với bot lạ**: bắt 10–34%. Chiến thuật 3 nên giao cho kiểm tra phát lại (E5), không phải cho phân loại.
+- **IsolationForest (chỉ học từ người) tổng quát hoá tốt hơn với bot lạ** (chiến thuật 1, 2: 100% dù chưa từng thấy; chiến thuật 4: 38–47%, dao động giữa các lần chạy vì IsolationForest ngẫu nhiên; lần chạy lại sau khi thêm đặc trưng ô nhập cho 0,47 thay vì 0,38). Vì vậy giữ nó trong bộ kết hợp. Bộ kết hợp về cơ bản bằng mô hình tốt hơn trong hai mô hình ở từng trường hợp.
+- **Chiến thuật 3, 4 (bot giống người) vẫn khó với bot lạ**: bắt 11–41%. Chiến thuật 3 nên giao cho kiểm tra phát lại (E5), không phải cho phân loại.
 - Bỏ nhóm kích thước chạm (`tap_w/h`) gần như không đổi kết quả trên dữ liệu giả; nhóm này vẫn cần kiểm chứng trên thiết bị thật (R2).
 - Đặc trưng quan trọng nhất: `swipe_v_peak_ratio`, `swipe_lateral_dev`, `dy_std`, `tap_w_std`, `dx_std`. Hầu hết là đặc trưng vuốt/lệch tâm do bộ sinh quyết định, nên cần soi lại với dữ liệu thật.
 

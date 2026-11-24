@@ -44,6 +44,23 @@ class ScreenVisit(BaseModel):
     t_first_touch: Ms | None = None
 
 
+class InputEvent(BaseModel):
+    """Một thay đổi trong ô nhập. KHÔNG chứa nội dung: chỉ thời gian, loại và số ký tự."""
+
+    t: Ms  # ms từ đầu phiên
+    # key: gõ ký tự; paste: dán; delete: xoá; set_text: văn bản đổi mà KHÔNG có sự kiện phím (vd. Trợ năng ACTION_SET_TEXT)
+    kind: Literal["key", "paste", "delete", "set_text"]
+    n: int = Field(default=1, ge=0, le=500)  # số ký tự thay đổi
+    cls: Literal["digit", "letter", "space", "symbol"] | None = None  # lớp ký tự (chỉ với key), không gửi ký tự
+
+
+class TextField(BaseModel):
+    """Một ô nhập của giao dịch: số tiền, người nhận, nội dung chuyển khoản, tên."""
+
+    name: Literal["amount", "recipient", "note", "name"]
+    events: list[InputEvent] = Field(default_factory=list, max_length=600)
+
+
 Ident = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.\-]+$")]
 
 
@@ -72,6 +89,7 @@ class SessionIn(BaseModel):
     pin_taps: list[PinTap] = Field(default_factory=list, max_length=12)
     swipes: list[Swipe] = Field(default_factory=list, max_length=100)
     screens: list[ScreenVisit] = Field(default_factory=list, max_length=50)
+    fields: list[TextField] = Field(default_factory=list, max_length=10)  # ô nhập ngoài PIN
     meta: CollectionMeta | None = None  # chỉ gửi khi thu dữ liệu
 
     model_config = ConfigDict(

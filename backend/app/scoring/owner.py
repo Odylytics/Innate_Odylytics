@@ -11,7 +11,8 @@ DRIFT_CAP = 1.0  # mẫu chuẩn không được trôi quá 1 sd so với lúc �
 
 
 def is_identity_feature(k: str) -> bool:
-    return not k.startswith("screen_") and k not in ("swipe_count", "swipe_straight_max", "tap_w_std")
+    return not k.startswith("screen_") and k not in (
+        "swipe_count", "swipe_straight_max", "tap_w_std", "fld_set_text_frac", "fld_amount_set_text")
 
 
 def _floor(k: str, mu: float) -> float:

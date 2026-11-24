@@ -78,6 +78,21 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 
 - `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = tâm và kích thước phím (`getBoundingClientRect`).
 - Không gửi `pressure`. Không dựa vào `isTrusted`.
+
+**Ô nhập ngoài PIN (`fields`, tuỳ chọn):** số tiền, người nhận, ghi chú. Chỉ gửi **thời gian, loại sự kiện và số ký tự**, không gửi nội dung.
+
+```json
+"fields": [
+  {"name": "amount",    "events": [{"t": 4100, "kind": "key", "n": 1, "cls": "digit"}, {"t": 4290, "kind": "key", "n": 1, "cls": "digit"}]},
+  {"name": "recipient", "events": [{"t": 2200, "kind": "paste", "n": 10}]},
+  {"name": "note",      "events": [{"t": 6100, "kind": "key", "n": 1, "cls": "letter"}, {"t": 6350, "kind": "delete", "n": 1}]}
+]
+```
+
+- `name`: `amount | recipient | note | name`. `kind`: `key` (gõ ký tự), `paste` (dán), `delete`, `set_text` (văn bản đổi mà **không có sự kiện phím**, vd. Trợ năng `ACTION_SET_TEXT`; chỉ SDK native phát hiện được).
+- Web SDK (`wallet.html`) phát `key`, `paste`, `delete` từ sự kiện `input`; không phát `set_text`.
+- Luật baseline: `set_text` ở ô **số tiền** bị coi là máy (`text_set_without_keys`, giữ lệnh); ở ô khác chỉ trừ điểm nhẹ vì autofill/danh bạ cũng có thể đặt văn bản không qua phím. Ngưỡng **chưa kiểm chứng trên máy thật** (R9).
+- Nhịp gõ trong ô (≥ 4 phím) thành đặc trưng nhận dạng chủ `fld_<ô>_gap_mean/std`; muốn có trong mẫu chuẩn thì lượt đăng ký phải gõ cả các ô đó.
 - **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine`, `impostor` (biết PIN, cố bấm giống chủ) hoặc `bot` (kèm `tactic` 1–4, do [bộ giả lập](../attacker/README.md) gửi). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
 - Server từ chối (422): `t_up < t_down`, số NaN/âm, `user_id` có ký tự lạ, quá nhiều sự kiện.
 

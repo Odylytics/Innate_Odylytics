@@ -69,6 +69,24 @@ def extract(raw: dict) -> dict[str, float]:
     for j, name in enumerate(("straight", "v_mean", "v_peak_ratio", "lateral_dev", "dt_cv")):
         xs = [s[j] for s in sw if not math.isnan(s[j])]
         f[f"swipe_{name}"] = fmean(xs) if xs else NAN
+    # ô nhập ngoài PIN (số tiền, người nhận, ghi chú): bot hay đặt thẳng văn bản hoặc gõ rất đều
+    flds = raw.get("fields", [])
+    ev = [(fl["name"], e) for fl in flds for e in fl.get("events", [])]
+    chars = {k: sum(e["n"] for _, e in ev if e["kind"] == k) for k in ("key", "paste", "set_text", "delete")}
+    total = chars["key"] + chars["paste"] + chars["set_text"]
+    f["fld_count"] = float(len(flds))
+    f["fld_set_text_frac"] = chars["set_text"] / total if total else NAN
+    f["fld_paste_frac"] = chars["paste"] / total if total else NAN
+    f["fld_delete_frac"] = chars["delete"] / (chars["key"] + chars["delete"]) if chars["key"] + chars["delete"] else NAN
+    f["fld_amount_set_text"] = (float(any(n == "amount" and e["kind"] == "set_text" for n, e in ev))
+                                if any(n == "amount" for n in (fl["name"] for fl in flds)) else NAN)
+    gaps = []
+    for fl in flds:
+        ts = sorted(e["t"] for e in fl.get("events", []) if e["kind"] == "key")
+        gaps.append([b - a for a, b in zip(ts, ts[1:])])
+    gaps = [g for g in gaps if len(g) >= 3]
+    f["fld_key_gap_mean"] = fmean(fmean(g) for g in gaps) if gaps else NAN
+    f["fld_key_gap_cv"] = fmean(_cv(g) for g in gaps) if gaps else NAN
     waits = [v["t_first_touch"] - v["t_enter"] for v in raw.get("screens", []) if v.get("t_first_touch") is not None]
     f["first_touch_wait"] = fmean(waits) if waits else NAN
     return f

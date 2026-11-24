@@ -24,6 +24,7 @@ Nhóm làm web/demo riêng sau. Phần ví demo (`backend/app/static/wallet.html
 | R6 | Hạ tầng: Vercel Python + Neon có đủ ổn định, độ trễ < 200 ms, không "ngủ đông" gây lỗi lúc chấm? Giới hạn gói free? | Sản phẩm phải online đến 11/12 | Đo cold start, 100 yêu cầu liên tiếp, kiểm tra giới hạn gói, bật giám sát `/health` | Số liệu độ trễ + kế hoạch dự phòng | 02/12 |
 | R7 | Pháp lý thu dữ liệu: Luật BVDLCN 2025 + NĐ 356/2025 xếp sinh trắc là nhạy cảm | Điều kiện loại: dữ liệu cá nhân không nguồn và căn cứ | Soạn phiếu đồng ý, chỉ lưu thời gian + toạ độ, ghi README | Phiếu đồng ý + đoạn README | 27/11 |
 | R8 | (Tuỳ chọn) Dashboard + tóm tắt LLM | Góc "Future Workspace" | Chỉ làm sau khi R1–R4 xong | Dashboard | sau 01/12 |
+| R9 | **Tín hiệu ngoài PIN**: gõ số tiền, số tài khoản/tên người nhận, nội dung chuyển khoản. Gõ vào các ô này có đủ tín hiệu không? Máy điều khiển từ xa điền ô bằng cách nào (gõ phím hay đặt thẳng văn bản)? | Một phiên có thêm hàng chục lần gõ thay vì 6 lần chạm PIN, và là nơi bot lộ nhất | Đo trên điện thoại: gõ thật, dán, và điền bằng `ACTION_SET_TEXT` (Trợ năng). Ghi sự kiện `beforeinput`/`input`/`keydown` ở web, `TextWatcher` ở native | Bảng tín hiệu theo loại ô + quyết định giữ/bỏ từng ô | 30/11 |
 
 ## Thứ tự làm
 
