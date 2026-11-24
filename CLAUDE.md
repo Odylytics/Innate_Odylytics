@@ -30,6 +30,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - `SessionIn.fields` = text-field events (amount/recipient/note): only time, kind (key/paste/delete/set_text) and char count, NEVER content. `set_text` on `amount` => rule `text_set_without_keys` (unvalidated, R9). Web SDK cannot emit `set_text`.
 - `backend/app/static/wallet.html` — demo wallet + JS SDK (6-digit demo PIN 159357), served at `/`.
 - Population-variance shrinkage for TIMING features is in `owner.py` (`population_prior.json`, nu=5; off with `NHIP_POP_PRIOR=off`); offsets deliberately keep the sd floor (shrinking them hurts, E10). Human/bot LightGBM is wired in `/score` via `scoring/human_model.py` (optional, `NHIP_HUMAN_MODEL=off`; model files in `app/models/` are TEMPORARY: StrokePIN humans + generator bots). Both derive from CC BY-NC-SA 4.0 data: declare in the submission README.
+- Text-field bot signals (E11, real Aalto typists, note field only): naive bots (set_text, even typing) caught ~100% only when the model has seen them; unseen even-typing bots 0%; replay 6%, population-sampling 31% (58% with extra rhythm stats not yet in `bot_features.py`). Amount-field `set_text` rule still unvalidated (no human data). Attacker can emit fields via `generate(..., with_fields=True)`.
 - Not built yet: ops dashboard, trained LightGBM/RF model, real data. Replay check exists (`scoring/replay.py`, wired in `/score`, threshold from SYNTHETIC data, recalibrate on real data).
 
 ## Commands (PowerShell-style in READMEs; uses `uv`)

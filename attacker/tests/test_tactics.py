@@ -82,3 +82,26 @@ def test_adb_dry_run_commands():
     assert [c[3:] for c in cmds[1:]] == [["100", "1500"], ["540", "1700"], ["980", "1900"], ["980", "1500"]]
     with pytest.raises(ValueError):
         adb.attack("1234", layout, 1, dry_run=True)
+
+
+def test_fields_per_tactic_have_the_expected_signature():
+    import random as _r
+    from nhip_attacker import fields, tactics as t
+
+    rng = _r.Random(5)
+    st = fields.for_tactic(1, rng, [])
+    assert {f["name"] for f in st} == {"amount", "recipient", "note"}
+    assert all(e["kind"] == "set_text" for f in st for e in f["events"])  # không có phím nào
+
+    ev = [e for f in fields.for_tactic(2, rng, []) for e in f["events"]]
+    assert ev and all(e["kind"] == "key" and e["t"] == int(e["t"]) for e in ev)  # chỉ phím, thời gian nguyên ms
+
+    human = {"fields": [{"name": "note", "events": [{"t": 100 * i, "kind": "key", "n": 1, "cls": "letter"} for i in range(20)]}]}
+    rp = fields.for_tactic(3, rng, [], human)[0]["events"]  # phát lại: cùng số sự kiện, thời gian tăng dần, tổng thời lượng lệch ≤ 5%
+    ts = [e["t"] for e in rp]
+    assert len(rp) == 20 and ts == sorted(ts) and 0.95 * 1900 <= ts[-1] - ts[0] <= 1.05 * 1900
+    assert fields.for_tactic(3, rng, [], {}) == [] and fields.for_tactic(4, rng, []) == []  # không có kho thì rỗng
+    assert fields.for_tactic(4, rng, [human])[0]["name"] == "note"
+
+    s = t.generate(1, "u", "1593", t.synth_humans(5), rng, with_fields=True)
+    assert s["fields"] and "fields" not in t.generate(1, "u", "1593", t.synth_humans(5), rng)  # mặc định không đổi hành vi cũ
