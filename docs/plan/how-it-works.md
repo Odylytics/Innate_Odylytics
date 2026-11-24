@@ -40,7 +40,7 @@ Vì người dùng cuối chỉ có 3–5 mẫu, đây là bài toán **ít mẫ
 | | Vân tay, khuôn mặt | Thói quen nhập PIN |
 |---|---|---|
 | Bản chất | Đặc điểm cơ thể, gần như cố định | Hành vi: đổi theo tư thế, tâm trạng, thời gian |
-| Độ chính xác | Rất cao | **EER 16–20%**; ở FRR 5% thì 57–73% kẻ gian biết PIN vẫn lọt (E9) |
+| Độ chính xác | Rất cao | **EER ~16%**; ở FRR 5% thì **38–57%** kẻ gian biết PIN vẫn lọt (E9, E12b: 57% với khoảng cách cơ bản, 38% với mô hình học) |
 | Đổi điều kiện | Ổn định | **Ngồi → đi: gần như mất tín hiệu** (EER 32–40%) |
 | Mẫu lưu ở đâu | Trong chip bảo mật trên máy | **Trên máy chủ** → phải bảo vệ như dữ liệu sinh trắc nhạy cảm |
 

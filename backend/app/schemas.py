@@ -57,7 +57,9 @@ class InputEvent(BaseModel):
 class TextField(BaseModel):
     """Một ô nhập của giao dịch: số tiền, người nhận, nội dung chuyển khoản, tên."""
 
-    name: Literal["amount", "recipient", "note", "name"]
+    # challenge = câu thử thách do hệ thống sinh và hiển thị, người dùng gõ lại (xem docs/plan/innate-challenge.md)
+    name: Literal["amount", "recipient", "note", "name", "challenge"]
+    expected_len: int | None = Field(default=None, ge=1, le=200)  # độ dài câu thử thách (chỉ để phát hiện dán/đặt thẳng)
     events: list[InputEvent] = Field(default_factory=list, max_length=600)
 
 

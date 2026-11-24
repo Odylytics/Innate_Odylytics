@@ -39,3 +39,13 @@ Nộp sản phẩm có từ trước · người ngoài đội tham gia · chia 
 | 03/12 | Nộp đủ 4 thành phần |
 | 08/12 | Công bố top 5 |
 | 11/12 | Chung kết tại TP.HCM; sản phẩm phải còn online |
+
+## Tiến độ hồ sơ (24/11)
+
+| Thành phần | Trạng thái |
+|---|---|
+| Slide ≤ 10 trang | **Bản nháp đã có**: [`../submission/slides/innate-slides.pdf`](../submission/slides/innate-slides.pdf) (nguồn HTML cùng thư mục). Còn `[TÊN ĐỘI]` cần điền; **không sửa được sau khi nộp** |
+| Video ≤ 3 phút | Kịch bản có ([`video-script.md`](../submission/video-script.md)); **chưa quay** (cần URL demo) |
+| PDF hướng dẫn 1 trang | Bản nháp ([`product-guide-1page.md`](../submission/product-guide-1page.md)); thiếu URL và tài khoản demo |
+| README nộp bài | Khung ([`README.submission.md`](../submission/README.submission.md)); còn `TODO` |
+| Đề xuất, kịch bản thuyết trình + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) |

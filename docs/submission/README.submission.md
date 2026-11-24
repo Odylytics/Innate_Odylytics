@@ -6,9 +6,9 @@
 
 ## 1. Sản phẩm là gì
 
-Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt (không thay thế). Nó chấm điểm rủi ro của giao dịch dựa trên **cách người dùng chạm và gõ** khi nhập PIN và các ô giao dịch, để trả lời hai câu hỏi: thao tác do **người hay máy** làm (mã độc Trợ năng, `adb`, script), và nếu là người thì có **khớp thói quen chủ tài khoản** không. Kết quả: `allow` / `step_up` (xác thực thêm) / `hold` (giữ lệnh), kèm lý do tiếng Việt. Hệ thống chỉ đề xuất, không tự khoá tài khoản. Giải thích đầy đủ: [`../plan/how-it-works.md`](../plan/how-it-works.md); định vị: [`../plan/positioning.md`](../plan/positioning.md).
+Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt (không thay thế). Nó chấm điểm rủi ro của giao dịch dựa trên **cách người dùng chạm và gõ** khi nhập PIN và các ô giao dịch, để trả lời hai câu hỏi: thao tác do **người hay máy** làm (mã độc Trợ năng, `adb`, script), và nếu là người thì có **khớp thói quen chủ tài khoản** không. Kết quả: `allow` / `step_up` (xác thực thêm) / `hold` (giữ lệnh), kèm lý do tiếng Việt. Khi chưa chắc, **Innate Challenge** yêu cầu gõ một câu chữ-số ngẫu nhiên để có thêm tín hiệu. Hệ thống chỉ đề xuất, không tự khoá tài khoản. Giải thích đầy đủ: [`../plan/how-it-works.md`](../plan/how-it-works.md); định vị: [`../plan/positioning.md`](../plan/positioning.md).
 
-**Giới hạn (nói thẳng):** điểm "chủ" là một tín hiệu rủi ro, **không phải cổng xác thực**. Số đo hiện có (dữ liệu người thật công khai): EER 16–20%; ở FRR 5% còn ~50% kẻ gian biết PIN lọt; đổi tư thế gần như mất tín hiệu. Bot ngây thơ bị bắt 100%; bot giống người thì yếu (xem mục 6).
+**Giới hạn (nói thẳng):** điểm "chủ" là một tín hiệu rủi ro, **không phải cổng xác thực**. Số đo hiện có (dữ liệu người thật công khai): EER ~16%; ở FRR 5% còn 38–57% kẻ gian biết PIN lọt (57% khoảng cách cơ bản, 38% mô hình học); đổi tư thế gần như mất tín hiệu. Bot ngây thơ bị bắt 100%; bot giống người thì yếu (xem mục 6).
 
 ## 2. Dùng thử trực tuyến
 
@@ -27,17 +27,17 @@ Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền b
 cd backend
 uv sync --extra ml          # hoặc: pip install fastapi uvicorn sqlalchemy "psycopg[binary]" lightgbm numpy
 uv run uvicorn app.main:app --reload --port 8000     # /docs = Swagger, key mặc định demo-key
-uv run pytest -q            # 18 bài
-cd ../attacker && uv sync && uv run pytest -q         # 7 bài
+uv run pytest -q            # 28 bài
+cd ../attacker && uv sync && uv run pytest -q         # 8 bài
 ```
 
-Biến môi trường: `DATABASE_URL`, `NHIP_API_KEYS` (SDK), `NHIP_OPS_KEYS` (dashboard), `NHIP_ML_KEYS` (xuất dữ liệu cho ML; ops/ml đóng khi chưa đặt), `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A/B`, `NHIP_HUMAN_MODEL=off` (tắt mô hình học), `NHIP_POP_PRIOR=off` (tắt prior dân số), `NHIP_REPLAY_THRESHOLD`. Tên `NHIP_*` là định danh kỹ thuật cũ, giữ để không làm hỏng bản đã deploy.
+Biến môi trường: `DATABASE_URL`, `NHIP_API_KEYS` (SDK), `NHIP_OPS_KEYS` (dashboard), `NHIP_ML_KEYS` (xuất dữ liệu cho ML; ops/ml đóng khi chưa đặt), `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A/B`, `NHIP_HUMAN_MODEL=off` / `NHIP_OWNER_MODEL=off` (tắt mô hình học người/máy, nhận chủ), `NHIP_POP_PRIOR=off` (tắt prior dân số), `NHIP_REPLAY_THRESHOLD`. Tên `NHIP_*` là định danh kỹ thuật cũ, giữ để không làm hỏng bản đã deploy.
 
 ## 4. Công nghệ
 
 Python 3.11+, FastAPI, SQLAlchemy (SQLite khi chạy local, Postgres khi deploy), LightGBM (mô hình người/máy, tuỳ chọn), SDK JavaScript thuần (Pointer Events) trong `backend/app/static/wallet.html`. Hạ tầng triển khai: `TODO: xác nhận (Vercel + Neon theo bản đã deploy)`.
 
-Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng thời gian/toạ độ → (A) người hay máy: luật + LightGBM + kiểm tra phát lại → (B) có phải chủ: so với mẫu chuẩn bằng khoảng cách chuẩn hoá, co rút phương sai về dân số cho đặc trưng thời gian → (C) hợp nhất có trọng số + giải thích bằng mẫu câu.
+Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng thời gian/toạ độ → (A) người hay máy: luật + LightGBM + kiểm tra phát lại → (B) có phải chủ: so với mẫu chuẩn bằng khoảng cách chuẩn hoá (co rút phương sai về dân số cho đặc trưng thời gian) rồi **LightGBM học trọng số** trên độ lệch → (C) hợp nhất có trọng số + giải thích bằng mẫu câu.
 
 ## 5. Tài sản có sẵn, thư viện mã nguồn mở, công cụ AI, dữ liệu — KHAI ĐẦY ĐỦ (giấu = bị loại)
 
@@ -73,9 +73,10 @@ Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2
 
 | Việc | Kết quả | Ghi chú |
 |---|---|---|
-| Xác minh chủ (StrokePIN, 97 người, kẻ gian biết PIN, 3 lượt đăng ký) | EER 0,146; FAR 0,495 ở FRR 5% | Co rút về dân số cho thời gian: FAR 0,663 → 0,495 (ghép cặp, CI không chứa 0). Đổi tư thế: EER ~0,35, không cải thiện |
+| Xác minh chủ (StrokePIN, 97 người, kẻ gian biết PIN, 3 lần đăng ký, chia theo người, **không dùng kích thước chạm**) | Khoảng cách cơ bản: EER 0,161, kẻ gian lọt 0,573 ở FRR 5%. **Học máy: EER 0,158, kẻ gian lọt 0,375** (−0,198, CI không chứa 0). Đổi tư thế (ngồi→đi): EER 0,309, kẻ gian lọt 0,708 | Khoảng tin cậy ghép cặp, bootstrap theo người. Bản có kích thước chạm cho số đẹp hơn nhưng là nhiễu **thiết bị** (kẻ gian trong dữ liệu dùng máy khác), nên không dùng |
 | Người/máy (người thật, bot sinh) | Bot ngây thơ (CT1, CT2): 100%; CT3 (phát lại): 12–26%; CT4 (lấy mẫu dân số): 20–73% | Bot **do bộ sinh tạo**, chưa có bot thật |
 | Kiểm tra phát lại (người thật, ngưỡng 0,07) | Bắt 100% phát lại có nhiễu tới ±10%; 29% ở ±15%; 0% từ ±20% | FPR người thật ~0,1% (8 phiên cũ), ngoại suy ~0,7% (50 phiên). Hiệu chỉnh lại trên dữ liệu của đội |
+| **Innate Challenge** (2.260 người gõ câu, chỉ thời gian) | Kẻ gian lọt ở FRR 5%: 81% (6 phím) → 49% (30 phím); bắt bot gõ đều AUC 0,92 → 0,996 | Chép câu mẫu tiếng Anh; chưa đo gộp PIN + câu, chưa đo ma sát |
 | Số liệu trên dữ liệu của đội | `TODO` | |
 
 Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.
@@ -86,6 +87,8 @@ Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/a
 backend/    API, SDK, mô hình, test           attacker/   bộ giả lập bot (4 chiến thuật, adb)
 research/   mã thí nghiệm + kết quả            docs/       kế hoạch, giải thích, nghiên cứu
 ```
+**Hồ sơ nộp (không nằm trong zip mã nguồn nếu BTC tách riêng):** `docs/submission/` gồm slide PDF, đề xuất, kịch bản video/thuyết trình, bản nháp hướng dẫn 1 trang.
+
 **Không đưa vào gói:** `papers/` (PDF có bản quyền), `research/data/` và `research/external/` (dữ liệu và mã bên thứ ba), `.env*`, `backend/.env.deploy-key`, `*.db`, `.venv`, `__pycache__`.
 
 ## 8. Quyền riêng tư và pháp lý
