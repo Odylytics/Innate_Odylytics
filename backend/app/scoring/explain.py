@@ -2,6 +2,8 @@
 
 from statistics import fmean
 
+from . import owner as owner_model
+
 _BOT_VI = {
     "timing_too_regular": "nhịp bấm đều bất thường",
     "tap_exact_center": "chạm đúng tâm nút",
@@ -66,6 +68,9 @@ def explain(human: float, bot_reasons: list[str], owner: float | None, features:
     elif owner is None:
         reasons.append("not_enrolled")
         parts.append("Tài khoản chưa đăng ký nhịp thao tác.")
+    elif owner_model.missing_pin_evidence(features, tpl):
+        reasons.append("missing_pin_evidence")
+        parts.append("Phiên không có đủ thao tác nhập PIN để đối chiếu với chủ tài khoản.")
     else:
         owner_rs = _owner_reasons(features, tpl, z)
         reasons += [code for _, code, _ in owner_rs]

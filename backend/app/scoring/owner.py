@@ -59,8 +59,15 @@ def build_template(feature_list: list[dict[str, float]]) -> dict:
     return {"mu": mu, "sd": sd, "mu0": dict(mu), "n": len(feature_list), "updates": 0}
 
 
+def missing_pin_evidence(features: dict[str, float], tpl: dict) -> bool:
+    """Phiên thiếu nhịp PIN mà mẫu chuẩn được dựng từ đó (bỏ PIN, PIN khác độ dài)."""
+    return any(k.startswith("pin_") and k not in features for k in tpl["mu"])
+
+
 def score(features: dict[str, float], tpl: dict) -> tuple[float | None, dict[str, float]]:
     z = {k: (features[k] - tpl["mu"][k]) / tpl["sd"][k] for k in tpl["mu"] if k in features}
+    if missing_pin_evidence(features, tpl):
+        return 0.0, z  # đã đăng ký mà không có bằng chứng PIN: coi là không khớp, không phải "trung tính"
     if not z:
         return None, z
     d = fmean(abs(v) for v in z.values())

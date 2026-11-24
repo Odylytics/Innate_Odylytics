@@ -248,7 +248,9 @@ E10b chạy **chính `owner.build_template`/`owner.score`** với mọi đặc t
 - Cải thiện thật và **không đánh đổi EER** ở cùng tư thế: kẻ gian lọt giảm từ 66% xuống 50% ở FRR 5%.
 - **Không cứu được trường hợp đổi tư thế** (0,943 không đổi). Vấn đề đó cần đăng ký nhiều tư thế, không phải co rút.
 - FAR 50% vẫn rất cao: điểm "chủ" vẫn không thể làm cổng chặn.
-- **Giới hạn:** prior trong `population_prior.json` tính trên **cả 97 người** (bản chạy thật), nên khi chấm lại trên chính StrokePIN sẽ rò rỉ; E10b dùng bỏ-một-người để tránh. Prior là thống kê từ dữ liệu CC BY-NC-SA 4.0: ghi trong README. Chỉ kiểm trên PIN 6 số trên điện thoại ở một đợt thu.
+- **Tương tác với sửa bảo mật mới (24/11):** `/enroll` giờ trả 409 khi đã có mẫu chuẩn (chặn người khác tiêm nhịp của mình vào tài khoản đã đăng ký). Điều này **xung đột với khuyến nghị đăng ký nhiều tư thế** của E9: cần một đường đăng ký lại có kiểm soát (vd. sau khi xác thực mạnh), chưa thiết kế.
+
+**Giới hạn:** prior trong `population_prior.json` tính trên **cả 97 người** (bản chạy thật), nên khi chấm lại trên chính StrokePIN sẽ rò rỉ; E10b dùng bỏ-một-người để tránh. Prior là thống kê từ dữ liệu CC BY-NC-SA 4.0: ghi trong README. Chỉ kiểm trên PIN 6 số trên điện thoại ở một đợt thu.
 
 ### Mô hình người/máy đã nối vào backend (24/11, TẠM THỜI)
 

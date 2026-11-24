@@ -36,7 +36,7 @@ def loaded() -> bool:
 def predict(raw: dict) -> float | None:
     """raw = phiên thô (SessionIn.model_dump()). -> điểm "là người" trong [0,1], hoặc None nếu không có mô hình."""
     m = _load()
-    if m is None:
+    if m is None or not raw.get("pin_taps"):  # mô hình học trên phiên có PIN; thiếu PIN thì để owner.py báo missing_pin_evidence
         return None
     booster, meta = m
     f = bot_features.extract(raw)

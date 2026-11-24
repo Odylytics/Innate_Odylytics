@@ -35,7 +35,7 @@ class Point(BaseModel):
 
 
 class Swipe(BaseModel):
-    points: list[Point] = Field(min_length=2, max_length=500)
+    points: list[Point] = Field(min_length=2, max_length=200)  # ~3 s vuốt ở 60 Hz; dài hơn thì SDK cắt bớt
 
 
 class ScreenVisit(BaseModel):
@@ -87,7 +87,7 @@ class SessionIn(BaseModel):
     user_id: Ident
     device_id: str = Field(default="unknown", max_length=64)
     pin_taps: list[PinTap] = Field(default_factory=list, max_length=12)
-    swipes: list[Swipe] = Field(default_factory=list, max_length=100)
+    swipes: list[Swipe] = Field(default_factory=list, max_length=30)
     screens: list[ScreenVisit] = Field(default_factory=list, max_length=50)
     fields: list[TextField] = Field(default_factory=list, max_length=10)  # ô nhập ngoài PIN
     meta: CollectionMeta | None = None  # chỉ gửi khi thu dữ liệu
