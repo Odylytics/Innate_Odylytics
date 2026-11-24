@@ -92,6 +92,10 @@ Rút ra cho đội:
 - Chiến thuật 4 cho thấy ánh xạ điểm khớp chủ (`owner.py`, d = 2 → 0,5) đang quá dễ dãi: lấy mẫu từ người khác vẫn được coi là chủ. Cần hiệu chỉnh trên dữ liệu thật (mục 5.5).
 - Chiến thuật 3: phát lại gần như y hệt một phiên cũ là dấu hiệu mạnh — người thật không bao giờ lặp lại nhịp trong ±5%. Có thể thêm kiểm tra "trùng phiên cũ" ở backend.
 
+## Ô nhập ngoài PIN
+
+`tactics.generate(..., with_fields=True)` thêm `fields` (số tiền, người nhận, ghi chú) theo chiến thuật, xem `nhip_attacker/fields.py`: (1) đặt thẳng văn bản (`set_text`, không phím), (2) gõ đều không xoá/dán, (3) phát lại nhịp một phiên người thật (±5%), (4) lấy mẫu khoảng cách và tỷ lệ xoá/dán từ kho người thật. Mặc định tắt nên hành vi cũ không đổi. Kết quả đo: `research/results/e11_text_field_bots.md`.
+
 ## Kiểm thử
 
 ```powershell

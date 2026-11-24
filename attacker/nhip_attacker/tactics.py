@@ -11,6 +11,8 @@ Phiên trả về đúng định dạng SessionIn của backend (không kèm met
 import copy
 import random
 
+from . import fields
+
 # phím -> (tâm x, tâm y, rộng, cao), px. Khớp tests/synth.py của backend; app thật thì lấy từ phiên người (layout_from_sessions).
 DEFAULT_LAYOUT: dict[str, tuple[float, float, float, float]] = {
     str(d): (60 + 120 * ((d - 1) % 3), 400 + 80 * ((d - 1) // 3), 100, 70) for d in range(1, 10)
@@ -153,17 +155,24 @@ def synth_owner(user_id: str, k: int, pin: str = "1593", layout=DEFAULT_LAYOUT, 
     return [_persona_session(user_id, p, pin, layout, rng) for _ in range(k)]
 
 
-def generate(tactic: int, user_id: str, pin: str, humans: list[dict], rng: random.Random) -> dict:
+def generate(tactic: int, user_id: str, pin: str, humans: list[dict], rng: random.Random, with_fields: bool = False) -> dict:
+    """with_fields=True thêm ô nhập (số tiền, người nhận, ghi chú) theo chiến thuật: xem fields.py."""
     layout = layout_from_sessions(humans) or DEFAULT_LAYOUT
+    source = None
     if tactic == 1:
-        return tactic1(user_id, pin, layout, rng)
-    if tactic == 2:
-        return tactic2(user_id, pin, layout, rng)
-    if tactic == 3:
+        s = tactic1(user_id, pin, layout, rng)
+    elif tactic == 2:
+        s = tactic2(user_id, pin, layout, rng)
+    elif tactic == 3:
         same_pin = [h for h in humans if "".join(t["key"] for t in h.get("pin_taps", [])) == pin]
         if not same_pin:
             raise ValueError("Chiến thuật 3 cần phiên người thật nhập đúng PIN này")
-        return tactic3(user_id, rng.choice(same_pin), rng)
-    if tactic == 4:
-        return tactic4(user_id, pin, humans, layout, rng)
-    raise ValueError(f"Không có chiến thuật {tactic}")
+        source = rng.choice(same_pin)
+        s = tactic3(user_id, source, rng)
+    elif tactic == 4:
+        s = tactic4(user_id, pin, humans, layout, rng)
+    else:
+        raise ValueError(f"Không có chiến thuật {tactic}")
+    if with_fields:
+        s["fields"] = fields.for_tactic(tactic, rng, humans, source)
+    return s

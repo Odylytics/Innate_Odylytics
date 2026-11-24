@@ -154,6 +154,32 @@ Mã: `research/experiments/e5b_replay_real.py`; bảng: `research/results/e5b_re
 - **Đã đổi ngưỡng mặc định sang 0,07** (FPR ~0,1% tại 8 phiên, ~0,7% ngoại suy tại 50). Cái giá: bắt 100% phát lại có nhiễu tới ±10% nhưng chỉ **29% ở ±15%** (ngưỡng cũ: 86%) và 0% từ ±20%. Kẻ tấn công thích nghi thêm nhiễu ≥15% vẫn qua mặt kiểm tra này; lúc đó phiên trông như một người khác và chỉ còn điểm "chủ" (yếu) cản lại.
 - **Giới hạn:** lịch sử trong dữ liệu ngắn (~9 lượt, một đợt thu), nên hiệu ứng nhiều phiên cũ phải đo lại bằng dữ liệu của đội (lịch sử dài, nhiều ngày). Người thật ở đây gõ PIN do người nghiên cứu giao, không phải PIN riêng đã thuộc, nên có thể ít đều hơn hoặc nhiều hơn người dùng thật.
 
+### E11 — người/máy trên ô văn bản tự do, người thật Aalto (24/11)
+
+Mã: `research/experiments/aalto_note_extract.py` (trích nhịp gõ từ mysqldump, **chỉ giữ thời gian, loại sự kiện, lớp ký tự, không giữ nội dung**), `e11_text_field_bots.py`; bot: `attacker/nhip_attacker/fields.py` (`generate(..., with_fields=True)`); bảng: `research/results/e11_text_field_bots.md`. Người: **33.522 câu gõ thật của 2.260 người**, chia theo người. Bot chỉ ở ô `note` (Aalto không có ô số tiền/người nhận), 4 chiến thuật: (1) đặt thẳng văn bản kiểu `ACTION_SET_TEXT`, (2) gõ đều qua công cụ tự động, (3) phát lại nhịp một người thật, (4) lấy mẫu khoảng cách từ dân số.
+
+Nhịp gõ thật (để hiệu chỉnh): khoảng cách giữa phím trung vị 223 ms (phân vị 5–95%: 84–1394 ms), độ biến thiên trong một câu trung vị **0,92** (rất không đều), tỷ lệ xoá trung vị 3,4%, 63% câu không có sự kiện dự đoán/dán.
+
+Tỷ lệ bot bị bắt ở FRR 5% (LightGBM, đặc trưng `fld_*` hiện có trong backend; trong ngoặc: thêm đặc trưng mở rộng):
+
+| | CT1 đặt thẳng văn bản | CT2 gõ đều | CT3 phát lại | CT4 lấy mẫu dân số |
+|---|---|---|---|---|
+| Đã thấy loại bot đó | **1,00** | **0,99** | 0,06 | 0,31 (0,58) |
+| **Chưa từng thấy** | 1,00 | **0,00** (AUC 0,20) | 0,05 | 0,04 |
+| IsolationForest (chỉ người) | 0,00 | 0,00 | 0,05 | 0,01 |
+| Luật hiện tại của backend | 0,00 | 0,00 | 0,00 | 0,00 |
+
+Đọc kết quả:
+- **Hai bot ngây thơ (đặt thẳng văn bản, gõ đều) bị bắt ~100% khi mô hình đã thấy chúng**, vì nhịp người thật rất bất đều (CV 0,92 so với 0,35 của bot gõ đều).
+- **Bot lạ là điểm yếu:** bỏ chiến thuật 2 khỏi huấn luyện thì bắt **0%** (AUC 0,20: tệ hơn đoán ngẫu nhiên, bot gõ đều trông "người hơn người" với mô hình học trên các bot khác). Đây là cùng bài học như E4/E4b: mô hình giám sát chỉ giỏi với họ bot đã thấy. IsolationForest (chỉ học từ người) **không cứu được** ở ngưỡng FRR 5% (bắt 0% hai bot ngây thơ, dù AUC 0,71–0,85).
+- **Bot giống người không bắt được bằng nhịp:** phát lại (CT3) 6%, đúng như dự đoán (nhịp đó là của một người thật). Lấy mẫu dân số (CT4) 31%; **đặc trưng mở rộng (phân vị khoảng cách, độ lệch liên tiếp, độ lệch chuẩn) nâng lên 58% (AUC 0,85 → 0,93)**: bộ `fld_*` hiện có thiếu thống kê nhịp. Chưa thêm vào `bot_features.py` vì mô hình đang triển khai chưa huấn luyện trên dữ liệu có ô nhập.
+- **Luật backend hiện tại bắt 0% ở ô ghi chú là có chủ ý:** ô ghi chú đặt văn bản không qua phím chỉ bị trừ nhẹ (autofill, gõ giọng nói và dán đều hợp lệ). E11 không đánh giá ô số tiền (không có dữ liệu người thật), nên luật "`set_text` ở ô số tiền = máy" **vẫn chưa kiểm chứng**.
+
+**Giới hạn, số liệu lạc quan ở các điểm sau:**
+1. Tôi chỉ giữ câu người thật có ≥ 15 phím, nên **loại sẵn** người nhập bằng giọng nói, dán hay autofill. Vì vậy việc tách "đặt thẳng văn bản" khỏi người thật (CT1) dễ hơn thực tế. Ngoài đời, nhiều người nhập ô ghi chú mà không có phím nào.
+2. Dữ liệu Aalto là **chép lại câu mẫu tiếng Anh** trên điện thoại (bài kiểm tra tốc độ gõ), khác với **soạn** nội dung chuyển khoản tiếng Việt; nhịp soạn có nhiều ngừng suy nghĩ hơn.
+3. Bot vẫn do bộ sinh tạo, một ô duy nhất, chưa có bot thật.
+
 ### E7 — đầu độc mẫu chuẩn (đã chạy, dữ liệu GIẢ)
 
 Mã: `research/experiments/e7_poisoning.py`; bảng: `research/results/e7_poisoning.md`. **Chưa thay đổi `owner.py`**; đây là khuyến nghị để đội quyết.

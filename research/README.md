@@ -8,6 +8,7 @@ Thí nghiệm AI (chạy cục bộ, không thuộc bản nộp).
 - `experiments/e4_human_bot_lgbm.py`: E4, LightGBM + IsolationForest cho bài người/máy, đánh giá bỏ-một-chiến-thuật (dữ liệu giả). Cần `lightgbm`, `scikit-learn`.
 - `experiments/e4b_human_bot_real.py`: E4b, người/máy với người thật từ StrokePIN (bot vẫn giả).
 - `experiments/strokepin_loader.py` + `e9_strokepin_owner.py`: E9, xác minh chủ trên PIN điện thoại thật (StrokePIN, cần `git clone` vào `data/StrokePIN`).
+- `experiments/aalto_note_extract.py` + `e11_text_field_bots.py`: nhịp gõ văn bản tự do thật từ Aalto (chỉ thời gian, không nội dung) và E11 người/máy trên ô ghi chú; chạy `python -I` vì đọc dữ liệu tải ngoài.
 - `experiments/e5b_replay_real.py`: E5b, hiệu chỉnh kiểm tra phát lại trên người thật (StrokePIN).
 - `experiments/e10_deployable_prior.py`, `e10b_backend_path.py`, `make_population_prior.py`: co rút về dân số dùng được khi triển khai; kiểm tra chính `owner.py`; sinh `backend/app/scoring/population_prior.json`.
 - `experiments/train_human_model.py`: huấn luyện mô hình người/máy (StrokePIN + bot sinh) ra `backend/app/models/` (tạm thời).
