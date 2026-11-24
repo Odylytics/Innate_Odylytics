@@ -8,7 +8,7 @@ API chấm điểm rủi ro hành vi (Người 2). FastAPI + SQLAlchemy, SQLite 
 |---|---|
 | URL | https://nhip-api-taupe.vercel.app |
 | Swagger | https://nhip-api-taupe.vercel.app/docs → **Authorize** → nhập API key |
-| API key | Lưu ở `backend/.env.deploy-key` trên máy Người 2 (không commit). Hỏi Người 2 khi cần |
+| API key | 3 key theo vai trò (SDK / ops / ML), lưu ở `backend/.env.deploy-key` trên máy Người 2 (không commit). Hỏi Người 2 khi cần |
 | Hạ tầng | Vercel project `nhip-api`, vùng Singapore (`sin1`); DB Neon `nhip-db` (gói free, Singapore), gắn qua Vercel Marketplace |
 | Độ trễ đo 23/11 | Xử lý phía server 16–21 ms/lần chấm; khứ hồi từ Việt Nam ~125–150 ms |
 
@@ -22,7 +22,7 @@ uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-- Swagger: http://localhost:8000/docs → bấm **Authorize**, nhập `demo-key`.
+- Swagger: http://localhost:8000/docs → bấm **Authorize**, nhập `demo-key` (key SDK). Muốn thử dashboard/export ở local thì đặt thêm `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`.
 - Kiểm thử: `uv run pytest -q` (7 bài, ~2 giây). SQLite trong test bật kiểm tra khoá ngoại để giống Postgres.
 
 ### Biến môi trường
@@ -30,7 +30,9 @@ uv run uvicorn app.main:app --reload --port 8000
 | Biến | Mặc định | Ghi chú |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./nhip.db` | Trên Vercel do Neon tự đặt; `postgres://` được tự đổi sang driver psycopg |
-| `NHIP_API_KEYS` | `demo-key` | Nhiều key cách nhau dấu phẩy. Bản deploy đã đặt key riêng (Secret trên Vercel) |
+| `NHIP_API_KEYS` | `demo-key` | Key **SDK** (nằm trong app web): gửi phiên, đăng ký nhịp, chấm điểm. Nhiều key cách nhau dấu phẩy |
+| `NHIP_OPS_KEYS` | *(trống = đóng)* | Key **dashboard**: xem danh sách phiên, gắn nhãn |
+| `NHIP_ML_KEYS` | *(trống = đóng)* | Key **Người 1**: `/v1/export` |
 | `NHIP_CORS_ORIGINS` | `*` | Bản deploy đang để `*`. **Đặt đúng domain ví demo + dashboard khi Người 3 deploy frontend** |
 | `NHIP_THRESHOLD_A` | `0.25` | rủi ro < A → `allow` |
 | `NHIP_THRESHOLD_B` | `0.55` | rủi ro > B → `hold`; giữa A và B → `step_up` |
@@ -39,18 +41,18 @@ Mọi phản hồi có header `X-Process-Time-Ms` (độ trễ xử lý, dùng c
 
 ## Endpoint
 
-Tất cả `/v1/*` cần header `X-API-Key`.
+Tất cả `/v1/*` cần header `X-API-Key` đúng vai trò ở cột *Quyền*. Sai key → 401; key hợp lệ nhưng sai vai trò → 403. Key SDK nằm trong app web nên **không** mở được dashboard hay export.
 
-| Method | Đường dẫn | Ai gọi | Việc |
+| Method | Đường dẫn | Quyền | Việc |
 |---|---|---|---|
 | GET | `/health` | deploy | Kiểm tra sống |
 | POST | `/v1/sessions` | App | Gửi phiên thao tác → `{session_id, n_features}` |
-| POST | `/v1/users/{user_id}/enroll` | App | Body `{session_id}`. Đánh dấu lượt đăng ký; từ lượt thứ 3 có mẫu chuẩn |
+| POST | `/v1/users/{user_id}/enroll` | SDK | Body `{session_id}`. Đánh dấu lượt đăng ký; đủ 3 lượt thì có mẫu chuẩn và **khoá đăng ký** (thêm lượt → 409) |
 | GET | `/v1/users/{user_id}` | App | Số lượt đã đăng ký, mẫu chuẩn sẵn sàng chưa, số lần cập nhật |
 | POST | `/v1/sessions/{id}/score` | App | Body `{recipient_is_new, amount}` → điểm + hành động + lý do |
-| GET | `/v1/export?participant_id=` | Người 1 | Xuất phiên có `meta` (dữ liệu thô + đặc trưng + nhãn thu dữ liệu) |
-| GET | `/v1/sessions?flagged=true&limit=50` | Dashboard | Phiên `step_up`/`hold` mới nhất (bỏ `flagged` = tất cả phiên đã chấm) |
-| POST | `/v1/sessions/{id}/label` | Dashboard | Body `{label: "fraud" \| "legit"}` |
+| GET | `/v1/export?participant_id=` | ML | Xuất phiên có `meta` (dữ liệu thô + đặc trưng + nhãn thu dữ liệu) |
+| GET | `/v1/sessions?flagged=true&limit=50` | ops | Phiên `step_up`/`hold` mới nhất (bỏ `flagged` = tất cả phiên đã chấm) |
+| POST | `/v1/sessions/{id}/label` | ops | Body `{label: "fraud" \| "legit"}` |
 
 ### Luồng của app (Người 3)
 
@@ -96,7 +98,7 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 }
 ```
 
-`owner_match = null` khi người dùng chưa đăng ký đủ 3 lượt (lý do `not_enrolled`).
+`owner_match = null` khi người dùng chưa đăng ký đủ 3 lượt (lý do `not_enrolled`). Đã đăng ký mà phiên thiếu nhịp PIN (không bấm PIN, hoặc PIN ngắn hơn lúc đăng ký) → `owner_match = 0`, lý do `missing_pin_evidence`, không bao giờ `allow`.
 
 ## Lớp chấm điểm (`app/scoring/`) — Người 1 thay từng file, giữ chữ ký hàm
 
@@ -114,7 +116,8 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 
 `tests/test_api.py` (dữ liệu giả từ `tests/synth.py`):
 
-- Không có/sai API key → 401; dữ liệu sai → 422; đăng ký phiên của người khác → 400.
+- Không có/sai API key → 401 (kể cả header ngoài ASCII); key sai vai trò → 403; dữ liệu sai → 422; đăng ký phiên của người khác → 400; đăng ký thêm khi đã có mẫu chuẩn → 409.
+- Phiên chỉ có vuốt hoặc PIN thiếu phím cho tài khoản đã đăng ký → không `allow`, lý do `missing_pin_evidence`.
 - Luồng đầy đủ: chưa đăng ký → `not_enrolled`; đăng ký 3 lượt → có mẫu chuẩn; chủ thật → `allow`; người khác biết PIN → `step_up` với lý do nhịp/vị trí; bot chiến thuật 1 → `hold` với `tap_exact_center`; số tiền gấp 50 lần → `amount_unusual`; mẫu chuẩn được cập nhật; dashboard thấy phiên bị gắn cờ; gắn nhãn được.
 - Chặn trôi: 200 lần "dạy dần" bằng phiên lệch xa, mẫu chuẩn vẫn trong ±1 sd.
 
@@ -124,7 +127,8 @@ Chạy 200 seed với dữ liệu giả: chủ thật được cho qua 95%, ngư
 
 - Ngưỡng và trọng số là giá trị khởi đầu, chưa fit trên dữ liệu thật.
 - Luật người/máy bắt được chiến thuật 1–2; chiến thuật 3 (phát lại phiên người thật) và 4 sẽ qua — cần mô hình của Người 1.
-- API key nằm trong app web nên ai cũng xem được; đủ cho demo, không đủ cho sản phẩm thật.
+- Key SDK nằm trong app web nên ai cũng xem được: người dùng app vẫn gửi được phiên và chấm điểm cho **bất kỳ** `user_id` nào, và có thể đăng ký nhịp trước cho tài khoản **chưa** đăng ký. Sản phẩm thật cần gắn `user_id` với phiên đăng nhập của ví (backend của đối tác gọi API bằng key bí mật).
+- Chưa có luồng đặt lại mẫu chuẩn (đăng ký lại) — hiện phải xoá `users.template` trong DB.
 - Mẫu chuẩn dùng chung mọi thiết bị của một người dùng (kế hoạch dùng một điện thoại demo).
 - Chưa có: bộ giả lập hacker, tóm tắt LLM cho dashboard, migration DB (bảng được tạo tự động lúc khởi động).
 

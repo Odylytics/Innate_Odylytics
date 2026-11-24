@@ -25,7 +25,10 @@ def _humans(args, c: httpx.Client) -> list[dict]:
     if src == "synth":
         return tactics.synth_humans(30, args.pin)
     if src == "api":
-        rows = c.get("/v1/export").raise_for_status().json()
+        ml_key = args.ml_key or os.environ.get("NHIP_ML_KEY")
+        if not ml_key:
+            sys.exit("--human-source api cần key quyền ML: đặt NHIP_ML_KEY hoặc --ml-key (hoặc dùng --human-source synth)")
+        rows = c.get("/v1/export", headers={"X-API-Key": ml_key}).raise_for_status().json()
         out = [r["raw"] for r in rows if (r.get("meta") or {}).get("role") == "genuine"]
         if not out:
             sys.exit("API chưa có phiên người thật (meta.role = genuine). Dùng --human-source synth để thử trước")
@@ -99,7 +102,8 @@ def main(argv=None) -> None:
 
     def api_args(sp):
         sp.add_argument("--api", default=os.environ.get("NHIP_API_URL", "http://localhost:8000"))
-        sp.add_argument("--key", help="mặc định lấy từ NHIP_API_KEY")
+        sp.add_argument("--key", help="key SDK, mặc định lấy từ NHIP_API_KEY")
+        sp.add_argument("--ml-key", help="key ML để đọc /v1/export, mặc định lấy từ NHIP_ML_KEY")
         sp.add_argument("--pin", default="1593")
         sp.add_argument("--tactic", type=int, nargs="+", default=[1, 2, 3, 4], choices=[1, 2, 3, 4])
         sp.add_argument("--n", type=int, default=20)

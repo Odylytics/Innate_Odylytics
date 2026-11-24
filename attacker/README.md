@@ -9,7 +9,7 @@ cd attacker
 uv sync
 ```
 
-API key: đặt `NHIP_API_KEY` (key của bản deploy nằm ở `backend/.env.deploy-key` trên máy Người 2). URL mặc định `http://localhost:8000`; bản online dùng `--api https://nhip-api-taupe.vercel.app`.
+API key: đặt `NHIP_API_KEY` = key **SDK**; muốn dùng `--human-source api` thì đặt thêm `NHIP_ML_KEY` = key **ML** (để đọc `/v1/export`). Key bản deploy nằm ở `backend/.env.deploy-key` trên máy Người 2. URL mặc định `http://localhost:8000`; bản online dùng `--api https://nhip-api-taupe.vercel.app`.
 
 ```powershell
 $env:NHIP_API_KEY = "<key>"

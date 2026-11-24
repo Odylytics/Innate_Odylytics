@@ -14,7 +14,17 @@ from . import schemas
 from .db import Base, SessionLocal, TouchSession, User, engine
 from .scoring import explain, features, fusion, human, owner
 
-API_KEYS = [k.strip() for k in os.environ.get("NHIP_API_KEYS", "demo-key").split(",") if k.strip()]
+def _keys(var: str, default: str = "") -> list[str]:
+    return [k.strip() for k in os.environ.get(var, default).split(",") if k.strip()]
+
+
+# Mỗi vai trò một bộ key: key SDK nằm trong app web (ai cũng xem được) nên không được mở dashboard hay export.
+# Key ops/ml không có mặc định: chưa cấu hình thì các route đó đóng.
+SCOPE_KEYS = {
+    "sdk": _keys("NHIP_API_KEYS", "demo-key"),  # gửi phiên, đăng ký nhịp, chấm điểm
+    "ops": _keys("NHIP_OPS_KEYS"),  # dashboard: xem danh sách, gắn nhãn
+    "ml": _keys("NHIP_ML_KEYS"),  # Người 1: xuất dữ liệu
+}
 CORS_ORIGINS = os.environ.get("NHIP_CORS_ORIGINS", "*").split(",")
 MIN_ENROLL = 3
 UPDATE_MIN_OWNER = 0.8  # chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao
@@ -47,9 +57,22 @@ async def timing(request: Request, call_next):
 _api_key = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
-def require_key(key: str | None = Security(_api_key)) -> None:
-    if not key or not any(secrets.compare_digest(key, k) for k in API_KEYS):
+def _match(key: str, keys: list[str]) -> bool:
+    # so bytes: compare_digest với str chứa ký tự ngoài ASCII sẽ ném TypeError (500 thay vì 401)
+    return any(secrets.compare_digest(key.encode(), k.encode()) for k in keys)
+
+
+def require(scope: str):
+    def dep(key: str | None = Security(_api_key)) -> None:
+        if key and _match(key, SCOPE_KEYS[scope]):
+            return
+        if key and any(_match(key, ks) for ks in SCOPE_KEYS.values()):
+            raise HTTPException(403, f"API key không có quyền '{scope}' cho thao tác này")
         raise HTTPException(401, "API key không hợp lệ")
+    return Depends(dep)
+
+
+SDK, OPS, ML = require("sdk"), require("ops"), require("ml")
 
 
 def get_db():
@@ -75,10 +98,10 @@ def health():
     return {"status": "ok"}
 
 
-v1 = APIRouter(prefix="/v1", dependencies=[Depends(require_key)])
+v1 = APIRouter(prefix="/v1")
 
 
-@v1.post("/sessions", response_model=schemas.SessionCreated, tags=["sdk"])
+@v1.post("/sessions", response_model=schemas.SessionCreated, tags=["sdk"], dependencies=[SDK])
 def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
     """SDK gửi phiên thao tác (chạm PIN, vuốt, nhịp màn hình)."""
     raw = body.model_dump()
@@ -95,26 +118,29 @@ def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
     return {"session_id": sid, "n_features": len(feats)}
 
 
-@v1.post("/users/{user_id}/enroll", response_model=schemas.EnrollOut, tags=["sdk"])
+@v1.post("/users/{user_id}/enroll", response_model=schemas.EnrollOut, tags=["sdk"], dependencies=[SDK])
 def enroll(user_id: str, body: schemas.EnrollIn, db: Session = Depends(get_db)):
-    """Đánh dấu một phiên là lượt đăng ký nhịp. Từ lượt thứ 3 trở đi, mẫu chuẩn được dựng lại từ mọi lượt đăng ký."""
+    """Đánh dấu một phiên là lượt đăng ký nhịp. Đủ 3 lượt thì dựng mẫu chuẩn và khoá đăng ký."""
     s = _get_session(db, body.session_id)
     if s.user_id != user_id:
         raise HTTPException(400, "Phiên không thuộc người dùng này")
     if "pin_hold_0" not in s.features:
         raise HTTPException(400, "Phiên đăng ký phải có thao tác nhập PIN")
+    user = db.get(User, user_id)
+    if user.template is not None:
+        # chặn kẻ gian chèn nhịp của mình vào mẫu chuẩn đã có; đăng ký lại phải qua luồng đặt lại có xác thực
+        raise HTTPException(409, "Tài khoản đã đăng ký nhịp, không thể thêm lượt đăng ký")
     s.is_enrollment = True
     db.flush()
     enrolled = db.scalars(select(TouchSession).where(
         TouchSession.user_id == user_id, TouchSession.is_enrollment)).all()
-    user = db.get(User, user_id)
     if len(enrolled) >= MIN_ENROLL:
         user.template = owner.build_template([e.features for e in enrolled])
     db.commit()
     return _enroll_status(db, user)
 
 
-@v1.get("/users/{user_id}", response_model=schemas.UserOut, tags=["sdk"])
+@v1.get("/users/{user_id}", response_model=schemas.UserOut, tags=["sdk"], dependencies=[SDK])
 def get_user(user_id: str, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if user is None:
@@ -122,7 +148,7 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     return {**_enroll_status(db, user), "template_updates": (user.template or {}).get("updates", 0)}
 
 
-@v1.post("/sessions/{session_id}/score", response_model=schemas.ScoreOut, tags=["sdk"])
+@v1.post("/sessions/{session_id}/score", response_model=schemas.ScoreOut, tags=["sdk"], dependencies=[SDK])
 def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depends(get_db)):
     """Chấm điểm phiên ở bước xác nhận giao dịch. Hệ thống chỉ đề xuất, không tự khoá tài khoản."""
     s = _get_session(db, session_id)
@@ -159,7 +185,7 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
     return result
 
 
-@v1.get("/sessions", response_model=list[schemas.SessionSummary], tags=["dashboard"])
+@v1.get("/sessions", response_model=list[schemas.SessionSummary], tags=["dashboard"], dependencies=[OPS])
 def list_sessions(flagged: bool = True, limit: int = Query(50, ge=1, le=500), db: Session = Depends(get_db)):
     """Danh sách phiên cho dashboard. flagged=true: chỉ phiên step_up/hold."""
     # lọc theo action (cột chuỗi): cột JSON lưu None thành 'null' nên IS NOT NULL không loại được phiên chưa chấm
@@ -179,7 +205,7 @@ def list_sessions(flagged: bool = True, limit: int = Query(50, ge=1, le=500), db
     } for r in rows]
 
 
-@v1.get("/export", tags=["data"])
+@v1.get("/export", tags=["data"], dependencies=[ML])
 def export_sessions(participant_id: str | None = None, collected_only: bool = True,
                     limit: int = Query(5000, ge=1, le=20000), db: Session = Depends(get_db)):
     """Xuất phiên cho Người 1 (dữ liệu thô + đặc trưng + nhãn thu dữ liệu), cũ nhất trước."""
@@ -199,7 +225,7 @@ def export_sessions(participant_id: str | None = None, collected_only: bool = Tr
     return out
 
 
-@v1.post("/sessions/{session_id}/label", tags=["dashboard"])
+@v1.post("/sessions/{session_id}/label", tags=["dashboard"], dependencies=[OPS])
 def label_session(session_id: str, body: schemas.LabelIn, db: Session = Depends(get_db)):
     """Chuyên viên đánh dấu đúng (fraud) / sai (legit). Lưu lại để huấn luyện sau."""
     s = _get_session(db, session_id)

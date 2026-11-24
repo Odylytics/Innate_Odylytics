@@ -3,7 +3,10 @@ import random
 import tempfile
 
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(tempfile.mkdtemp(), "test.db")
-os.environ["NHIP_API_KEYS"] = "test-key"
+# test-key có mọi quyền cho các test luồng; sdk-key/ops-key/ml-key mỗi key một quyền cho test phân quyền
+os.environ["NHIP_API_KEYS"] = "test-key,sdk-key"
+os.environ["NHIP_OPS_KEYS"] = "test-key,ops-key"
+os.environ["NHIP_ML_KEYS"] = "test-key,ml-key"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -141,3 +144,54 @@ def test_bot_meta_requires_tactic(client):
                        ({"participant_id": "sim", "sitting": 1, "role": "bot"}, 422),
                        ({"participant_id": "p01", "sitting": 1, "role": "genuine", "tactic": 1}, 422)]:
         assert client.post("/v1/sessions", json=dict(body, meta=meta), headers=H).status_code == code
+
+
+def test_keys_are_scoped_by_role(client):
+    sdk, ops, ml = ({"X-API-Key": k} for k in ("sdk-key", "ops-key", "ml-key"))
+    sid = _post_session(client, human_session("scope_u", OWNER, random.Random(21)))
+    # key SDK (nằm trong app web) không mở được dashboard, gắn nhãn hay export
+    assert client.get("/v1/export", headers=sdk).status_code == 403
+    assert client.get("/v1/sessions", headers=sdk).status_code == 403
+    assert client.post(f"/v1/sessions/{sid}/label", json={"label": "legit"}, headers=sdk).status_code == 403
+    # key ops chỉ dùng dashboard, key ml chỉ export
+    assert client.get("/v1/sessions", headers=ops).status_code == 200
+    assert client.get("/v1/export", headers=ops).status_code == 403
+    assert client.get("/v1/export", headers=ml).status_code == 200
+    assert client.post("/v1/sessions", json=human_session("x", OWNER, random.Random(1)), headers=ml).status_code == 403
+    # key lạ vẫn là 401; header ngoài ASCII không làm sập server
+    assert client.get("/v1/export", headers={"X-API-Key": "sai"}).status_code == 401
+    assert client.get("/v1/export", headers={"X-API-Key": "khóa".encode()}).status_code == 401
+
+
+def _enroll(client, user, sessions):
+    for body in sessions:
+        r = client.post(f"/v1/users/{user}/enroll", json={"session_id": _post_session(client, body)}, headers=H)
+        assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_enrollment_locked_once_template_ready(client):
+    rng = random.Random(31)
+    assert _enroll(client, "lock_u", [human_session("lock_u", OWNER, rng) for _ in range(3)])["template_ready"]
+    tpl_before = client.get("/v1/users/lock_u", headers=H).json()
+    # kẻ gian chèn nhịp của mình vào tài khoản đã đăng ký -> bị chặn, mẫu chuẩn giữ nguyên
+    sid = _post_session(client, human_session("lock_u", IMPOSTOR, rng))
+    r = client.post("/v1/users/lock_u/enroll", json={"session_id": sid}, headers=H)
+    assert r.status_code == 409
+    assert client.get("/v1/users/lock_u", headers=H).json() == tpl_before
+
+
+def test_enrolled_user_without_pin_evidence_is_not_allowed(client):
+    rng = random.Random(41)
+    no_swipe = [dict(human_session("pin_u", OWNER, rng), swipes=[]) for _ in range(3)]  # mẫu chuẩn không có đặc trưng vuốt
+    _enroll(client, "pin_u", no_swipe)
+    swipe_only = {"user_id": "pin_u", "pin_taps": [],
+                  "swipes": [{"points": [{"t": 0, "x": 200, "y": 600}, {"t": 40, "x": 230, "y": 470},
+                                         {"t": 90, "x": 290, "y": 330}]}]}
+    r = _score(client, _post_session(client, swipe_only))
+    assert r["owner_match"] == 0 and r["action"] != "allow", r
+    assert "missing_pin_evidence" in r["reasons"]
+    # PIN ngắn hơn PIN đã đăng ký cũng không được coi là khớp
+    short = human_session("pin_u", OWNER, rng)
+    short["pin_taps"] = short["pin_taps"][:1]
+    assert _score(client, _post_session(client, short))["action"] != "allow"
