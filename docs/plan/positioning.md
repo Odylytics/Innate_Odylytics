@@ -59,7 +59,7 @@ Hợp nhất: điểm người/máy + điểm khớp chủ + ngữ cảnh (ngư�
 
 ## Giới hạn phải nói thẳng (dữ liệu người thật công khai; chưa phải dữ liệu của đội)
 
-- Điểm "chủ": **EER 16–20%; ở FRR 5% còn ~50% kẻ gian biết PIN lọt** (E9, E10b); đổi tư thế gần như mất tín hiệu. Đây là **tín hiệu rủi ro, không phải cổng xác thực**.
+- Điểm "chủ": **EER ~16%; ở FRR 5% còn 38–57% kẻ gian biết PIN lọt** (E9, E10b, E12b: 57% khoảng cách cơ bản, 38% mô hình học); đổi tư thế gần như mất tín hiệu. Đây là **tín hiệu rủi ro, không phải cổng xác thực**.
 - Bot giống người (chiến thuật phát lại, lấy mẫu dân số) bị bắt yếu; kẻ tấn công thích nghi cấp hệ thống có thể qua mặt cả chạm lẫn cảm biến (Wang 2026, ActReal: 71–77%).
 - Web SDK không thấy được văn bản đặt thẳng không qua phím; cần SDK native.
 - Chưa có bot thật (`adb`, `dispatchGesture`) và chưa có dữ liệu của đội trong bất kỳ số đo nào.

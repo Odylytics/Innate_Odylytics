@@ -58,6 +58,13 @@ def extract(raw: dict) -> dict[str, float]:
     if amount:
         f["fld_amount_set_text"] = float(any(e["kind"] == "set_text" for fl in amount for e in fl["events"]))
 
+    chal = [fl for fl in raw.get("fields", []) if fl["name"] == "challenge"]
+    if chal:  # câu thử thách ngẫu nhiên không thể dán/đặt sẵn bởi người thật; tín hiệu mạnh hơn các ô khác
+        f["fld_challenge_set_text"] = float(any(e["kind"] == "set_text" for fl in chal for e in fl["events"]))
+        expected = max((fl.get("expected_len") or 0) for fl in chal)
+        pasted = sum(e["n"] for fl in chal for e in fl["events"] if e["kind"] == "paste")
+        f["fld_challenge_paste"] = float(expected > 0 and pasted >= 0.5 * expected)
+
     for fld in raw.get("fields", []):
         gaps = _key_gaps(fld["events"])
         if len(gaps) >= 3:  # nhịp gõ trong ô; cần >= 3 khoảng cách mới ổn định

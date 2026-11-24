@@ -1,0 +1,40 @@
+{
+  "features": [
+    "pin_dx_0",
+    "pin_dx_1",
+    "pin_dx_2",
+    "pin_dx_3",
+    "pin_dx_4",
+    "pin_dx_5",
+    "pin_dy_0",
+    "pin_dy_1",
+    "pin_dy_2",
+    "pin_dy_3",
+    "pin_dy_4",
+    "pin_dy_5",
+    "pin_flight_0",
+    "pin_flight_1",
+    "pin_flight_2",
+    "pin_flight_3",
+    "pin_flight_4",
+    "pin_hold_0",
+    "pin_hold_1",
+    "pin_hold_2",
+    "pin_hold_3",
+    "pin_hold_4",
+    "pin_hold_5",
+    "pin_total"
+  ],
+  "threshold": 0.8555336887344904,
+  "target_frr": 0.05,
+  "seed": 21,
+  "trained_on": "StrokePIN (người thật, CC BY-NC-SA 4.0), PIN 6 số, KHÔNG dùng kích thước chạm; chia theo người",
+  "status": "TẠM THỜI: dữ liệu công khai, chưa phải dữ liệu của đội; thiết bị khác nhau giữa người",
+  "heldout_report": {
+    "threshold": 0.8555336887344904,
+    "FRR_sit": 0.05009560229445507,
+    "FAR_sit": 0.35943314849044977,
+    "FRR_walk": 0.22138170590505596,
+    "FAR_walk": 0.3769880277252678
+  }
+}

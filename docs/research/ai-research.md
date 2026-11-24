@@ -180,6 +180,41 @@ Tỷ lệ bot bị bắt ở FRR 5% (LightGBM, đặc trưng `fld_*` hiện có 
 2. Dữ liệu Aalto là **chép lại câu mẫu tiếng Anh** trên điện thoại (bài kiểm tra tốc độ gõ), khác với **soạn** nội dung chuyển khoản tiếng Việt; nhịp soạn có nhiều ngừng suy nghĩ hơn.
 3. Bot vẫn do bộ sinh tạo, một ô duy nhất, chưa có bot thật.
 
+### E12 / E12b — mô hình xác minh chủ HỌC ĐƯỢC (việc A, 24/11)
+
+Mã: `research/experiments/e12_learned_owner.py` (`--no-contact` cho E12b), `train_owner_model.py`; bảng: `research/results/e12_learned_owner.md`, `e12b_learned_owner_no_contact.md`. StrokePIN, chia theo **người** (58 huấn luyện / 39 kiểm thử, 3 cách chia), đăng ký 3 lượt ngồi, kẻ gian biết PIN, prior chỉ từ người huấn luyện. Thay `mean(|z|)` (mọi đặc trưng ngang nhau) bằng bộ phân loại học trên vector |z|.
+
+| | Cùng tư thế: EER | Cùng tư thế: FAR@FRR5% | Đổi tư thế: EER | Đổi tư thế: FAR@FRR5% |
+|---|---|---|---|---|
+| E12 (có kích thước chạm) baseline | 0,149 | 0,558 | 0,354 | 0,943 |
+| E12 LightGBM | 0,108 | 0,200 | 0,264 | 0,675 |
+| **E12b (bỏ kích thước chạm)** baseline | 0,161 | 0,573 | 0,363 | 0,944 |
+| E12b hồi quy logistic | 0,206 (**+0,045, tệ hơn**) | 0,510 (khoảng tin cậy chứa 0) | 0,319 | 0,737 |
+| **E12b LightGBM** | 0,158 (−0,003, không có ý nghĩa) | **0,375 (−0,198 [−0,363, −0,085])** | **0,309 (−0,053 [−0,078, −0,033])** | **0,708 (−0,236)** |
+
+Đọc kết quả:
+- **E12 đẹp vì nhiễu thiết bị:** trọng số lớn nhất hồi quy học được là `tap_w_mean` và `tap_h_mean` (kích thước vùng chạm = khác máy giữa các người). Kẻ gian trong StrokePIN dùng máy *của họ*; kịch bản B thật thì kẻ gian cầm đúng máy nạn nhân nên hiệu ứng này mất. **Số đáng tin là E12b** (đã bỏ kích thước chạm), không phải E12.
+- **E12b: LightGBM học vẫn có lợi thật**, chủ yếu ở điểm vận hành FRR 5% (kẻ gian lọt 0,573 → 0,375) và khi đổi tư thế; **EER cùng tư thế không cải thiện**. Hồi quy logistic (trọng số tuyến tính) **không** tốt hơn khoảng cách cũ về EER.
+- **Đã nối vào backend** (`app/scoring/owner_model.py`, `app/models/owner_lgbm.*`, tuỳ chọn; thiếu thư viện, thiếu file hoặc PIN không đủ 6 phím thì dùng điểm khoảng cách cũ; `NHIP_OWNER_MODEL=off` để tắt). Điểm được ánh xạ để ngưỡng FRR 5% = 0,5. Trên 29 người giữ lại: FRR 5,0% cùng tư thế, kẻ gian lọt 0,359; **đổi tư thế chủ bị từ chối 22,1%**.
+- **Giới hạn:** huấn luyện trên 97 người công khai, mỗi người một máy (nhiễu thiết bị còn lại trong lệch tâm do chuẩn hoá theo cỡ phím ước lượng), PIN 6 số do người nghiên cứu giao, một đợt thu. Mô hình **tạm thời**; phải huấn luyện lại bằng dữ liệu của đội.
+
+### E13 — "Innate Challenge": nhiều phím hơn thì tốt hơn? (24/11)
+
+Mã: `research/experiments/e13_length_effect.py`; bảng: `research/results/e13_length_effect.md`; thiết kế: [`../plan/innate-challenge.md`](../plan/innate-challenge.md). Người thật gõ câu trên điện thoại (Aalto, chỉ thời gian), cắt ở n phím đầu, **câu kiểm thử khác nội dung câu đăng ký**.
+
+| Số phím n | Nhận chủ: EER | FAR@FRR5% | Bắt bot gõ đều (AUC) | Bắt bot lấy mẫu dân số (AUC) |
+|---|---|---|---|---|
+| 6 | 0,364 | 0,807 | 0,915 | 0,719 |
+| 10 | 0,337 | 0,733 | 0,969 | 0,764 |
+| 20 | 0,279 | 0,591 | 0,996 | 0,848 |
+| 30 | 0,245 | 0,489 | 0,995 | 0,891 |
+
+Nhiều phím hơn cải thiện rõ rệt cả nhận chủ lẫn bắt bot, khoảng tin cậy không chồng. **Nhưng số tuyệt đối vẫn yếu** (EER 24,5% ở 30 phím với 6 đặc trưng nhịp và 3 câu đăng ký); **không so được với PIN** (Aalto không có thời gian giữ phím, toạ độ); người **chép câu mẫu tiếng Anh**, không gõ chuỗi chữ-số ngẫu nhiên lúc căng thẳng; bot là giả; chưa đo gộp PIN + câu và chưa đo ma sát.
+
+### Việc B — huấn luyện lại bằng dữ liệu của đội (quy trình sẵn sàng, 24/11)
+
+`research/experiments/train_human_model.py --export export.jsonl [--no-strokepin] [--no-generated]` nhận đầu ra của `GET /v1/export` (role `genuine`/`impostor` = người, role `bot` = bot **thật**), chia người theo `participant_id`, ngưỡng FRR 5% trên người validation, báo bắt bot thật ở tập test. Mặc định (không cờ) cho **mô hình giống hệt từng byte** bản đang triển khai. Đã thử nhánh `--export` bằng dữ liệu đội **giả lập**: chạy đúng (kết quả trên dữ liệu giả không có ý nghĩa). **Việc huấn luyện thật chưa làm được vì đội chưa có dữ liệu.**
+
 ### E7 — đầu độc mẫu chuẩn (đã chạy, dữ liệu GIẢ)
 
 Mã: `research/experiments/e7_poisoning.py`; bảng: `research/results/e7_poisoning.md`. **Chưa thay đổi `owner.py`**; đây là khuyến nghị để đội quyết.

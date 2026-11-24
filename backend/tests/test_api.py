@@ -359,3 +359,44 @@ def test_swipe_size_caps(client):
 def test_human_model_is_not_applied_to_sessions_without_pin_taps():
     from app.scoring import human_model
     assert human_model.predict({"user_id": "x", "pin_taps": [], "swipes": [], "screens": []}) is None
+
+
+def test_challenge_field_set_text_or_pasted_is_machine_but_typing_is_not(client):
+    rng = random.Random(51)
+    user = "challenge_user"
+    typed = human_session(user, OWNER, rng)
+    typed["fields"] = [dict(_typed("challenge", rng, 16, "letter"), expected_len=16)]
+    r = _score(client, _post_session(client, typed))
+    assert "text_set_without_keys" not in r["reasons"] and "challenge_pasted" not in r["reasons"]
+
+    direct = human_session(user, OWNER, rng)  # đặt thẳng cả câu thử thách (kiểu ACTION_SET_TEXT)
+    direct["fields"] = [{"name": "challenge", "expected_len": 16, "events": [{"t": 900, "kind": "set_text", "n": 16}]}]
+    r = _score(client, _post_session(client, direct))
+    assert "text_set_without_keys" in r["reasons"] and r["action"] == "hold"
+
+    pasted = human_session(user, OWNER, rng)  # dán nguyên câu
+    pasted["fields"] = [{"name": "challenge", "expected_len": 16, "events": [{"t": 900, "kind": "paste", "n": 16}]}]
+    r = _score(client, _post_session(client, pasted))
+    assert "challenge_pasted" in r["reasons"]
+
+    autocorrected = human_session(user, OWNER, rng)  # bàn phím tự sửa một từ: KHÔNG phải dán cả câu
+    autocorrected["fields"] = [dict(_typed("challenge", rng, 14, "letter"), expected_len=16)]
+    autocorrected["fields"][0]["events"].append({"t": 9000, "kind": "paste", "n": 3})
+    assert "challenge_pasted" not in _score(client, _post_session(client, autocorrected))["reasons"]
+
+
+def test_owner_model_scores_small_deviations_high_and_falls_back_when_not_applicable():
+    pytest.importorskip("lightgbm")
+    from app.scoring import owner_model
+    assert owner_model.loaded()
+    keys = owner_model._load()[1]["features"]
+    close = owner_model.predict({k: 0.2 for k in keys})
+    far = owner_model.predict({k: 4.0 for k in keys})
+    assert 0 <= far < 0.5 < close <= 1  # độ lệch nhỏ => khớp chủ cao; lớn => thấp
+    assert owner_model.predict({k: 0.2 for k in keys[:-1]}) is None  # thiếu một đặc trưng (vd. PIN không đủ 6 phím) => dùng điểm cũ
+
+
+def test_owner_model_is_optional(monkeypatch):
+    from app.scoring import owner_model
+    monkeypatch.setattr(owner_model, "_state", {"m": None})
+    assert owner_model.predict({"pin_hold_0": 0.1}) is None and not owner_model.loaded()

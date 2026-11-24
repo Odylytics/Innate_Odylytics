@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .db import DATABASE_URL, Base, SessionLocal, TouchSession, User, engine
-from .scoring import explain, features, fusion, human, human_model, owner, replay
+from .scoring import explain, features, fusion, human, human_model, owner, owner_model, replay
 
 def _keys(var: str, default: str = "") -> list[str]:
     return [k.strip() for k in os.environ.get(var, default).split(",") if k.strip()]
@@ -185,6 +185,9 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
     if replay.is_replay(feats, past):
         h, bot_reasons = min(h, 0.1), [*bot_reasons, "replayed_session"]
     o, z = owner.score(feats, tpl) if tpl else (None, {})
+    if o:  # mô hình học (tuỳ chọn) thay điểm khoảng cách khi áp dụng được; o == 0 là thiếu bằng chứng PIN: giữ nguyên
+        m = owner_model.predict(z)
+        o = o if m is None else m
     history = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
         TouchSession.user_id == s.user_id, TouchSession.action == "allow",
         TouchSession.id != s.id)).all() if c]
