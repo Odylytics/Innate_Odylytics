@@ -1,7 +1,10 @@
 """Mô hình 2 bản 1: so với mẫu chuẩn bằng scaled Manhattan (Killourhy & Maxion 2009)."""
 
+import json
 import math
-from statistics import fmean, stdev
+import os
+from pathlib import Path
+from statistics import fmean, stdev, variance
 
 # Sàn độ lệch chuẩn: 3–5 lượt đăng ký cho sd rất nhiễu, sàn giữ một đặc trưng "quá ổn định" không chi phối điểm.
 _SD_FLOOR = {"pin_hold": 15.0, "pin_flight": 25.0, "pin_total": 80.0, "pin_dx": 0.05, "pin_dy": 0.05}
@@ -20,10 +23,39 @@ def _floor(k: str, mu: float) -> float:
     return max(base, 0.1 * abs(mu), 1e-6)
 
 
+def _load_prior() -> dict:
+    """Phương sai trong-người của dân số cho đặc trưng THỜI GIAN (research/experiments/make_population_prior.py)."""
+    try:
+        if os.environ.get("NHIP_POP_PRIOR", "on") == "off":
+            return {}
+        return json.loads((Path(__file__).parent / "population_prior.json").read_text(encoding="utf-8"))
+    except Exception:  # thiếu file: dùng sd có sàn như trước
+        return {}
+
+
+_PRIOR = _load_prior()
+
+
+def _sd(k: str, xs: list[float], mu: float, prior_var: dict[str, float]) -> float:
+    """Co rút (E2/E10): với đặc trưng thời gian có prior, kéo phương sai ước lượng từ vài mẫu về phương sai dân số.
+    Đặc trưng khác (lệch tâm...) giữ sd có sàn: co rút cho lệch tâm làm tệ hơn (E10).
+    """
+    pv = prior_var.get(k)
+    if pv is None or len(xs) < 2:
+        return max(stdev(xs), _floor(k, mu))
+    nu, n = _PRIOR.get("nu", 5), len(xs)
+    return math.sqrt(((n - 1) * variance(xs) + nu * pv) / (n - 1 + nu))
+
+
 def build_template(feature_list: list[dict[str, float]]) -> dict:
     keys = set.intersection(*({k for k in f if is_identity_feature(k)} for f in feature_list))
     mu = {k: fmean(f[k] for f in feature_list) for k in keys}
-    sd = {k: max(stdev([f[k] for f in feature_list]), _floor(k, mu[k])) for k in keys}
+    prior_var = dict(_PRIOR.get("within_var", {}))
+    # tổng thời gian nhập phụ thuộc độ dài PIN: chỉ dùng prior khi PIN có đúng số phím của dữ liệu nguồn
+    n = _PRIOR.get("n_taps", 6)
+    if f"pin_hold_{n - 1}" not in keys or f"pin_hold_{n}" in keys:
+        prior_var.pop("pin_total", None)
+    sd = {k: _sd(k, [f[k] for f in feature_list], mu[k], prior_var) for k in keys}
     return {"mu": mu, "sd": sd, "mu0": dict(mu), "n": len(feature_list), "updates": 0}
 
 

@@ -232,3 +232,19 @@ def test_field_typing_rhythm_enters_identity_features_only_with_enough_keys():
     assert b["fld_set_text_frac"] == 0.0 and b["fld_count"] == 2.0
     s["fields"] = [{"name": "amount", "events": [{"t": 5, "kind": "set_text", "n": 6}]}]
     assert bot_features.extract(s)["fld_amount_set_text"] == 1.0
+
+
+def test_human_model_is_loaded_and_separates_bot_from_human():
+    pytest.importorskip("lightgbm")  # mô hình là tuỳ chọn (nhóm `ml`)
+    from app.scoring import human_model
+    assert human_model.loaded()
+    rng = random.Random(31)
+    humans = [human_model.predict(human_session("m", OWNER, rng)) for _ in range(50)]
+    assert sum(p < 0.5 for p in humans) <= 2  # người giả không bị coi là máy
+    assert human_model.predict(bot_session("m")) < 0.5
+
+
+def test_human_model_is_optional(monkeypatch):
+    from app.scoring import human_model
+    monkeypatch.setattr(human_model, "_state", {"m": None})  # như thiếu lightgbm hoặc thiếu file mô hình
+    assert human_model.predict(bot_session("m")) is None and not human_model.loaded()

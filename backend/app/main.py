@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .db import Base, SessionLocal, TouchSession, User, engine
-from .scoring import explain, features, fusion, human, owner, replay
+from .scoring import explain, features, fusion, human, human_model, owner, replay
 
 API_KEYS = [k.strip() for k in os.environ.get("NHIP_API_KEYS", "demo-key").split(",") if k.strip()]
 CORS_ORIGINS = os.environ.get("NHIP_CORS_ORIGINS", "*").split(",")
@@ -143,6 +143,12 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
     feats = s.features
 
     h, bot_reasons = human.score(feats)
+    # mô hình học (tuỳ chọn): chỉ thay luật khi luật không có đủ dữ liệu, còn lại lấy điểm bi quan hơn
+    p = human_model.predict(s.raw)
+    if p is not None:
+        h = p if bot_reasons == ["insufficient_data"] else min(h, p)
+        if p < 0.5 and not [r for r in bot_reasons if r in explain._BOT_VI]:
+            bot_reasons = [*bot_reasons, "ml_bot_pattern"]
     # phát lại: gần như y hệt một phiên cũ của chính tài khoản này (người thật không lặp lại nhịp)
     past = db.scalars(select(TouchSession.features).where(
         TouchSession.user_id == s.user_id, TouchSession.id != s.id)

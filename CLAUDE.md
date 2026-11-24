@@ -28,6 +28,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).
 - `SessionIn.fields` = text-field events (amount/recipient/note): only time, kind (key/paste/delete/set_text) and char count, NEVER content. `set_text` on `amount` => rule `text_set_without_keys` (unvalidated, R9). Web SDK cannot emit `set_text`.
 - `backend/app/static/wallet.html` — demo wallet + JS SDK (6-digit demo PIN 159357), served at `/`.
+- Population-variance shrinkage for TIMING features is in `owner.py` (`population_prior.json`, nu=5; off with `NHIP_POP_PRIOR=off`); offsets deliberately keep the sd floor (shrinking them hurts, E10). Human/bot LightGBM is wired in `/score` via `scoring/human_model.py` (optional, `NHIP_HUMAN_MODEL=off`; model files in `app/models/` are TEMPORARY: StrokePIN humans + generator bots). Both derive from CC BY-NC-SA 4.0 data: declare in the submission README.
 - Not built yet: ops dashboard, trained LightGBM/RF model, real data. Replay check exists (`scoring/replay.py`, wired in `/score`, threshold from SYNTHETIC data, recalibrate on real data).
 
 ## Commands (PowerShell-style in READMEs; uses `uv`)
@@ -52,5 +53,5 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 
 ## Known gaps
 - Replay (tactic 3): caught up to ~±10–15% attacker noise (E5, synthetic); fails at ±20%+. PIN-4 FPR grows with history size (history capped at 50). Threshold needs real-data calibration.
-- `owner.py` score mapping (d=2 → 0.5) is uncalibrated and too lenient: on synthetic data 56% of real impostor sessions already score >= 0.5 before any poisoning (E7). Calibrate on real data (E3). E7 recommends "freeze + flag" over the per-feature 1 sd cap (not yet applied).
+- `owner.py` score mapping (d=2 → 0.5) is uncalibrated and too lenient (also: owner signal alone is weak, E9/E10b: FAR ~50% at FRR 5%): on synthetic data 56% of real impostor sessions already score >= 0.5 before any poisoning (E7). Calibrate on real data (E3). E7 recommends "freeze + flag" over the per-feature 1 sd cap (not yet applied).
 - Bot model train/test share the same 4 generators; keep `adb`/real malware sessions as an independent test set.

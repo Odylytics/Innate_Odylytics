@@ -1,0 +1,21 @@
+{
+  "within_var": {
+    "pin_flight_0": 5625.78,
+    "pin_flight_1": 10605.77,
+    "pin_flight_2": 12004.36,
+    "pin_flight_3": 12500.8,
+    "pin_flight_4": 8589.39,
+    "pin_hold_0": 183.35,
+    "pin_hold_1": 172.11,
+    "pin_hold_2": 163.91,
+    "pin_hold_3": 165.41,
+    "pin_hold_4": 166.39,
+    "pin_hold_5": 228.73,
+    "pin_total": 54057.84
+  },
+  "n_taps": 6,
+  "nu": 5,
+  "source": "StrokePIN (Yao & Wang 2026, CC BY-NC-SA 4.0), 97 người, PIN 6 số, ngồi+đi; thống kê tổng hợp trên mọi PIN",
+  "n_groups": 3659,
+  "note": "pin_total chỉ dùng khi PIN có đúng 6 phím"
+}

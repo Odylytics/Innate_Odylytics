@@ -7,6 +7,7 @@ _BOT_VI = {
     "tap_exact_center": "chạm đúng tâm nút",
     "swipe_perfectly_straight": "vuốt thẳng tuyệt đối",
     "text_set_without_keys": "văn bản được đặt thẳng vào ô, không có nhịp gõ",
+    "ml_bot_pattern": "mẫu thao tác giống bot theo mô hình học máy",
     "replayed_session": "lặp lại gần như y hệt một phiên trước đó",
 }
 _ACTION_VI = {

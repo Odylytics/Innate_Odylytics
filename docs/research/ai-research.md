@@ -102,7 +102,7 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 | # | Giả thuyết | Quy trình | Chỉ số | Cần dữ liệu thật? |
 |---|---|---|---|---|
 | E1 | Mahalanobis co rút ≥ scaled Manhattan khi chỉ có 3–5 mẫu (**proxy đã chạy: không, kém hơn**; chưa lặp lại trên StrokePIN) | Cùng chia dữ liệu; so theo số lượt đăng ký 1/3/5 | EER, FAR@FRR 5% + khoảng tin cậy | Có |
-| E2 | Co rút về dân số tốt hơn sàn σ cố định (**đã chạy trên DSL và StrokePIN (E9): giảm FAR@FRR 5% 7–16 điểm, EER không đổi**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
+| E2 | Co rút về dân số tốt hơn sàn σ cố định (**đã chạy trên DSL và StrokePIN; bản triển khai được = chỉ thời gian, đã vào `owner.py`: FAR@FRR 5% 0,66 → 0,50, E10b**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
 | E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần ngồi 1, kiểm thử lần ngồi 2 | FAR@FRR 5%, đường DET | Có |
 | E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** (**đã chạy: E4 người giả quá lạc quan; E4b người thật: bắt 100% bot ngây thơ, CT3 26%, CT4 20–73%, bot lạ yếu**) | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
 | E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật (**đã chạy: bắt 100% ở ±5–10% nhiễu, thua từ ±20%**) | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
@@ -214,6 +214,41 @@ So với E4 (người giả):
 2. **Chiến thuật 3 (phát lại) phải giao cho kiểm tra phát lại (E5)**, không phải cho phân loại: phân loại chỉ bắt 9–26%.
 3. **Chiến thuật 4 (lấy mẫu từ dân số) chỉ bắt 20–73%** tuỳ có thấy hay chưa. Nói thẳng là giới hạn.
 4. Vẫn là **bot giả**: chưa có bot thật. Kết quả trên bot thật có thể khác theo cả hai hướng.
+
+### E10 / E10b — co rút về dân số, bản triển khai được, đã vào `owner.py` (24/11)
+
+Mã: `research/experiments/e10_deployable_prior.py` (so các biến thể), `e10b_backend_path.py` (kiểm tra chính mã backend), `make_population_prior.py` (sinh prior); bảng: `research/results/e10_deployable_prior.md`, `e10b_backend_path.md`. Dữ liệu: StrokePIN, người thật, prior **bỏ-một-người**.
+
+E9 dùng prior riêng theo (PIN, tư thế), mà khi chạy thật không biết trước PIN. E10 thử prior **dùng chung mọi PIN và cả hai tư thế**:
+- **Chỉ thời gian:** prior chung giảm FAR@FRR 5% ~8–11 điểm, gần bằng bản cận trên theo PIN (−0,11).
+- **Thêm lệch tâm: co rút cho lệch tâm làm TỆ HƠN** (EER +0,04, FAR +0,06; kể cả prior theo PIN cũng làm EER tệ +0,03). Độ dao động lệch tâm khác nhau quá nhiều giữa người và thiết bị. **Đây là điều chỉnh so với kết luận E9** (khi đó tôi nói E2 nên áp dụng cho mọi đặc trưng).
+- **Biến thể lai thắng:** co rút **chỉ cho thời gian**, giữ sd có sàn cho lệch tâm.
+
+**Đã áp dụng vào `owner.py`** (hàm `_sd`, `population_prior.json`, ν=5): chỉ `pin_hold_i`, `pin_flight_i`, và `pin_total` (chỉ khi PIN đúng 6 phím); có thể tắt bằng `NHIP_POP_PRIOR=off`.
+
+E10b chạy **chính `owner.build_template`/`owner.score`** với mọi đặc trưng nhận dạng như backend thật, k=3:
+
+| Tư thế kiểm thử | Co rút | EER | FAR @ FRR 5% |
+|---|---|---|---|
+| Cùng (ngồi) | tắt (cũ) | 0,153 | 0,663 |
+| Cùng (ngồi) | **bật** | 0,146 | **0,495** |
+| | chênh lệch ghép cặp | −0,007 [−0,011, −0,004] | **−0,167 [−0,190, −0,114]** |
+| Đổi (đi) | tắt / bật | 0,352 / 0,355 | 0,943 / 0,943 |
+
+Đọc kết quả:
+- Cải thiện thật và **không đánh đổi EER** ở cùng tư thế: kẻ gian lọt giảm từ 66% xuống 50% ở FRR 5%.
+- **Không cứu được trường hợp đổi tư thế** (0,943 không đổi). Vấn đề đó cần đăng ký nhiều tư thế, không phải co rút.
+- FAR 50% vẫn rất cao: điểm "chủ" vẫn không thể làm cổng chặn.
+- **Giới hạn:** prior trong `population_prior.json` tính trên **cả 97 người** (bản chạy thật), nên khi chấm lại trên chính StrokePIN sẽ rò rỉ; E10b dùng bỏ-một-người để tránh. Prior là thống kê từ dữ liệu CC BY-NC-SA 4.0: ghi trong README. Chỉ kiểm trên PIN 6 số trên điện thoại ở một đợt thu.
+
+### Mô hình người/máy đã nối vào backend (24/11, TẠM THỜI)
+
+- `backend/app/scoring/human_model.py` nạp LightGBM (`backend/app/models/human_lgbm.txt` + `.json`); **tuỳ chọn**: thiếu `lightgbm`, thiếu file hoặc đặt `NHIP_HUMAN_MODEL=off` thì dùng luật baseline. Nối trong `/score`: lấy điểm bi quan hơn giữa luật và mô hình (nếu luật không đủ dữ liệu thì dùng điểm mô hình); mô hình cờ mà luật không giải thích được thì thêm lý do `ml_bot_pattern`.
+- Điểm mô hình được ánh xạ để ngưỡng FRR 5% (trên người validation) = 0,5.
+- Huấn luyện: `research/experiments/train_human_model.py` trên **người thật StrokePIN + bot sinh bởi `tactics.py`**, chia theo người, **không dùng kích thước chạm**. Mô hình này là **tạm thời**: chưa phải dữ liệu của đội, chưa có bot thật.
+- Kết quả trên 20 người **chưa từng thấy**: FRR 3,3%; bắt chiến thuật 1: 100%, 2: 100%, 3: 12%, 4: 61% (nhất quán với E4b). Người giả của `tests/synth.py` không bị coi là máy (0/200), bot chiến thuật 1 điểm 0,0.
+- **Giấy phép:** mô hình huấn luyện trên StrokePIN (CC BY-NC-SA 4.0, chia sẻ phái sinh cùng giấy phép). Ghi trong README nộp bài.
+- Cài đặt: `pip install lightgbm` (nhóm `ml` tuỳ chọn trong `pyproject.toml`); chưa cập nhật `uv.lock`.
 
 ### Open weights có sẵn (đã kiểm chứng ngày 24/11 qua GitHub API)
 
