@@ -104,7 +104,7 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 | E1 | Mahalanobis co rút ≥ scaled Manhattan khi chỉ có 3–5 mẫu (**proxy đã chạy: không, kém hơn**; chưa lặp lại trên StrokePIN) | Cùng chia dữ liệu; so theo số lượt đăng ký 1/3/5 | EER, FAR@FRR 5% + khoảng tin cậy | Có |
 | E2 | Co rút về dân số tốt hơn sàn σ cố định (**đã chạy trên DSL và StrokePIN (E9): giảm FAR@FRR 5% 7–16 điểm, EER không đổi**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
 | E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần ngồi 1, kiểm thử lần ngồi 2 | FAR@FRR 5%, đường DET | Có |
-| E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** (**proxy đã chạy: vượt luật với bot đã thấy; sập 0–23% với bot lạ do học tắt; IsolationForest tổng quát hoá tốt hơn**) | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
+| E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** (**đã chạy: E4 người giả quá lạc quan; E4b người thật: bắt 100% bot ngây thơ, CT3 26%, CT4 20–73%, bot lạ yếu**) | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
 | E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật (**đã chạy: bắt 100% ở ±5–10% nhiễu, thua từ ±20%**) | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
 | E6 | Tín hiệu mới (lượng tử hoá thời gian, dao động toạ độ) tách bot khỏi người | Thêm từng nhóm đặc trưng, đo cải thiện | Độ quan trọng, ΔAUC/ΔFAR | Có, cùng với dữ liệu `adb` |
 | E7 | Chống đầu độc: drift cap + kiểm tra hướng trôi chặn được chuỗi "dạy dần" (**đã chạy: trần giới hạn chứ không loại bỏ; khuyến nghị đóng băng + cờ**) | Mô phỏng chuỗi phiên bot nằm trên ngưỡng cập nhật | Độ trôi mẫu sau n lần | Không (mô phỏng) |
@@ -189,6 +189,31 @@ Tỷ lệ bot bị bắt (FRR thật ~5%):
 - Đặc trưng quan trọng nhất: `swipe_v_peak_ratio`, `swipe_lateral_dev`, `dy_std`, `tap_w_std`, `dx_std`. Hầu hết là đặc trưng vuốt/lệch tâm do bộ sinh quyết định, nên cần soi lại với dữ liệu thật.
 
 **Hệ quả:** bài người/máy cần **nhiều họ bot khác nhau do công cụ thật sinh ra** (`adb`, app `dispatchGesture`, ít nhất vài kiểu), và người thật. Chỉ khi đó đánh giá "bỏ một họ bot" mới có nghĩa.
+
+### E4b — người/máy với NGƯỜI THẬT (đã chạy; người thật, bot vẫn giả)
+
+Mã: `research/experiments/e4b_human_bot_real.py`; bảng: `research/results/e4b_human_bot_real.md`. Người = phiên PIN thật từ StrokePIN, **chia theo người** (train 40 / val 12 / test 30 / kho kẻ tấn công 15, không trùng người, 3 cách chia). Bot = 4 chiến thuật của nhóm, dựng trên PIN thật và phân bố người thật; chỉ so phần PIN (bot bị bỏ vuốt/màn hình vì StrokePIN không có). Ngưỡng FRR 5% chọn trên người ở tập validation.
+
+| Tỷ lệ bot bị bắt | CT1 | CT2 | CT3 | CT4 | FRR thật |
+|---|---|---|---|---|---|
+| Luật baseline (`human.py`) | 1,00 | 1,00 | 0,05 | 0,01 | 0,058 |
+| LightGBM, đã thấy cả 4 chiến thuật | 1,00 | 1,00 | **0,26** | **0,73** | 0,059 |
+| LightGBM, **bỏ đúng chiến thuật đó** | 1,00 | 0,56 | 0,09 | 0,20 | 0,059 |
+| IsolationForest (chỉ người), có kích thước chạm | 1,00 | 0,86 | 0,07 | 0,03 | 0,046 |
+| IsolationForest, **không** kích thước chạm | **0,33** | **0,31** | 0,07 | 0,03 | 0,056 |
+
+So với E4 (người giả):
+- **E4 giả đã quá lạc quan.** Chiến thuật 3: 0,85 → **0,26**; chiến thuật 4: 0,97 → **0,73**. Với người thật thì bot giống người khó bắt hơn nhiều.
+- **Hiện tượng "sập 0%" của E4 biến mất** (bỏ CT1 vẫn bắt 100%): nó là học tắt do chi tiết vuốt của bộ sinh người giả, đúng như đã chẩn đoán. Nhưng **bot lạ vẫn khó**: bỏ CT2 còn 0,56, bỏ CT3 còn 0,09, bỏ CT4 còn 0,20.
+- **IsolationForest chỉ tách được bot ngây thơ nhờ kích thước chạm:** bỏ nhóm này thì chiến thuật 1, 2 chỉ còn 0,31–0,33. Bot dùng `w=h=1` quá dễ lộ ở dữ liệu giả; bot thật có thể đặt giá trị bất kỳ, và trình duyệt cũng trả 1 cho người thật khi máy không đo được (R2). Không được dựa vào nhóm này.
+- **LightGBM giám sát vẫn bắt chiến thuật 1, 2 ở 100% kể cả không có kích thước chạm** (nhờ nhịp đều và đúng tâm), nên đây là phần chắc nhất.
+- **FRR thật 5,8–6,4% so với mục tiêu 5%:** người test dùng thiết bị khác người validation. Ngưỡng cần hiệu chỉnh theo thiết bị.
+
+**Hệ quả:**
+1. Bài người/máy chắc chắn bắt được **bot ngây thơ** (chiến thuật 1, 2; `adb`, script). Đây là con số có thể nói.
+2. **Chiến thuật 3 (phát lại) phải giao cho kiểm tra phát lại (E5)**, không phải cho phân loại: phân loại chỉ bắt 9–26%.
+3. **Chiến thuật 4 (lấy mẫu từ dân số) chỉ bắt 20–73%** tuỳ có thấy hay chưa. Nói thẳng là giới hạn.
+4. Vẫn là **bot giả**: chưa có bot thật. Kết quả trên bot thật có thể khác theo cả hai hướng.
 
 ### Open weights có sẵn (đã kiểm chứng ngày 24/11 qua GitHub API)
 
