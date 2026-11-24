@@ -87,7 +87,7 @@ Example `/score` response (reasons are codes; the explanation text is Vietnamese
   "human_score": 0.97,
   "owner_match": 0.31,
   "risk": "medium",
-  "risk_score": 0.404,
+  "risk_score": 0.403,
   "action": "step_up",
   "reasons": ["pin_rhythm_slower_40pct", "tap_offset_right", "new_recipient"],
   "explanation_vi": "Thao tác giống người thật nhưng không khớp thói quen của chủ tài khoản (...). Đề nghị xác thực khuôn mặt trước khi chuyển."
