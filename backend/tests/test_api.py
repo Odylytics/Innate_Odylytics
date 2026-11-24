@@ -141,3 +141,8 @@ def test_bot_meta_requires_tactic(client):
                        ({"participant_id": "sim", "sitting": 1, "role": "bot"}, 422),
                        ({"participant_id": "p01", "sitting": 1, "role": "genuine", "tactic": 1}, 422)]:
         assert client.post("/v1/sessions", json=dict(body, meta=meta), headers=H).status_code == code
+
+
+def test_wallet_page_served(client):
+    r = client.get("/")
+    assert r.status_code == 200 and "TIBOM SDK" in r.text

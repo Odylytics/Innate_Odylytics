@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>TIBOM — Ví demo</title>
+<style>
+:root{--pink:#a50064;--pink2:#d82d8b;--bg:#eeeef1;--card:#fff;--ink:#222;--mute:#8a8a93;--line:#e7e7ec;--ok:#1aa760;--warn:#f0a020;--bad:#e5484d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;min-height:100vh;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;touch-action:pan-y;position:relative}
+@media(min-width:600px){body{padding:24px 0}#app{min-height:min(860px,calc(100dvh - 48px));border-radius:22px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.18)}}
+.bar{background:linear-gradient(135deg,var(--pink),var(--pink2));color:#fff;padding:calc(env(safe-area-inset-top) + 16px) 16px 44px;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:2}
+.bar .back{font-size:28px;line-height:1;padding:0 8px 0 0;cursor:pointer}
+.body{flex:1;padding:0 12px;margin-top:-30px}
+.card{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.lbl{font-size:13px;color:var(--mute);margin-bottom:4px}
+.src{display:flex;justify-content:space-between;align-items:center;gap:8px}.src b{font-size:15px}
+input,select{width:100%;border:0;border-bottom:1px solid var(--line);padding:8px 0;font-size:17px;background:transparent;color:var(--ink);outline:none;border-radius:0}
+input:focus{border-bottom-color:var(--pink)}
+.amt{font-size:clamp(24px,7vw,32px);font-weight:700;color:var(--pink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:6px 12px;border-radius:99px;background:#fbe9f3;color:var(--pink);font-size:14px;cursor:pointer}
+.foot{position:sticky;bottom:0;padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);background:linear-gradient(to top,var(--bg) 70%,transparent)}
+.btn{display:block;width:100%;padding:15px;border:0;border-radius:12px;background:var(--pink);color:#fff;font-size:17px;font-weight:600;text-align:center;cursor:pointer}
+.btn.alt{background:#fff;color:var(--pink);border:1px solid var(--pink);margin-top:8px}
+.err{color:var(--bad);min-height:22px;text-align:center;font-size:14px;margin:4px 12px}
+.pinwrap{flex:1;display:flex;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;margin-top:-26px;touch-action:none;position:relative;z-index:3}
+.pinhead{text-align:center;padding:clamp(14px,3.5vh,30px) 16px 0}
+.pinhead h1{font-size:19px;margin:0 0 6px}.pinhead .mute{color:var(--mute);font-size:14px}
+.dots{display:flex;gap:clamp(12px,4vw,18px);justify-content:center;margin:clamp(14px,3vh,26px) 0 4px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid #c9c9d1}.dots i.on{background:var(--pink);border-color:var(--pink)}
+.forgot{text-align:center;color:var(--pink);font-size:14px;margin:6px 0}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-top:auto;border-top:1px solid var(--line)}
+.pad button,.pad span{height:clamp(54px,9.5vh,78px);border:0;background:#fff;color:var(--ink);font-size:clamp(22px,3.6vh,28px);touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+.pad button:active{background:#fbe9f3}.pad .del{font-size:22px;color:var(--mute)}
+.res{text-align:center;padding:28px 16px 8px}
+.ico{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:36px}
+.ico.allow{background:var(--ok)}.ico.step_up{background:var(--warn)}.ico.hold{background:var(--bad)}
+.res h1{font-size:20px;margin:0 0 4px}.res .amt{font-size:26px}
+.why{font-size:14px}.why ul{margin:6px 0 0;padding-left:18px}.mute{color:var(--mute);font-size:13px}
+details{margin:4px 12px}summary{color:var(--mute);font-size:13px;cursor:pointer}details label{display:block;margin-top:8px;font-size:13px;color:var(--mute)}
+.note{text-align:center;color:var(--mute);font-size:12px;margin:12px 16px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ---------- TIBOM SDK (thu tín hiệu: chỉ thời gian + toạ độ, không lưu nội dung PIN) ----------
+const Nhip = (() => {
+  let t0, taps, swipes, screens, cur, down = {}, sw = null;
+  const now = () => Math.round((performance.now() - t0) * 10) / 10;
+  const r1 = v => Math.round(v * 10) / 10;
+  return {
+    start() { t0 = performance.now(); taps = []; swipes = []; screens = []; cur = null; },
+    screen(name) { cur = { name, t_enter: now(), t_first_touch: null }; screens.push(cur); },
+    // gọi từ pointerdown/up/move của toàn trang
+    onDown(e, keyEl) {
+      if (cur && cur.t_first_touch == null) cur.t_first_touch = now();
+      if (keyEl) {
+        const b = keyEl.getBoundingClientRect();
+        down[e.pointerId] = { key: keyEl.dataset.k, t_down: now(), x: r1(e.clientX), y: r1(e.clientY), w: r1(e.width), h: r1(e.height),
+          key_cx: r1(b.left + b.width / 2), key_cy: r1(b.top + b.height / 2), key_w: r1(b.width), key_h: r1(b.height) };
+      } else sw = { id: e.pointerId, points: [{ t: now(), x: r1(e.clientX), y: r1(e.clientY) }] };
+    },
+    onMove(e) { if (sw && sw.id === e.pointerId && sw.points.length < 500) sw.points.push({ t: now(), x: r1(e.clientX), y: r1(e.clientY) }); },
+    onUp(e) {
+      const d = down[e.pointerId];
+      if (d) { delete down[e.pointerId]; d.t_up = now(); if (taps.length < 12) taps.push(d); }
+      if (sw && sw.id === e.pointerId) { if (sw.points.length >= 2 && swipes.length < 100) swipes.push({ points: sw.points }); sw = null; }
+    },
+    // cuộn trang làm trình duyệt huỷ con trỏ: vẫn giữ lại đường vuốt đã ghi được
+    onCancel(e) { delete down[e.pointerId]; if (sw && sw.id === e.pointerId) { if (sw.points.length >= 2 && swipes.length < 100) swipes.push({ points: sw.points }); sw = null; } },
+    clearPin() { taps = []; },
+    popTap() { taps.pop(); },
+    payload(user_id, device_id, meta) { const p = { user_id, device_id, pin_taps: taps, swipes, screens }; if (meta) p.meta = meta; return p; },
+  };
+})();
+
+// ---------- Cấu hình (lưu cục bộ, có thể bị chặn nên bọc try/catch) ----------
+const store = {
+  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const cfg = () => ({
+  key: store.get("nhip_key", "demo-key"), user: store.get("nhip_user", "demo_user"),
+  who: store.get("nhip_who", ""), sitting: +store.get("nhip_sit", "1"), role: store.get("nhip_role", "genuine"),
+});
+const DEMO_PIN = "159357";
+const PIN_LEN = DEMO_PIN.length;
+const DEPLOY = "https://nhip-api-taupe.vercel.app"; // dùng khi trang không được phục vụ bởi chính backend
+const known = () => { try { return JSON.parse(store.get("nhip_known", "[]")); } catch { return []; } };
+
+let BASE = null;
+// Trang được backend phục vụ -> gọi cùng origin; mở bằng static server/file -> gọi bản đã deploy (hoặc URL tự đặt)
+async function base() {
+  if (BASE !== null) return BASE;
+  const saved = store.get("nhip_api", "");
+  if (saved) return (BASE = saved.replace(/\/$/, ""));
+  try { const r = await fetch("/health"); if (r.ok && (await r.json()).status === "ok") return (BASE = ""); } catch {}
+  return (BASE = DEPLOY);
+}
+
+async function api(path, body, method = "POST") {
+  const r = await fetch((await base()) + path, { method, headers: { "Content-Type": "application/json", "X-API-Key": cfg().key }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Lỗi " + r.status + " (kiểm tra API URL trong Cài đặt)");
+  return j;
+}
+
+// ---------- Giao diện (phong cách ví điện tử; không dùng logo hay tên thương hiệu thật) ----------
+const app = document.getElementById("app");
+let mode = "transfer", form = { acct: "", amount: 0, isNew: false }, pin = "", enrolledInfo = "";
+const money = n => n.toLocaleString("vi-VN") + "₫";
+const digits = v => +String(v).replace(/\D/g, "");
+
+async function loadEnroll() {
+  try { const u = await api(`/v1/users/${cfg().user}`, null, "GET"); enrolledInfo = `${u.enrolled_sessions} lượt đăng ký · ${u.template_ready ? "mẫu chuẩn sẵn sàng" : "cần ≥ 3 lượt"}`; }
+  catch { enrolledInfo = "Chưa đăng ký nhịp (cần ≥ 3 lượt)"; }
+}
+
+async function home() {
+  Nhip.start(); Nhip.screen("transfer"); pin = ""; mode = "transfer";
+  await loadEnroll();
+  const rec = known().slice(-3).reverse();
+  app.innerHTML = `<div class="bar"><span>Chuyển tiền</span></div>
+  <div class="body">
+    <div class="card"><div class="lbl">Nguồn tiền</div><div class="src"><b>Ví của tôi</b><b>12.500.000₫</b></div></div>
+    <div class="card"><div class="lbl">Số điện thoại / số tài khoản người nhận</div>
+      <input id="acct" inputmode="numeric" placeholder="Nhập số người nhận" value="${form.acct}">
+      ${rec.length ? `<div class="chips">${rec.map(r => `<span class="chip" data-fill="${r}">${r}</span>`).join("")}</div>` : ""}</div>
+    <div class="card"><div class="lbl">Số tiền</div>
+      <input id="amt" class="amt" inputmode="numeric" placeholder="0₫" value="${form.amount ? money(form.amount) : ""}">
+      <div class="chips">${[50000, 100000, 500000, 2000000].map(v => `<span class="chip" data-amt="${v}">${money(v)}</span>`).join("")}</div></div>
+    <div class="card"><div class="lbl">Lời nhắn</div><input id="msg" placeholder="Chuyển tiền"></div>
+    <div class="note">${enrolledInfo}<br>Giao diện minh hoạ cho bản thử nghiệm TIBOM, không phải ứng dụng của bất kỳ ví nào.</div>
+    <details><summary>Cài đặt thu dữ liệu</summary>
+      <label>API URL (để trống = tự dò)</label><input id="c_api" value="${store.get("nhip_api", "")}" placeholder="${DEPLOY}">
+      <label>API key</label><input id="c_key" value="${cfg().key}">
+      <label>Tài khoản bị thao tác (user_id)</label><input id="c_user" value="${cfg().user}">
+      <label>Người cầm máy (participant_id, để trống nếu không thu dữ liệu)</label><input id="c_who" value="${cfg().who}">
+      <label>Lần ngồi</label><input id="c_sit" type="number" min="1" max="20" value="${cfg().sitting}">
+      <label>Vai trò</label><select id="c_role"><option value="genuine">genuine (chủ)</option><option value="impostor">impostor (biết PIN, đóng giả)</option></select>
+    </details>
+  </div>
+  <div class="foot"><div class="err" id="err"></div><div class="btn" id="next">Tiếp tục</div><div class="btn alt" data-go="enroll">Đăng ký nhịp thao tác</div></div>`;
+  document.getElementById("c_role").value = cfg().role;
+  for (const [id, k] of [["c_api", "nhip_api"], ["c_key", "nhip_key"], ["c_user", "nhip_user"], ["c_who", "nhip_who"], ["c_sit", "nhip_sit"], ["c_role", "nhip_role"]])
+    document.getElementById(id).onchange = e => { store.set(k, e.target.value.trim()); if (id === "c_api") BASE = null; if (id === "c_user" || id === "c_api") home(); };
+  const amt = document.getElementById("amt");
+  amt.oninput = () => { const v = digits(amt.value); amt.value = v ? money(v) : ""; };
+  document.getElementById("next").onclick = () => {
+    const acct = document.getElementById("acct").value.trim(), a = digits(amt.value);
+    if (!acct || !a) return (document.getElementById("err").textContent = "Nhập người nhận và số tiền");
+    form = { acct, amount: a, isNew: !known().includes(acct) }; pinScreen();
+  };
+}
+
+const paintDots = () => document.querySelectorAll(".dots i").forEach((d, i) => d.classList.toggle("on", i < pin.length));
+function resetPin(msg) { pin = ""; Nhip.clearPin(); paintDots(); const e = document.getElementById("err"); if (e) e.textContent = msg || ""; }
+
+function pinScreen() {
+  Nhip.screen("pin"); Nhip.clearPin(); pin = "";
+  const sub = mode === "enroll" ? "Đăng ký nhịp thao tác của bạn" : `Chuyển ${money(form.amount)} đến ${form.acct}`;
+  app.innerHTML = `<div class="bar"><span class="back" data-go="home">‹</span><span>Xác nhận</span></div>
+  <div class="pinwrap">
+    <div class="pinhead"><h1>Nhập mã PIN</h1><div class="mute">${sub}</div><div class="mute">PIN demo: ${DEMO_PIN}</div></div>
+    <div class="dots">${"<i></i>".repeat(PIN_LEN)}</div><div class="err" id="err"></div><div class="forgot">Quên mã PIN?</div>
+    <div class="pad">${[1,2,3,4,5,6,7,8,9].map(k => `<button data-k="${k}">${k}</button>`).join("")}<span></span><button data-k="0">0</button><button class="del" data-del aria-label="Xoá">⌫</button></div>
+  </div>`;
+}
+
+async function finishPin() {
+  document.getElementById("err").textContent = "Đang xác minh…";
+  try {
+    const c = cfg(), meta = c.who ? { participant_id: c.who, sitting: c.sitting, role: c.role } : null;
+    const s = await api("/v1/sessions", Nhip.payload(c.user, navigator.userAgent.slice(0, 60), meta));
+    if (mode === "enroll") { await api(`/v1/users/${c.user}/enroll`, { session_id: s.session_id }); return home(); }
+    result(await api(`/v1/sessions/${s.session_id}/score`, { recipient_is_new: form.isNew, amount: form.amount }));
+  } catch (e) { resetPin(e.message); }
+}
+
+function result(r) {
+  const t = { allow: ["✓", "Chuyển tiền thành công"], step_up: ["!", "Cần xác thực thêm"], hold: ["✕", "Giao dịch đang được giữ"] }[r.action];
+  if (r.action === "allow") store.set("nhip_known", JSON.stringify([...known(), form.acct]));
+  app.innerHTML = `<div class="bar"><span>Kết quả</span></div>
+  <div class="body"><div class="card res"><div class="ico ${r.action}">${t[0]}</div><h1>${t[1]}</h1>
+    <div class="amt">${money(form.amount)}</div><div class="mute">đến ${form.acct}</div></div>
+    <div class="card why"><div class="lbl">TIBOM chấm điểm phiên này</div>${r.explanation_vi}
+      <ul>${r.reasons.map(x => `<li>${x}</li>`).join("")}</ul>
+      <div class="mute" style="margin-top:8px">Người thật: ${r.human_score} · Khớp chủ: ${r.owner_match ?? "chưa có mẫu"} · Rủi ro: ${r.risk_score} (${r.risk})</div></div></div>
+  <div class="foot"><div class="btn" data-go="home">Xong</div></div>`;
+}
+
+// ---------- Sự kiện toàn cục ----------
+const keyOf = e => e.target.closest && e.target.closest("[data-k]");
+app.addEventListener("pointerdown", e => Nhip.onDown(e, keyOf(e)));
+app.addEventListener("pointermove", e => Nhip.onMove(e));
+app.addEventListener("pointerup", e => {
+  const k = keyOf(e);
+  Nhip.onUp(e);
+  if (k && document.querySelector(".pad") && pin.length < PIN_LEN) {
+    pin += k.dataset.k; paintDots();
+    if (pin.length === PIN_LEN) pin === DEMO_PIN ? finishPin() : resetPin("PIN sai, nhập lại");
+  }
+});
+app.addEventListener("pointercancel", e => Nhip.onCancel(e));
+app.addEventListener("contextmenu", e => e.preventDefault());
+app.addEventListener("click", e => {
+  if (e.target.closest("[data-del]")) { if (pin) { pin = pin.slice(0, -1); Nhip.popTap(); paintDots(); } return; }
+  const f = e.target.closest("[data-fill]"); if (f) { document.getElementById("acct").value = f.dataset.fill; return; }
+  const m = e.target.closest("[data-amt]"); if (m) { document.getElementById("amt").value = money(+m.dataset.amt); return; }
+  const g = e.target.closest("[data-go]"); if (!g) return;
+  if (g.dataset.go === "home") { form = { acct: "", amount: 0, isNew: false }; home(); }
+  else if (g.dataset.go === "enroll") { mode = "enroll"; Nhip.start(); pinScreen(); }
+});
+// ô nhập liệu phải nhận chạm bình thường
+app.addEventListener("pointerdown", e => { if (e.target.matches("input,select,summary")) e.stopPropagation(); }, true);
+
+home();
+</script>
+</body>
+</html>
