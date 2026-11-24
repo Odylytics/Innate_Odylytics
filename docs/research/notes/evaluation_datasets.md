@@ -1,4 +1,4 @@
-# Evaluation methodology & datasets — academic backing for Nhịp (plan §5.5, §8, §10)
+# Evaluation methodology & datasets — academic backing for TIBOM (plan §5.5, §8, §10)
 
 Scope: papers that back the plan's evaluation choices (temporal split, single phone, no impostor data in training, report EER + FAR@FRR=5% + per-tactic bot catch rate + accuracy vs. #enrolments 1/3/5), plus public datasets usable for benchmarking. Local PDFs live in `C:/TuanNghia/Project/Momo_Odylytics/papers/evaluation-datasets/` (all verified `%PDF` header, all < 11 MB). Numbers below were read from the PDF text unless stated otherwise.
 
@@ -23,7 +23,7 @@ FETA (Georgiev et al.) quantifies exactly the pitfalls the plan avoids: random (
 - BehavePassDB's authors also criticise protocols where each user uses their own device, because extracted "features of user might in reality be related" to the device. — [Stragapede et al., BehavePassDB, arXiv:2206.02502](https://arxiv.org/abs/2206.02502)
 
 ### Inferences
-- The plan's §5.5 choices (temporal split, one phone, no random split) are each a named FETA pitfall avoided. The slide can cite FETA's 4.9% → 13.8% gap as the reason Nhịp's numbers may look "worse" than the literature but are honest.
+- The plan's §5.5 choices (temporal split, one phone, no random split) are each a named FETA pitfall avoided. The slide can cite FETA's 4.9% → 13.8% gap as the reason TIBOM's numbers may look "worse" than the literature but are honest.
 - Pairwise verifier (Model 2, Bản 2): train it on pairs from a disjoint set of people, never on the test people's impostor data. This keeps the open-set protocol used by FETA (EXCLUDEATK) and KVC.
 - Reporting per-user EER spread (or the Gini coefficient) would answer the Eberz critique cheaply.
 
@@ -40,12 +40,12 @@ Error grows with the time gap between enrolment and test. Touchalytics goes from
 - Touchalytics (41 users, scrolling/swiping): median EER is 0% intra-session, 2–3% inter-session and "below 4%" one week after enrolment. "The authentication difficulty seems to increase with increasing temporal distance to the training phase". The authors say this "disqualif[ies] this method as a standalone authentication mechanism for long-term authentication". — [Frank et al., IEEE TIFS 8(1):136–148, 2013, DOI 10.1109/TIFS.2012.2225048](https://arxiv.org/abs/1207.6231)
 - Touchalytics: intra-session tests used "randomly subsampled strokes from the entire corpus". This is the optimistic random-split setting. — [Frank 2013 Fig. 6 caption](https://arxiv.org/pdf/1207.6231)
 - Touchalytics: a single-stroke decision gives about 13% EER, and 11–12 strokes converge to 2–3% (inter-session). This supports the plan's choice to report both single-session and aggregated levels. — [Frank 2013 §Results](https://arxiv.org/pdf/1207.6231)
-- HMOG (100 users, 8 sessions) trains on the first two sessions and tests on the remaining two. It uses one-class verifiers such as scaled Manhattan (template = feature mean, scaled by per-user std), the same idea as Nhịp's Bản 1. It deliberately avoids 2-class verifiers because they need other users' biometric data. Best EER is 7.16% walking and 10.05% sitting with HMOG+tap+keystroke. — [Sitová et al., IEEE TIFS 2016, arXiv:1501.01199](https://arxiv.org/abs/1501.01199)
+- HMOG (100 users, 8 sessions) trains on the first two sessions and tests on the remaining two. It uses one-class verifiers such as scaled Manhattan (template = feature mean, scaled by per-user std), the same idea as TIBOM's Bản 1. It deliberately avoids 2-class verifiers because they need other users' biometric data. Best EER is 7.16% walking and 10.05% sitting with HMOG+tap+keystroke. — [Sitová et al., IEEE TIFS 2016, arXiv:1501.01199](https://arxiv.org/abs/1501.01199)
 - Teh et al. survey: 64% of reviewed touch-dynamics experiments collected each subject's data in a single session. "Touch dynamics biometrics, like other behavioral biometrics … is not stable over time". The survey describes data adaptation (updating the template after each successful authentication) to track gradual change. — [Teh et al., Computers & Security 59:210–235, 2016, DOI 10.1016/j.cose.2016.03.003; Manchester preprint](https://pure.manchester.ac.uk/ws/files/33082822/COSE_Preprint_escholar.pdf)
 - FETA (31-day dataset): non-contiguous training selection inflates performance by 3.8 pp EER. In effect, random splits hide drift. — [FETA](https://arxiv.org/abs/2201.10606)
 
 ### Inferences
-- With only 3–5 enrolment sessions over about 3 days (plan §7), Nhịp can only measure short-term inter-session drift, not week-scale aging. Say so on the slide.
+- With only 3–5 enrolment sessions over about 3 days (plan §7), TIBOM can only measure short-term inter-session drift, not week-scale aging. Say so on the slide.
 - The plan's guarded template update (only after high-match accepts) matches Teh's adaptation idea. The poisoning risk is covered by other notes, not here.
 
 ### Gaps
@@ -66,7 +66,7 @@ ISO/IEC 19795-1 asks for error rates at stated operating points, DET curves and 
 - Eberz 2017: the base-rate fallacy makes non-zero FRR costly for frequently used systems. This is the usability argument for fixing FRR at a low value (plan: FRR ≈ 5%). — [Eberz 2017](https://www.cs.ox.ac.uk/files/14899/asiaccs17.pdf)
 
 ### Inferences
-- In 19795 terms, Nhịp's "FAR @ FRR = 5%" is the mirror of "FNMR @ fixed FMR". Both are operating-point metrics. Because the product's cost is user friction (step_up), fixing FRR is the defensible choice. Plot a DET curve too.
+- In 19795 terms, TIBOM's "FAR @ FRR = 5%" is the mirror of "FNMR @ fixed FMR". Both are operating-point metrics. Because the product's cost is user friction (step_up), fixing FRR is the defensible choice. Plot a DET curve too.
 - With ~25 people the number of impostor comparisons is small. Bootstrap confidence intervals (as Ahmed & Imtiaz do) would satisfy the "interval of uncertainty" requirement.
 
 ### Gaps
@@ -75,7 +75,7 @@ ISO/IEC 19795-1 asks for error rates at stated operating points, DET curves and 
 ## Q4. Public datasets for training/benchmarking
 
 ### Takeaway
-Several free datasets match parts of Nhịp's signal set. HuMIdb is the closest fit for human-vs-bot (600 users, 14 sensors, with a BeCAPTCHA bot benchmark). Aalto/KVC is the best fit for mobile keystroke timing at scale. HMOG and BehavePassDB fit multi-session touch plus sensors on fixed devices. BB-MAS fits cross-device behaviour. MobileTouchDB is touch-drawn PINs on 94 phone models.
+Several free datasets match parts of TIBOM's signal set. HuMIdb is the closest fit for human-vs-bot (600 users, 14 sensors, with a BeCAPTCHA bot benchmark). Aalto/KVC is the best fit for mobile keystroke timing at scale. HMOG and BehavePassDB fit multi-session touch plus sensors on fixed devices. BB-MAS fits cross-device behaviour. MobileTouchDB is touch-drawn PINs on 94 phone models.
 
 ### Cited Findings
 - **HMOG**: 100 users (53 male, 47 female), 8 free-text typing sessions (4 sitting, 4 walking), touch, keystroke and accelerometer/gyroscope/magnetometer sensors at 100 Hz, custom virtual keyboard. — [Sitová et al. 2016, arXiv:1501.01199](https://arxiv.org/abs/1501.01199). Dataset access/licence: not verified in this pass.

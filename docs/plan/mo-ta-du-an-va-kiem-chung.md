@@ -1,11 +1,13 @@
-# Nhịp — Mô tả dự án và kiểm chứng bằng paper
+# TIBOM — Mô tả dự án và kiểm chứng bằng paper
 
-> Cập nhật 24/11/2026. Tài liệu này tóm tắt ý tưởng, hiện trạng mã nguồn, và kết quả đối chiếu các con số trong kế hoạch với paper gốc trong `papers/`.
-> Kế hoạch đầy đủ: [`../nhip-momo-tech-contest.md`](../nhip-momo-tech-contest.md). Tổng hợp paper: [`../reports/Paper nền tảng cho Nhịp.md`](../reports/Paper%20nền%20tảng%20cho%20Nhịp.md).
+> **TIBOM** = Touch Intelligence for Bot & Owner Monitoring.
+
+> Cập nhật 24/11/2026. Tài liệu này tóm tắt ý tưởng, hiện trạng mã nguồn, và kết quả đối chiếu các con số trong kế hoạch với paper gốc trong [`papers/`](../../papers/).
+> Kế hoạch đầy đủ: [`tibom-momo-tech-contest.md`](tibom-momo-tech-contest.md). Tổng hợp paper: [`../research/paper-report.md`](../research/paper-report.md).
 
 ## 1. Ý tưởng
 
-**Nhịp** là lớp chấm điểm rủi ro hành vi (B2B SDK + API) cho ví điện tử và ngân hàng. Khi điện thoại bị chiếm quyền, tiền vẫn đi ra bằng đúng app, đúng PIN, đúng thiết bị của nạn nhân, nên xác thực truyền thống coi đó là chính chủ. Nhịp trả lời hai câu hỏi tại bước xác nhận giao dịch:
+**TIBOM** là lớp chấm điểm rủi ro hành vi (B2B SDK + API) cho ví điện tử và ngân hàng. Khi điện thoại bị chiếm quyền, tiền vẫn đi ra bằng đúng app, đúng PIN, đúng thiết bị của nạn nhân, nên xác thực truyền thống coi đó là chính chủ. TIBOM trả lời hai câu hỏi tại bước xác nhận giao dịch:
 
 1. Thao tác này do **ngón tay người** hay do **máy** (mã độc Trợ năng, `adb`, script)?
 2. Nếu là người, có **khớp thói quen chủ tài khoản** không?
@@ -52,14 +54,14 @@ Số liệu baseline hiện có (bắt 100% chiến thuật 1–2, 0% chiến th
 | Killourhy 2009: Manhattan scaled tốt nhất | Abstract ghi hai bộ tốt nhất EER 9,6% và 10,2%. Chưa xác nhận bộ nào đạt 9,6%. |
 | Kịch bản A: mã độc Trợ năng có quyền cao | **Đúng.** Cloak & Dagger (2017): Trợ năng + overlay điều khiển trọn vòng phản hồi UI, lấy PIN, cài app. Diao 2019: lỗi thiết kế khung Trợ năng. AccessiLeaks 2019: 72% app tài chính top lộ thông tin. |
 
-Không tải được (paywalled hoặc nguồn chặn tải tự động): Tey 2013 (NDSS), Serwadda & Phoha 2013, Biggio 2013, Pisani 2016, Jain 2005, ISO 19795-1, Patel 2016, Stylios 2021, Vijayanand 2025. DOI có trong `reports/`.
+Không tải được (paywalled hoặc nguồn chặn tải tự động): Tey 2013 (NDSS), Serwadda & Phoha 2013, Biggio 2013, Pisani 2016, Jain 2005, ISO 19795-1, Patel 2016, Stylios 2021, Vijayanand 2025. DOI có trong `docs/research/paper-report.md`.
 
 ## 4. Phát hiện quan trọng nhất
 
 **ActReal (Wang 2026, preprint)**: tác nhân cấp hệ thống có đặc quyền có thể sinh đồng thời chạm và cảm biến IMU khớp thời gian. Tỷ lệ tấn công thành công trung bình 77,5% trên các bộ phát hiện dựa vào quỹ đạo chạm/thời gian, và **vẫn 71,1% khi bộ phát hiện dùng cả chạm lẫn IMU**. Nghĩa là mã độc đủ tinh vi sẽ qua mặt được lớp "người hay máy". Đây là rào cản lớn hơn mọi con số EER.
 
 Các điểm khác:
-- Các con số tốt nhất đến từ điều kiện thuận lợi (Zheng: 85 lượt đăng ký, nhiều cảm biến; BioTouchPass2: 217 người, RNN). Nhịp có ~25 người, một điện thoại, 3–5 lượt, **không có áp lực** (Pointer Events trả 0.5). Kỳ vọng thực tế **10–15% EER**.
+- Các con số tốt nhất đến từ điều kiện thuận lợi (Zheng: 85 lượt đăng ký, nhiều cảm biến; BioTouchPass2: 217 người, RNN). TIBOM có ~25 người, một điện thoại, 3–5 lượt, **không có áp lực** (Pointer Events trả 0.5). Kỳ vọng thực tế **10–15% EER**.
 - Tấn công bắt chước (kịch bản B) có số liệu cụ thể (10–15% EER) và nên nằm trong slide.
 - Với bot chưa từng thấy, bộ phân loại học trên bot sinh sẵn giảm mạnh (BeCAPTCHA, BeCAPTCHA-Type: few-shot là thách thức). Huấn luyện và kiểm thử cùng 4 bộ sinh bot của đội sẽ cho số quá đẹp.
 - Eberz 2017: EER trung bình che lỗi có hệ thống, cần báo phân bố theo từng người.

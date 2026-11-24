@@ -1,7 +1,12 @@
 # CLAUDE.md
 
-Nhịp — behavioral risk scoring (touch/PIN dynamics) for e-wallets. Entry for MoMo Tech Contest 2026.
+TIBOM — behavioral risk scoring (touch/PIN dynamics) for e-wallets. Entry for MoMo Tech Contest 2026.
 Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnamese.
+
+## Naming
+- Project/product name: **TIBOM** = Touch Intelligence for Bot & Owner Monitoring (renamed from "Nhịp" on 24/11/2026). Use TIBOM in all user-facing text, docs, slides.
+- Vietnamese word "nhịp" (rhythm: "nhịp PIN", "nhịp gõ", "đăng ký nhịp") is NOT the old brand; keep it where it means rhythm.
+- Technical identifiers still say `nhip` on purpose, to avoid breaking the live deploy: env vars `NHIP_*`, Python package `nhip_attacker`, Vercel project `nhip-api` / URL `nhip-api-taupe.vercel.app`, Neon DB `nhip-db`, localStorage keys `nhip_*`. Rename them together with a redeploy (and a new URL for the submission PDF) if/when wanted.
 
 ## Deadlines (2026)
 - 27/11 23:59 — registration + clarification questions to BTC
@@ -13,9 +18,12 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
   - `app/scoring/`: `features.py` (extract), `human.py` (bot-vs-human, rule baseline), `owner.py` (scaled Manhattan template + drift-capped update), `fusion.py` (weighted risk, thresholds A/B), `explain.py` (Vietnamese reasons).
   - `tests/synth.py` generates fake human sessions for tests.
 - `attacker/nhip_attacker/` — 4-tactic bot simulator (`tactics.py`), CLI (`__main__.py`: `generate`, `report`, `adb`), real-phone attack (`adb.py`).
-- `nhip-momo-tech-contest.md` — the full plan (architecture, models, evaluation, demo script, roles). Source of truth for intent.
-- `the-le-cuoc-thi.md` — contest rules summary. `reports/`, `research_notes/`, `papers/` — literature.
-- Not built yet: JS SDK, demo wallet (custom PIN keypad), ops dashboard, trained LightGBM/RF model, real data.
+- `docs/plan/tibom-momo-tech-contest.md` — the full plan (architecture, models, evaluation, demo script, roles). Source of truth for intent.
+- `docs/plan/mo-ta-du-an-va-kiem-chung.md` — description, state, paper verification, conclusions.
+- `docs/contest/` — rules summary + `submission-checklist.md` (what must be submitted, by 03/12).
+- `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).
+- `backend/app/static/wallet.html` — demo wallet + JS SDK (6-digit demo PIN 159357), served at `/`.
+- Not built yet: ops dashboard, trained LightGBM/RF model, real data, replay check.
 
 ## Commands (PowerShell-style in READMEs; uses `uv`)
 - Backend: `cd backend; uv sync; uv run uvicorn app.main:app --reload --port 8000` (Swagger at /docs, key `demo-key`)
