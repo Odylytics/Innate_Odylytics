@@ -6,6 +6,7 @@ _BOT_VI = {
     "timing_too_regular": "nhịp bấm đều bất thường",
     "tap_exact_center": "chạm đúng tâm nút",
     "swipe_perfectly_straight": "vuốt thẳng tuyệt đối",
+    "replayed_session": "lặp lại gần như y hệt một phiên trước đó",
 }
 _ACTION_VI = {
     "allow": "Cho phép giao dịch.",

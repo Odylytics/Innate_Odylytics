@@ -86,9 +86,9 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 | E2 | Co rút về dân số tốt hơn sàn σ cố định (**proxy đã chạy: giảm FAR@FRR 5% ~7–11 điểm, EER không đổi**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
 | E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần ngồi 1, kiểm thử lần ngồi 2 | FAR@FRR 5%, đường DET | Có |
 | E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
-| E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
+| E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật (**đã chạy: bắt 100% ở ±5–10% nhiễu, thua từ ±20%**) | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
 | E6 | Tín hiệu mới (lượng tử hoá thời gian, dao động toạ độ) tách bot khỏi người | Thêm từng nhóm đặc trưng, đo cải thiện | Độ quan trọng, ΔAUC/ΔFAR | Có, cùng với dữ liệu `adb` |
-| E7 | Chống đầu độc: drift cap + kiểm tra hướng trôi chặn được chuỗi "dạy dần" | Mô phỏng chuỗi phiên bot nằm trên ngưỡng cập nhật | Độ trôi mẫu sau n lần | Không (mô phỏng) |
+| E7 | Chống đầu độc: drift cap + kiểm tra hướng trôi chặn được chuỗi "dạy dần" (**đã chạy: trần giới hạn chứ không loại bỏ; khuyến nghị đóng băng + cờ**) | Mô phỏng chuỗi phiên bot nằm trên ngưỡng cập nhật | Độ trôi mẫu sau n lần | Không (mô phỏng) |
 
 **Quy tắc đánh giá** (FETA [paper]): tách theo thời gian, một điện thoại, không đưa dữ liệu kẻ gian vào huấn luyện bài B, leave-users-out nếu có mô hình so cặp, báo phân bố lỗi theo từng người (Eberz 2017).
 
@@ -108,7 +108,44 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 - **Sàn σ hiện tại của `owner.py` gần như không khác baseline**, nên nó không đang giúp gì ở few-shot.
 - EER ~0,20 cao hơn 9,6% của Killourhy & Maxion vì họ huấn luyện với 200 mẫu còn ở đây chỉ 3–10 mẫu và kiểm thử ở các phiên sau. Số này không so sánh trực tiếp được.
 
-**Giới hạn cần nói thật:** dữ liệu là bàn phím máy tính, một mật khẩu cố định, không có vị trí chạm. Đây là bằng chứng cho **phương pháp** (co rút về dân số giúp khi ít mẫu), chưa phải cho số liệu của Innate. Cần lặp lại trên dữ liệu PIN của đội. Chưa có thí nghiệm nào khác được chạy.
+**Giới hạn cần nói thật:** dữ liệu là bàn phím máy tính, một mật khẩu cố định, không có vị trí chạm. Đây là bằng chứng cho **phương pháp** (co rút về dân số giúp khi ít mẫu), chưa phải cho số liệu của Innate. Cần lặp lại trên dữ liệu PIN của đội. E5 và E7 chạy sau, xem bên dưới.
+
+### E5 — phát hiện phát lại (đã chạy, dữ liệu GIẢ)
+
+Mã: `research/experiments/e5_replay.py`; bảng: `research/results/e5_replay.md`. Đã cài vào backend: `app/scoring/replay.py` (nối trong `/score`, phiên bị coi là phát lại thì `human_score` ≤ 0,1, lý do `replayed_session`, hành động `hold`), 1 test mới.
+
+- Kẻ tấn công **thích nghi**: tăng nhiễu cả thời gian (±n) lẫn toạ độ (±max(2, 40n) px). Ngưỡng chọn để chỉ ~1% phiên người thật mới bị nhầm là phát lại.
+- Khoảng cách hiện đang dùng: thời gian giữ/cách phím (tương đối) **cộng lệch tâm dx/dy**. Bản chỉ dùng thời gian yếu hơn rõ khi nhiễu cao.
+
+| Mức nhiễu của kẻ tấn công | ±5% (như chiến thuật 3) | ±10% | ±15% | ±20% | ±30% |
+|---|---|---|---|---|---|
+| Bắt được, PIN 4 số | 1,00 | 1,00 | 0,59 | 0,07 | 0,00 |
+| Bắt được, PIN 6 số | 1,00 | 1,00 | 0,99 | 0,36 | 0,00 |
+
+- **Chiến thuật 3 gốc (±5%) bị bắt hoàn toàn**; kiểm tra phát lại bắt tốt đến nhiễu ±10–15%. Từ ±20–30% trở lên kẻ tấn công thắng, vì lúc đó phiên phát lại đã dao động ngang người thật. Đây là cuộc đua, không phải lời giải cuối.
+- **Lỗi phát hiện nhờ thí nghiệm:** với PIN 4 số chỉ có 7 đặc trưng thời gian nên hai phiên thật có thể gần nhau tình cờ; khi so với 200 phiên cũ, tỷ lệ từ chối nhầm chủ lên **7,5%** (PIN 6 số: 0%). Backend đã giảm số phiên so xuống **50** (PIN 4 số còn 3,3%). Ví demo dùng PIN 6 số. Nếu đối tác dùng PIN 4 số, nên tăng ngưỡng hoặc giảm số phiên so thêm.
+- **Giới hạn:** persona giả (độ dao động giữa các phiên do tôi/đội đặt ra), nên ngưỡng 0,085 **phải hiệu chỉnh lại trên dữ liệu người thật**. Chỉ so với phiên cũ **của cùng tài khoản**; phát lại một phiên chưa từng gửi lên máy chủ thì không bị bắt bởi kiểm tra này.
+
+### E7 — đầu độc mẫu chuẩn (đã chạy, dữ liệu GIẢ)
+
+Mã: `research/experiments/e7_poisoning.py`; bảng: `research/results/e7_poisoning.md`. **Chưa thay đổi `owner.py`**; đây là khuyến nghị để đội quyết.
+
+Kẻ tấn công mạnh (tạo được vector đặc trưng tuỳ ý) mỗi bước gửi phiên sát ngưỡng cập nhật (owner ≥ 0,8). 100 cặp chủ/kẻ gian.
+
+| Phòng thủ | Kẻ gian được chấp nhận sau tiêm (n=0 là 0,56) | Chủ được chấp nhận sau tiêm | Chủ trôi +50% (đếm ≥ 0,8) |
+|---|---|---|---|
+| Không trần | **1,00** (từ n=25) | **0,58** (chủ bị khoá ngoài) | 1,00 |
+| Trần 1 sd/đặc trưng (**hiện tại**) | 0,85 | 1,00 | 0,67 |
+| Trần 0,5 sd | 0,75 | 1,00 | 0,41 |
+| Trần 0,25 sd | 0,67 | 1,00 | 0,28 |
+| Đóng băng khi trôi trung bình > 0,5 sd (kèm cờ) | 0,77 | 1,00 | 0,68 |
+
+Đọc kết quả:
+- **Không có trần là thảm hoạ:** kẻ gian được chấp nhận 100% và chủ thật bị khoá ngoài (0,58). Việc `owner.py` có trần là cần thiết và đúng.
+- **Trần giới hạn thiệt hại chứ không loại bỏ:** mẫu bị kéo tới trần rất nhanh (~10 lần tiêm) rồi dừng. Với trần hiện tại, kẻ gian được chấp nhận 0,85 so với 0,56 lúc đầu.
+- **Đóng băng khi trôi có hướng** thắng trần 1 sd: kẻ gian 0,77 (thấp hơn 0,85) với cái giá ngang nhau cho chủ trôi mạnh (0,68 so với 0,67), và còn phát ra **cờ cảnh báo** cho vận hành. Trần chặt hơn (0,5; 0,25 sd) giảm kẻ gian nhưng làm chủ trôi mạnh bị từ chối nhiều (0,41; 0,28). **Khuyến nghị:** chuyển sang "đóng băng + cờ", khi đóng băng thì yêu cầu đăng ký lại.
+- **Phát hiện quan trọng hơn cả E7:** ngay trước khi bị đầu độc (n=0), **56% phiên thật của kẻ gian đã được chấp nhận** (owner ≥ 0,5) trên persona giả. Đây là hậu quả của ánh xạ điểm `d=2 → 0,5` quá dễ dãi trong `owner.py`, đã ghi ở mục 2. Ưu tiên hiệu chỉnh (E3) cao hơn việc chọn cách chống đầu độc.
+- **Giới hạn:** một chiến lược tấn công, persona giả, 100 cặp, chưa có khoảng tin cậy; kịch bản "chủ trôi" chỉ đổi thời gian. Cái giá của trần chỉ lộ ra ở ngưỡng 0,8; ở ngưỡng 0,5 mọi phòng thủ đều ~1,00 vì ngưỡng 0,5 quá dễ dãi.
 
 ## 7. Thứ tự làm
 

@@ -146,3 +146,38 @@ def test_bot_meta_requires_tactic(client):
 def test_wallet_page_served(client):
     r = client.get("/")
     assert r.status_code == 200 and "Innate SDK" in r.text
+
+
+def _replayed(src: dict, user: str, rng: random.Random, noise: float = 0.05) -> dict:
+    """Phát lại một phiên thật: thời gian ±noise, toạ độ ±2 px (như chiến thuật 3)."""
+    import copy
+    s = copy.deepcopy(src)
+    s["user_id"] = user
+    t = 0.0
+    taps = sorted(s["pin_taps"], key=lambda x: x["t_down"])
+    for i, tap in enumerate(taps):
+        hold = (tap["t_up"] - tap["t_down"]) * rng.uniform(1 - noise, 1 + noise)
+        gap = (taps[i + 1]["t_down"] - tap["t_up"]) * rng.uniform(1 - noise, 1 + noise) if i < len(taps) - 1 else 0
+        tap["x"] += rng.uniform(-2, 2)
+        tap["y"] += rng.uniform(-2, 2)
+        tap["t_down"], tap["t_up"] = t, t + hold
+        t += hold + gap
+    s["pin_taps"] = taps
+    return s
+
+
+def test_replayed_session_is_held_but_new_human_session_is_not(client):
+    rng = random.Random(11)
+    user = "replay_victim"
+    sessions = [human_session(user, OWNER, rng) for _ in range(4)]
+    for s in sessions[:3]:
+        sid = _post_session(client, s)
+        assert client.post(f"/v1/users/{user}/enroll", json={"session_id": sid}, headers=H).status_code == 200
+
+    # phiên người thật mới (không phải bản sao) không bị coi là phát lại
+    fresh = _score(client, _post_session(client, sessions[3]))
+    assert "replayed_session" not in fresh["reasons"]
+
+    # phát lại một phiên đã đăng ký, thêm nhiễu nhỏ -> giữ lệnh
+    r = _score(client, _post_session(client, _replayed(sessions[0], user, rng)))
+    assert r["action"] == "hold" and "replayed_session" in r["reasons"]

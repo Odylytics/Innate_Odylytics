@@ -14,13 +14,14 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .db import Base, SessionLocal, TouchSession, User, engine
-from .scoring import explain, features, fusion, human, owner
+from .scoring import explain, features, fusion, human, owner, replay
 
 API_KEYS = [k.strip() for k in os.environ.get("NHIP_API_KEYS", "demo-key").split(",") if k.strip()]
 CORS_ORIGINS = os.environ.get("NHIP_CORS_ORIGINS", "*").split(",")
 MIN_ENROLL = 3
 UPDATE_MIN_OWNER = 0.8  # chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao
 UPDATE_MIN_HUMAN = 0.8
+REPLAY_HISTORY = 50  # số phiên gần nhất dùng để so trùng; nhiều hơn thì FPR của PIN 4 số tăng (research/results/e5_replay.md)
 
 
 @asynccontextmanager
@@ -142,6 +143,12 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
     feats = s.features
 
     h, bot_reasons = human.score(feats)
+    # phát lại: gần như y hệt một phiên cũ của chính tài khoản này (người thật không lặp lại nhịp)
+    past = db.scalars(select(TouchSession.features).where(
+        TouchSession.user_id == s.user_id, TouchSession.id != s.id)
+        .order_by(TouchSession.created_at.desc()).limit(REPLAY_HISTORY)).all()
+    if replay.is_replay(feats, past):
+        h, bot_reasons = min(h, 0.1), [*bot_reasons, "replayed_session"]
     o, z = owner.score(feats, tpl) if tpl else (None, {})
     history = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
         TouchSession.user_id == s.user_id, TouchSession.action == "allow",

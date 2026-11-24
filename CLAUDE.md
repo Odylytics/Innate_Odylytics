@@ -27,7 +27,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - `docs/contest/` — rules summary + `submission-checklist.md` (what must be submitted, by 03/12).
 - `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).
 - `backend/app/static/wallet.html` — demo wallet + JS SDK (6-digit demo PIN 159357), served at `/`.
-- Not built yet: ops dashboard, trained LightGBM/RF model, real data, replay check.
+- Not built yet: ops dashboard, trained LightGBM/RF model, real data. Replay check exists (`scoring/replay.py`, wired in `/score`, threshold from SYNTHETIC data, recalibrate on real data).
 
 ## Commands (PowerShell-style in READMEs; uses `uv`)
 - Backend: `cd backend; uv sync; uv run uvicorn app.main:app --reload --port 8000` (Swagger at /docs, key `demo-key`)
@@ -50,6 +50,6 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - Synthetic-human results (attacker README table) must not go on slides; re-measure on real data.
 
 ## Known gaps
-- Tactic 3 (replay) is uncaught: add "near-duplicate of an old session" check in backend.
-- `owner.py` score mapping (d=2 → 0.5) is uncalibrated and too lenient (tactic 4); calibrate on real data.
+- Replay (tactic 3): caught up to ~±10–15% attacker noise (E5, synthetic); fails at ±20%+. PIN-4 FPR grows with history size (history capped at 50). Threshold needs real-data calibration.
+- `owner.py` score mapping (d=2 → 0.5) is uncalibrated and too lenient: on synthetic data 56% of real impostor sessions already score >= 0.5 before any poisoning (E7). Calibrate on real data (E3). E7 recommends "freeze + flag" over the per-feature 1 sd cap (not yet applied).
 - Bot model train/test share the same 4 generators; keep `adb`/real malware sessions as an independent test set.
