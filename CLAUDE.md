@@ -8,6 +8,10 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - Vietnamese word "nhịp" (rhythm: "nhịp PIN", "nhịp gõ", "đăng ký nhịp") is NOT a brand; keep it where it means rhythm.
 - Technical identifiers still say `nhip` on purpose, to avoid breaking the live deploy: env vars `NHIP_*`, Python package `nhip_attacker`, Vercel project `nhip-api` / URL `nhip-api-taupe.vercel.app`, Neon DB `nhip-db`, localStorage keys `nhip_*`. Rename them together with a redeploy (and a new URL for the submission PDF) if/when wanted.
 
+## Scope (24/11/2026)
+- Focus is the AI core (`backend/app/scoring/`, `attacker/`). The web/demo is built later by other team members: do NOT work on the wallet (`app/static/wallet.html`), the `nhip-api` deploy, or the dashboard unless asked. Code stays in the repo.
+- AI research: `docs/research/ai-research.md` (design, experiments E1–E7), `docs/research/datasets.md` (verified dataset links), `research/` (experiment code; E1/E2 proxy done on DSL-StrongPassword).
+
 ## Deadlines (2026)
 - 27/11 23:59 — registration + clarification questions to BTC
 - 03/12 23:59 — submission (zip + README, slides ≤10pp PDF, video ≤3min, 1-page PDF). No edits after.

@@ -2,6 +2,10 @@
 
 > Lập 24/11/2026. Mục tiêu: trả lời các câu hỏi kỹ thuật có thể làm sản phẩm hỏng hoặc bị giám khảo bắt bẻ, theo thứ tự rủi ro. Kết quả ghi vào [`tech-notes.md`](tech-notes.md).
 
+## Phạm vi (cập nhật 24/11)
+
+Nhóm làm web/demo riêng sau. Phần ví demo (`backend/app/static/wallet.html`) và việc deploy API (`nhip-api`) **ngừng phát triển**, không xoá code. R6 (hạ tầng) và R8 (dashboard) tạm hoãn. Trọng tâm là lõi AI: xem [`ai-research.md`](ai-research.md) (bài A người/máy, bài B chủ tài khoản, bài C hợp nhất và giải thích; thí nghiệm E1–E7).
+
 ## Nguyên tắc
 
 - Câu hỏi nào mà **câu trả lời đổi thiết kế** thì làm trước.

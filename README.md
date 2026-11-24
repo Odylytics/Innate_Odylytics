@@ -13,6 +13,7 @@ Lớp chấm điểm rủi ro hành vi (chạm/PIN) cho ví điện tử. Dự t
 | `docs/contest/` | Thể lệ và [danh sách output phải nộp](docs/contest/submission-checklist.md) |
 | `docs/plan/` | Kế hoạch dự án và [mô tả + kiểm chứng bằng paper](docs/plan/mo-ta-du-an-va-kiem-chung.md) |
 | `docs/research/` | [Kế hoạch nghiên cứu](docs/research/research-plan.md), [ghi chú công nghệ](docs/research/tech-notes.md), tổng hợp và ghi chú paper |
+| `research/` | Thí nghiệm AI chạy cục bộ ([README](research/README.md)); dữ liệu ở `research/data/` không commit |
 | `papers/` | PDF paper, chia theo nhóm (không đưa vào bản nộp) |
 
 ## Chạy nhanh

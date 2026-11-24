@@ -2,6 +2,8 @@
 
 > Nguồn: thể lệ chính thức ([tóm tắt](the-le-cuoc-thi.md)). Hạn nộp **23:59:59 03/12/2026**. Sau hạn **không được sửa**, kể cả sản phẩm tại link đã nộp. Gửi câu hỏi làm rõ trước **23:59:59 27/11**: techday@mservice.com.vn.
 
+> Phần web/demo và link sản phẩm online do nhóm làm sau; chưa có URL cuối cùng cho PDF (cần chốt trước khi viết).
+
 ## 4 thành phần
 
 | # | Thành phần | Định dạng và giới hạn | Nội dung cho Innate | Người phụ trách | Trạng thái |
