@@ -85,7 +85,7 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 | E1 | Mahalanobis co rút ≥ scaled Manhattan khi chỉ có 3–5 mẫu (**proxy đã chạy: không, kém hơn**) | Cùng chia dữ liệu; so theo số lượt đăng ký 1/3/5 | EER, FAR@FRR 5% + khoảng tin cậy | Có |
 | E2 | Co rút về dân số tốt hơn sàn σ cố định (**proxy đã chạy: giảm FAR@FRR 5% ~7–11 điểm, EER không đổi**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
 | E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần ngồi 1, kiểm thử lần ngồi 2 | FAR@FRR 5%, đường DET | Có |
-| E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
+| E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** (**proxy đã chạy: vượt luật với bot đã thấy; sập 0–23% với bot lạ do học tắt; IsolationForest tổng quát hoá tốt hơn**) | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
 | E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật (**đã chạy: bắt 100% ở ±5–10% nhiễu, thua từ ±20%**) | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
 | E6 | Tín hiệu mới (lượng tử hoá thời gian, dao động toạ độ) tách bot khỏi người | Thêm từng nhóm đặc trưng, đo cải thiện | Độ quan trọng, ΔAUC/ΔFAR | Có, cùng với dữ liệu `adb` |
 | E7 | Chống đầu độc: drift cap + kiểm tra hướng trôi chặn được chuỗi "dạy dần" (**đã chạy: trần giới hạn chứ không loại bỏ; khuyến nghị đóng băng + cờ**) | Mô phỏng chuỗi phiên bot nằm trên ngưỡng cập nhật | Độ trôi mẫu sau n lần | Không (mô phỏng) |
@@ -146,6 +146,48 @@ Kẻ tấn công mạnh (tạo được vector đặc trưng tuỳ ý) mỗi bư
 - **Đóng băng khi trôi có hướng** thắng trần 1 sd: kẻ gian 0,77 (thấp hơn 0,85) với cái giá ngang nhau cho chủ trôi mạnh (0,68 so với 0,67), và còn phát ra **cờ cảnh báo** cho vận hành. Trần chặt hơn (0,5; 0,25 sd) giảm kẻ gian nhưng làm chủ trôi mạnh bị từ chối nhiều (0,41; 0,28). **Khuyến nghị:** chuyển sang "đóng băng + cờ", khi đóng băng thì yêu cầu đăng ký lại.
 - **Phát hiện quan trọng hơn cả E7:** ngay trước khi bị đầu độc (n=0), **56% phiên thật của kẻ gian đã được chấp nhận** (owner ≥ 0,5) trên persona giả. Đây là hậu quả của ánh xạ điểm `d=2 → 0,5` quá dễ dãi trong `owner.py`, đã ghi ở mục 2. Ưu tiên hiệu chỉnh (E3) cao hơn việc chọn cách chống đầu độc.
 - **Giới hạn:** một chiến lược tấn công, persona giả, 100 cặp, chưa có khoảng tin cậy; kịch bản "chủ trôi" chỉ đổi thời gian. Cái giá của trần chỉ lộ ra ở ngưỡng 0,8; ở ngưỡng 0,5 mọi phòng thủ đều ~1,00 vì ngưỡng 0,5 quá dễ dãi.
+
+### E4 — LightGBM cho bài người/máy (đã chạy, dữ liệu GIẢ)
+
+Mã: `research/experiments/e4_human_bot_lgbm.py`; đặc trưng: `backend/app/scoring/bot_features.py` (vector độ dài cố định, ~30 đặc trưng, thiếu thì NaN); bảng: `research/results/e4_human_bot_lgbm.md`; mô hình huấn luyện trên dữ liệu giả lưu ở `research/models/` (**không dùng cho bản nộp**, và chưa nối vào backend). Ngưỡng chọn trên người ở tập validation để FRR = 5%, 3 lần sinh dữ liệu độc lập.
+
+Tỷ lệ bot bị bắt (FRR thật ~5%):
+
+| Mô hình | CT1 | CT2 | CT3 | CT4 |
+|---|---|---|---|---|
+| Luật baseline (`human.py`) | 1,00 | 1,00 | 0,04 | 0,01 |
+| LightGBM, **thấy cả 4 chiến thuật** khi huấn luyện | 1,00 | 1,00 | 0,85 | 0,97 |
+| LightGBM, **bỏ đúng chiến thuật đó** khỏi huấn luyện | **0,00** | 1,00 | 0,07 | 0,23 |
+| IsolationForest (chỉ huấn luyện trên người), chiến thuật lạ | 1,00 | 1,00 | 0,12 | 0,38 |
+| Bộ kết hợp (LightGBM hoặc IsolationForest), chiến thuật lạ | 1,00 | 1,00 | 0,10 | 0,34 |
+
+Đọc kết quả:
+- **Khi mô hình đã thấy loại bot**, LightGBM hơn hẳn luật baseline (chiến thuật 3: 0,85 so với 0,04; chiến thuật 4: 0,97 so với 0,01). Con số đẹp này chủ yếu phản ánh việc nó học được **dấu vết của bộ sinh dữ liệu**, nên không dùng cho slide.
+- **Khi gặp bot lạ, LightGBM sập**: bỏ chiến thuật 1 khỏi huấn luyện thì bắt **0%** (AUC 0,50) dù đó là bot ngây thơ nhất. Tôi đã kiểm tra: đó là **học tắt**. Trên dữ liệu giả, người luôn có bước thời gian vuốt đều (`swipe_dt_cv = 0`), còn chiến thuật 2 có nhiễu nên `swipe_dt_cv > 0`; cây chọn đúng điều kiện đó để tách hoàn toàn chiến thuật 2. Chiến thuật 1 cũng có `swipe_dt_cv = 0` nên bị xếp là người (P(người) = 0,971 cố định). Đây là rủi ro thật với dữ liệu thật: bot do script sinh ra khác người ở những chi tiết tầm thường, mô hình học chi tiết đó và không tổng quát hoá.
+- **IsolationForest (chỉ học từ người) tổng quát hoá tốt hơn với bot lạ** (chiến thuật 1, 2: 100% dù chưa từng thấy; chiến thuật 4: 38–45%). Vì vậy giữ nó trong bộ kết hợp. Bộ kết hợp về cơ bản bằng mô hình tốt hơn trong hai mô hình ở từng trường hợp.
+- **Chiến thuật 3, 4 (bot giống người) vẫn khó với bot lạ**: bắt 10–34%. Chiến thuật 3 nên giao cho kiểm tra phát lại (E5), không phải cho phân loại.
+- Bỏ nhóm kích thước chạm (`tap_w/h`) gần như không đổi kết quả trên dữ liệu giả; nhóm này vẫn cần kiểm chứng trên thiết bị thật (R2).
+- Đặc trưng quan trọng nhất: `swipe_v_peak_ratio`, `swipe_lateral_dev`, `dy_std`, `tap_w_std`, `dx_std`. Hầu hết là đặc trưng vuốt/lệch tâm do bộ sinh quyết định, nên cần soi lại với dữ liệu thật.
+
+**Hệ quả:** bài người/máy cần **nhiều họ bot khác nhau do công cụ thật sinh ra** (`adb`, app `dispatchGesture`, ít nhất vài kiểu), và người thật. Chỉ khi đó đánh giá "bỏ một họ bot" mới có nghĩa.
+
+### Open weights có sẵn (đã kiểm chứng ngày 24/11 qua GitHub API)
+
+| Ứng viên | Giấy phép | Có trọng số? | Dùng cho | Khớp với Innate? |
+|---|---|---|---|---|
+| **TypeFormer** (`gstrag/TypeFormer`) | **MIT** | **Có**: `pretrained/TypeFormer_pretrained.pt` (14,8 MB) và `preliminary_transformer_pretrained.pt` (3,7 MB) | Bài B (xác minh chủ qua embedding gõ phím di động) | Một phần: xem bên dưới |
+| TypeNet, SwipeFormer, KVC, MobileTouchDB, HuMIdb (BiDAlab) | **Không có giấy phép** trên repo | **Không**: repo chỉ có README/hình, dữ liệu cấp qua thỏa thuận email | | Không thể dùng làm trọng số |
+| Mô hình cho bài A (người/máy) | | **Không tìm thấy mô hình huấn luyện sẵn nào** | | Phải tự huấn luyện (LightGBM) |
+
+Chi tiết TypeFormer: huấn luyện trên bộ gõ di động Aalto; đầu vào là chuỗi phím, mỗi phím 5 đặc trưng (thời gian giữ, giữa hai lần nhấn, giữa hai lần nhả, giữa hai phím, mã phím/255); đầu ra là embedding, xác minh bằng khoảng cách tới các embedding đăng ký. Bản sao về `research/external/TypeFormer` (commit `8bf1342`, gitignored; mã dựa trên torch 1.13 cũ).
+
+**Khoảng cách miền cần kiểm chứng trước khi "lôi về tinh chỉnh":**
+1. TypeFormer học **gõ văn bản tự do** (chuỗi dài, nhiều phím); PIN 6 số chỉ có 6 phím, rất ngắn.
+2. Đầu vào của nó **không có vị trí chạm**, mà Buschek 2015 cho thấy đặc trưng không gian giảm 26–37% lỗi. Vứt thông tin này đi có thể phản tác dụng.
+3. Fine-tune cần **dữ liệu PIN thật của đội** (chưa có). Với ~25 người, nguy cơ quá khớp cao; E2 đã đạt cải thiện chỉ bằng co rút thống kê.
+4. Khai báo: dùng trọng số này phải ghi vào README nộp bài (tài sản có sẵn + trích dẫn bài báo) và cân nhắc việc Aalto là nguồn dữ liệu huấn luyện.
+
+**Đề xuất E8:** nhúng phiên PIN qua TypeFormer (đệm chuỗi), so với Manhattan + co rút dân số (E2) trên **cùng dữ liệu PIN thật** theo cùng quy trình đánh giá. Chỉ chọn nếu thắng ở FAR@FRR 5%. Bản đầu có thể thử zero-shot trên DSL, nhưng đó là bàn phím máy tính nên chỉ là kiểm tra đường ống.
 
 ## 7. Thứ tự làm
 
