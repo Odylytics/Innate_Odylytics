@@ -25,7 +25,7 @@ Unsure?        Innate Challenge: type a short random letters+digits phrase shown
 
 All are 1:1 verification. Outputs are fused with context (new recipient, unusual amount) into `allow | step_up | hold` plus Vietnamese reasons. **No LLM is on the decision path.** Where it sits in the security stack and what it does *not* do: [`docs/plan/positioning.md`](docs/plan/positioning.md).
 
-**Innate Challenge** (design: [`docs/plan/innate-challenge.md`](docs/plan/innate-challenge.md)): more keystrokes give more signal. On 2,260 real typists, going from 6 to 30 keystrokes cut the false-accept rate at FRR 5% from 81% to 49%. It helps; it does not turn the owner score into a gate.
+**Innate Challenge** (design: [`docs/plan/innate-challenge.md`](docs/plan/innate-challenge.md)): more keystrokes give more signal. On 2,260 real typists, going from 6 to 30 keystrokes cut the false-accept rate at FRR 5% from 81% to 49%. With the learned verifier and 3 enrolment phrases the false-accept rate stays around 43–52% (E22): it helps, it does not turn the owner score into a gate. The phrase is a random Vietnamese sentence served by `GET /v1/challenge` with a single-use signed token; typing it through Telex/VNI exposes extra style signals (tone-key position, corrections, whether an IME was used) that a replayed rhythm does not carry. **That Vietnamese channel is a hypothesis: no real Vietnamese typists have been measured yet** ([`docs/plan/innate-challenge-vi.md`](docs/plan/innate-challenge-vi.md)).
 
 ## What is inside
 
@@ -34,9 +34,11 @@ All are 1:1 verification. Outputs are fused with context (new recipient, unusual
 | API | FastAPI scoring service (the mobile demo app will send only timings/coordinates/event kinds, no content) | `backend/` |
 | Learned models (interim) | LightGBM human-vs-bot and owner-match models, population prior; all optional with rule/distance fallback | `backend/app/models/`, `backend/app/scoring/` |
 | Bot simulator | 4 tactics (even taps → timing noise → replay → sampling human distributions), text-field bots, real-phone `adb` attack | `attacker/` |
-| Research | every experiment (E1–E13) with code and result tables | `research/`, `docs/research/ai-research.md` |
+| Phone SDK + probe | text-input recorder for phones (IME "transform" keys), keyboard probe page | `sdk/` |
+| Web | landing page, demo wallet, attacker console, data-collection page, ops view | `web/` |
+| Research | every experiment (E1–E27) with code and result tables; team-data pipeline | `research/` ([`EXPERIMENTS.md`](research/EXPERIMENTS.md)), `docs/research/ai-research.md` |
 
-Endpoints (key scopes SDK / ops / ml): `POST /v1/sessions`, `POST /v1/users/{id}/enroll`, `GET /v1/users/{id}`, `POST /v1/sessions/{id}/score`, `GET /v1/sessions` and `POST …/label` (ops), `GET /v1/export` (ml), Swagger at `/docs`. Data contract: [`backend/README.md`](backend/README.md).
+Endpoints (key scopes SDK / ops / ml): `POST /v1/sessions`, `POST /v1/users/{id}/enroll`, `GET /v1/users/{id}`, `POST /v1/sessions/{id}/score`, `GET /v1/sessions` and `POST …/label` (ops), `GET /v1/export` (ml), `GET /v1/challenge` (random Vietnamese phrase + single-use token), Swagger at `/docs`. Data contract: [`backend/README.md`](backend/README.md).
 
 ## Measured results
 
@@ -48,6 +50,11 @@ All from **public data of other people** (StrokePIN, Aalto, CMU DSL); **none yet
 | Human vs machine: real humans, generator bots | naive bots (even rhythm, exact key centres, timing noise): **100%** caught; population-sampling bot 20–73%; unseen bot families are weak |
 | Replay check (threshold calibrated on real humans) | catches 100% of replays with ≤ ±10% added noise, 29% at ±15%, 0% from ±20%; human false-positive ≈ 0.1% |
 
+| **Whole system** (E24: `/score` chain on 10 people unseen by both learned models, known recipient) | owner: 80% allow / 19% step_up / 1% hold; PIN-knowing stranger (other phone): 28% / 70% / 2%; naive bots and replay ≤ ±10%: **100% hold**; population-sampling bot: 7% allow; with a new recipient the owner is allowed only 17% of the time |
+| **Adaptive attackers** (E27) | replay with ±15–30% noise: 48–72% **allowed**; a bot that knows the victim's template: 75–82% allowed. Raising the replay threshold to 0.085 catches ±15% (86%) at a few % false holds on short histories |
+| Swipe rule (E19: Touchalytics, 41 people, 20,896 strokes) | uniform-speed rule: 0 human strokes flagged, 100% of uniform bots caught; the old "straightness" rule flagged 13% of human sessions (replaced). Swipes do **not** identify the owner (AUC ≈ 0.5) |
+| Latency (E26, local) | `/score` p50 3.7 ms, p99 14 ms (no network, Vercel cold start or Neon) |
+
 So the owner signal is **weaker than papers suggest** (EER 16%, not "a few percent"): use it to trigger step-up, never as a gate.
 
 ## Limitations
@@ -55,6 +62,7 @@ So the owner signal is **weaker than papers suggest** (EER 16%, not "a few perce
 - Habits are *hard*, not *impossible*, to imitate; adaptive system-level agents were reported to beat touch+IMU detectors 71–77% of the time (ActReal 2026).
 - Enrolment must cover several postures; a sit-only template barely works while walking. The enrolment lock (409 once a template exists) conflicts with that need; a controlled re-enrolment path is not designed yet.
 - Web SDKs cannot see text set without keystrokes and get no coordinates on the system keyboard; a native SDK is needed.
+- Bots that replay with ≥ 15% noise or know the owner's template **pass**; four evidence channels (motion, PIN, typed phrase, touch/swipe) raise the bar but are not proven against adaptive attackers ([`docs/plan/bon-cong-pipeline.md`](docs/plan/bon-cong-pipeline.md)). Phone motion sensors looked excellent for owner matching (EER 0.04) only because each person used a different phone and they fail after a posture change (E23): not claimed.
 - Models are **interim**: public people + generated bots. Retrain on team data with `research/experiments/train_human_model.py --export …`.
 - Out of scope: detecting the malware itself, content-based scam detection, replacing authentication.
 
@@ -93,4 +101,6 @@ Config (env): `DATABASE_URL`, `NHIP_API_KEYS` / `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`
 
 ## Status
 
-Contest deadline **2026-12-03 23:59** (product online until 2026-12-11). Next: collect real sessions from consenting participants, real bots via `adb`/`dispatchGesture`, retrain and recalibrate, a controlled re-enrolment path, deployment (the Vercel preview currently fails) and a mobile demo app. The website (landing page + web demo) is in [`web/`](web/). Submission material: [`docs/submission/`](docs/submission/).
+Contest deadline **2026-12-03 23:59** (registration and questions to the organisers by **2026-11-27 23:59**; product online until 2026-12-11). Both Vercel projects (`nhip-api`, `innate-web`) deploy from `main`; `/health` and `/docs` answer 200. The backend passes 43 tests, the attacker 8, the phone SDK 4.
+
+Next, in order: register the team and send the questions in [`docs/contest/dang-ky-va-cau-hoi-btc.md`](docs/contest/dang-ky-va-cau-hoi-btc.md); collect real sessions from consenting participants ([`docs/plan/thu-du-lieu-doi.md`](docs/plan/thu-du-lieu-doi.md)) and run `research/experiments/team_analysis.py`; test the phone keyboard probe on real Gboard / iOS; add the typed-phrase step to the collection page; real bots via `adb`; recalibrate thresholds; fill the `TODO`s in [`docs/submission/`](docs/submission/). Map of all folders and documents: [`docs/INDEX.md`](docs/INDEX.md). Licence: CC BY-NC-SA 4.0 ([`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)).
