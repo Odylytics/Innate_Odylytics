@@ -124,6 +124,7 @@ function Nav({ path, theme, setTheme }: { path: string; theme: Theme; setTheme: 
             ))}
           </div>
           <div className="nav-tools">
+            <LangSwitch />
             <ThemeSwitch theme={theme} setTheme={setTheme} />
             <ArrowBtn href="#/demo?choose=1"><T k="navDemo" /></ArrowBtn>
             <button className="icon-btn burger" aria-expanded={open} aria-controls="menu-sheet" aria-label={open ? L.closeMenu[lang] : L.menu[lang]} onClick={() => setOpen(!open)}>
@@ -136,7 +137,7 @@ function Nav({ path, theme, setTheme }: { path: string; theme: Theme; setTheme: 
         <div className="menu-sheet" id="menu-sheet">
           {links.map((l) => <a key={l.href} className="m-link" href={l.href} onClick={() => setOpen(false)}>{l.label}</a>)}
           <a className="m-link" href="#/demo?choose=1" onClick={() => setOpen(false)}><T k="navDemo" /></a>
-          <div className="menu-tools"><ThemeSwitch theme={theme} setTheme={setTheme} /></div>
+          <div className="menu-tools"><LangSwitch /><ThemeSwitch theme={theme} setTheme={setTheme} /></div>
         </div>
       )}
     </header>
@@ -154,10 +155,6 @@ function AppPage() {
 }
 
 function Site() {
-  // English-only site (26/11). The Vietnamese strings stay in the code; restore the switch + stored choice to bring VI back.
-  const [lang, setLangState] = useState<Lang>('en')
-  const setLang = (l: Lang) => { setLangState(l) }
-  useEffect(() => { document.documentElement.lang = lang }, [lang])
   useEffect(() => { startSmoothScroll() }, [])
 
   // dark by default (DEMO_DESIGN_RULES.md); index.html applies the stored choice before first paint
@@ -180,7 +177,7 @@ function Site() {
   }, [hash, isDemo, isOps])
 
   return (
-    <LangContext.Provider value={{ lang, setLang }}>
+    <>
       {isDemo || isOps ? (
         <>
           <AppPage />
@@ -192,12 +189,19 @@ function Site() {
       ) : (
         <LandingPage />
       )}
-    </LangContext.Provider>
+    </>
   )
 }
 
 // #/collect is a standalone phone-only page (no site nav, footer or smooth scroll), so it is routed before the site mounts.
 export default function App() {
+  // The language lives here so the standalone collection page follows the same language as the site.
+  const [lang, setLang] = useState<Lang>(() => (store.get('innate.lang') === 'vi' ? 'vi' : 'en'))
+  useEffect(() => { document.documentElement.lang = lang; store.set('innate.lang', lang) }, [lang])
   const hash = useHash()
-  return hash.startsWith('#/collect') ? <Collect /> : <Site />
+  return (
+    <LangContext.Provider value={{ lang, setLang }}>
+      {hash.startsWith('#/collect') ? <Collect /> : <Site />}
+    </LangContext.Provider>
+  )
 }
