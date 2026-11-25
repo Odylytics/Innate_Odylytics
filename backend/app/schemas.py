@@ -61,6 +61,7 @@ class TextField(BaseModel):
     name: Literal["amount", "recipient", "note", "name", "challenge"]
     expected_len: int | None = Field(default=None, ge=1, le=200)  # độ dài câu thử thách (chỉ để phát hiện dán/đặt thẳng)
     token: str | None = Field(default=None, max_length=200)  # token từ GET /challenge: máy chủ biết câu mà không cần nội dung gõ
+    token_status: Literal["ok", "reused", "expired", "invalid"] | None = None  # máy chủ tự đặt khi có token; giá trị client gửi bị ghi đè
     events: list[InputEvent] = Field(default_factory=list, max_length=600)
 
 

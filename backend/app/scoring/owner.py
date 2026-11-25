@@ -17,7 +17,7 @@ def is_identity_feature(k: str) -> bool:
     # swipe_*: E19 (Touchalytics) cho AUC ~0.5 khi nhận chủ bằng 5 đặc trưng vuốt (kể cả cùng ngày, cùng tác vụ): chỉ thêm nhiễu
     return not k.startswith(("screen_", "swipe_", "vi_")) and k not in (
         "tap_w_std", "fld_set_text_frac", "fld_amount_set_text",
-        "fld_challenge_set_text", "fld_challenge_paste")
+        "fld_challenge_set_text", "fld_challenge_paste", "fld_challenge_token_bad")
 
 
 def _floor(k: str, mu: float) -> float:
@@ -74,7 +74,7 @@ def score(features: dict[str, float], tpl: dict) -> tuple[float | None, dict[str
         return None, z
     d = fmean(abs(v) for v in z.values())
     # shortcut: ánh xạ khoảng cách -> [0,1] chưa hiệu chỉnh (d=2 -> 0.5); Người 1 thay bằng ngưỡng fit trên dữ liệu thật
-    return 1 / (1 + math.exp(2 * (d - 2))), z
+    return 1 / (1 + math.exp(min(2 * (d - 2), 700.0))), z  # chặn tràn số khi phiên lệch rất xa (trước đây OverflowError => 500)
 
 
 def update(tpl: dict, features: dict[str, float]) -> dict:

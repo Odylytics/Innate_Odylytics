@@ -8,6 +8,7 @@ _BOT_VI = {
     "timing_too_regular": "nhịp bấm đều bất thường",
     "tap_exact_center": "chạm đúng tâm nút",
     "swipe_uniform_speed": "vận tốc vuốt đều bất thường",
+    "challenge_token_replayed": "câu thử thách đã dùng, hết hạn hoặc không hợp lệ (nghi phát lại phiên đã ghi)",
     "challenge_no_ime": "câu thử thách có dấu nhưng không có thao tác gõ dấu tiếng Việt",
     "challenge_pasted": "câu thử thách được dán thay vì gõ",
     "text_set_without_keys": "văn bản được đặt thẳng vào ô, không có nhịp gõ",
