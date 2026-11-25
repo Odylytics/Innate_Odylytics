@@ -408,6 +408,18 @@ Mã: `research/experiments/aalto_note_orient.py`, `e22_improve_far.py`; bảng: 
 - **Góc nghiêng thiết bị cho số đẹp nhất (FAR 0,277) nhưng KHÔNG nên tin:** mọi câu của một người nằm trong một buổi nên tư thế trùng giữa đăng ký và thử (E9: đổi tư thế gần như mất tín hiệu, EER 0,309). Trên điện thoại thật cần xin quyền cảm biến (iOS Safari), là dữ liệu nhạy cảm, và chỉ đo được "đang cầm kiểu nào". Không đưa vào sản phẩm khi chưa có dữ liệu hai buổi.
 - Bảng đánh đổi FRR/FAR (E13 thô, 30 phím): FRR 5% → FAR 49%; 10% → 39%; 20% → 29%; 30% → 22%; 40% → 17%.
 
+### E23 — thêm chuyển động điện thoại vào nhận chủ (StrokePIN, 97 người, 25/11)
+
+Mã: `research/experiments/e23_imu_fusion.py`; bảng: `research/results/e23_imu_fusion.md`. Giao thức E9; đặc trưng IMU: trọng lực (trung bình, độ lệch theo trục), độ rung gia tốc và con quay. Bộ phát hiện E2 (co rút về dân số), k = 3 lượt đăng ký.
+
+| Bộ đặc trưng | Cùng tư thế (ngồi): EER / FAR@FRR5% | Đổi tư thế (đi): EER / FAR@FRR5% |
+|---|---|---|
+| PIN (thời gian + lệch tâm) | 0,197 / 0,692 | 0,374 / 0,936 |
+| Chỉ chuyển động | 0,038 / 0,030 | 0,441 / 0,913 |
+| PIN + chuyển động | 0,057 / 0,075 | 0,420 / 0,910 |
+
+**Không tin được số này:** mỗi người một điện thoại, nên gia tốc/trọng lực mang **dấu vết thiết bị** (độ lệch cảm biến, góc cầm) chứ không chỉ thói quen người; kẻ gian trong dữ liệu dùng máy khác. Cùng lỗi đã loại kích thước chạm (E12b). Kịch bản kẻ gian cầm đúng điện thoại của nạn nhân không được mô phỏng. **Đổi tư thế thì mất hết (EER 0,42–0,48).** StrokePIN lấy gia tốc/con quay ~5 Hz nên không kiểm được khớp thời điểm chạm và cú giật. Kết luận: chuyển động là ứng viên cho cổng chống bot ("có tay cầm"), chưa chứng minh được cho nhận chủ. Thiết kế 4 kênh: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
+
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).
