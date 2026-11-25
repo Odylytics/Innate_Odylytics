@@ -1,5 +1,7 @@
 # Innate Challenge — gõ một câu để chứng minh "người thật, đúng chủ"
 
+> **Cập nhật 25/11/2026:** thiết kế đã chuyển sang **câu tiếng Việt ngẫu nhiên, viết thường, chỉ chữ cái** (không còn chuỗi chữ-số như ví dụ "mua 4 ca phe 27" bên dưới), cấp bởi `GET /v1/challenge` kèm token ký dùng một lần. Số đo ở đây là trên câu tiếng Anh (Aalto). Thiết kế hiện tại, kênh kiểu gõ Telex/VNI và rủi ro: [`innate-challenge-vi.md`](innate-challenge-vi.md); cách giảm FAR (E22): `../research/ai-research.md`. Tệp này giữ lại như tài liệu gốc.
+
 > Ý tưởng chốt ngày 24/11/2026. Bổ sung cho lớp kiểm chứng thụ động của Innate ([`positioning.md`](positioning.md)). Số liệu: [`../research/ai-research.md`](../research/ai-research.md), E13.
 
 ## Ý tưởng một đoạn
