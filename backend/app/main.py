@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import schemas
-from .db import DATABASE_URL, Base, Participant, SessionLocal, TouchSession, User, engine
+from .db import DATABASE_URL, Base, ChallengeNonce, Participant, SessionLocal, TouchSession, User, engine
 from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
 
 def _keys(var: str, default: str = "") -> list[str]:
@@ -130,10 +130,30 @@ def register_participant(body: schemas.ParticipantIn, db: Session = Depends(get_
     return {"participant_id": body.participant_id}
 
 
+def _consume_challenge_tokens(db: Session, raw: dict) -> None:
+    """Gắn `token_status` (ok | reused | expired | invalid) cho mỗi token câu thử thách; token hợp lệ chỉ dùng được MỘT lần."""
+    for fl in raw.get("fields", []):
+        if not fl.get("token"):
+            continue
+        p = challenge.parse(fl["token"])
+        if p is None:
+            fl["token_status"] = "invalid"
+        elif p[1] < time.time():
+            fl["token_status"] = "expired"
+        else:
+            try:
+                with db.begin_nested():
+                    db.add(ChallengeNonce(nonce=p[2]))
+                fl["token_status"] = "ok"
+            except IntegrityError:
+                fl["token_status"] = "reused"
+
+
 @v1.post("/sessions", response_model=schemas.SessionCreated, tags=["sdk"], dependencies=[SDK])
 def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
     """SDK gửi phiên thao tác (chạm PIN, vuốt, nhịp màn hình)."""
     raw = body.model_dump()
+    _consume_challenge_tokens(db, raw)
     feats = features.extract(raw)
     if db.get(User, body.user_id) is None:
         try:

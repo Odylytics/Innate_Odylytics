@@ -80,8 +80,12 @@ def extract(raw: dict) -> dict[str, float]:
         f["fld_challenge_paste"] = float(expected > 0 and pasted >= 0.5 * expected)
 
     for fl in chal:
-        phrase = challenge.verify(fl.get("token"))
-        if phrase:
+        if not fl.get("token"):
+            continue
+        phrase = challenge.verify(fl["token"])
+        if not phrase or fl.get("token_status", "ok") != "ok":
+            f["fld_challenge_token_bad"] = 1.0  # giả chữ ký, hết hạn hoặc dùng lại: dấu hiệu phát lại phiên ghi sẵn
+        else:
             f.update(vi_ime.style_features(fl["events"], phrase))
 
     for fld in raw.get("fields", []):

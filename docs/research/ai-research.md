@@ -420,6 +420,34 @@ Mã: `research/experiments/e23_imu_fusion.py`; bảng: `research/results/e23_imu
 
 **Không tin được số này:** mỗi người một điện thoại, nên gia tốc/trọng lực mang **dấu vết thiết bị** (độ lệch cảm biến, góc cầm) chứ không chỉ thói quen người; kẻ gian trong dữ liệu dùng máy khác. Cùng lỗi đã loại kích thước chạm (E12b). Kịch bản kẻ gian cầm đúng điện thoại của nạn nhân không được mô phỏng. **Đổi tư thế thì mất hết (EER 0,42–0,48).** StrokePIN lấy gia tốc/con quay ~5 Hz nên không kiểm được khớp thời điểm chạm và cú giật. Kết luận: chuyển động là ứng viên cho cổng chống bot ("có tay cầm"), chưa chứng minh được cho nhận chủ. Thiết kế 4 kênh: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
 
+### E24–E27 — quyết định toàn hệ thống, quét ngưỡng, bot thích nghi, độ trễ (StrokePIN, 25/11)
+
+Mã: `research/experiments/e24_end_to_end.py` (gồm E25, E27, E27b), `e26_latency.py`; bảng đầy đủ: `research/results/e24_end_to_end.md`, `e26_latency.md`. Chạy đúng chuỗi `/score` (luật + mô hình người/máy, kiểm tra phát lại, nhận chủ + mô hình chủ, hợp nhất) trong tiến trình, trên **10 người chưa từng thấy bởi cả hai mô hình học** (cỡ mẫu nhỏ về số người, hàng trăm phiên mỗi nhóm). Kẻ biết PIN = người khác nhập cùng PIN trên máy của họ (lẫn nhiễu thiết bị). Bot do bộ sinh/script của đội.
+
+**E24, người nhận quen, ngưỡng hiện tại (A=0,25, B=0,55):**
+| Nhóm | allow | step_up | hold |
+|---|---|---|---|
+| chủ, ngồi | 80% | 19% | 1% |
+| chủ, đổi tư thế (đi) | 63% | 37% | 0% |
+| kẻ biết PIN (máy khác) | 28% | 70% | 2% |
+| bot CT1, CT2, CT3 (phát lại ±5%) | 0% | 0% | **100%** |
+| bot CT4 (lấy mẫu dân số) | 7% | 67% | 26% |
+| phát lại ±10% | 0% | 0% | **100%** |
+| phát lại ±15% | **58%** | 13% | 30% |
+| phát lại ±20% | **72%** | 26% | 1% |
+| phát lại ±30% | **48%** | 48% | 4% |
+| bot **biết mẫu chuẩn** (lấy mẫu theo trung bình/độ lệch của nạn nhân) | **75–82%** | 6–17% | 8–12% |
+
+- **Với người nhận mới**, chủ chỉ `allow` 17% (79% `step_up`): trọng số "người nhận mới" 0,15 đẩy rủi ro qua A. Đây là thiết kế, nhưng là ma sát lớn.
+- **Mô hình học quan trọng:** tắt hai mô hình học thì kẻ biết PIN `allow` 90% (chỉ còn luật và khoảng cách).
+- **Điểm yếu thật (E27):** bot phát lại có nhiễu ≥ 15% và bot biết mẫu chuẩn của nạn nhân **qua mặt hệ thống** (allow 48–82%). Hệ thống chặn chắc bot ngây thơ và phát lại nhiễu thấp; không chặn được kẻ tấn công thích nghi.
+
+**E25, quét ngưỡng A** (B ít ảnh hưởng): không có điểm tối ưu cho cả hai phía. A=0,25 (hiện tại): chủ ngồi allow 80%, kẻ biết PIN không-allow 72%, bot biết mẫu chuẩn không-allow 25%. A=0,30: 91% / 50% / 17%. A=0,20: 65% / 90% / 36%. A=0,10: 17% / 99% / 80% (chủ bị phiền gần hết). Chọn theo chính sách (chấp nhận hỏi thêm bao nhiêu người thật); nên chốt sau khi có dữ liệu đội cùng máy.
+
+**E27b, ngưỡng phát lại** (hiện 0,07): 0,085 bắt phát lại ±15% 86% (so với 30%) với chủ bị hold 3% (lịch sử ngắn ở đây; E5b ngoại suy FPR cao hơn khi lịch sử dài); 0,10: ±20% bắt 47% nhưng chủ hold 6%. Chưa đổi ngưỡng; quyết sau khi đo lịch sử dài của đội (T3).
+
+**E26, độ trễ local (TestClient, SQLite, không mạng):** `POST /sessions` p50 2,2 ms / p95 2,9 ms; `/score` p50 3,8 ms / p95 4,7 ms / p99 6,2 ms. **Lần gọi đầu mất ~1 s** (nạp mô hình LightGBM lười): quan trọng cho khởi động nguội trên Vercel; chưa đo trên Vercel/Neon.
+
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).

@@ -5,7 +5,7 @@ Thay bằng dữ liệu của đội khi có. Chia theo người: train 50 / val
 Không dùng đặc trưng kích thước chạm (web có thể chỉ trả 1; bot đặt được giá trị bất kỳ).
 Ra: backend/app/models/human_lgbm.txt + human_lgbm.json (đặc trưng, ngưỡng FRR 5%, mô tả huấn luyện).
 
-DỮ LIỆU CỦA ĐỘI (việc B): `python experiments/train_human_model.py --export export.jsonl [--no-strokepin] [--no-generated]`
+DỮ LIỆU CỦA ĐỘI (việc B): `python experiments/train_human_model.py --export export.jsonl --out <thư mục> [--no-strokepin] [--no-generated]` (có --export thì BẮT BUỘC --out hoặc --overwrite)
   export.jsonl = đầu ra của GET /v1/export (JSON list hoặc mỗi dòng một bản ghi {raw, meta:{participant_id, role, tactic}}).
   role genuine/impostor -> người (impostor là người biết PIN); role bot -> bot THẬT (adb, dispatchGesture...). Người chia theo participant_id.
   Mặc định vẫn thêm StrokePIN và bot sinh; bỏ bằng --no-strokepin / --no-generated. Ngưỡng FRR 5% chọn trên người validation.
@@ -23,11 +23,13 @@ ROOT = Path(__file__).parents[2]
 sys.path[:0] = [str(ROOT / "backend"), str(ROOT / "attacker"), str(Path(__file__).parent)]
 from app.scoring import bot_features  # noqa: E402
 from nhip_attacker import tactics  # noqa: E402
-import strokepin_loader  # noqa: E402
 
 SEED, FRR, TACTICS = 7, 0.05, (1, 2, 3, 4)
 ARGS = sys.argv[1:]
 EXPORT = ARGS[ARGS.index("--export") + 1] if "--export" in ARGS else None
+OUT_DIR = Path(ARGS[ARGS.index("--out") + 1]) if "--out" in ARGS else None
+if EXPORT and not OUT_DIR and "--overwrite" not in ARGS:
+    sys.exit("--export sẽ GHI ĐÈ mô hình trong backend/app/models. Thêm --out <thư mục> để thử, hoặc --overwrite khi chắc chắn.")
 USE_STROKEPIN, USE_GENERATED = "--no-strokepin" not in ARGS, "--no-generated" not in ARGS
 N_H, N_BOT = {"train": 4000, "val": 1500, "test": 3000, "pool": 500}, {"train": 800, "test": 400}
 NAMES = [n for n in bot_features.FEATURE_NAMES if n not in bot_features.CONTACT_FEATURES]
@@ -35,7 +37,8 @@ NAMES = [n for n in bot_features.FEATURE_NAMES if n not in bot_features.CONTACT_
 rng = random.Random(SEED)
 H = {k: [] for k in ("train", "val", "test", "pool")}
 PINS = []
-if USE_STROKEPIN:  # chia như bản gốc (giữ nguyên kết quả khi chạy không cờ)
+if USE_STROKEPIN:  # chia như bản gốc
+    import strokepin_loader  # import muộn: chạy chỉ với dữ liệu đội (--no-strokepin) không cần pandas/StrokePIN (giữ nguyên kết quả khi chạy không cờ)
     S = strokepin_loader.load()
     USERS, PINS = sorted({e["user"] for e in S}), sorted({e["pin"] for e in S})
     us = USERS[:]
@@ -101,8 +104,8 @@ if USE_GENERATED and PINS:
 if real_bots["test"]:
     rep["catch_real_bots_test"] = float((p(vec(real_bots["test"])) < thr).mean())
 
-out = ROOT / "backend/app/models"
-out.mkdir(exist_ok=True)
+out = OUT_DIR or ROOT / "backend/app/models"
+out.mkdir(parents=True, exist_ok=True)
 model.booster_.save_model(str(out / "human_lgbm.txt"))
 src = ["StrokePIN (người thật, CC BY-NC-SA 4.0, chia theo người)"] * USE_STROKEPIN + ["dữ liệu của đội (export)"] * bool(EXPORT)
 meta = {"features": NAMES, "threshold": thr, "target_frr": FRR, "seed": SEED,

@@ -426,3 +426,28 @@ def test_participant_registration_stores_email_and_name_but_not_in_export(client
 def test_participant_rejects_bad_input(client, bad):
     body = {"participant_id": "u_test2", "email": "a@b.vn", "full_name": "Trần Thị Lan", **bad}
     assert client.post("/v1/participants", json=body, headers=H).status_code == 422
+
+
+def _challenge_session(client, user, token, phrase):
+    from tests.synth_vi import type_phrase
+    s = human_session(user, OWNER, random.Random(3))
+    s["fields"] = [{"name": "challenge", "token": token, "token_status": "ok", "events": type_phrase(phrase, "telex", 1.0)}]
+    return _post_session(client, s)
+
+
+def test_challenge_token_is_single_use(client):
+    c = client.get("/v1/challenge", headers=H).json()
+    first = _score(client, _challenge_session(client, "tok_u", c["token"], c["phrase"]))
+    again = _score(client, _challenge_session(client, "tok_u", c["token"], c["phrase"]))  # client tự xưng token_status=ok: bị ghi đè
+    assert "challenge_token_replayed" not in first["reasons"]
+    assert "challenge_token_replayed" in again["reasons"] and again["action"] != "allow"
+    forged = _score(client, _challenge_session(client, "tok_u", "abc.def", c["phrase"]))
+    assert "challenge_token_replayed" in forged["reasons"]
+
+
+def test_expired_challenge_token_is_flagged(client):
+    import time as _t
+    from app.scoring import challenge
+    c = challenge.issue(now=_t.time() - 10_000)
+    r = _score(client, _challenge_session(client, "tok_exp", c["token"], c["phrase"]))
+    assert "challenge_token_replayed" in r["reasons"]

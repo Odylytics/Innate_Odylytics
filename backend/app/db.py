@@ -65,3 +65,11 @@ class TouchSession(Base):
     action: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
     label: Mapped[str | None] = mapped_column(String(16), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)
+
+
+class ChallengeNonce(Base):
+    """Token câu thử thách đã dùng (dùng một lần): dùng lại là dấu hiệu phát lại phiên ghi sẵn."""
+
+    __tablename__ = "challenge_nonces"
+    nonce: Mapped[str] = mapped_column(String(32), primary_key=True)
+    used_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=_now)

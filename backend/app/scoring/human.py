@@ -32,6 +32,9 @@ def score(f: dict[str, float]) -> tuple[float, list[str]]:
         # E19 (Touchalytics, 20.896 nét người thật): vận tốc đều (CV < 0.3) gặp 0 lần ở người thật. Luật "thẳng > 0.999" cũ gắn cờ nhầm 13% phiên 3 nét.
         cues["swipe_uniform_speed"] = 0.7 * f["swipe_robotic"]
 
+    if f.get("fld_challenge_token_bad", 0) >= 1:
+        cues["challenge_token_replayed"] = 0.8  # token câu thử thách giả, hết hạn hoặc đã dùng: phát lại phiên đã ghi
+
     if "vi_ime_coverage" in f:
         # câu thử thách có dấu mà không có phím biến đổi nào: đặt/dán/adb/bàn phím không có tiếng Việt. Tín hiệu MỀM (người dùng bàn phím gợi ý từ cũng vậy), chưa đo trên người Việt thật
         cues["challenge_no_ime"] = 0.3 * (1 - f["vi_ime_coverage"])
