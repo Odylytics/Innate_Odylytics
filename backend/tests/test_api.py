@@ -407,3 +407,22 @@ def test_challenge_endpoint_issues_signed_phrase(client):
     r = client.get("/v1/challenge", headers=H)
     assert r.status_code == 200 and challenge.verify(r.json()["token"]) == r.json()["phrase"]
     assert client.get("/v1/challenge", headers={"X-API-Key": "sai"}).status_code == 401
+
+
+def test_participant_registration_stores_email_and_name_but_not_in_export(client):
+    body = {"participant_id": "u_test1", "email": "  Nguyen.An@Example.com ", "full_name": "Nguyễn  Văn An"}
+    assert client.post("/v1/participants", json=body, headers=H).json() == {"participant_id": "u_test1"}
+    from app.db import Participant, SessionLocal
+    with SessionLocal() as db:
+        p = db.get(Participant, "u_test1")
+        assert (p.email, p.full_name) == ("nguyen.an@example.com", "Nguyễn Văn An")
+    # gửi lại cùng id thì cập nhật, không lỗi
+    assert client.post("/v1/participants", json={**body, "full_name": "Nguyễn Văn Bình"}, headers=H).status_code == 200
+    # export huấn luyện không chứa email/họ tên
+    assert "example.com" not in client.get("/v1/export?collected_only=false", headers={"X-API-Key": "ml-key"}).text
+
+
+@pytest.mark.parametrize("bad", [{"email": "khong-phai-email"}, {"full_name": "An 2"}, {"full_name": "A"}, {"participant_id": "a b"}])
+def test_participant_rejects_bad_input(client, bad):
+    body = {"participant_id": "u_test2", "email": "a@b.vn", "full_name": "Trần Thị Lan", **bad}
+    assert client.post("/v1/participants", json=body, headers=H).status_code == 422

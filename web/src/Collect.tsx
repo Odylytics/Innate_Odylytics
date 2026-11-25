@@ -1,37 +1,52 @@
-import { useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
+import { useContext, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
 import { ApiError, api, type CollectionMeta, type SessionIn } from './api'
 import { Recorder } from './capture'
+import { LangContext } from './i18n'
 import './collect.css'
 
-// Data-collection page (#/collect): a plain transfer app for volunteers on their own phone. It records only times,
-// finger positions and touch size (same SDK as the demo), never the digits, and sends them with a `meta` label.
-// Phone only: on a desktop it shows a "open on your phone" notice (add ?dev=1 to test in devtools).
-const PIN = '1593'
+// Data-collection page (#/collect): a plain transfer app for volunteers on their own phone.
+// Flow: consent → email + full name → create a PIN (twice) → enter it 5 times through the transfer screens.
+// It records only times, finger positions and touch size (same SDK as the demo) plus the key labels the API stores,
+// and sends them with a `meta` label. Email and name go to a separate table (POST /v1/participants), never into the sessions.
+// Phone only: on a desktop it shows an "open on your phone" notice (add ?dev=1 to test in devtools).
+// Language follows the site (LangContext from App.tsx).
+const PIN_LEN = 6 // the learned owner model was trained on 6-digit PINs (backend/app/scoring/owner_model.py)
+const ENTRIES = 5
+const ENROLL = 3 // the first entries become the owner's rhythm template, like the demo's 3 enrolment entries
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
-const CONTACT = (import.meta.env.VITE_COLLECT_CONTACT as string | undefined) ?? 'người mời bạn tham gia'
-const IDENT = /^[A-Za-z0-9_.-]{1,64}$/
+const CONTACT = import.meta.env.VITE_COLLECT_CONTACT as string | undefined
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 const AMOUNTS = [200_000, 500_000, 1_000_000, 2_000_000]
 const PEOPLE = [
-  { id: 'a', name: 'Mẹ', acct: '0901 234 567', ini: 'M' },
-  { id: 'b', name: 'Anh Tuấn (chủ nhà)', acct: '0912 888 120', ini: 'T' },
-  { id: 'c', name: 'Lan Anh', acct: '0987 456 321', ini: 'L' },
+  { id: 'a', en: 'Mum', vi: 'Mẹ', acct: '0901 234 567', ini: 'M' },
+  { id: 'b', en: 'Tuấn (landlord)', vi: 'Anh Tuấn (chủ nhà)', acct: '0912 888 120', ini: 'T' },
+  { id: 'c', en: 'Lan Anh', vi: 'Lan Anh', acct: '0987 456 321', ini: 'L' },
 ]
-const vnd = (n: number) => `${n.toLocaleString('vi-VN')} ₫`
 
-interface Setup { code: string; role: 'genuine' | 'impostor'; owner: string; sitting: number; posture: string }
-const SETUP_KEY = 'innate.collect.setup'
-const loadSetup = (): Setup | null => { try { return JSON.parse(localStorage.getItem(SETUP_KEY) ?? 'null') } catch { return null } }
-const doneKey = (s: Setup) => `innate.collect.done.${s.role}.${s.code}.${s.owner}.${s.sitting}`
-const readDone = (s: Setup) => { try { return Number(localStorage.getItem(doneKey(s))) || 0 } catch { return 0 } }
-// sitting 1: 3 enrolment entries + 5 test entries; later sittings and impostor rounds: 5 entries (docs/plan/thu-du-lieu-doi.md)
-const ENROLL = 3
-const targetOf = (s: Setup) => (s.role === 'genuine' && s.sitting === 1 ? ENROLL + 5 : 5)
+/** at least two words, each starting with a capital letter followed by lowercase letters (diacritics allowed) */
+const nameOk = (name: string) => {
+  const words = name.normalize('NFC').trim().split(/\s+/)
+  return words.length >= 2 && words.every((w) => /^\p{Lu}[\p{Ll}\p{M}]*$/u.test(w))
+}
+const newId = () => `u_${[...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.toString(16).padStart(2, '0')).join('')}`
+
+/** the site language; tx(english, vietnamese) picks one */
+function useTx() {
+  const { lang } = useContext(LangContext)
+  const tx = (en: string, vi: string) => (lang === 'en' ? en : vi)
+  const vnd = (n: number) => `${n.toLocaleString(lang === 'en' ? 'en-US' : 'vi-VN')} ₫`
+  return { tx, vnd, lang }
+}
 
 function isPhone() {
   return window.matchMedia('(pointer: coarse)').matches && Math.min(window.innerWidth, window.innerHeight) <= 600
 }
 
+type Step = 'consent' | 'profile' | 'create' | 'confirm' | 'run'
+interface Profile { id: string; email: string; name: string }
+
 export default function Collect() {
+  const { tx } = useTx()
   useEffect(() => {
     const html = document.documentElement
     html.dataset.page = 'collect'
@@ -47,75 +62,164 @@ export default function Collect() {
     return () => window.removeEventListener('resize', on)
   }, [dev])
 
-  const [setup, setSetup] = useState<Setup | null>(loadSetup)
-  const [agreed, setAgreed] = useState(false)
+  const [step, setStep] = useState<Step>('consent')
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [pin, setPin] = useState('') // kept in memory only, never stored in the browser
 
   if (!phone) {
     return (
-      <div className="cl cl-gate"><h1>Mở trang này trên điện thoại</h1>
-        <p>Trang thu thập dữ liệu chỉ chạy trên điện thoại cảm ứng. Hãy mở lại đường link này bằng điện thoại của bạn.</p></div>
+      <div className="cl cl-gate"><h1>{tx('Open this page on your phone', 'Mở trang này trên điện thoại')}</h1>
+        <p>{tx('The data-collection page only works on a touchscreen phone. Please open this link again on your phone.',
+          'Trang thu thập dữ liệu chỉ chạy trên điện thoại cảm ứng. Hãy mở lại đường link này bằng điện thoại của bạn.')}</p></div>
     )
   }
-  if (!agreed) return <Consent onAgree={() => setAgreed(true)} />
-  if (!setup) return <SetupForm onDone={(s) => { localStorage.setItem(SETUP_KEY, JSON.stringify(s)); setSetup(s) }} />
-  return <TransferApp key={doneKey(setup)} setup={setup} onChange={() => { localStorage.removeItem(SETUP_KEY); setSetup(null) }} />
+  if (step === 'consent') return <Consent onAgree={() => setStep('profile')} />
+  if (step === 'profile' || !profile) return <ProfileForm onDone={(p) => { setProfile(p); setStep('create') }} />
+  if (step === 'create') return <PinSetup key="create" mode="create" onDone={(p) => { setPin(p); setStep('confirm') }} />
+  if (step === 'confirm') return <PinSetup key="confirm" mode="confirm" expected={pin} onBack={() => setStep('create')} onDone={() => setStep('run')} />
+  return <TransferApp profile={profile} pin={pin} onRestart={() => { setPin(''); setStep('create') }} />
 }
 
 function Consent({ onAgree }: { onAgree: () => void }) {
+  const { tx } = useTx()
   const [ok, setOk] = useState(false)
+  const contact = CONTACT ?? tx('the person who invited you', 'người mời bạn tham gia')
   return (
     <div className="cl cl-page">
-      <h1>Phiếu đồng ý tham gia thu thập dữ liệu thao tác</h1>
-      <p>Chúng tôi thu cách bạn chạm và gõ trên màn hình để nghiên cứu cho sản phẩm Innate tham dự MoMo Tech Contest 2026.</p>
+      <h1>{tx('Consent to take part in touch-data collection', 'Phiếu đồng ý tham gia thu thập dữ liệu thao tác')}</h1>
+      <p>{tx('We record how you tap and type on the screen, for research on the Innate product entered in MoMo Tech Contest 2026.',
+        'Chúng tôi thu cách bạn chạm và gõ trên màn hình để nghiên cứu cho sản phẩm Innate tham dự MoMo Tech Contest 2026.')}</p>
       <ul>
-        <li><b>Dữ liệu thu:</b> thời điểm và vị trí các lần chạm, kích thước vùng chạm, thời điểm các lần vuốt. <b>Không</b> ghi nội dung PIN, tên, số điện thoại, ảnh, giọng nói, vị trí hay tin nhắn.</li>
-        <li><b>Ứng dụng này là giả:</b> không có tiền thật, không chuyển tiền thật. PIN thử là một số cố định hiển thị trên màn hình.</li>
-        <li><b>Mục đích:</b> huấn luyện và đánh giá mô hình phát hiện bot và nhận ra chủ tài khoản; chỉ công bố số liệu tổng hợp.</li>
-        <li><b>Lưu trữ:</b> dữ liệu gắn mã ẩn danh, không bán hay chia cho bên thứ ba. Bạn có thể từ chối, rút lui hoặc yêu cầu xem và xoá dữ liệu của mình bất cứ lúc nào: liên hệ {CONTACT}.</li>
-        <li>Dữ liệu thao tác có thể là dữ liệu nhạy cảm theo Luật Bảo vệ dữ liệu cá nhân 2025; việc thu dựa trên sự đồng ý của bạn tại đây.</li>
+        <li><b>{tx('What we record:', 'Dữ liệu thu:')}</b> {tx('your email and full name; when and where you touch the keys, the size of the touch, and when you swipe; and the practice PIN you create, as it is typed. We do not record photos, voice, location, contacts or messages.',
+          'email và họ tên của bạn; thời điểm và vị trí các lần chạm phím, kích thước vùng chạm, thời điểm các lần vuốt; và mã PIN thử bạn tự tạo, đúng như bạn gõ. Chúng tôi không ghi ảnh, giọng nói, vị trí, danh bạ hay tin nhắn.')}</li>
+        <li><b>{tx('Use a made-up PIN:', 'Hãy dùng PIN tự nghĩ ra:')}</b> {tx('do not use the PIN of your bank, wallet or phone.', 'đừng dùng PIN của ngân hàng, ví hay điện thoại của bạn.')}</li>
+        <li><b>{tx('This app is fake:', 'Ứng dụng này là giả:')}</b> {tx('no real money, no real transfers.', 'không có tiền thật, không chuyển tiền thật.')}</li>
+        <li><b>{tx('Purpose:', 'Mục đích:')}</b> {tx('to train and evaluate models that detect bots and recognise the account owner; only aggregate results are published.', 'huấn luyện và đánh giá mô hình phát hiện bot và nhận ra chủ tài khoản; chỉ công bố số liệu tổng hợp.')}</li>
+        <li><b>{tx('Storage:', 'Lưu trữ:')}</b> {tx(`your email and name are kept in a separate table from the touch data, which carries only an anonymous code. Nothing is sold or shared with third parties. You can decline, withdraw, or ask to see and delete your data at any time: contact ${contact}.`, `email và họ tên được lưu ở bảng riêng, tách khỏi dữ liệu chạm (chỉ gắn mã ẩn danh). Không bán hay chia cho bên thứ ba. Bạn có thể từ chối, rút lui hoặc yêu cầu xem và xoá dữ liệu của mình bất cứ lúc nào: liên hệ ${contact}.`)}</li>
+        <li>{tx('Touch data can be sensitive data under Vietnam’s 2025 Personal Data Protection Law; we collect it on the basis of your consent here.', 'Dữ liệu thao tác có thể là dữ liệu nhạy cảm theo Luật Bảo vệ dữ liệu cá nhân 2025; việc thu dựa trên sự đồng ý của bạn tại đây.')}</li>
       </ul>
       <label className="cl-check"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />
-        <span>Tôi đã đọc và đồng ý tham gia.</span></label>
-      <button className="cl-btn" disabled={!ok} onClick={onAgree}>Tiếp tục</button>
+        <span>{tx('I have read this and agree to take part.', 'Tôi đã đọc và đồng ý tham gia.')}</span></label>
+      <button className="cl-btn" disabled={!ok} onClick={onAgree}>{tx('Continue', 'Tiếp tục')}</button>
     </div>
   )
 }
 
-function SetupForm({ onDone }: { onDone: (s: Setup) => void }) {
-  const [code, setCode] = useState('')
-  const [role, setRole] = useState<Setup['role']>('genuine')
-  const [owner, setOwner] = useState('')
-  const [sitting, setSitting] = useState(1)
-  const [posture, setPosture] = useState('ngồi')
-  const codeOk = IDENT.test(code), ownerOk = role === 'genuine' || (IDENT.test(owner) && owner !== code)
+function ProfileForm({ onDone }: { onDone: (p: Profile) => void }) {
+  const { tx } = useTx()
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [touched, setTouched] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const emailOk = EMAIL.test(email.trim()), fullName = name.normalize('NFC').trim().replace(/\s+/g, ' ')
+  const nameValid = nameOk(fullName)
+  const noMarks = fullName !== '' && /^[\x20-\x7E]+$/.test(fullName) // all plain ASCII: maybe a Vietnamese name written without diacritics
+
+  async function submit() {
+    setTouched(true)
+    if (!emailOk || !nameValid) return
+    setBusy(true); setErr(null)
+    const id = newId()
+    try {
+      await api.registerParticipant({ participant_id: id, email: email.trim(), full_name: fullName })
+      onDone({ id, email: email.trim().toLowerCase(), name: fullName })
+    } catch (e) {
+      const st = e instanceof ApiError ? e.status : -1
+      setErr(st === 0 ? tx('No connection. Check your network and try again.', 'Không có mạng. Kiểm tra kết nối rồi thử lại.')
+        : st === 401 || st === 403 ? tx('This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.')
+        : tx(`Could not save your details (${st}). Try again.`, `Không lưu được thông tin (${st}). Thử lại.`))
+    } finally { setBusy(false) }
+  }
+
   return (
-    <div className="cl cl-page">
-      <h1>Bắt đầu</h1>
-      <label className="cl-field"><span>Mã tham gia (do đội cung cấp, vd. p07)</span>
-        <input value={code} onChange={(e) => setCode(e.target.value.trim().toLowerCase())} autoCapitalize="none" autoCorrect="off" spellCheck={false} /></label>
-      <fieldset className="cl-field"><legend>Bạn sẽ làm gì?</legend>
-        <label className="cl-radio"><input type="radio" checked={role === 'genuine'} onChange={() => setRole('genuine')} /><span>Dùng ví của chính mình</span></label>
-        <label className="cl-radio"><input type="radio" checked={role === 'impostor'} onChange={() => setRole('impostor')} /><span>Đóng vai người biết PIN, dùng ví của người khác</span></label>
-      </fieldset>
-      {role === 'impostor' && (
-        <label className="cl-field"><span>Mã của chủ ví bạn đang thử</span>
-          <input value={owner} onChange={(e) => setOwner(e.target.value.trim().toLowerCase())} autoCapitalize="none" autoCorrect="off" spellCheck={false} /></label>
-      )}
-      <label className="cl-field"><span>Lần ngồi thứ mấy? (1 = lần đầu, 2 = lần sau, cách ≥ 1 ngày)</span>
-        <select value={sitting} onChange={(e) => setSitting(Number(e.target.value))}>{[1, 2, 3, 4].map((n) => <option key={n} value={n}>Lần {n}</option>)}</select></label>
-      <label className="cl-field"><span>Tư thế lúc này</span>
-        <select value={posture} onChange={(e) => setPosture(e.target.value)}>{['ngồi', 'đứng', 'đi bộ', 'nằm'].map((p) => <option key={p}>{p}</option>)}</select></label>
-      <button className="cl-btn" disabled={!codeOk || !ownerOk} onClick={() => onDone({ code, role, owner: role === 'genuine' ? code : owner, sitting, posture })}>Mở ứng dụng</button>
+    <form className="cl cl-page" noValidate onSubmit={(e) => { e.preventDefault(); void submit() }}>
+      <h1>{tx('About you', 'Thông tin của bạn')}</h1>
+      <label className="cl-field"><span>Email</span>
+        <input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+          value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={touched && !emailOk} />
+        {touched && !emailOk && <small className="cl-bad">{tx('Enter a valid email, e.g. an@gmail.com', 'Nhập email hợp lệ, ví dụ an@gmail.com')}</small>}
+      </label>
+      <label className="cl-field"><span>{tx('Full name', 'Họ và tên')}</span>
+        <input type="text" autoComplete="name" autoCapitalize="words" spellCheck={false}
+          value={name} onChange={(e) => setName(e.target.value)} aria-invalid={touched && !nameValid} />
+        <small>{tx('Capitalise each word. If you are Vietnamese, write it with full diacritics, e.g. Nguyễn Văn An.', 'Viết hoa chữ cái đầu mỗi từ. Nếu là người Việt, viết đủ dấu, ví dụ: Nguyễn Văn An.')}</small>
+        {touched && !nameValid && <small className="cl-bad">{tx('First and last name, each word starting with a capital letter.', 'Cần cả họ và tên, mỗi từ viết hoa chữ cái đầu.')}</small>}
+        {nameValid && noMarks && <small>{tx('No diacritics found. If your name has them, please add them.', 'Chưa thấy dấu nào. Nếu tên bạn có dấu, hãy viết đủ dấu.')}</small>}
+      </label>
+      {err && <p className="cl-err" role="alert">{err}</p>}
+      <button className="cl-btn" type="submit" disabled={busy}>{busy ? tx('Saving…', 'Đang lưu…') : tx('Continue', 'Tiếp tục')}</button>
+    </form>
+  )
+}
+
+/** The number pad. Only `onDown`/`onUp` feed the touch recorder; the create/confirm steps pass none. */
+function Keypad({ pressed, disabled, onPress, onDown, onUp }: {
+  pressed: string | null; disabled?: boolean; onPress: (k: string) => void
+  onDown?: (e: RPointerEvent<HTMLButtonElement>, k: string) => void; onUp?: (e: RPointerEvent<HTMLButtonElement>) => void
+}) {
+  const { tx } = useTx()
+  return (
+    <div className="cl-keys">
+      {KEYS.map((k, i) => k === '' ? <span key={i} /> : (
+        <button key={i} className={`cl-key ${pressed === k ? 'down' : ''}`} disabled={disabled}
+          onPointerDown={(e) => onDown?.(e, k)} onPointerUp={(e) => onUp?.(e)} onPointerCancel={(e) => onUp?.(e)} onClick={() => onPress(k)}
+          aria-label={k === '⌫' ? tx('Clear', 'Xoá') : k}>{k}</button>
+      ))}
+    </div>
+  )
+}
+
+function Dots({ n, shake }: { n: number; shake?: boolean }) {
+  return (
+    <div className={`cl-dots ${shake ? 'shake' : ''}`} aria-label={`${n}/${PIN_LEN}`}>
+      {Array.from({ length: PIN_LEN }, (_, i) => <i key={i} className={i < n ? 'on' : ''} />)}
+    </div>
+  )
+}
+
+/** create the PIN, then type it again to confirm; nothing is recorded or sent here */
+function PinSetup({ mode, expected, onDone, onBack }: { mode: 'create' | 'confirm'; expected?: string; onDone: (pin: string) => void; onBack?: () => void }) {
+  const { tx } = useTx()
+  const [digits, setDigits] = useState('')
+  const [pressed, setPressed] = useState<string | null>(null)
+  const [shake, setShake] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const press = (k: string) => {
+    if (k === '⌫') { setDigits(''); setNote(null); return }
+    if (!k || digits.length >= PIN_LEN) return
+    const next = digits + k
+    setDigits(next)
+    if (next.length < PIN_LEN) return
+    if (mode === 'create') { window.setTimeout(() => onDone(next), 150); return }
+    if (next === expected) { window.setTimeout(() => onDone(next), 150); return }
+    setShake(true); setNote(tx('The two PINs do not match. Try again.', 'Hai mã PIN không khớp. Nhập lại nhé.'))
+    window.setTimeout(() => { setShake(false); setDigits('') }, 450)
+  }
+  return (
+    <div className="cl cl-app">
+      <div className="cl-pin">
+        <h2>{mode === 'create' ? tx(`Create a ${PIN_LEN}-digit PIN`, `Tạo mã PIN ${PIN_LEN} số`) : tx('Enter it again to confirm', 'Nhập lại để xác nhận')}</h2>
+        <p className="cl-hint">{mode === 'create'
+          ? tx('Make one up and remember it: you will type it 5 times. Do not use a real PIN.', 'Hãy tự nghĩ một mã và nhớ nó: bạn sẽ nhập 5 lần. Đừng dùng PIN thật.')
+          : tx('Same PIN as before.', 'Giống mã vừa tạo.')}</p>
+        <Dots n={digits.length} shake={shake} />
+        {note && <p className="cl-err" role="alert">{note}</p>}
+        <div onPointerDown={(e) => { const b = (e.target as HTMLElement).closest('button'); if (b) setPressed(b.textContent) }} onPointerUp={() => setPressed(null)} onPointerCancel={() => setPressed(null)}>
+          <Keypad pressed={pressed} onPress={press} />
+        </div>
+        {mode === 'confirm' && <button className="cl-link" onClick={onBack}>{tx('Choose a different PIN', 'Đổi mã PIN khác')}</button>}
+      </div>
     </div>
   )
 }
 
 type Screen = 'home' | 'transfer' | 'pin' | 'sending' | 'ok' | 'finish'
 
-function TransferApp({ setup, onChange }: { setup: Setup; onChange: () => void }) {
-  const target = targetOf(setup)
-  const [done, setDone] = useState(() => readDone(setup))
-  const [screen, setScreen] = useState<Screen>(done >= target ? 'finish' : 'home')
+function TransferApp({ profile, pin, onRestart }: { profile: Profile; pin: string; onRestart: () => void }) {
+  const { tx, vnd, lang } = useTx()
+  const [done, setDone] = useState(0)
+  const [screen, setScreen] = useState<Screen>('home')
   const [who, setWho] = useState(PEOPLE[0].id)
   const [amount, setAmount] = useState(AMOUNTS[1])
   const [digits, setDigits] = useState('')
@@ -133,36 +237,36 @@ function TransferApp({ setup, onChange }: { setup: Setup; onChange: () => void }
     setScreen('sending'); setErr(null)
     try {
       const { session_id } = await api.createSession(s)
-      // the first 3 entries of the owner's first sitting become the rhythm template (the API keeps it locked afterwards)
-      if (setup.role === 'genuine' && setup.sitting === 1 && done < ENROLL) {
+      // the first entries become the rhythm template (the API keeps it locked afterwards)
+      if (done < ENROLL) {
         try { await api.enroll(s.user_id, session_id) } catch (e) { if (!(e instanceof ApiError && e.status === 409)) throw e }
       }
-      const n = done + 1
-      localStorage.setItem(doneKey(setup), String(n)); setDone(n); pending.current = null; setScreen('ok')
+      pending.current = null; setDone(done + 1); setScreen('ok')
     } catch (e) {
       pending.current = s
-      setErr(e instanceof ApiError && e.status === 0 ? 'Không có mạng. Kiểm tra kết nối rồi bấm Thử lại.'
-        : e instanceof ApiError && (e.status === 401 || e.status === 403) ? 'Bản này chưa cấu hình khoá API. Báo cho đội.'
-        : `Lỗi gửi dữ liệu${e instanceof ApiError ? ` (${e.status})` : ''}. Bấm Thử lại.`)
+      const st = e instanceof ApiError ? e.status : -1
+      setErr(st === 0 ? tx('No connection. Check your network, then tap Retry.', 'Không có mạng. Kiểm tra kết nối rồi bấm Thử lại.')
+        : st === 401 || st === 403 ? tx('This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.')
+        : tx(`Could not send the data${st > 0 ? ` (${st})` : ''}. Tap Retry.`, `Lỗi gửi dữ liệu${st > 0 ? ` (${st})` : ''}. Bấm Thử lại.`))
       setScreen('pin')
     }
   }
 
   const press = (k: string) => {
     if (k === '⌫') { setDigits(''); rec.current.clearTaps(); return }
-    if (!k || digits.length >= PIN.length) return
+    if (!k || digits.length >= PIN_LEN) return
     const next = digits + k
     setDigits(next)
-    if (next.length < PIN.length) return
-    if (next !== PIN) {
+    if (next.length < PIN_LEN) return
+    if (next !== pin) {
       setShake(true)
       window.setTimeout(() => { setShake(false); setDigits(''); rec.current.clearTaps() }, 450)
       return
     }
     window.setTimeout(() => {
-      if (rec.current.taps.length < PIN.length) { setDigits(''); rec.current.clearTaps(); return } // no finger on a key
-      const meta: CollectionMeta = { participant_id: setup.code, sitting: setup.sitting, role: setup.role, note: setup.posture }
-      void send({ ...rec.current.payload(setup.owner), meta })
+      if (rec.current.taps.length < PIN_LEN) { setDigits(''); rec.current.clearTaps(); return } // no finger on a key
+      const meta: CollectionMeta = { participant_id: profile.id, sitting: 1, role: 'genuine' }
+      void send({ ...rec.current.payload(profile.id), meta })
     }, 0)
   }
   const keyDown = (e: RPointerEvent<HTMLButtonElement>, k: string) => {
@@ -179,34 +283,35 @@ function TransferApp({ setup, onChange }: { setup: Setup; onChange: () => void }
   return (
     <div className="cl cl-app">
       <div className="cl-strip">
-        <span>Thu thập dữ liệu · {setup.code}{setup.role === 'impostor' ? ` → ${setup.owner}` : ''} · lần {setup.sitting}</span>
-        <b>{Math.min(done, target)}/{target}</b>
+        <span>{tx('Data collection', 'Thu thập dữ liệu')} · {profile.name}</span>
+        <b>{done}/{ENTRIES}</b>
       </div>
 
       {screen === 'home' && (
         <div className="cl-home">
           <header><span className="cl-logo">Innate Pay</span></header>
-          <div className="cl-card"><span>Số dư khả dụng</span><b>12.450.000 ₫</b></div>
+          <div className="cl-card"><span>{tx('Available balance', 'Số dư khả dụng')}</span><b>{vnd(12_450_000)}</b></div>
           <div className="cl-grid">
-            <button className="cl-tile on" onClick={begin}><i>↗</i>Chuyển tiền</button>
-            <button className="cl-tile" disabled><i>＋</i>Nạp tiền</button>
-            <button className="cl-tile" disabled><i>▤</i>Hóa đơn</button>
-            <button className="cl-tile" disabled><i>☰</i>Lịch sử</button>
+            <button className="cl-tile on" onClick={begin}><i>↗</i>{tx('Transfer', 'Chuyển tiền')}</button>
+            <button className="cl-tile" disabled><i>＋</i>{tx('Top up', 'Nạp tiền')}</button>
+            <button className="cl-tile" disabled><i>▤</i>{tx('Bills', 'Hóa đơn')}</button>
+            <button className="cl-tile" disabled><i>☰</i>{tx('History', 'Lịch sử')}</button>
           </div>
+          <p className="cl-hint">{tx('Tap Transfer, then enter the PIN you created.', 'Bấm Chuyển tiền, rồi nhập mã PIN bạn đã tạo.')}</p>
         </div>
       )}
 
       {screen === 'transfer' && (
         <div className="cl-transfer">
-          <h2>Chuyển tiền</h2>
-          <h3>Người nhận</h3>
+          <h2>{tx('Send money', 'Chuyển tiền')}</h2>
+          <h3>{tx('Recipient', 'Người nhận')}</h3>
           {PEOPLE.map((p) => (
             <label key={p.id} className={`cl-person ${who === p.id ? 'on' : ''}`}>
               <input type="radio" name="to" checked={who === p.id} onChange={() => setWho(p.id)} />
-              <i>{p.ini}</i><span><b>{p.name}</b><small>{p.acct}</small></span>
+              <i>{p.ini}</i><span><b>{p[lang]}</b><small>{p.acct}</small></span>
             </label>
           ))}
-          <h3>Số tiền</h3>
+          <h3>{tx('Amount', 'Số tiền')}</h3>
           <div className="cl-amounts">
             {AMOUNTS.map((a) => (
               <label key={a} className={`cl-chip ${amount === a ? 'on' : ''}`}>
@@ -216,44 +321,34 @@ function TransferApp({ setup, onChange }: { setup: Setup; onChange: () => void }
           </div>
           <div className="cl-swipe" {...swipe} role="button" tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter') toPin() }}>
-            <span aria-hidden="true">↑</span> Vuốt lên để xác nhận
+            <span aria-hidden="true">↑</span> {tx('Swipe up to confirm', 'Vuốt lên để xác nhận')}
           </div>
         </div>
       )}
 
       {(screen === 'pin' || screen === 'sending') && (
         <div className="cl-pin">
-          <h2>Nhập mã PIN</h2>
-          <p className="cl-sub">Chuyển {vnd(amount)} cho {person.name}</p>
-          <p className="cl-hint">Mã PIN thử: <b>{PIN}</b> (ứng dụng giả, không có tiền thật)</p>
-          <div className={`cl-dots ${shake ? 'shake' : ''}`} aria-label={`${digits.length}/4`}>
-            {[0, 1, 2, 3].map((i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
-          </div>
+          <h2>{tx('Enter your PIN', 'Nhập mã PIN')}</h2>
+          <p className="cl-sub">{tx(`Send ${vnd(amount)} to ${person.en}`, `Chuyển ${vnd(amount)} cho ${person.vi}`)}</p>
+          <Dots n={digits.length} shake={shake} />
           {err && (
             <p className="cl-err" role="alert">{err}{' '}
-              {pending.current && <button className="cl-link" onClick={() => void send(pending.current!)}>Thử lại</button>}</p>
+              {pending.current && <button className="cl-link" onClick={() => void send(pending.current!)}>{tx('Retry', 'Thử lại')}</button>}</p>
           )}
           {screen === 'sending'
-            ? <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />Đang xử lý…</div>
-            : (
-              <div className="cl-keys">
-                {KEYS.map((k, i) => k === '' ? <span key={i} /> : (
-                  <button key={i} className={`cl-key ${pressed === k ? 'down' : ''}`} disabled={!!pending.current && !!err}
-                    onPointerDown={(e) => keyDown(e, k)} onPointerUp={keyUp} onPointerCancel={keyUp} onClick={() => press(k)}
-                    aria-label={k === '⌫' ? 'Xoá' : k}>{k}</button>
-                ))}
-              </div>
-            )}
+            ? <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />{tx('Processing…', 'Đang xử lý…')}</div>
+            : <Keypad pressed={pressed} disabled={!!pending.current && !!err} onPress={press} onDown={keyDown} onUp={keyUp} />}
+          {screen === 'pin' && !pending.current && <button className="cl-link" onClick={onRestart}>{tx('I forgot my PIN', 'Tôi quên mã PIN')}</button>}
         </div>
       )}
 
       {screen === 'ok' && (
         <div className="cl-ok">
           <span className="cl-tick" aria-hidden="true">✓</span>
-          <h2>Chuyển tiền thành công</h2>
-          <p>{vnd(amount)} → {person.name}</p>
-          <button className="cl-btn" onClick={() => (done >= target ? setScreen('finish') : setScreen('home'))}>
-            {done >= target ? 'Hoàn tất' : 'Về trang chủ'}
+          <h2>{tx('Transfer successful', 'Chuyển tiền thành công')}</h2>
+          <p>{vnd(amount)} → {person[lang]}</p>
+          <button className="cl-btn" onClick={() => setScreen(done >= ENTRIES ? 'finish' : 'home')}>
+            {done >= ENTRIES ? tx('Finish', 'Hoàn tất') : tx('Back to home', 'Về trang chủ')}
           </button>
         </div>
       )}
@@ -261,9 +356,8 @@ function TransferApp({ setup, onChange }: { setup: Setup; onChange: () => void }
       {screen === 'finish' && (
         <div className="cl-ok">
           <span className="cl-tick" aria-hidden="true">✓</span>
-          <h2>Cảm ơn bạn!</h2>
-          <p>Bạn đã hoàn thành {target} lần nhập của phần này. Bạn có thể đóng trang.</p>
-          <button className="cl-btn ghost" onClick={onChange}>Làm phần khác (đổi vai, lần ngồi)</button>
+          <h2>{tx('Thank you!', 'Cảm ơn bạn!')}</h2>
+          <p>{tx('You have entered your PIN 5 times. Your data has been saved. You can close this page.', 'Bạn đã nhập PIN 5 lần. Dữ liệu đã được lưu. Bạn có thể đóng trang này.')}</p>
         </div>
       )}
     </div>

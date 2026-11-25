@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import schemas
-from .db import DATABASE_URL, Base, SessionLocal, TouchSession, User, engine
+from .db import DATABASE_URL, Base, Participant, SessionLocal, TouchSession, User, engine
 from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
 
 def _keys(var: str, default: str = "") -> list[str]:
@@ -116,6 +116,18 @@ v1 = APIRouter(prefix="/v1")
 def get_challenge():
     """Cấp câu thử thách tiếng Việt + token ký. App hiển thị câu, người dùng gõ lại, gửi events kèm `token` trong fields[name=challenge]."""
     return challenge.issue()
+
+
+@v1.post("/participants", tags=["sdk"], dependencies=[SDK])
+def register_participant(body: schemas.ParticipantIn, db: Session = Depends(get_db)):
+    """Trang thu dữ liệu: lưu email + họ tên của người tình nguyện (chỉ ghi, không có route đọc cho key SDK)."""
+    p = db.get(Participant, body.participant_id)
+    if p is None:
+        db.add(Participant(id=body.participant_id, email=body.email, full_name=body.full_name))
+    else:
+        p.email, p.full_name = body.email, body.full_name
+    db.commit()
+    return {"participant_id": body.participant_id}
 
 
 @v1.post("/sessions", response_model=schemas.SessionCreated, tags=["sdk"], dependencies=[SDK])

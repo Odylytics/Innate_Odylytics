@@ -42,6 +42,15 @@ class User(Base):
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
+class Participant(Base):
+    """Người tình nguyện thu dữ liệu. Tách khỏi `sessions` để export huấn luyện (gắn bằng participant_id) không mang email hay họ tên."""
+    __tablename__ = "participants"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)  # = meta.participant_id
+    email: Mapped[str] = mapped_column(String(254), index=True)
+    full_name: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
 class TouchSession(Base):
     __tablename__ = "sessions"
     id: Mapped[str] = mapped_column(String(32), primary_key=True)

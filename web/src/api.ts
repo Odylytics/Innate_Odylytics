@@ -52,6 +52,8 @@ async function call<T>(path: string, { method = 'GET', body, key = SDK_KEY }: { 
 
 export const api = {
   hasSdkKey: () => SDK_KEY.length > 0,
+  registerParticipant: (p: { participant_id: string; email: string; full_name: string }) =>
+    call<{ participant_id: string }>('/v1/participants', { method: 'POST', body: p }),
   createSession: (s: SessionIn) => call<{ session_id: string; n_features: number }>('/v1/sessions', { method: 'POST', body: s }),
   enroll: (userId: string, sessionId: string) =>
     call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll`, { method: 'POST', body: { session_id: sessionId } }),
