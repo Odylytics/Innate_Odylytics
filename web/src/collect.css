@@ -60,3 +60,7 @@ html[data-page='collect'], html[data-page='collect'] body { background: #f3f5f8;
 .cl-ok { text-align: center; display: grid; align-content: center; justify-items: center; gap: 4px; }
 .cl-ok p { color: #5b6878; margin: 0 0 12px; }
 .cl-tick { width: 72px; height: 72px; border-radius: 50%; background: #1b9a5a; color: #fff; font-size: 2.2rem; display: grid; place-items: center; margin-bottom: 12px; }
+.cl-note { margin: 18px 0 0; padding: 12px; border-radius: 10px; background: #fff4e5; color: #6b3d00; font-size: .88rem; line-height: 1.45; }
+.cl-more { margin: 12px 0 0; font-size: .85rem; color: #5b6878; }
+.cl-more summary { cursor: pointer; color: #0b6e99; font-weight: 600; }
+.cl-more ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.45; }
