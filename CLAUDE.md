@@ -56,7 +56,7 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 ## Design rules — do not break
 - ML/rules decide; an LLM may only explain, never sit on the decision path.
 - System recommends `allow | step_up | hold`; it never locks accounts.
-- Store only timings + coordinates (+ key label). Never PIN content. Touch data is sensitive under VN law (Luật BVDLCN 2025) — consent required.
+- Store only timings + coordinates (+ key label). Never the PIN of a real account. Exception: the `#/collect` research page stores the digits of a throwaway PIN the volunteer creates (with name + email, consent, and a warning not to reuse any real password/PIN); never ship this into the product SDK. Touch data is sensitive under VN law (Luật BVDLCN 2025) — consent required.
 - Don't rely on `pressure` or `isTrusted`.
 - Evaluation per FETA: time-split enroll/test, one device, no impostor data in owner-model training, leave-users-out for pairwise models. Headline metric FAR@FRR=5%.
 - Owner template updates only after confident `allow` + correct PIN; keep the drift cap.

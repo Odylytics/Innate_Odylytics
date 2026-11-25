@@ -5,14 +5,14 @@ Mục tiêu: thay các số "tạm" (mô hình huấn luyện trên dữ liệu 
 ## Quy mô và lịch
 - **10–20 người tự nguyện** (bạn bè, người quen), mỗi người **2 buổi cách nhau ≥ 1 ngày** (buổi 1 đăng ký, buổi 2 kiểm thử theo thời gian đúng FETA). Thu xong trước 01/12 để kịp số liệu vào slide; **sau 03/12 không sửa được slide**.
 - Mỗi người dùng **điện thoại của chính họ** (bàn phím quen), ngồi cầm máy như bình thường. Ghi tư thế (`note`: ngồi/đi/nằm).
-- Mỗi buổi: 3 lần nhập PIN `1593` (đăng ký), 5 lần nhập PIN kiểm thử, 5 câu thử thách ngẫu nhiên (`GET /v1/challenge`), vài lượt người thứ hai (kẻ gian biết PIN) bấm thử tài khoản của người đó.
+- Trang thu `#/collect` (bản 25/11): chỉ hỏi họ tên + email và một ô đồng ý, rồi bàn phím 10 số: **tự tạo PIN 6 số** (được lưu, xem dưới), tổng cộng nhập 5 lần (các lần sau phải khớp lần đầu, lần sai không ghi); xong 5 lần mới gửi cả 5 phiên. Không hỏi tư thế, lần ngồi, vai. Kế hoạch ban đầu: 3 lần nhập PIN `1593` (đăng ký), 5 lần nhập PIN kiểm thử, 5 câu thử thách ngẫu nhiên (`GET /v1/challenge`), vài lượt người thứ hai (kẻ gian biết PIN) bấm thử tài khoản của người đó.
 - Bot: dùng `attacker/` (4 chiến thuật) và `adb` trên 1–2 máy thật để có tập bot độc lập với bộ sinh.
 
 ## Dùng sẵn hạ tầng hiện có
 Backend đã có nhãn thu dữ liệu `meta` (`participant_id`, `sitting`, `role` genuine/impostor/bot, `tactic`, `note`) trong `POST /v1/sessions` và `GET /v1/export` (key ML). Huấn luyện lại: `research/experiments/train_human_model.py --export export.jsonl` (chưa thử trên dữ liệu thật). Web demo cần gắn `meta` khi thu: `TODO` đội web xác nhận cách bật chế độ thu.
 
 ## Dữ liệu được lưu
-Chỉ **thời gian, toạ độ, kích thước chạm, loại sự kiện, số ký tự, lớp ký tự**. **Không lưu** nội dung PIN, tên, số điện thoại, nội dung chuyển khoản. `participant_id` là mã ngẫu nhiên (vd. `p07`), bảng ghép mã với tên người (nếu cần) giữ riêng, không đưa vào repo hay zip nộp.
+Chỉ **thời gian, toạ độ, kích thước chạm, loại sự kiện, số ký tự, lớp ký tự**. **Không lưu** số điện thoại, nội dung chuyển khoản. **Ngoại lệ có chủ đích (25/11):** trang thu lưu **chữ số PIN** người tham gia tự đặt (`pin_taps[].key`, ghép lại ra mã PIN) để nghiên cứu theo phím/cặp phím; trang nhắc hai lần (phiếu đồng ý + ô xác nhận) rằng mã này không được trùng mật khẩu hay PIN thật nào. **Từ 25/11 trang thu ghi họ tên + email thẳng vào `meta` của mỗi phiên** (người tham gia đồng ý trên trang); `participant_id` là mã băm từ email. Vì vậy file `/v1/export` chứa dữ liệu cá nhân: không đưa vào repo hay zip nộp, chỉ người giữ key ML được xuất.
 
 ## Phiếu đồng ý (mẫu, đội chỉnh và **nhờ người am hiểu pháp lý xem lại**)
 

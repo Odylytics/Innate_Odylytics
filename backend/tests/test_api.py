@@ -131,6 +131,20 @@ def test_collection_meta_and_export(client):
     assert [r["meta"]["participant_id"] for r in client.get("/v1/export?participant_id=p02", headers=H).json()] == ["p02"]
 
 
+def test_collect_page_name_email_and_pin(client):
+    body = human_session("acc_mail", OWNER, random.Random(12))
+    body["meta"] = {"participant_id": "e1a2b3", "sitting": 1, "role": "genuine",
+                    "full_name": "Nguyễn Văn A", "email": "a@example.com"}
+    _post_session(client, body)
+    bad = dict(body, meta=dict(body["meta"], email="khong-phai-email"))
+    assert client.post("/v1/sessions", json=bad, headers=H).status_code == 422
+    row = client.get("/v1/export?participant_id=e1a2b3", headers=H).json()[0]
+    assert row["meta"]["email"] == "a@example.com" and row["meta"]["full_name"] == "Nguyễn Văn A"
+    assert "pin_hold_0" in row["features"]
+    # trang thu cố ý lưu chữ số PIN người tham gia tự đặt (pin_taps[].key) để nghiên cứu
+    assert "".join(t["key"] for t in row["raw"]["pin_taps"]) == "".join(t["key"] for t in body["pin_taps"])
+
+
 def test_unflagged_list_skips_unscored_sessions(client):
     _post_session(client, human_session("unscored", OWNER, random.Random(5)))
     r = client.get("/v1/sessions?flagged=false", headers=H)

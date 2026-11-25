@@ -77,6 +77,9 @@ class CollectionMeta(BaseModel):
     role: Literal["genuine", "impostor", "bot"]
     tactic: int | None = Field(default=None, ge=1, le=4)  # chiến thuật bot 1–4 (chỉ khi role = bot)
     note: str | None = Field(default=None, max_length=200)
+    # trang thu (#/collect) ghi họ tên + email người tham gia thẳng vào phiên (có đồng ý); /v1/export trả cả hai
+    full_name: str | None = Field(default=None, min_length=1, max_length=100)
+    email: str | None = Field(default=None, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
     @model_validator(mode="after")
     def _tactic_only_for_bot(self):

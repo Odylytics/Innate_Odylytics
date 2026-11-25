@@ -13,7 +13,7 @@ export interface ScreenVisit { name: string; t_enter: number; t_first_touch: num
 export interface FieldEvent { t: number; kind: 'key' | 'paste' | 'delete' | 'set_text'; n?: number; cls?: 'digit' }
 export interface TextField { name: 'recipient' | 'amount'; events: FieldEvent[] }
 // Collection label (backend CollectionMeta): who really held the phone, which sitting, genuine owner or someone who saw the PIN.
-export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; note?: string }
+export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; note?: string; full_name?: string; email?: string }
 export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta }
 
 export type Action = 'allow' | 'step_up' | 'hold'
