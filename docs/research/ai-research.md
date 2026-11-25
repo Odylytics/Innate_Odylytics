@@ -389,6 +389,25 @@ Mã: `research/experiments/aalto_note_chars.py` (giữ chữ cái, gitignored, c
 
 **Kết quả gần như không đổi** (cải thiện ≤ 1,1 điểm EER, khoảng tin cậy chạm nhau). So hồ sơ theo từng cặp phím **làm tệ hơn** vì hai câu ngẫu nhiên chỉ chung ~6,5 cặp phổ biến ở 30 phím. Kết luận: với câu đổi mỗi lần, chuẩn hoá nội dung không phải đòn bẩy; kênh không phụ thuộc câu (kiểu gõ tiếng Việt) và nhiều phím hơn quan trọng hơn. Chưa đưa vào backend. Công trình liên quan: [`related-work.md`](related-work.md).
 
+### E22 — cách giảm FAR của Innate Challenge (Aalto, 939 người đánh giá, 30 phím, 25/11)
+
+Mã: `research/experiments/aalto_note_orient.py`, `e22_improve_far.py`; bảng: `research/results/e22_improve_far.md`. Giao thức E13 (câu thử khác câu đăng ký); khoảng tin cậy bootstrap theo người.
+
+| Cấu hình | EER | FAR@FRR5% |
+|---|---|---|
+| 6 đặc trưng thô, K=1 câu đăng ký | 0,288 | 0,625 |
+| K=3 (như E13) | 0,253 | 0,517 |
+| K=5 | 0,246 | 0,471 |
+| K=8 | 0,235 | 0,457 |
+| thô + chuẩn hoá cặp phím (12), K=3 | 0,248 | 0,502 |
+| **+ mô hình học (LightGBM trên vector lệch), K=3** | **0,227** | **0,429** |
+| + tư thế cầm máy (góc nghiêng), K=3 | 0,144 | 0,277 |
+
+- **Thêm câu đăng ký giúp nhưng giảm dần:** 1 → 3 câu cắt FAR 10 điểm, 3 → 8 câu chỉ thêm 6 điểm.
+- **Mô hình học giúp ~7 điểm FAR** (0,502 → 0,429), cùng hướng với E12b.
+- **Góc nghiêng thiết bị cho số đẹp nhất (FAR 0,277) nhưng KHÔNG nên tin:** mọi câu của một người nằm trong một buổi nên tư thế trùng giữa đăng ký và thử (E9: đổi tư thế gần như mất tín hiệu, EER 0,309). Trên điện thoại thật cần xin quyền cảm biến (iOS Safari), là dữ liệu nhạy cảm, và chỉ đo được "đang cầm kiểu nào". Không đưa vào sản phẩm khi chưa có dữ liệu hai buổi.
+- Bảng đánh đổi FRR/FAR (E13 thô, 30 phím): FRR 5% → FAR 49%; 10% → 39%; 20% → 29%; 30% → 22%; 40% → 17%.
+
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).
