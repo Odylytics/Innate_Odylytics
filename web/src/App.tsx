@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { LangContext, dict, useT, type Lang } from './i18n'
 import DemoChoice from './DemoChoice'
-import Footer from './Footer'
-import Intro from './Intro'
-import Landing from './Landing'
 import Demo from './Demo'
 import Ops from './Ops'
-import { scrollToEl, scrollToY, startSmoothScroll } from './smooth'
+import { scrollToY, startSmoothScroll } from './smooth'
 import { ArrowBtn, Glyph, T } from './ui'
 
 const store = {
@@ -17,11 +14,12 @@ export { store }
 
 type Theme = 'dark' | 'light'
 
-// Hash routes (#/, #/demo, #/demo?story=1) so the static build works on any host without rewrites.
+// Hash routes (#/, #/demo, #/demo?story=1, #/ops) so the static build works on any host without rewrites.
+// The landing page is its own site (landing/); here #/ opens the demo start screen.
 function useHash() {
   const [hash, setHash] = useState(window.location.hash)
   useEffect(() => {
-    const on = () => { setHash(window.location.hash); if (!window.location.hash.includes('#how')) scrollToY(0, false) }
+    const on = () => { setHash(window.location.hash); scrollToY(0, false) }
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
   }, [])
@@ -44,7 +42,6 @@ export function Mark({ className = 'brand-mark' }: { className?: string }) {
 }
 
 const L = {
-  how: { en: 'How it works', vi: 'Cách hoạt động' },
   menu: { en: 'Menu', vi: 'Menu' },
   closeMenu: { en: 'Close menu', vi: 'Đóng menu' },
   toLight: { en: 'Switch to light theme', vi: 'Chuyển sang giao diện sáng' },
@@ -108,7 +105,6 @@ function Nav({ path, theme, setTheme }: { path: string; theme: Theme; setTheme: 
 
   const other: Lang = lang === 'en' ? 'vi' : 'en'
   const links = [
-    { href: '#/#how', label: L.how[lang], alt: L.how[other], current: false },
     { href: '#/ops', label: t('navOps'), alt: dict.navOps[other], current: path.startsWith('/ops') },
   ]
 
@@ -164,21 +160,14 @@ export default function App() {
 
   const hash = useHash()
   const [path, query] = hash.replace(/^#/, '').split('?')
-  const isDemo = path.startsWith('/demo')
   const isOps = path.startsWith('/ops')
   const story = new URLSearchParams(query ?? '').get('story') === '1'
-  const choose = new URLSearchParams(query ?? '').get('choose') === '1'
-
-  useEffect(() => {
-    if (!isDemo && !isOps && hash.includes('#how')) scrollToEl(document.getElementById('how'))
-  }, [hash, isDemo, isOps])
+  const choose = !path.startsWith('/demo') || new URLSearchParams(query ?? '').get('choose') === '1'
 
   return (
     <LangContext.Provider value={{ lang, setLang }}>
-      <Intro />
       <Nav path={path} theme={theme} setTheme={setTheme} />
-      <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isDemo ? <><Demo key={String(story)} story={story} />{choose && <DemoChoice />}</> : isOps ? <Ops /> : <Landing />}</main>
-      {!isDemo && <Footer />}
+      <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isOps ? <Ops /> : <><Demo key={String(story)} story={story} />{choose && <DemoChoice />}</>}</main>
     </LangContext.Provider>
   )
 }

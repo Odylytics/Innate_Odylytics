@@ -1,6 +1,6 @@
 # Innate — Web demo
 
-Landing page, demo wallet, guided story and ops dashboard for Innate. Vite + React + TypeScript, static build, hash routing. Every score shown comes from the live Innate API (`backend/`).
+Demo wallet, guided story and ops dashboard for Innate (the landing page is its own site in `../landing/`). Vite + React + TypeScript, static build, hash routing. Every score shown comes from the live Innate API (`backend/`).
 
 ## Run
 
@@ -23,7 +23,7 @@ Environment (`web/.env.local`, not committed):
 
 | Route | What it shows |
 |---|---|
-| `#/` | Landing in the Movora layout: INNATE wordmark with a phone lowered on a spring, threat strip, problem, the three outcomes as numbered rows, inside a score + KPIs, the Lime “How it works” band, under the hood, cast, FAQ. Intro: P·IN → IN·NATE. |
+| `#/` | Demo start screen: choose the guided story or the demo wallet (same as `#/demo?choose=1`). The landing page links here via its `VITE_DEMO_URL`. |
 | `#/demo` | Demo wallet with the SDK inside. Enroll your rhythm (3 × PIN `1593`), then transfer; the attacker console replays malware or another person on the same keys. |
 | `#/demo?story=1` | Guided story, 8 steps (~90 s): SDK, Hà enrolls, Hà pays her mum (allow), fake officer + Accessibility app, malware at 2 a.m. (hold), Bảo with the PIN (step-up), ops review, policy. Seeded sessions, scored live. Autoplay, sound, keyboard ← → K M, behind-the-scenes picture-in-picture. |
 | `#/ops` | Fraud-ops dashboard: flagged sessions with reasons, label fraud / legit. Needs the **ops** key, typed by the analyst and kept in `sessionStorage` only. |
@@ -36,7 +36,6 @@ Environment (`web/.env.local`, not committed):
 | Scoring, enrollment lock, reasons | Live, from the API. |
 | Attacker console, story sessions | Synthetic sessions (`src/synth.ts`) on the real key layout, scored live. Real attacks: `attacker/` (adb). |
 | Wallet, people, fake app dialog | Fictional. |
-| KPIs on the landing page | Latency measured on the live API; catch rates simulated on synthetic sessions, labelled as such. |
 
 ## Pre-existing assets, libraries and tools (declared per contest rules)
 
