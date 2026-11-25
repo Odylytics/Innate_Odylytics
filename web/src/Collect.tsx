@@ -1,11 +1,14 @@
 import { useContext, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
-import { ApiError, api, type CollectionMeta, type SessionIn } from './api'
+import { ApiError, api, type Challenge, type CollectionMeta, type FieldEvent, type SessionIn } from './api'
+import { ComposeRecorder } from './compose'
 import { Recorder } from './capture'
 import { LangContext } from './i18n'
 import './collect.css'
 
 // Data-collection page (#/collect): a plain transfer app for volunteers on their own phone.
-// Flow: consent → email + full name → create a PIN (twice) → enter it 5 times through the transfer screens.
+// Flow: consent → email + full name → create a PIN (twice) → enter it 5 times through the transfer screens; after each PIN the volunteer
+// types a short random Vietnamese sentence shown on screen (the "Innate Challenge", docs/plan/innate-challenge-vi.md). Only its timing, key kinds and
+// lengths are sent (compose.ts), tied to the signed token from GET /v1/challenge, so each session carries both PIN and phrase for the PIN + phrase analysis.
 // It records only times, finger positions and touch size (same SDK as the demo) plus the key labels the API stores,
 // and sends them with a `meta` label. Email and name go to a separate table (POST /v1/participants), never into the sessions.
 // Phone only: on a desktop it shows an "open on your phone" notice (add ?dev=1 to test in devtools).
@@ -107,8 +110,8 @@ function Consent({ onAgree }: { onAgree: () => void }) {
       <p>{tx('We record how you tap and type on the screen, for research on the Innate product entered in MoMo Tech Contest 2026.',
         'Chúng tôi thu cách bạn chạm và gõ trên màn hình để nghiên cứu cho sản phẩm Innate tham dự MoMo Tech Contest 2026.')}</p>
       <ul>
-        <li><b>{tx('What we record:', 'Dữ liệu thu:')}</b> {tx('your email and full name; when and where you touch the keys, the size of the touch, and when you swipe; and the practice PIN you create, as it is typed. We do not record photos, voice, location, contacts or messages.',
-          'email và họ tên của bạn; thời điểm và vị trí các lần chạm phím, kích thước vùng chạm, thời điểm các lần vuốt; và mã PIN thử bạn tự tạo, đúng như bạn gõ. Chúng tôi không ghi ảnh, giọng nói, vị trí, danh bạ hay tin nhắn.')}</li>
+        <li><b>{tx('What we record:', 'Dữ liệu thu:')}</b> {tx('your email and full name; when and where you touch the keys, the size of the touch, and when you swipe; and the practice PIN you create, as it is typed; and how you type a short sentence shown on screen (times, kinds of keys and lengths only, not the sentence itself). We do not record photos, voice, location, contacts or messages.',
+          'email và họ tên của bạn; thời điểm và vị trí các lần chạm phím, kích thước vùng chạm, thời điểm các lần vuốt; và mã PIN thử bạn tự tạo, đúng như bạn gõ; và cách bạn gõ một câu ngắn hiện trên màn hình (chỉ thời điểm, loại phím và độ dài, không ghi nội dung câu). Chúng tôi không ghi ảnh, giọng nói, vị trí, danh bạ hay tin nhắn.')}</li>
         <li><b>{tx('Use a made-up PIN:', 'Hãy dùng PIN tự nghĩ ra:')}</b> {tx('do not use the PIN of your bank, wallet or phone.', 'đừng dùng PIN của ngân hàng, ví hay điện thoại của bạn.')}</li>
         <li><b>{tx('This app is fake:', 'Ứng dụng này là giả:')}</b> {tx('no real money, no real transfers.', 'không có tiền thật, không chuyển tiền thật.')}</li>
         <li><b>{tx('Purpose:', 'Mục đích:')}</b> {tx('to train and evaluate models that detect bots and recognise the account owner; only aggregate results are published.', 'huấn luyện và đánh giá mô hình phát hiện bot và nhận ra chủ tài khoản; chỉ công bố số liệu tổng hợp.')}</li>
@@ -231,7 +234,7 @@ function PinSetup({ mode, expected, onDone, onBack }: { mode: 'create' | 'confir
   )
 }
 
-type Screen = 'home' | 'transfer' | 'pin' | 'sending' | 'ok' | 'finish'
+type Screen = 'home' | 'transfer' | 'pin' | 'phrase' | 'sending' | 'ok' | 'finish'
 
 function TransferApp({ profile, pin, done, onDone, onRestart }: { profile: Profile; pin: string; done: number; onDone: (n: number) => void; onRestart: () => void }) {
   const { tx, vnd, lang } = useTx()
@@ -281,9 +284,14 @@ function TransferApp({ profile, pin, done, onDone, onRestart }: { profile: Profi
     }
     window.setTimeout(() => {
       if (rec.current.taps.length < PIN_LEN) { setDigits(''); rec.current.clearTaps(); return } // no finger on a key
-      const meta: CollectionMeta = { participant_id: profile.id, sitting: 1, role: 'genuine' }
-      void send({ ...rec.current.payload(profile.id), meta })
+      setScreen('phrase') // the phrase step finishes the session
     }, 0)
+  }
+  const finishPhrase = (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => {
+    const meta: CollectionMeta = { participant_id: profile.id, sitting: 1, role: 'genuine', ...(note ? { note } : {}) }
+    const base = rec.current.payload(profile.id)
+    const fields = r ? [...(base.fields ?? []), { name: 'challenge' as const, token: r.challenge.token, expected_len: r.challenge.expected_len, events: r.events }] : base.fields
+    void send({ ...base, ...(fields ? { fields } : {}), meta })
   }
   const keyDown = (e: RPointerEvent<HTMLButtonElement>, k: string) => {
     if (!k || k === '⌫') return
@@ -313,7 +321,7 @@ function TransferApp({ profile, pin, done, onDone, onRestart }: { profile: Profi
             <button className="cl-tile" disabled><i>▤</i>{tx('Bills', 'Hóa đơn')}</button>
             <button className="cl-tile" disabled><i>☰</i>{tx('History', 'Lịch sử')}</button>
           </div>
-          <p className="cl-hint">{tx('Tap Transfer, then enter the PIN you created.', 'Bấm Chuyển tiền, rồi nhập mã PIN bạn đã tạo.')}</p>
+          <p className="cl-hint">{tx('Tap Transfer, enter the PIN you created, then type the sentence shown.', 'Bấm Chuyển tiền, nhập mã PIN bạn đã tạo, rồi gõ câu hiện ra.')}</p>
         </div>
       )}
 
@@ -358,6 +366,8 @@ function TransferApp({ profile, pin, done, onDone, onRestart }: { profile: Profi
         </div>
       )}
 
+      {screen === 'phrase' && <PhraseStep now={() => rec.current.now()} onDone={finishPhrase} />}
+
       {screen === 'ok' && (
         <div className="cl-ok">
           <span className="cl-tick" aria-hidden="true">✓</span>
@@ -373,9 +383,50 @@ function TransferApp({ profile, pin, done, onDone, onRestart }: { profile: Profi
         <div className="cl-ok">
           <span className="cl-tick" aria-hidden="true">✓</span>
           <h2>{tx('Thank you!', 'Cảm ơn bạn!')}</h2>
-          <p>{tx('You have entered your PIN 5 times. Your data has been saved. You can close this page.', 'Bạn đã nhập PIN 5 lần. Dữ liệu đã được lưu. Bạn có thể đóng trang này.')}</p>
+          <p>{tx('You have entered your PIN and typed a sentence 5 times. Your data has been saved. You can close this page.', 'Bạn đã nhập PIN và gõ câu 5 lần. Dữ liệu đã được lưu. Bạn có thể đóng trang này.')}</p>
         </div>
       )}
+    </div>
+  )
+}
+
+/** Type the random Vietnamese sentence from the API. Paste/drop/cut are blocked; only timing, key kinds and lengths are recorded. */
+function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => void }) {
+  const { tx } = useTx()
+  const [ch, setCh] = useState<Challenge | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [typed, setTyped] = useState('')
+  const input = useRef<HTMLInputElement>(null)
+  const rec = useRef<ComposeRecorder | null>(null)
+  useEffect(() => {
+    let live = true
+    api.challenge().then((c) => { if (live) setCh(c) }).catch(() => { if (live) setFailed(true) })
+    return () => { live = false }
+  }, [])
+  useEffect(() => {
+    if (ch && input.current && !rec.current) { rec.current = new ComposeRecorder(input.current, now); input.current.focus() }
+  }, [ch, now])
+  const nfc = (v: string) => v.normalize('NFC').trim()
+  const match = !!ch && nfc(typed) === nfc(ch.phrase)
+  return (
+    <div className="cl-pin cl-phrase">
+      <h2>{tx('Type this sentence', 'Gõ lại câu này')}</h2>
+      {!ch && !failed && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />{tx('Loading…', 'Đang tải…')}</div>}
+      {failed && <>
+        <p className="cl-err" role="alert">{tx('Could not load the sentence. You can skip this step.', 'Không tải được câu. Bạn có thể bỏ qua bước này.')}</p>
+        <button className="cl-btn" onClick={() => onDone(null, 'phrase_unavailable')}>{tx('Skip', 'Bỏ qua')}</button>
+      </>}
+      {ch && <>
+        <p className="cl-sentence" lang="vi">{ch.phrase}</p>
+        <p className="cl-hint">{tx('Use your usual Vietnamese keyboard (Telex or VNI) with accents. Pasting is disabled.', 'Dùng bàn phím tiếng Việt quen thuộc của bạn (Telex hoặc VNI), gõ đủ dấu. Không dán được.')}</p>
+        <input ref={input} className="cl-type" type="text" lang="vi" value={typed} onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} enterKeyHint="done" inputMode="text"
+          onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()}
+          aria-label={tx('Type the sentence', 'Gõ lại câu')} aria-invalid={typed.length >= ch.phrase.length && !match} />
+        {typed.length >= ch.phrase.length && !match && <p className="cl-err" role="alert">{tx('Not the same yet. Check the accents and spaces.', 'Chưa giống. Kiểm tra dấu và khoảng trắng.')}</p>}
+        <button className="cl-btn" disabled={!match} onClick={() => onDone({ challenge: ch, events: rec.current?.finish() ?? [] })}>{tx('Continue', 'Tiếp tục')}</button>
+        <button className="cl-link" onClick={() => onDone(null, 'no_vi_keyboard')}>{tx('I cannot type Vietnamese accents on my keyboard', 'Bàn phím của tôi không gõ được dấu tiếng Việt')}</button>
+      </>}
     </div>
   )
 }

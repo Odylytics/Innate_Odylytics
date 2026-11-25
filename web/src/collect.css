@@ -63,3 +63,8 @@ html[data-page='collect'], html[data-page='collect'] body { background: #f3f5f8;
 .cl-ok { text-align: center; display: grid; align-content: center; justify-items: center; gap: 4px; }
 .cl-ok p { color: #5b6878; margin: 0 0 12px; }
 .cl-tick { width: 72px; height: 72px; border-radius: 50%; background: #1b9a5a; color: #fff; font-size: 2.2rem; display: grid; place-items: center; margin-bottom: 12px; }
+
+/* typed-phrase step */
+.cl-sentence { margin: 6px 0 4px; padding: 14px 12px; font-size: 1.15rem; line-height: 1.5; font-weight: 600; text-align: center; background: #eef4fa; border-radius: 10px; user-select: none; -webkit-user-select: none; }
+.cl-type { width: 100%; box-sizing: border-box; font: inherit; font-size: 1.05rem; padding: 12px; margin: 4px 0 12px; border: 1px solid #c5ced9; border-radius: 10px; background: #fff; }
+.cl-type[aria-invalid='true'] { border-color: #b3261e; }
