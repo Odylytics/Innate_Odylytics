@@ -6,6 +6,7 @@ import LandingPage from './landing/LandingPage'
 import { Atmosphere } from './landing/Atmosphere'
 import { AppIcon, Wordmark } from './landing/ui'
 import Demo from './Demo'
+import Collect from './Collect'
 import Ops from './Ops'
 import { scrollToEl, scrollToY, startSmoothScroll } from './smooth'
 import { ArrowBtn, Glyph, T } from './ui'
@@ -152,7 +153,7 @@ function AppPage() {
   return null
 }
 
-export default function App() {
+function Site() {
   // English-only site (26/11). The Vietnamese strings stay in the code; restore the switch + stored choice to bring VI back.
   const [lang, setLangState] = useState<Lang>('en')
   const setLang = (l: Lang) => { setLangState(l) }
@@ -193,4 +194,10 @@ export default function App() {
       )}
     </LangContext.Provider>
   )
+}
+
+// #/collect is a standalone phone-only page (no site nav, footer or smooth scroll), so it is routed before the site mounts.
+export default function App() {
+  const hash = useHash()
+  return hash.startsWith('#/collect') ? <Collect /> : <Site />
 }

@@ -73,6 +73,7 @@ export function Nav() {
               <a key={id} href={`#${id}`} onClick={go(id)} className="whitespace-nowrap hover:text-ink">{l(label)}</a>
             ))}
             <a href="#/ops" className="whitespace-nowrap hover:text-ink">{l({ en: 'Ops', vi: 'Vận hành' })}</a>
+            <a href="#/collect" className="whitespace-nowrap hover:text-ink">{l({ en: 'Join the study', vi: 'Tham gia thu dữ liệu' })}</a>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <Button href="#/demo?choose=1" className="!h-10 !px-4 text-sm sm:!px-5">
@@ -101,6 +102,11 @@ export function Nav() {
               <li>
                 <a href="#/ops" onClick={() => setOpen(false)} className="flex min-h-12 items-center rounded-xl px-3 text-[16px] font-medium text-ink hover:bg-canvas">
                   {l({ en: 'Ops dashboard', vi: 'Bảng vận hành' })}
+                </a>
+              </li>
+              <li>
+                <a href="#/collect" onClick={() => setOpen(false)} className="flex min-h-12 items-center rounded-xl px-3 text-[16px] font-medium text-ink hover:bg-canvas">
+                  {l({ en: 'Join the data collection', vi: 'Tham gia thu thập dữ liệu' })}
                 </a>
               </li>
             </ul>
@@ -141,6 +147,9 @@ export function Hero() {
             </Button>
             <Button href="#/demo" variant="ghost" className="justify-center">
               {l({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}
+            </Button>
+            <Button href="#/collect" variant="ghost" className="justify-center">
+              {l({ en: 'Join the data collection (phone only)', vi: 'Tham gia thu dữ liệu (chỉ trên điện thoại)' })}
             </Button>
           </div>
           <div className="mt-8 hidden flex-wrap gap-2 sm:flex lg:mt-10">
