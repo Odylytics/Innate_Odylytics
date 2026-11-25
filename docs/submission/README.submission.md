@@ -6,7 +6,7 @@
 
 ## 1. Sản phẩm là gì
 
-Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt (không thay thế). Nó chấm điểm rủi ro của giao dịch dựa trên **cách người dùng chạm và gõ** khi nhập PIN và các ô giao dịch, để trả lời hai câu hỏi: thao tác do **người hay máy** làm (mã độc Trợ năng, `adb`, script), và nếu là người thì có **khớp thói quen chủ tài khoản** không. Kết quả: `allow` / `step_up` (xác thực thêm) / `hold` (giữ lệnh), kèm lý do tiếng Việt. Khi chưa chắc, **Innate Challenge** yêu cầu gõ một câu chữ-số ngẫu nhiên để có thêm tín hiệu. Hệ thống chỉ đề xuất, không tự khoá tài khoản. Giải thích đầy đủ: [`../plan/how-it-works.md`](../plan/how-it-works.md); định vị: [`../plan/positioning.md`](../plan/positioning.md).
+Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt (không thay thế). Nó chấm điểm rủi ro của giao dịch dựa trên **cách người dùng chạm và gõ** khi nhập PIN và các ô giao dịch, để trả lời hai câu hỏi: thao tác do **người hay máy** làm (mã độc Trợ năng, `adb`, script), và nếu là người thì có **khớp thói quen chủ tài khoản** không. Kết quả: `allow` / `step_up` (xác thực thêm) / `hold` (giữ lệnh), kèm lý do tiếng Việt. Khi chưa chắc, **Innate Challenge** yêu cầu gõ lại một câu tiếng Việt ngẫu nhiên (máy chủ cấp, ký token) để có thêm tín hiệu: nhịp gõ và kiểu gõ dấu Telex/VNI. Phần kiểu gõ tiếng Việt mới là giả thuyết, chưa đo trên người thật (`../plan/innate-challenge-vi.md`). Hệ thống chỉ đề xuất, không tự khoá tài khoản. Giải thích đầy đủ: [`../plan/how-it-works.md`](../plan/how-it-works.md); định vị: [`../plan/positioning.md`](../plan/positioning.md).
 
 **Giới hạn (nói thẳng):** điểm "chủ" là một tín hiệu rủi ro, **không phải cổng xác thực**. Số đo hiện có (dữ liệu người thật công khai): EER ~16%; ở FRR 5% còn 38–57% kẻ gian biết PIN lọt (57% khoảng cách cơ bản, 38% mô hình học); đổi tư thế gần như mất tín hiệu. Bot ngây thơ bị bắt 100%; bot giống người thì yếu (xem mục 6).
 
@@ -14,12 +14,13 @@ Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở 
 
 | | |
 |---|---|
-| Trang demo | `TODO: URL` |
-| API + Swagger | `TODO: URL/docs` |
-| Tài khoản / API key demo | `TODO` |
-| PIN demo | `159357` (ví demo) |
+| Trang demo (web) | `TODO: URL deploy của thư mục web/` (đội web chốt) |
+| API | https://nhip-api-taupe.vercel.app (`/health` 200 ngày 25/11/2026) |
+| Swagger | https://nhip-api-taupe.vercel.app/docs (bấm Authorize, nhập key SDK) |
+| Tài khoản / API key demo | `TODO`: key SDK của bản deploy (đã nằm trong bản build web, xem `web/README.md`); web demo không cần đăng nhập |
+| PIN demo | `1593` (web demo, theo `web/README.md`; `TODO: xác nhận`) |
 
-Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền bằng chính chủ; (3) người thứ hai biết PIN thử → bị yêu cầu xác thực thêm; (4) bảng điều khiển bot → bị giữ lệnh. `TODO: xác nhận URL cuối; sản phẩm phải online đến hết 11/12/2026.`
+Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền bằng chính chủ; (3) người thứ hai biết PIN thử → bị yêu cầu xác thực thêm; (4) bảng điều khiển bot → bị giữ lệnh. Sản phẩm phải online đến hết 11/12/2026: `TODO: xác nhận URL web cuối và theo dõi Vercel đến hết ngày đó`.
 
 ## 3. Cách chạy local
 
@@ -27,15 +28,17 @@ Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền b
 cd backend
 uv sync --extra ml          # hoặc: pip install fastapi uvicorn sqlalchemy "psycopg[binary]" lightgbm numpy
 uv run uvicorn app.main:app --reload --port 8000     # /docs = Swagger, key mặc định demo-key
-uv run pytest -q            # 28 bài
+uv run pytest -q            # 40 bài
 cd ../attacker && uv sync && uv run pytest -q         # 8 bài
+cd .. && node --test sdk/innate-compose.test.js        # 4 bài (SDK nhập liệu điện thoại)
+cd web && npm install && npm test && npm run dev       # trang web demo (Vite)
 ```
 
 Biến môi trường: `DATABASE_URL`, `NHIP_API_KEYS` (SDK), `NHIP_OPS_KEYS` (dashboard), `NHIP_ML_KEYS` (xuất dữ liệu cho ML; ops/ml đóng khi chưa đặt), `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A/B`, `NHIP_HUMAN_MODEL=off` / `NHIP_OWNER_MODEL=off` (tắt mô hình học người/máy, nhận chủ), `NHIP_POP_PRIOR=off` (tắt prior dân số), `NHIP_REPLAY_THRESHOLD`. Tên `NHIP_*` là định danh kỹ thuật cũ, giữ để không làm hỏng bản đã deploy.
 
 ## 4. Công nghệ
 
-Python 3.11+, FastAPI, SQLAlchemy (SQLite khi chạy local, Postgres khi deploy), LightGBM (mô hình người/máy, tuỳ chọn), SDK JavaScript thuần (Pointer Events) trong `backend/app/static/wallet.html`. Hạ tầng triển khai: `TODO: xác nhận (Vercel + Neon theo bản đã deploy)`.
+Python 3.11+, FastAPI, SQLAlchemy (SQLite khi chạy local, Postgres khi deploy), LightGBM (mô hình người/máy, tuỳ chọn), web demo React 18 + TypeScript + Vite trong `web/` (có SDK thu sự kiện chạm), SDK nhập liệu cho điện thoại `sdk/innate-compose.js`. Hạ tầng: Vercel (API và web, hai project) + Neon Postgres (theo `CLAUDE.md`; `TODO: xác nhận`).
 
 Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng thời gian/toạ độ → (A) người hay máy: luật + LightGBM + kiểm tra phát lại → (B) có phải chủ: so với mẫu chuẩn bằng khoảng cách chuẩn hoá (co rút phương sai về dân số cho đặc trưng thời gian) rồi **LightGBM học trọng số** trên độ lệch → (C) hợp nhất có trọng số + giải thích bằng mẫu câu.
 
@@ -47,6 +50,7 @@ Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng
 | FastAPI, Uvicorn, SQLAlchemy, psycopg | Backend API và lưu trữ |
 | LightGBM, NumPy | Mô hình người/máy (tuỳ chọn) |
 | scikit-learn, pandas, NumPy, LightGBM | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
+| React, React DOM, Vite, TypeScript, Vitest, Lenis, DiceBear (`@dicebear/core`, `notionists`) | Trang web demo trong `web/` (`TODO: kiểm giấy phép từng gói, đặc biệt bộ ảnh đại diện DiceBear notionists`) |
 | pytest, httpx | Kiểm thử |
 
 ### Dữ liệu và giấy phép
@@ -54,8 +58,8 @@ Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng
 |---|---|---|---|
 | **StrokePIN** (Yao & Wang, IEEE TDSC 2026; DOI 10.21227/thft-4721) | Đánh giá bài "chủ"; huấn luyện mô hình người/máy; sinh `population_prior.json` | **CC BY-NC-SA 4.0**: phi thương mại, ghi nguồn, **chia sẻ phái sinh cùng giấy phép** | **Mô hình trong `backend/app/models/` và `population_prior.json` là sản phẩm phái sinh: phát hành theo CC BY-NC-SA 4.0.** `TODO: đội quyết định giấy phép cho phần mã còn lại và kiểm tra tương thích` |
 | CMU DSL-StrongPassword (Killourhy & Maxion 2009) | Thí nghiệm few-shot (`research/`) | Trang gốc không nêu giấy phép | Không có trong sản phẩm |
-| Touchalytics (Frank et al. 2013) | `TODO: nếu dùng cho đặc trưng vuốt` | `TODO: kiểm` | |
-| Aalto typing37k (Palin et al. 2019) | `TODO: nếu dùng` | `TODO: kiểm` | Dữ liệu chứa nội dung gõ: không đưa vào sản phẩm |
+| Touchalytics (Frank et al. 2013) | Chỉ trong `research/` (E19: kiểm luật vuốt và nhận chủ bằng vuốt); không có trong sản phẩm | Trang gốc và readme không nêu giấy phép; `TODO: hỏi tác giả hoặc ghi rõ "dùng nghiên cứu, trích dẫn"` | Trích dẫn Frank et al., IEEE TIFS 2013 |
+| Aalto typing37k (Palin et al. 2019) | Chỉ trong `research/` (E11, E12, E13, E21: nhịp gõ người thật, bot ngoài sản phẩm) | `TODO: đọc điều khoản ở https://userinterfaces.aalto.fi/typing37k/` | Dữ liệu chứa nội dung gõ: **không đưa vào sản phẩm hay zip**; `research/data/` loại khỏi gói |
 | Dữ liệu tự thu của đội | `TODO` | Phiếu đồng ý của người tham gia; chỉ lưu thời gian, toạ độ, loại sự kiện, **không lưu nội dung** | `TODO: số người, số phiên, ngày thu` |
 
 Bot trong `attacker/` là **dữ liệu tự sinh** (4 chiến thuật), không phải mã độc thật.
@@ -77,6 +81,9 @@ Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2
 | Người/máy (người thật, bot sinh) | Bot ngây thơ (CT1, CT2): 100%; CT3 (phát lại): 12–26%; CT4 (lấy mẫu dân số): 20–73% | Bot **do bộ sinh tạo**, chưa có bot thật |
 | Kiểm tra phát lại (người thật, ngưỡng 0,07) | Bắt 100% phát lại có nhiễu tới ±10%; 29% ở ±15%; 0% từ ±20% | FPR người thật ~0,1% (8 phiên cũ), ngoại suy ~0,7% (50 phiên). Hiệu chỉnh lại trên dữ liệu của đội |
 | **Innate Challenge** (2.260 người gõ câu, chỉ thời gian) | Kẻ gian lọt ở FRR 5%: 81% (6 phím) → 49% (30 phím); bắt bot gõ đều AUC 0,92 → 0,996 | Chép câu mẫu tiếng Anh; chưa đo gộp PIN + câu, chưa đo ma sát |
+| Luật vuốt (Touchalytics, 41 người, 20.896 nét) | Luật "vận tốc đều" (CV < 0,3): 0 nét người thật bị gắn cờ, bắt 100% bot vuốt đều/nhiễu thời gian ±6 ms. Luật cũ "thẳng > 0.999" gắn cờ nhầm 13,4% phiên người thật (đã thay). Nhận chủ bằng vuốt: AUC 0,48–0,60 (đã bỏ khỏi nhận chủ) | Bot là bộ sinh của đội; bot thật có thể giả vận tốc |
+| Innate Challenge tiếng Việt | **Chưa đo trên người Việt.** Có số mô phỏng và đếm lý thuyết (3–6,6 bit biến thể gõ Telex/VNI) | `../plan/innate-challenge-vi.md`; cần thu dữ liệu và thử Gboard/iOS thật |
+| Chuẩn hoá nhịp theo cặp phím (Aalto, 1.000 người) | Gần như không đổi (EER 0,249 → 0,238 ở 30 phím); không đưa vào sản phẩm | Kết quả âm tính, ghi để minh bạch |
 | Số liệu trên dữ liệu của đội | `TODO` | |
 
 Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.
