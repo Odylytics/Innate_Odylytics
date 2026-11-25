@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { LangContext, dict, useT, type Lang } from './i18n'
 import DemoChoice from './DemoChoice'
 import Footer from './Footer'
-import Intro from './Intro'
-import Landing from './Landing'
+import LandingPage from './landing/LandingPage'
+import { Atmosphere } from './landing/Atmosphere'
+import { AppIcon, Wordmark } from './landing/ui'
 import Demo from './Demo'
 import Ops from './Ops'
 import { scrollToEl, scrollToY, startSmoothScroll } from './smooth'
@@ -29,17 +30,11 @@ function useHash() {
 }
 
 export function Mark({ className = 'brand-mark' }: { className?: string }) {
+  // approved app icon (Figma "App icon 160"); a hairline ring keeps it visible on the dark nav
   return (
-    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="#0B1F44" />
-      <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="none" stroke="rgba(234,242,255,0.18)" />
-      <g fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round">
-        <path d="M9.5 20.5a6.5 6.5 0 0 1 13 0" />
-        <path d="M6 20.5a10 10 0 0 1 20 0" opacity="0.55" />
-        <path d="M13 20.5a3 3 0 0 1 6 0" />
-      </g>
-      <circle cx="16" cy="25" r="2.4" fill="#2878FF" />
-    </svg>
+    <span className={className} style={{ display: 'inline-flex', borderRadius: '22.5%', boxShadow: '0 0 0 1px rgba(226,236,246,0.22)' }} aria-hidden="true">
+      <AppIcon size={30} />
+    </span>
   )
 }
 
@@ -52,7 +47,7 @@ const L = {
   skip: { en: 'Skip to content', vi: 'Bỏ qua tới nội dung' },
 }
 
-function LangSwitch() {
+export function LangSwitch() {
   return (
     <LangContext.Consumer>
       {({ lang, setLang }) => (
@@ -116,7 +111,7 @@ function Nav({ path, theme, setTheme }: { path: string; theme: Theme; setTheme: 
     <header className={`nav-bar ${tucked && !open ? 'tucked' : ''}`}>
       <a className="skip" href="#content" onClick={(e) => { e.preventDefault(); document.getElementById('content')?.focus() }}>{L.skip[lang]}</a>
       <nav className="nav" aria-label="Main">
-        <a className="brand" href="#/" aria-label="Innate"><Mark /><span className="brand-word">Innate</span></a>
+        <a className="brand" href="#/" aria-label="Innate"><Mark /><Wordmark height={18} className="brand-word" /><span className="sr-only">Innate</span></a>
         <div className="nav-right">
           <div className="nav-links">
             {links.map((l) => (
@@ -128,7 +123,6 @@ function Nav({ path, theme, setTheme }: { path: string; theme: Theme; setTheme: 
             ))}
           </div>
           <div className="nav-tools">
-            <LangSwitch />
             <ThemeSwitch theme={theme} setTheme={setTheme} />
             <ArrowBtn href="#/demo?choose=1"><T k="navDemo" /></ArrowBtn>
             <button className="icon-btn burger" aria-expanded={open} aria-controls="menu-sheet" aria-label={open ? L.closeMenu[lang] : L.menu[lang]} onClick={() => setOpen(!open)}>
@@ -141,16 +135,27 @@ function Nav({ path, theme, setTheme }: { path: string; theme: Theme; setTheme: 
         <div className="menu-sheet" id="menu-sheet">
           {links.map((l) => <a key={l.href} className="m-link" href={l.href} onClick={() => setOpen(false)}>{l.label}</a>)}
           <a className="m-link" href="#/demo?choose=1" onClick={() => setOpen(false)}><T k="navDemo" /></a>
-          <div className="menu-tools"><LangSwitch /><ThemeSwitch theme={theme} setTheme={setTheme} /></div>
+          <div className="menu-tools"><ThemeSwitch theme={theme} setTheme={setTheme} /></div>
         </div>
       )}
     </header>
   )
 }
 
+/** Marks <html> while a demo/ops page is shown, so the page background can sit behind the atmosphere. */
+function AppPage() {
+  useEffect(() => {
+    const html = document.documentElement
+    html.dataset.page = 'app'
+    return () => { if (html.dataset.page === 'app') delete html.dataset.page }
+  }, [])
+  return null
+}
+
 export default function App() {
-  const [lang, setLangState] = useState<Lang>(() => (store.get('innate.lang') === 'en' ? 'en' : 'vi'))
-  const setLang = (l: Lang) => { setLangState(l); store.set('innate.lang', l) }
+  // English-only site (26/11). The Vietnamese strings stay in the code; restore the switch + stored choice to bring VI back.
+  const [lang, setLangState] = useState<Lang>('en')
+  const setLang = (l: Lang) => { setLangState(l) }
   useEffect(() => { document.documentElement.lang = lang }, [lang])
   useEffect(() => { startSmoothScroll() }, [])
 
@@ -159,7 +164,7 @@ export default function App() {
   const setTheme = (next: Theme) => { setThemeState(next); store.set('innate.theme', next) }
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#071431' : '#EAF2FF')
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0A1522' : '#EEF4FA')
   }, [theme])
 
   const hash = useHash()
@@ -175,10 +180,17 @@ export default function App() {
 
   return (
     <LangContext.Provider value={{ lang, setLang }}>
-      <Intro />
-      <Nav path={path} theme={theme} setTheme={setTheme} />
-      <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isDemo ? <><Demo key={String(story)} story={story} />{choose && <DemoChoice />}</> : isOps ? <Ops /> : <Landing />}</main>
-      {!isDemo && <Footer />}
+      {isDemo || isOps ? (
+        <>
+          <AppPage />
+          <div className="app-atmos" aria-hidden="true">{theme === 'dark' ? <Atmosphere dark /> : <Atmosphere />}</div>
+          <Nav path={path} theme={theme} setTheme={setTheme} />
+          <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isDemo ? <><Demo key={String(story)} story={story} />{choose && <DemoChoice />}</> : <Ops />}</main>
+          {!isDemo && <Footer />}
+        </>
+      ) : (
+        <LandingPage />
+      )}
     </LangContext.Provider>
   )
 }

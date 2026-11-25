@@ -1,0 +1,82 @@
+/* Demo, story and ops pages restyled to match the landing page (dark variant).
+   Shapes, type and surfaces only: no layout logic and no demo behaviour lives here.
+   Loaded after styles.css + innate.css, so these rules win on equal specificity. */
+
+/* ── page: dark canvas with the landing's contour atmosphere behind it (see <Atmosphere dark />) ── */
+html[data-page='app'] body { background: transparent; }
+.app-atmos { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.app-atmos .lp-atmos { -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%); }
+
+/* ── type: landing scale (Sora, sentence case, tight tracking) instead of Movora's uppercase display ── */
+.h1, .h2, .h3,
+.ws-head h1, .start-card h2, .choose-title, .choose-tile b, .menu-sheet a.m-link, .foot-col a, .wallet-screen h3 {
+  text-transform: none; font-weight: 600; letter-spacing: -0.02em; font-stretch: normal;
+}
+.ws-head h1 { font-size: clamp(30px, 3.4vw, 48px); line-height: 1.08; }
+.box h2 { text-transform: none; letter-spacing: -0.01em; font-size: 17px; font-weight: 600; }
+.badge { text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-weight: 700; font-size: 13px; }
+.field, .status { font-family: var(--f-body); letter-spacing: 0.08em; font-weight: 700; }
+.wallet-screen h3 { font-size: 19px; }
+
+/* ── surfaces: rounded cards like the landing (24 px), hairline borders ── */
+.box, .modal, .choose-tile, .foot-contact { border-radius: 24px; }
+.box { border-color: var(--line); }
+.callout { border-radius: 16px; border-left: 0; box-shadow: inset 3px 0 0 var(--line-strong); }
+.callout.strong { box-shadow: inset 3px 0 0 var(--lime); }
+.act-panel { box-shadow: inset 0 3px 0 var(--lime); }
+.perm { border-radius: 16px; }
+.pills li { border-radius: 999px; padding: 8px 14px; }
+.foot-cols { border-radius: 0 0 24px 24px; overflow: hidden; }
+.pip, .pip-min { border-radius: 20px; }
+.pip-frame { border-radius: 12px; }
+.pip-x { border-radius: 999px; }
+.modal { padding: 28px; }
+
+/* ── controls: pill buttons, round icon buttons, round meters ── */
+.btn, .abtn, .abtn-ico, .badge-ico, .chip, .status, .icon-btn, .lang, .lang button, .choose-go, .seg-btn::before, .seg-btn i,
+.meter-track, .meter-track i, .pip-bar, .pip-bar i { border-radius: 999px; }
+.btn { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.btn.small { font-size: 13px; }
+.abtn { text-transform: none; letter-spacing: 0; }
+.status::before, .chip.sim::before { border-radius: 50%; }
+.status.discrepancy::before { border-radius: 2px; }
+.lang { padding: 2px; }
+
+/* ── nav: translucent like the landing header ── */
+.nav-bar { background: rgba(10, 21, 34, 0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+[data-theme='light'] .nav-bar { background: rgba(255, 255, 255, 0.72); }
+
+/* ── demo wallet: the landing phone (ink frame, pale-blue screen, rounded white keys) ── */
+.wallet { background: #071a1c; border-radius: 48px; padding: 13px; border-color: rgba(226, 236, 246, 0.18); box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.6); }
+.wallet-screen { border-radius: 36px; }
+.w-key { border: 0; border-radius: 16px; box-shadow: 0 1px 0 #d6e2ee; }
+.w-key.down { background: var(--mist); border-color: transparent; }
+.w-key.del { box-shadow: none; }
+.w-opt, .w-chip, .w-acct { border-radius: 14px; border-color: #d6e2ee; }
+.w-opt.on { box-shadow: inset 0 0 0 1px var(--navy); }
+.w-swipe { border-radius: 22px; margin: auto 12px 12px; }
+.w-swipe-arrow { color: var(--mint); }
+.w-res-ico { border-radius: 50%; }
+.w-result.allow .w-res-ico { color: var(--mint); }
+
+/* ── demo choice overlay ── */
+.choose-tile.primary { --text-2: rgba(10, 21, 34, 0.8); }
+
+/* ── nav contents: landing link style + one solid pill CTA ── */
+.nav-links a { font-family: var(--f-body); font-weight: 500; font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--text-2); }
+.nav-links a:hover, .nav-links a[aria-current='page'] { color: var(--text); }
+.nav .abtn { min-width: 0; min-height: 40px; padding: 0 20px; background: var(--lime); color: #0a1522; font-family: var(--f-body); font-weight: 700; font-size: 14px; }
+.nav .abtn:hover { background: var(--lime-hover); }
+.nav .abtn .abtn-ico { display: none; }
+/* keep the label on small screens too (styles.css hides it there and shows only the icon) */
+.nav .abtn .abtn-label { display: inline; }
+@media (max-width: 420px) { .nav .abtn { padding: 0 14px; font-size: 13px; } }
+[data-theme='light'] .nav .abtn { background: #0d1b2a; color: #fff; }
+.menu-sheet a.m-link { font-size: clamp(24px, 6vw, 36px); }
+
+/* ── form fields ── */
+.field input, .field select, .field textarea, .ws input[type='text'], .ws input[type='password'], .ws select { border-radius: 12px; }
+
+/* ── story player ── */
+.story { border-radius: 24px; }
+.cast-btn, .cast-btn img, .story-line img { border-radius: 12px; }
