@@ -52,19 +52,19 @@
 .w-balance span { font-size: 12px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.06em; }
 .w-balance b { font-family: var(--f-display); font-size: 26px; font-variant-numeric: tabular-nums; }
 .w-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.w-act { border: 1px solid rgba(11, 31, 68, 0.25); background: #fff; color: var(--navy); padding: 12px 8px; font: 600 13px var(--f-ui); text-transform: uppercase; letter-spacing: 0.03em; cursor: pointer; }
+.w-act { border: 1px solid rgba(13, 27, 42, 0.25); background: #fff; color: var(--navy); padding: 12px 8px; font: 600 13px var(--f-ui); text-transform: uppercase; letter-spacing: 0.03em; cursor: pointer; }
 .w-act.primary { background: var(--lime); border-color: var(--navy); }
 .w-act:disabled { opacity: 0.45; cursor: default; }
 .w-act:focus-visible, .w-key:focus-visible, .w-swipe:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .w-foot { margin-top: auto; font-size: 11px; opacity: 0.6; text-align: center; }
 .w-transfer fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
 .w-transfer legend { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; margin-bottom: 4px; }
-.w-opt { position: relative; display: grid; grid-template-columns: 1fr; padding: 8px 12px; background: #fff; border: 1px solid rgba(11, 31, 68, 0.18); cursor: pointer; }
+.w-opt { position: relative; display: grid; grid-template-columns: 1fr; padding: 8px 12px; background: #fff; border: 1px solid rgba(13, 27, 42, 0.18); cursor: pointer; }
 .w-opt.on { border-color: var(--navy); box-shadow: inset 3px 0 0 var(--navy); }
 .w-opt span { font-size: 11px; opacity: 0.65; }
 .w-opt input, .w-chip input { position: absolute; opacity: 0; pointer-events: none; }
 .w-amounts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.w-chip { position: relative; padding: 8px; background: #fff; border: 1px solid rgba(11, 31, 68, 0.18); text-align: center; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; }
+.w-chip { position: relative; padding: 8px; background: #fff; border: 1px solid rgba(13, 27, 42, 0.18); text-align: center; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; }
 .w-chip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
 .w-opt:has(input:focus-visible), .w-chip:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 2px; }
 .w-swipe { margin-top: auto; min-height: 96px; display: grid; place-items: center; align-content: center; gap: 4px; background: var(--navy); color: #fff; font: 600 13px var(--f-ui); text-transform: uppercase; letter-spacing: 0.05em; touch-action: none; user-select: none; cursor: grab; }
@@ -79,11 +79,11 @@
 @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
 .w-note { font-size: 12px; text-align: center; background: #fff; border: 1px solid var(--blue); padding: 6px 10px; }
 .w-keys { margin-top: auto; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.w-key { aspect-ratio: 1.45; border: 1px solid rgba(11, 31, 68, 0.2); background: #fff; color: var(--navy); font: 600 24px var(--f-display); cursor: pointer; touch-action: manipulation; user-select: none; transition: background 0.08s, transform 0.08s; }
+.w-key { aspect-ratio: 1.45; border: 1px solid rgba(13, 27, 42, 0.2); background: #fff; color: var(--navy); font: 600 24px var(--f-display); cursor: pointer; touch-action: manipulation; user-select: none; transition: background 0.08s, transform 0.08s; }
 .w-key.down { background: var(--lime); border-color: var(--navy); transform: scale(0.96); }
 .w-key.del { font-size: 18px; background: transparent; border-color: transparent; }
 .w-wait { margin-top: auto; margin-bottom: auto; display: grid; justify-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
-.w-spin { width: 28px; height: 28px; border: 3px solid rgba(11, 31, 68, 0.2); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.w-spin { width: 28px; height: 28px; border: 3px solid rgba(13, 27, 42, 0.2); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .w-result { align-items: center; justify-content: center; text-align: center; }
 .w-result p { font-size: 14px; max-width: 260px; }
@@ -98,7 +98,7 @@
 /* account number entry (bank transfer) */
 .w-banks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .w-banks .w-chip { font-size: 11px; padding: 7px 4px; }
-.w-acct { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 12px; background: #fff; border: 1px solid rgba(11, 31, 68, 0.18); }
+.w-acct { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 12px; background: #fff; border: 1px solid rgba(13, 27, 42, 0.18); }
 .w-acct .mono { font-family: var(--f-mono); font-size: 16px; letter-spacing: 0.06em; overflow-wrap: anywhere; }
 .w-acct small { font-size: 11px; opacity: 0.6; white-space: nowrap; }
 .w-account { gap: 10px; }

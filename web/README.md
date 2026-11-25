@@ -36,7 +36,7 @@ After deploy, open `/#/demo` and enroll once to check that scoring works (withou
 
 | Route | What it shows |
 |---|---|
-| `#/` | Landing in the Movora layout: INNATE wordmark with a phone lowered on a spring, threat strip, problem, the three outcomes as numbered rows, inside a score + KPIs, the Lime “How it works” band, under the hood, cast, FAQ. Intro: P·IN → IN·NATE. |
+| `#/` | Landing (`src/landing/`, Tailwind, scoped to this page): hero with an animated PIN phone, live signal box (tap four keys, then let a bot try; runs in the browser), links into the full demo, owner vs PIN-thief vs malware, the three decisions, how it works, privacy, API and dashboard. Pale-blue hero atmosphere that fades into a white page; approved app-icon logo and fonts from the Figma brand kit. English only (the Vietnamese strings stay in the code; the language switch is removed). |
 | `#/demo` | Demo wallet with the SDK inside. Enroll your rhythm (3 × PIN `1593`), then transfer to a saved contact or to a **bank account** (pick a bank, type the account number on the wallet's own pad: only key times are sent, never the digits). The attacker console replays malware (fills the account straight into the field, then taps the PIN) or another person (types an account, then the PIN) on the same screens. |
 | `#/demo?story=1` | Guided story, 8 steps (~90 s): SDK, Hà enrolls, Hà pays her mum (allow), fake officer + Accessibility app, malware at 2 a.m. (hold), Bảo with the PIN (step-up), ops review, policy. Seeded sessions, scored live. Autoplay, sound, keyboard ← → K M, behind-the-scenes picture-in-picture. |
 | `#/ops` | Fraud-ops dashboard: flagged sessions with reasons, label fraud / legit. Needs the **ops** key, typed by the analyst and kept in `sessionStorage` only. |
@@ -58,6 +58,6 @@ After deploy, open `/#/demo` and enroll once to check that scoring works (withou
 | **Design system and frontend shell** | Movago web demo by team Odylytics (one of this team's members), reused: `styles.css`, `ui.tsx`, `smooth.ts`, `sound.ts`, `Intro.tsx`, `StoryBar.tsx`, `BehindScenes.tsx` engine, `DemoChoice.tsx`, nav/footer structure, colour tokens and type scale | Layout, components, motion, story player. All Innate content, wallet, SDK, API client, pages and line art are new. |
 | Layout reference | Movora template (Framer Marketplace), via Movago's `DESIGN.md` | Grid, spacing, shapes only; no Movora images, logos or text |
 | Avatars | Notionists by Zoish (CC0), pre-rendered with DiceBear | Fictional cast |
-| Fonts | Archivo, Be Vietnam Pro, JetBrains Mono (OFL, Google Fonts); Hagrid (Adobe Fonts kit, wordmark only; falls back to Archivo if the kit does not serve this domain) | Typography |
-| Libraries | React, React DOM, Lenis (MIT), Vite, TypeScript, Vitest | Build and runtime |
+| Fonts | Sora, Manrope, JetBrains Mono (OFL, Google Fonts), chosen in the team's Figma brand kit | Typography (Sora has no Vietnamese glyphs, so Vietnamese headings use Manrope) |
+| Libraries | React, React DOM, Lenis (MIT), Vite, TypeScript, Vitest, Tailwind CSS (MIT, landing page only, no preflight) | Build and runtime |
 | AI tools | Claude (Anthropic) via Claude Code, used for code, copy and review | Development |

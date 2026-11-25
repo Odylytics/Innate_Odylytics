@@ -1,7 +1,7 @@
 // Line art authored for Innate in the Movago style: stroke = currentColor, Lime = the highlighter.
 const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'square' as const, strokeLinejoin: 'miter' as const }
-const LIME = '#C8F65A'
-const NAVY = '#0B1F44'
+const LIME = '#11B88F' // jade
+const NAVY = '#1B263B' // Holst Navy
 
 /** Keypad grid used by several pieces: 3 × 4 squares. */
 function Pad({ x, y, k = 34, gap = 8, hit = [] as number[], dots = false }: { x: number; y: number; k?: number; gap?: number; hit?: number[]; dots?: boolean }) {
