@@ -110,7 +110,8 @@ def root():
 
 @app.get("/health", tags=["system"])
 def health():
-    return {"status": "ok"}
+    # models: có nạp được mô hình học không (false = đang chạy chỉ bằng luật/khoảng cách, vd. thiếu lightgbm hoặc libgomp trên máy chủ)
+    return {"status": "ok", "models": {"human": human_model.loaded(), "owner": owner_model.loaded()}}
 
 
 v1 = APIRouter(prefix="/v1")

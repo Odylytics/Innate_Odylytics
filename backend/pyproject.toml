@@ -8,10 +8,12 @@ dependencies = [
     "uvicorn>=0.30",
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
+    "lightgbm>=4.0",  # mô hình học người/máy và nhận chủ; thiếu thư viện hoặc libgomp thì backend tự rơi về luật (xem /health)
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
-ml = ["lightgbm>=4.0", "numpy>=1.26"]  # mô hình người/máy; thiếu thì backend dùng luật baseline
+ml = []  # giữ để lệnh `uv sync --extra ml` cũ vẫn chạy: lightgbm và numpy nay là phụ thuộc mặc định
 
 [dependency-groups]
 dev = ["pytest>=8", "httpx>=0.27"]

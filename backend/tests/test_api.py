@@ -37,7 +37,8 @@ def _score(client, sid, **ctx) -> dict:
 
 
 def test_health_and_auth(client):
-    assert client.get("/health").json() == {"status": "ok"}
+    h = client.get("/health").json()
+    assert h["status"] == "ok" and set(h["models"]) == {"human", "owner"}
     assert client.post("/v1/sessions", json={"user_id": "x"}).status_code == 401
     assert client.post("/v1/sessions", json={"user_id": "x"}, headers={"X-API-Key": "sai"}).status_code == 401
 
