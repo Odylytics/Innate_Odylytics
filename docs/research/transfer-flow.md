@@ -92,7 +92,51 @@ Không có bộ dữ liệu công khai nào cho việc chọn ngân hàng trong 
 
 Thứ tự: E14 trước (không cần app, trả lời câu hỏi "gõ số tài khoản có giúp nhận chủ không"), rồi đổi schema + E15, cuối cùng E16 khi có app.
 
-## 5. Kịch bản demo gợi ý
+## 5. Bối cảnh Việt Nam và lập luận cho Innate
+
+> Tra cứu 25/11/2026. Phần lớn nguồn là báo chí và blog, không phải văn bản gốc của ngân hàng hay NHNN; các nguồn lệch nhau ở vài chỗ (ghi rõ bên dưới). Kiểm lại ở nguồn gốc trước khi đưa số lên slide.
+
+### 5.1. Số tài khoản dài bao nhiêu
+
+| Ngân hàng | Số chữ số (theo nguồn tra được) |
+|---|---|
+| ACB | 8 (có nguồn ghi 8–9) |
+| VPBank | 8–9 |
+| VIB | 9 (trước đây 15) |
+| TPBank | 11 |
+| VietinBank | 12 |
+| Sacombank | 12 |
+| Vietcombank | 13 |
+| Agribank | 13 |
+| MB | 13 (có nguồn ghi 10–13) |
+| BIDV | 14 |
+| Techcombank | 14 |
+| Số thẻ (chuyển qua Napas bằng số thẻ) | 16–19 |
+
+Nguồn: [Timo](https://timo.vn/blogs/so-tai-khoan-ngan-hang-la-gi-nhung-dieu-ban-can-biet-ve-so-tai-khoan-ngan-hang/), [QuanTriMang](https://quantrimang.com/cong-nghe/so-tai-khoan-ngan-hang-ghi-o-dau-co-bao-nhieu-so-152869), [TheBank](https://m.thebank.vn/blog/16614-tong-hop-dau-so-tai-khoan-cua-cac-ngan-hang-vietcombank-agribank-bidv-hien-nay.html), [VietnamBiz](https://vietnambiz.vn/cap-nhat-danh-sach-dau-so-tai-khoan-cac-ngan-hang-moi-nhat--2022530154256452.htm), [Chanhtuoi](https://chanhtuoi.com/dau-so-tai-khoan-cac-ngan-hang-p8902.html). Ngoài ra nhiều ngân hàng cho chọn "số đẹp" hoặc dùng số điện thoại làm số tài khoản; độ dài khi đó khác bảng trên. Phần này **chưa tìm được nguồn xác nhận**.
+
+**Ý nghĩa:** ngân hàng lớn nhất (Vietcombank, BIDV, VietinBank, Agribank, Techcombank, MB) dùng **12–14 số**. Theo E14, 12 số chưa thấy trước cho EER 0,27 và FAR 0,59 (FRR 5%), so với 0,33 / 0,70 khi chỉ có 6 số. Nghĩa là với phần lớn người nhận ở các ngân hàng này, bước gõ số tài khoản **thêm khoảng gấp đôi số phím** so với PIN, đúng vùng mà tín hiệu bắt đầu có ích. Với ACB, VPBank (8–9 số) thì lợi ít hơn.
+
+### 5.2. Chuyển tiền diễn ra thế nào
+
+- **Napas 247**: chuyển nhanh liên ngân hàng bằng số tài khoản hoặc số thẻ; ví tự tra tên người nhận sau khi có số tài khoản và ngân hàng. Năm 2025 hệ thống Napas xử lý bình quân hơn 32 triệu giao dịch mỗi ngày ([VNBA](https://vnba.org.vn/vi/napas-to-chuc-hoi-nghi-thuong-nien-thanh-vien-nam-2025-19723.htm)).
+- **VietQR chiếm gần một nửa**: đầu 11/2025 khoảng 15 triệu giao dịch VietQR mỗi ngày trên tổng khoảng 35 triệu ([VnEconomy](https://vneconomy.vn/tu-chuyen-khoan-ca-nhan-den-thanh-toan-thuong-mai-chuan-quoc-gia.htm)); 10 tháng đầu 2025 khoảng 3,6 tỷ giao dịch VietQR, tăng hơn 52% ([Diễn đàn Doanh nghiệp](https://diendandoanhnghiep.vn/print/10165115.html)).
+- **Sinh trắc học theo Quyết định 2345/QĐ-NHNN** (hiệu lực 01/7/2024): xác thực khuôn mặt khi chuyển **từ 10 triệu đồng** một lần (nguồn lệch nhau "từ" hay "trên") hoặc khi tổng trong ngày **vượt 20 triệu**; dưới mức đó chỉ cần PIN/OTP ([LuatVietnam](https://luatvietnam.vn/tin-van-ban-moi/tu-2024-chuyen-khoan-tren-10-trieu-dong-phai-xac-thuc-sinh-trac-hoc-186-96491-article.html), [Thị trường Tài chính Tiền tệ](https://thitruongtaichinhtiente.vn/phan-loai-giao-dich-ngan-hang-phai-xac-thuc-sinh-trac-hoc-theo-quyet-dinh-2345-qd-nhnn-58169.html)). Chưa kiểm văn bản gốc và các sửa đổi sau 2024.
+- **SIMO của NHNN**: khi chuyển tiền, app đối chiếu **tài khoản người nhận** với danh sách nghi gian lận và cảnh báo. Đến 28/9/2026 hơn 5,6 triệu lượt cảnh báo, hơn 1,9 triệu lượt dừng hoặc huỷ giao dịch ([CafeF](https://cafef.vn/hon-19-trieu-luot-khach-hang-dung-giao-dich-sau-canh-bao-gian-lan-18826100811053583.chn)). Khung pháp lý: Thông tư 50/2024 và 77/2025/TT-NHNN (theo báo chí, chưa đọc văn bản gốc).
+
+### 5.3. Lập luận củng cố
+
+1. **Innate đứng đúng chỗ trống của quy định.** Dưới 10 triệu một lần và 20 triệu một ngày, giao dịch chỉ cần PIN/OTP, đúng hai thứ mã độc và người nhìn lén lấy được. Innate chấm thêm ở chính những giao dịch này mà không bắt người dùng làm gì thêm. Trên ngưỡng, khuôn mặt chứng minh người chủ có mặt **lúc xác thực**, nhưng mã độc điều khiển từ xa vẫn thao tác các bước trước đó (nhập số tài khoản, chọn ngân hàng), và ngân hàng đã nêu tội phạm dùng deepfake để vượt sinh trắc ([Tạp chí Kinh tế Tài chính](https://tapchikinhtetaichinh.vn/dam-bao-an-ninh-tai-chinh-ca-nhan-truoc-lan-song-lua-dao-cong-nghe-cao-138286.html)). Innate không thay khuôn mặt; nó chấm các bước khuôn mặt không nhìn thấy.
+2. **Ba lớp bổ sung cho nhau, không trùng.** SIMO hỏi "**tài khoản nhận** có đáng ngờ không", sinh trắc hỏi "**chủ** có mặt lúc xác thực không", Innate hỏi "**ai hoặc cái gì** đang chạm màn hình suốt luồng chuyển tiền". Tài khoản nhận mới mở (chưa vào danh sách SIMO) hoặc mã độc chuyển dưới ngưỡng là chỗ Innate có giá trị riêng.
+3. **Thêm ma sát đúng chỗ thì giảm được lừa đảo.** VPBank cho biết sau khi áp sinh trắc khi chuyển tiền, số tài khoản cá nhân bị lừa giảm khoảng 59% và số tiền bị lừa giảm 52% (theo báo chí, số của ngân hàng tự công bố) ([Tạp chí Kinh tế Tài chính](https://tapchikinhtetaichinh.vn/dam-bao-an-ninh-tai-chinh-ca-nhan-truoc-lan-song-lua-dao-cong-nghe-cao-138286.html)). Innate đề xuất ma sát (`step_up`) **chỉ khi hành vi bất thường**, thay vì cho mọi giao dịch.
+4. **Số tài khoản dài là lợi thế của Việt Nam.** Ngân hàng lớn dùng 12–14 số; E14 cho thấy 12 số tốt hơn rõ 6 số. Gộp PIN 6 số + số tài khoản 12–14 số cho khoảng 18–20 phím mỗi giao dịch. Chưa đo trực tiếp việc gộp hai điểm này (việc tiếp theo).
+5. **Quy mô mối đe doạ.** Thiệt hại lừa đảo trực tuyến 2025 được ước tính trên 6.000 tỷ đồng theo Hiệp hội An ninh mạng quốc gia, có nguồn khác ghi trên 8.000 tỷ ([SGGP](https://www.sggp.org.vn/nam-2025-thiet-hai-do-lua-dao-truc-tuyen-o-viet-nam-uoc-tinh-tren-6000-ty-dong-post832336.html), [Báo Pháp luật](https://doanhnhan.baophapluat.vn/hon-8-000-ty-dong-boc-hoi-vi-lua-dao-truc-tuyen-bo-cong-an-canh-bao-thu-doan-dau-hieu-nhan-biet-va-cach-phong-tranh-9b93d880.html)); NCA ghi nhận 62.952 mã độc di động mới tại Việt Nam năm 2025 (theo các bài báo trên). Hai con số lệch nhau, chỉ nên dùng con số có nguồn gốc rõ nhất.
+
+**Điểm yếu phải nói thẳng:**
+- **Gần một nửa giao dịch là VietQR**, không gõ số tài khoản. Với những giao dịch này Innate chỉ còn PIN và thao tác xác nhận. Thiếu bước gõ phải được coi là trung tính, không phải đáng ngờ.
+- **Lừa đảo phổ biến nhất 2025 là mạo danh công an** (theo các bài báo trên): nạn nhân tự chuyển, đúng người đúng máy. Innate không bắt được bằng hành vi; đó là việc của SIMO và cảnh báo nội dung.
+
+## 6. Kịch bản demo gợi ý
 
 1. Chủ ví chuyển tiền: gõ số tài khoản, chọn ngân hàng, gõ PIN → `allow`.
 2. Mã độc: số tài khoản bị đặt thẳng, ngân hàng được chọn không có chạm, PIN bấm đều → `hold`, lý do tiếng Việt cho từng bước.
