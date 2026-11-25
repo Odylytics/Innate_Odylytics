@@ -77,7 +77,7 @@
 .w-dots i.on { background: var(--navy); }
 .w-dots.shake { animation: shake 0.4s; }
 @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
-.w-note { font-size: 12px; text-align: center; background: #fff; border-left: 3px solid var(--blue); padding: 6px 10px; }
+.w-note { font-size: 12px; text-align: center; background: #fff; border: 1px solid var(--blue); padding: 6px 10px; }
 .w-keys { margin-top: auto; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .w-key { aspect-ratio: 1.45; border: 1px solid rgba(11, 31, 68, 0.2); background: #fff; color: var(--navy); font: 600 24px var(--f-display); cursor: pointer; touch-action: manipulation; user-select: none; transition: background 0.08s, transform 0.08s; }
 .w-key.down { background: var(--lime); border-color: var(--navy); transform: scale(0.96); }
