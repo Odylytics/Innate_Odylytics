@@ -45,6 +45,18 @@ function isPhone() {
 type Step = 'consent' | 'profile' | 'create' | 'confirm' | 'run'
 interface Profile { id: string; email: string; name: string }
 
+// Progress survives a reload for the life of the tab (sessionStorage is cleared when the tab closes). The PIN is a made-up
+// practice PIN that is already part of the data sent to the API, so keeping it here adds no exposure.
+const STATE_KEY = 'innate.collect.state'
+interface Saved { step: Step; profile: Profile | null; pin: string; done: number }
+const loadSaved = (): Saved => {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(STATE_KEY) ?? 'null') as Saved | null
+    if (v && v.step && (v.step === 'consent' || v.step === 'profile' || v.profile)) return v
+  } catch { /* private mode or bad JSON */ }
+  return { step: 'consent', profile: null, pin: '', done: 0 }
+}
+
 export default function Collect() {
   const { tx } = useTx()
   useEffect(() => {
@@ -62,9 +74,14 @@ export default function Collect() {
     return () => window.removeEventListener('resize', on)
   }, [dev])
 
-  const [step, setStep] = useState<Step>('consent')
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [pin, setPin] = useState('') // kept in memory only, never stored in the browser
+  const [saved] = useState(loadSaved)
+  const [step, setStep] = useState<Step>(saved.step)
+  const [profile, setProfile] = useState<Profile | null>(saved.profile)
+  const [pin, setPin] = useState(saved.pin)
+  const [done, setDone] = useState(saved.done)
+  useEffect(() => {
+    try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ step, profile, pin, done } satisfies Saved)) } catch { /* private mode */ }
+  }, [step, profile, pin, done])
 
   if (!phone) {
     return (
@@ -77,7 +94,7 @@ export default function Collect() {
   if (step === 'profile' || !profile) return <ProfileForm onDone={(p) => { setProfile(p); setStep('create') }} />
   if (step === 'create') return <PinSetup key="create" mode="create" onDone={(p) => { setPin(p); setStep('confirm') }} />
   if (step === 'confirm') return <PinSetup key="confirm" mode="confirm" expected={pin} onBack={() => setStep('create')} onDone={() => setStep('run')} />
-  return <TransferApp profile={profile} pin={pin} onRestart={() => { setPin(''); setStep('create') }} />
+  return <TransferApp profile={profile} pin={pin} done={done} onDone={setDone} onRestart={() => { setPin(''); setDone(0); setStep('create') }} />
 }
 
 function Consent({ onAgree }: { onAgree: () => void }) {
@@ -216,10 +233,9 @@ function PinSetup({ mode, expected, onDone, onBack }: { mode: 'create' | 'confir
 
 type Screen = 'home' | 'transfer' | 'pin' | 'sending' | 'ok' | 'finish'
 
-function TransferApp({ profile, pin, onRestart }: { profile: Profile; pin: string; onRestart: () => void }) {
+function TransferApp({ profile, pin, done, onDone, onRestart }: { profile: Profile; pin: string; done: number; onDone: (n: number) => void; onRestart: () => void }) {
   const { tx, vnd, lang } = useTx()
-  const [done, setDone] = useState(0)
-  const [screen, setScreen] = useState<Screen>('home')
+  const [screen, setScreen] = useState<Screen>(done >= ENTRIES ? 'finish' : 'home')
   const [who, setWho] = useState(PEOPLE[0].id)
   const [amount, setAmount] = useState(AMOUNTS[1])
   const [digits, setDigits] = useState('')
@@ -241,7 +257,7 @@ function TransferApp({ profile, pin, onRestart }: { profile: Profile; pin: strin
       if (done < ENROLL) {
         try { await api.enroll(s.user_id, session_id) } catch (e) { if (!(e instanceof ApiError && e.status === 409)) throw e }
       }
-      pending.current = null; setDone(done + 1); setScreen('ok')
+      pending.current = null; onDone(done + 1); setScreen('ok')
     } catch (e) {
       pending.current = s
       const st = e instanceof ApiError ? e.status : -1
