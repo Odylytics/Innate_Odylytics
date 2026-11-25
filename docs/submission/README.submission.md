@@ -1,6 +1,6 @@
 # Innate — Lớp chấm điểm rủi ro hành vi chạm cho ví điện tử
 
-> **KHUNG README NỘP BÀI — chưa hoàn chỉnh.** Mục có `TODO` cần đội điền/quyết trước 03/12. Khi nộp, đổi tên file này thành `README.md` ở gốc gói `.zip` và xoá dòng này. Danh sách kiểm: [`../contest/submission-checklist.md`](../contest/submission-checklist.md).
+> **KHUNG README NỘP BÀI — chưa hoàn chỉnh (mục giấy phép và tài sản có sẵn đã kiểm 25/11).** Mục có `TODO` cần đội điền/quyết trước 03/12. Khi nộp, đổi tên file này thành `README.md` ở gốc gói `.zip` và xoá dòng này. Danh sách kiểm: [`../contest/submission-checklist.md`](../contest/submission-checklist.md).
 
 **Đội:** `TODO: tên đội` · **Thành viên:** `TODO` · **Chủ đề:** An ninh mạng + Chống lừa đảo · **MoMo Tech Contest 2026**
 
@@ -50,19 +50,29 @@ Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng
 | FastAPI, Uvicorn, SQLAlchemy, psycopg | Backend API và lưu trữ |
 | LightGBM, NumPy | Mô hình người/máy (tuỳ chọn) |
 | scikit-learn, pandas, NumPy, LightGBM | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
-| React, React DOM, Vite, TypeScript, Vitest, Lenis, DiceBear (`@dicebear/core`, `notionists`) | Trang web demo trong `web/` (`TODO: kiểm giấy phép từng gói, đặc biệt bộ ảnh đại diện DiceBear notionists`) |
+| React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
+| psycopg (**LGPL-3.0**) | Kết nối Postgres, dùng nguyên bản như thư viện phụ thuộc, không sao chép vào mã |
 | pytest, httpx | Kiểm thử |
 
 ### Dữ liệu và giấy phép
 | Nguồn | Dùng cho | Giấy phép / điều kiện | Ghi chú |
 |---|---|---|---|
-| **StrokePIN** (Yao & Wang, IEEE TDSC 2026; DOI 10.21227/thft-4721) | Đánh giá bài "chủ"; huấn luyện mô hình người/máy; sinh `population_prior.json` | **CC BY-NC-SA 4.0**: phi thương mại, ghi nguồn, **chia sẻ phái sinh cùng giấy phép** | **Mô hình trong `backend/app/models/` và `population_prior.json` là sản phẩm phái sinh: phát hành theo CC BY-NC-SA 4.0.** `TODO: đội quyết định giấy phép cho phần mã còn lại và kiểm tra tương thích` |
-| CMU DSL-StrongPassword (Killourhy & Maxion 2009) | Thí nghiệm few-shot (`research/`) | Trang gốc không nêu giấy phép | Không có trong sản phẩm |
-| Touchalytics (Frank et al. 2013) | Chỉ trong `research/` (E19: kiểm luật vuốt và nhận chủ bằng vuốt); không có trong sản phẩm | Trang gốc và readme không nêu giấy phép; `TODO: hỏi tác giả hoặc ghi rõ "dùng nghiên cứu, trích dẫn"` | Trích dẫn Frank et al., IEEE TIFS 2013 |
-| Aalto typing37k (Palin et al. 2019) | Chỉ trong `research/` (E11, E12, E13, E21: nhịp gõ người thật, bot ngoài sản phẩm) | `TODO: đọc điều khoản ở https://userinterfaces.aalto.fi/typing37k/` | Dữ liệu chứa nội dung gõ: **không đưa vào sản phẩm hay zip**; `research/data/` loại khỏi gói |
+| **StrokePIN** (Yao & Wang, IEEE TDSC 2026; DOI 10.21227/thft-4721; chủ sở hữu: Đại học Nam Khai) | Đánh giá bài "chủ"; huấn luyện mô hình người/máy; sinh `population_prior.json` | **CC BY-NC-SA 4.0**: phi thương mại, ghi nguồn, **chia sẻ phái sinh cùng giấy phép** | **Mô hình trong `backend/app/models/` và `population_prior.json` là sản phẩm phái sinh: phát hành theo CC BY-NC-SA 4.0.** Đội chốt (25/11): **toàn bộ gói theo CC BY-NC-SA 4.0** (`LICENSE`); thư viện bên thứ ba giữ giấy phép riêng (`THIRD_PARTY_NOTICES.md`). Dùng thương mại cần chủ sở hữu StrokePIN cho phép bằng văn bản |
+| CMU DSL-StrongPassword (Killourhy & Maxion 2009) | Thí nghiệm few-shot (`research/`) | Kiểm 25/11: trang gốc không nêu giấy phép, yêu cầu trích dẫn bài DSN-2009 | Không có trong sản phẩm |
+| Touchalytics (Frank et al. 2013) | Chỉ trong `research/` (E19: kiểm luật vuốt và nhận chủ bằng vuốt); ngưỡng vận tốc vuốt 0,3 chọn khi quan sát dữ liệu này. Không có dữ liệu hay mô hình phái sinh trong sản phẩm | Kiểm 25/11: trang gốc và `readme_data.txt` **không nêu giấy phép**; dữ liệu đưa tải công khai kèm bài báo | Trích dẫn Frank et al., IEEE TIFS 8(1), 2013 |
+| Aalto typing37k (Palin et al. 2019) | Chỉ trong `research/` (E11, E12, E13, E21, E22: nhịp gõ người thật). Không có dữ liệu hay mô hình phái sinh trong sản phẩm | Kiểm 25/11: trang và bài báo nói "openly available" nhưng **không nêu giấy phép dữ liệu** (chỉ phần mềm thu dữ liệu là MIT) | Dữ liệu chứa nội dung gõ: **không đưa vào gói**; `research/data/` bị loại; chỉ công bố bảng tổng hợp. Trích dẫn MobileHCI 2019 |
 | Dữ liệu tự thu của đội | `TODO` | Phiếu đồng ý của người tham gia; chỉ lưu thời gian, toạ độ, loại sự kiện, **không lưu nội dung** | `TODO: số người, số phiên, ngày thu` |
 
 Bot trong `attacker/` là **dữ liệu tự sinh** (4 chiến thuật), không phải mã độc thật.
+
+### Tài sản có sẵn khác (đã khai ở `web/README.md`)
+| Tài sản | Nguồn | Ghi chú |
+|---|---|---|
+| Hệ thiết kế và khung giao diện web | **Movago**, trang demo web trước đây của một thành viên (team Odylytics), dùng lại: `styles.css`, `ui.tsx`, `smooth.ts`, `sound.ts`, `Intro.tsx`, `StoryBar.tsx`... | Nội dung Innate, ví, SDK, client API, các trang và hình vẽ là mới |
+| Tham chiếu bố cục | Mẫu Movora (Framer Marketplace) qua `DESIGN.md` của Movago | Chỉ lưới, khoảng cách, hình khối; không dùng ảnh, logo, chữ của Movora |
+| Phông chữ | Sora, Manrope, JetBrains Mono (SIL OFL, Google Fonts) | Sora không có glyph tiếng Việt: tiêu đề tiếng Việt dùng Manrope |
+
+Danh sách đầy đủ kèm cách kiểm: `THIRD_PARTY_NOTICES.md`.
 
 ### Công cụ AI đã dùng
 | Công cụ | Dùng cho |
