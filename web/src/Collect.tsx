@@ -3,13 +3,13 @@ import { ApiError, api, type CollectionMeta, type SessionIn } from './api'
 import { Recorder } from './capture'
 import './collect.css'
 
-// Data-collection page (#/collect): one form (name, email, consent), then a 10-digit pad where the volunteer creates
+// Data-collection page (#/collect): one form (name, email, consent), then a 10-digit pad (+ delete) where the volunteer creates
 // a 6-digit PIN and types it 5 times in all. The 5 entries are sent together, with name + email in `meta`.
 // The PIN digits are stored on purpose (pin_taps[].key, for per-key research); the form warns not to reuse a real one.
 // Phone only: on a desktop it shows a "open on your phone" notice (add ?dev=1 to test in devtools).
 const PIN_LEN = 6
 const ENTRIES = 5
-const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '']
+const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
 const CONTACT = (import.meta.env.VITE_COLLECT_CONTACT as string | undefined) ?? 'người mời bạn tham gia'
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
@@ -121,6 +121,8 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
   }
 
   const press = (k: string) => {
+    // delete one digit and its tap (taps are pushed on key-up, so the last tap is the last digit)
+    if (k === '⌫') { if (digits) { setDigits(digits.slice(0, -1)); rec.current.taps.pop() }; return }
     if (digits.length >= PIN_LEN) return
     const next = digits + k
     setDigits(next); setMsg(null)
@@ -142,7 +144,10 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
       if (n === ENTRIES) { pin.current = ''; void sendAll() }
     }, 0)
   }
-  const keyDown = (e: RPointerEvent<HTMLButtonElement>, k: string) => { rec.current.keyDown(e.nativeEvent, k, e.currentTarget); setPressed(k) }
+  const keyDown = (e: RPointerEvent<HTMLButtonElement>, k: string) => {
+    if (k !== '⌫') rec.current.keyDown(e.nativeEvent, k, e.currentTarget)
+    setPressed(k)
+  }
   const keyUp = (e: RPointerEvent<HTMLButtonElement>) => { rec.current.keyUp(e.nativeEvent); setPressed(null) }
 
   if (state === 'done') {
@@ -175,7 +180,7 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
               {KEYS.map((k, i) => k === '' ? <span key={i} /> : (
                 <button key={i} className={`cl-key ${pressed === k ? 'down' : ''}`}
                   onPointerDown={(e) => keyDown(e, k)} onPointerUp={keyUp} onPointerCancel={keyUp} onClick={() => press(k)}
-                  aria-label={k}>{k}</button>
+                  aria-label={k === '⌫' ? 'Xoá' : k}>{k}</button>
               ))}
             </div>
           )}
