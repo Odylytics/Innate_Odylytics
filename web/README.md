@@ -1,6 +1,6 @@
 # Innate — Web demo
 
-Demo wallet, guided story and ops dashboard for Innate (the landing page is its own site in `../landing/`). Vite + React + TypeScript, static build, hash routing. Every score shown comes from the live Innate API (`backend/`).
+Demo wallet, guided story and ops dashboard for Innate (the landing page is a separate site in its own repository). Vite + React + TypeScript, static build, hash routing. Every score shown comes from the live Innate API (`backend/`).
 
 ## Run
 

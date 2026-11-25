@@ -15,7 +15,7 @@ export { store }
 type Theme = 'dark' | 'light'
 
 // Hash routes (#/, #/demo, #/demo?story=1, #/ops) so the static build works on any host without rewrites.
-// The landing page is its own site (landing/); here #/ opens the demo start screen.
+// The landing page is a separate site (own repository); here #/ opens the demo start screen.
 function useHash() {
   const [hash, setHash] = useState(window.location.hash)
   useEffect(() => {
