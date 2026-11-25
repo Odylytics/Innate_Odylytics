@@ -446,7 +446,7 @@ Mã: `research/experiments/e24_end_to_end.py` (gồm E25, E27, E27b), `e26_laten
 
 **E27b, ngưỡng phát lại** (hiện 0,07): 0,085 bắt phát lại ±15% 86% (so với 30%) với chủ bị hold 3% (lịch sử ngắn ở đây; E5b ngoại suy FPR cao hơn khi lịch sử dài); 0,10: ±20% bắt 47% nhưng chủ hold 6%. Chưa đổi ngưỡng; quyết sau khi đo lịch sử dài của đội (T3).
 
-**E26, độ trễ local (TestClient, SQLite, không mạng):** `POST /sessions` p50 2,2 ms / p95 2,9 ms; `/score` p50 3,8 ms / p95 4,7 ms / p99 6,2 ms. **Lần gọi đầu mất ~1 s** (nạp mô hình LightGBM lười): quan trọng cho khởi động nguội trên Vercel; chưa đo trên Vercel/Neon.
+**E26, độ trễ local (TestClient, SQLite, không mạng):** `POST /sessions` p50 2,2 ms / p95 2,9 ms; `/score` p50 3,8 ms / p95 4,7 ms / p99 6,2 ms. **Lần gọi đầu từng mất ~1 s** (nạp mô hình LightGBM lười). **Đã sửa 25/11:** `main.py` nạp sẵn hai mô hình khi khởi động; đo lại: `/score` p50 3,7 ms, p99 14,2 ms, max 36,5 ms. Chi phí nạp chuyển sang khởi động nguội trên Vercel (chưa đo Vercel/Neon).
 
 ## 7. Thứ tự làm
 
