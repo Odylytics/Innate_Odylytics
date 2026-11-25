@@ -16,6 +16,10 @@ from . import schemas
 from .db import DATABASE_URL, Base, ChallengeNonce, SessionLocal, TouchSession, User, engine
 from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
 
+# nạp sẵn hai mô hình học khi khởi động: tránh ~1 s ở lần /score đầu tiên (E26); thiếu thư viện hoặc file thì _load() tự rơi về luật
+human_model.loaded()
+owner_model.loaded()
+
 def _keys(var: str, default: str = "") -> list[str]:
     return [k.strip() for k in os.environ.get(var, default).split(",") if k.strip()]
 

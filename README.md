@@ -60,7 +60,9 @@ So the owner signal is **weaker than papers suggest** (EER 16%, not "a few perce
 
 ## Repository layout
 
-`backend/` service, scoring, models, tests · `attacker/` bot simulator · `research/` experiments, results, git-ignored `data/` · `docs/` (`contest/` rules + checklist, `plan/` positioning / how-it-works / challenge / pitch, `research/` logs, `submission/` proposal, slides, scripts, README skeleton) · `papers/` reference PDFs (not submitted) · `CLAUDE.md` conventions and known gaps.
+Start at **[`docs/INDEX.md`](docs/INDEX.md)** (map of every folder and document) and **[`research/EXPERIMENTS.md`](research/EXPERIMENTS.md)** (index of experiments E1–E27 with code, result tables and one-line conclusions).
+
+`backend/` service, scoring core (`app/scoring/`), models, tests · `attacker/` bot simulator · `sdk/` phone text-input SDK + keyboard probe · `web/` landing, demo, data-collection page · `research/` experiments, results, git-ignored `data/` and `external/` · `docs/` (`contest/` rules + checklist + BTC questions, `plan/` positioning / how-it-works / challenge / data collection, `research/` logs and related work, `submission/` proposal, slides, scripts, README skeleton) · `papers/` reference PDFs (not submitted) · `LICENSE`, `THIRD_PARTY_NOTICES.md` · `CLAUDE.md` conventions and known gaps.
 
 ## Quick start
 
@@ -69,7 +71,7 @@ Python 3.11+, [`uv`](https://docs.astral.sh/uv/).
 ```bash
 cd backend && uv sync --extra ml        # ml = LightGBM + NumPy (optional)
 uv run uvicorn app.main:app --reload --port 8000    # Swagger at /docs (local default key: demo-key)
-uv run pytest -q                        # 28 tests
+uv run pytest -q                        # 43 tests
 cd ../attacker && uv sync && uv run pytest -q       # 8 tests
 ```
 
@@ -84,8 +86,10 @@ Config (env): `DATABASE_URL`, `NHIP_API_KEYS` / `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`
 
 ## Data, licences, privacy
 
-- **StrokePIN** (Yao & Wang, IEEE TDSC 2026) is **CC BY-NC-SA 4.0**; the models and `population_prior.json` derived from it are under the same terms. Aalto typing37k and CMU DSL are used for research experiments only (licences to be confirmed). Open-source libraries keep their own licences. Claude Code (Anthropic) assisted with code, experiments and docs; every reported number comes from code in `research/`. **The repository code itself has no licence yet; the team must decide.**
-- Only timings, coordinates, event kinds and character counts are stored: **never PIN content, amounts, recipients or message text.** Touch and typing dynamics are sensitive biometric-like data (Vietnam's 2025 personal-data law, Decree 356/2025): collect only with explicit consent.
+- **Licence of this repository: CC BY-NC-SA 4.0** ([`LICENSE`](LICENSE)). Reason: the models and `population_prior.json` are derived from **StrokePIN** (Nankai University, CC BY-NC-SA 4.0: share derivatives under the same licence; commercial use needs written authorisation from the dataset owner). Third-party libraries, fonts and avatars keep their own licences: see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) (checked 2026-11-25).
+- **Aalto typing37k, Touchalytics, CMU DSL**: state no data licence ("openly available", cite the paper); used for research experiments only, no data or derived model is shipped. Contact the authors before redistributing anything derived.
+- Open-source libraries keep their own licences (note: psycopg is LGPL-3.0, used unmodified). Claude Code (Anthropic) assisted with code, experiments and docs; every reported number comes from code in `research/`.
+- Only timings, coordinates, event kinds and character counts are stored: **never PIN content, amounts, recipients or message text.** Touch and typing dynamics are sensitive biometric-like data (Vietnam's 2025 personal-data law, Decree 356/2025): collect only with explicit consent ([`docs/plan/thu-du-lieu-doi.md`](docs/plan/thu-du-lieu-doi.md)).
 
 ## Status
 
