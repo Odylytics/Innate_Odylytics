@@ -26,6 +26,7 @@
 | E24 | Quyết định toàn hệ thống (allow/step_up/hold) | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Bot ngây thơ và phát lại ≤ ±10% 100% hold |
 | E25 | Quét ngưỡng A, B | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Không có điểm tối ưu cho cả hai phía |
 | E26 | Độ trễ API local | giả | `e26_latency.py` | `e26_latency.md` | `/score` p50 3,7 ms, max 36 ms sau khi nạp sẵn mô hình (trước: lần đầu ~1 s) |
+| E28 | PIN 4 số (demo) hay 6 số: quyết định của hệ thống | thật (StrokePIN cắt 4 chạm, xấp xỉ) | `e28_pin_length.py` | `e28_pin_length.md` | PIN 4 số: mô hình chủ học không chạy; kẻ biết PIN được allow 68% (6 số: 28%) |
 | E27/E27b | Bot thích nghi; ngưỡng phát lại | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Phát lại ±15% trở lên và bot biết mẫu chuẩn qua mặt |
 
 **Chưa chạy / chưa có số:** E3 (hiệu chỉnh ánh xạ điểm chủ trên dữ liệu đội), E6, E8 (kế hoạch trong `docs/research/research-plan.md`); gộp PIN + câu; kiểu gõ tiếng Việt trên người thật; bot thật; dữ liệu của đội. Đường ống cho dữ liệu đội: `team_analysis.py` (T1–T5), `team_data_dryrun.py` (thử ống bằng dữ liệu giả), `train_human_model.py --export ... --out ...`.

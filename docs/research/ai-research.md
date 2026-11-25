@@ -448,6 +448,17 @@ Mã: `research/experiments/e24_end_to_end.py` (gồm E25, E27, E27b), `e26_laten
 
 **E26, độ trễ local (TestClient, SQLite, không mạng):** `POST /sessions` p50 2,2 ms / p95 2,9 ms; `/score` p50 3,8 ms / p95 4,7 ms / p99 6,2 ms. **Lần gọi đầu từng mất ~1 s** (nạp mô hình LightGBM lười). **Đã sửa 25/11:** `main.py` nạp sẵn hai mô hình khi khởi động; đo lại: `/score` p50 3,7 ms, p99 14,2 ms, max 36,5 ms. Chi phí nạp chuyển sang khởi động nguội trên Vercel (chưa đo Vercel/Neon).
 
+### E28 — PIN 4 số (web demo) so với PIN 6 số (25/11)
+
+Mã: `research/experiments/e28_pin_length.py`; bảng: `research/results/e28_pin_length.md`. Cùng 10 người chưa từng thấy bởi cả hai mô hình học và giao thức E24 (người nhận quen). PIN 4 số mô phỏng bằng cách cắt 4 lần chạm đầu của phiên 6 số thật (**xấp xỉ**).
+
+| PIN | Mô hình chủ học chạy? | Chủ ngồi: allow / step_up / hold | Kẻ biết PIN: allow / step_up / hold |
+|---|---|---|---|
+| 6 số | có | 81% / 19% / 0% | 28% / 70% / 2% |
+| **4 số** | **không** (rơi về khoảng cách) | 90% / 7% / 3% | **68% / 30% / 2%** |
+
+`owner_model.predict` trả None khi thiếu đặc trưng của 6 phím, và web demo dùng PIN 1593 (4 số): kịch bản "người thứ hai biết PIN thì bị `step_up`" sẽ chỉ xảy ra ~30% lần (kẻ gian ở đây dùng máy khác, nên số thật có thể khác). **Nên đổi PIN demo sang 6 số** (trang thu dữ liệu đã dùng 6 số) hoặc huấn luyện mô hình chủ cho PIN 4 số.
+
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).
