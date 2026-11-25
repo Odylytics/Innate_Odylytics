@@ -146,9 +146,9 @@ def test_bot_meta_requires_tactic(client):
         assert client.post("/v1/sessions", json=dict(body, meta=meta), headers=H).status_code == code
 
 
-def test_wallet_page_served(client):
-    r = client.get("/")
-    assert r.status_code == 200 and "Innate SDK" in r.text
+def test_root_redirects_to_docs(client):
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/docs"
 
 
 def _replayed(src: dict, user: str, rng: random.Random, noise: float = 0.05) -> dict:

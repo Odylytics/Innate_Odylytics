@@ -3,11 +3,10 @@ import os
 import secrets
 import time
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -99,13 +98,10 @@ def _enroll_status(db: Session, user: User) -> dict:
     return {"user_id": user.id, "enrolled_sessions": n, "template_ready": user.template is not None}
 
 
-_WALLET = (Path(__file__).parent / "static" / "wallet.html").read_text(encoding="utf-8")
-
-
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-def wallet():
-    """Ví demo + SDK thu tín hiệu (một trang tĩnh)."""
-    return _WALLET
+@app.get("/", include_in_schema=False)
+def root():
+    """Không còn ví demo web: trang gốc chuyển sang Swagger."""
+    return RedirectResponse("/docs")
 
 
 @app.get("/health", tags=["system"])

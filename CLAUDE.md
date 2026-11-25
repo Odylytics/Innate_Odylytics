@@ -9,7 +9,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - Technical identifiers still say `nhip` on purpose, to avoid breaking the live deploy: env vars `NHIP_*`, Python package `nhip_attacker`, Vercel project `nhip-api` / URL `nhip-api-taupe.vercel.app`, Neon DB `nhip-db`, localStorage keys `nhip_*`. Rename them together with a redeploy (and a new URL for the submission PDF) if/when wanted.
 
 ## Scope (24/11/2026)
-- Focus is the AI core (`backend/app/scoring/`, `attacker/`). The web/demo is built later by other team members: do NOT work on the wallet (`app/static/wallet.html`), the `nhip-api` deploy, or the dashboard unless asked. Code stays in the repo.
+- Focus is the AI core (`backend/app/scoring/`, `attacker/`). This repo holds only the API and a mobile demo app (to be built); the landing page is the separate `Innate_website` repo and the web demo/wallet were removed (25/11/2026). Do NOT work on the `nhip-api` deploy unless asked. Code stays in the repo.
 - AI research: `docs/research/ai-research.md` (design, experiments E1–E7), `docs/research/datasets.md` (verified dataset links), `research/` (experiment code; E1/E2 proxy done on DSL-StrongPassword).
 
 ## Deadlines (2026)
@@ -28,7 +28,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - `docs/contest/` — rules summary + `submission-checklist.md` (what must be submitted, by 03/12).
 - `docs/research/` — `research-plan.md` (R1–R8), `tech-notes.md` (findings), `paper-report.md`, `notes/`. `papers/` — PDFs (keep out of the submission zip).
 - `SessionIn.fields` = text-field events (amount/recipient/note): only time, kind (key/paste/delete/set_text) and char count, NEVER content. `set_text` on `amount` => rule `text_set_without_keys` (unvalidated, R9). Web SDK cannot emit `set_text`.
-- `backend/app/static/wallet.html` — demo wallet + JS SDK (6-digit demo PIN 159357), served at `/`.
+- `/` redirects to Swagger (`/docs`); the web demo wallet + JS SDK (`wallet.html`) was removed, no SDK in this repo yet.
 - Population-variance shrinkage for TIMING features is in `owner.py` (`population_prior.json`, nu=5; off with `NHIP_POP_PRIOR=off`); offsets deliberately keep the sd floor (shrinking them hurts, E10). Human/bot LightGBM is wired in `/score` via `scoring/human_model.py` (optional, `NHIP_HUMAN_MODEL=off`; model files in `app/models/` are TEMPORARY: StrokePIN humans + generator bots). Both derive from CC BY-NC-SA 4.0 data: declare in the submission README.
 - Text-field bot signals (E11, real Aalto typists, note field only): naive bots (set_text, even typing) caught ~100% only when the model has seen them; unseen even-typing bots 0%; replay 6%, population-sampling 31% (58% with extra rhythm stats not yet in `bot_features.py`). Amount-field `set_text` rule still unvalidated (no human data). Attacker can emit fields via `generate(..., with_fields=True)`.
 - Learned owner verifier (E12b, no contact-size to avoid device confound): wired via `owner_model.py` (`NHIP_OWNER_MODEL=off`), TEMPORARY. LightGBM cuts FAR@FRR5% 0.573->0.375 same posture, no EER gain same posture; owner still can't be a gate. "Innate Challenge" (type a random letters+digits phrase at step-up): design in `docs/plan/innate-challenge.md`, E13 shows more keystrokes help (EER 0.364->0.245 from 6 to 30 keys, timing-only, Aalto); backend accepts `fields[name="challenge"]` with `expected_len`, no UI/phrase generator yet.

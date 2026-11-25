@@ -31,7 +31,7 @@ All are 1:1 verification. Outputs are fused with context (new recipient, unusual
 
 | Part | What | Where |
 |---|---|---|
-| API + SDK | FastAPI scoring service, JS SDK (Pointer Events; only timings/coordinates/event kinds, no content), demo wallet | `backend/` |
+| API | FastAPI scoring service (the mobile demo app will send only timings/coordinates/event kinds, no content) | `backend/` |
 | Learned models (interim) | LightGBM human-vs-bot and owner-match models, population prior; all optional with rule/distance fallback | `backend/app/models/`, `backend/app/scoring/` |
 | Bot simulator | 4 tactics (even taps → timing noise → replay → sampling human distributions), text-field bots, real-phone `adb` attack | `attacker/` |
 | Research | every experiment (E1–E13) with code and result tables | `research/`, `docs/research/ai-research.md` |
@@ -68,7 +68,7 @@ Python 3.11+, [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
 cd backend && uv sync --extra ml        # ml = LightGBM + NumPy (optional)
-uv run uvicorn app.main:app --reload --port 8000    # demo wallet at /, Swagger at /docs (local default key: demo-key, demo PIN 159357)
+uv run uvicorn app.main:app --reload --port 8000    # Swagger at /docs (local default key: demo-key)
 uv run pytest -q                        # 28 tests
 cd ../attacker && uv sync && uv run pytest -q       # 8 tests
 ```
