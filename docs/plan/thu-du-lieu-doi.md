@@ -27,6 +27,17 @@ Chỉ **thời gian, toạ độ, kích thước chạm, loại sự kiện, s�
 >
 > Họ tên: ____ · Ngày: ____ · Chữ ký / xác nhận: ____ · Mã tham gia (đội điền): ____
 
+## Chạy phân tích (một lệnh)
+```bash
+# 1) xuất dữ liệu (key ML), theo trang tới khi hết header X-Next-Offset
+curl -s -H "X-API-Key: $NHIP_ML_KEY" "https://nhip-api-taupe.vercel.app/v1/export?limit=500&offset=0" > page0.json   # lặp với offset từ X-Next-Offset, gộp thành export.jsonl
+# 2) T1–T5 một lệnh, ra research/results/team_analysis.md
+python research/experiments/team_analysis.py export.jsonl
+# 3) huấn luyện lại người/máy: BẮT BUỘC --out để không ghi đè mô hình đang chạy
+python research/experiments/train_human_model.py --export export.jsonl --out /tmp/models --no-strokepin --no-generated
+```
+Thử đường ống bằng dữ liệu GIẢ trước khi thu thật: `research/experiments/team_data_dryrun.py` (dựng backend local, gửi phiên có `meta`, xuất, chạy 2 bước trên; **số in ra là giả**, chỉ để bắt lỗi ống). Lần chạy thử 25/11 đã bắt được một lỗi backend (`owner.score` tràn số, xem commit) và hai lỗi script.
+
 ## Phân tích sau khi thu (đã có sẵn mã)
 - Nhận chủ theo thời gian (buổi 1 vs 2): `research/experiments/e9_strokepin_owner.py` làm mẫu, thay nguồn dữ liệu.
 - Người/máy trên bot thật: `train_human_model.py`, giữ bot `adb` làm tập kiểm độc lập.

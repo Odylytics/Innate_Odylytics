@@ -36,3 +36,10 @@ def test_falls_back_to_floor_when_prior_is_missing(monkeypatch):
     monkeypatch.setattr(owner, "_PRIOR", {})
     tpl = owner.build_template(_enroll())
     assert tpl["sd"]["pin_hold_0"] == owner._floor("pin_hold_0", 90.0)
+
+
+def test_score_does_not_overflow_on_extreme_deviation():
+    tpl = owner.build_template(_enroll())
+    f = {k: v + 1e6 for k, v in _enroll()[0].items()}  # lệch hàng triệu sd
+    m, _ = owner.score(f, tpl)
+    assert m is not None and 0.0 <= m < 1e-9
