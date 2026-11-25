@@ -389,6 +389,37 @@ Mã: `research/experiments/aalto_note_chars.py` (giữ chữ cái, gitignored, c
 
 **Kết quả gần như không đổi** (cải thiện ≤ 1,1 điểm EER, khoảng tin cậy chạm nhau). So hồ sơ theo từng cặp phím **làm tệ hơn** vì hai câu ngẫu nhiên chỉ chung ~6,5 cặp phổ biến ở 30 phím. Kết luận: với câu đổi mỗi lần, chuẩn hoá nội dung không phải đòn bẩy; kênh không phụ thuộc câu (kiểu gõ tiếng Việt) và nhiều phím hơn quan trọng hơn. Chưa đưa vào backend. Công trình liên quan: [`related-work.md`](related-work.md).
 
+### E22 — cách giảm FAR của Innate Challenge (Aalto, 939 người đánh giá, 30 phím, 25/11)
+
+Mã: `research/experiments/aalto_note_orient.py`, `e22_improve_far.py`; bảng: `research/results/e22_improve_far.md`. Giao thức E13 (câu thử khác câu đăng ký); khoảng tin cậy bootstrap theo người.
+
+| Cấu hình | EER | FAR@FRR5% |
+|---|---|---|
+| 6 đặc trưng thô, K=1 câu đăng ký | 0,288 | 0,625 |
+| K=3 (như E13) | 0,253 | 0,517 |
+| K=5 | 0,246 | 0,471 |
+| K=8 | 0,235 | 0,457 |
+| thô + chuẩn hoá cặp phím (12), K=3 | 0,248 | 0,502 |
+| **+ mô hình học (LightGBM trên vector lệch), K=3** | **0,227** | **0,429** |
+| + tư thế cầm máy (góc nghiêng), K=3 | 0,144 | 0,277 |
+
+- **Thêm câu đăng ký giúp nhưng giảm dần:** 1 → 3 câu cắt FAR 10 điểm, 3 → 8 câu chỉ thêm 6 điểm.
+- **Mô hình học giúp ~7 điểm FAR** (0,502 → 0,429), cùng hướng với E12b.
+- **Góc nghiêng thiết bị cho số đẹp nhất (FAR 0,277) nhưng KHÔNG nên tin:** mọi câu của một người nằm trong một buổi nên tư thế trùng giữa đăng ký và thử (E9: đổi tư thế gần như mất tín hiệu, EER 0,309). Trên điện thoại thật cần xin quyền cảm biến (iOS Safari), là dữ liệu nhạy cảm, và chỉ đo được "đang cầm kiểu nào". Không đưa vào sản phẩm khi chưa có dữ liệu hai buổi.
+- Bảng đánh đổi FRR/FAR (E13 thô, 30 phím): FRR 5% → FAR 49%; 10% → 39%; 20% → 29%; 30% → 22%; 40% → 17%.
+
+### E23 — thêm chuyển động điện thoại vào nhận chủ (StrokePIN, 97 người, 25/11)
+
+Mã: `research/experiments/e23_imu_fusion.py`; bảng: `research/results/e23_imu_fusion.md`. Giao thức E9; đặc trưng IMU: trọng lực (trung bình, độ lệch theo trục), độ rung gia tốc và con quay. Bộ phát hiện E2 (co rút về dân số), k = 3 lượt đăng ký.
+
+| Bộ đặc trưng | Cùng tư thế (ngồi): EER / FAR@FRR5% | Đổi tư thế (đi): EER / FAR@FRR5% |
+|---|---|---|
+| PIN (thời gian + lệch tâm) | 0,197 / 0,692 | 0,374 / 0,936 |
+| Chỉ chuyển động | 0,038 / 0,030 | 0,441 / 0,913 |
+| PIN + chuyển động | 0,057 / 0,075 | 0,420 / 0,910 |
+
+**Không tin được số này:** mỗi người một điện thoại, nên gia tốc/trọng lực mang **dấu vết thiết bị** (độ lệch cảm biến, góc cầm) chứ không chỉ thói quen người; kẻ gian trong dữ liệu dùng máy khác. Cùng lỗi đã loại kích thước chạm (E12b). Kịch bản kẻ gian cầm đúng điện thoại của nạn nhân không được mô phỏng. **Đổi tư thế thì mất hết (EER 0,42–0,48).** StrokePIN lấy gia tốc/con quay ~5 Hz nên không kiểm được khớp thời điểm chạm và cú giật. Kết luận: chuyển động là ứng viên cho cổng chống bot ("có tay cầm"), chưa chứng minh được cho nhận chủ. Thiết kế 4 kênh: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
+
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).
