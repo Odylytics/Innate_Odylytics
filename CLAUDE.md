@@ -9,7 +9,7 @@ Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnam
 - Technical identifiers still say `nhip` on purpose, to avoid breaking the live deploy: env vars `NHIP_*`, Python package `nhip_attacker`, Vercel project `nhip-api` / URL `nhip-api-taupe.vercel.app`, Neon DB `nhip-db`, localStorage keys `nhip_*`. Rename them together with a redeploy (and a new URL for the submission PDF) if/when wanted.
 
 ## Scope (24/11/2026)
-- Focus is the AI core (`backend/app/scoring/`, `attacker/`). This repo holds only the API and a mobile demo app (to be built); the landing page is the separate `Innate_website` repo and the web demo/wallet were removed (25/11/2026). Do NOT work on the `nhip-api` deploy unless asked. Code stays in the repo.
+- Focus is the AI core (`backend/app/scoring/`, `attacker/`). This repo holds the API (`backend/`), the AI research, the bot simulator and the website `web/` (landing page + web demo wallet + guided story + ops dashboard, one Vite app; see `web/README.md`); a mobile demo app is to come. The standalone `Innate_website` repo is superseded by `web/` (26/11/2026). Do NOT work on the `nhip-api` deploy unless asked. Code stays in the repo.
 - AI research: `docs/research/ai-research.md` (design, experiments E1–E7), `docs/research/datasets.md` (verified dataset links), `research/` (experiment code; E1/E2 proxy done on DSL-StrongPassword).
 
 ## Deadlines (2026)

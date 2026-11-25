@@ -89,4 +89,4 @@ Config (env): `DATABASE_URL`, `NHIP_API_KEYS` / `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`
 
 ## Status
 
-Contest deadline **2026-12-03 23:59** (product online until 2026-12-11). Next: collect real sessions from consenting participants, real bots via `adb`/`dispatchGesture`, retrain and recalibrate, a controlled re-enrolment path, deployment (the Vercel preview currently fails) and a mobile demo app. The landing page lives in its own repository (`Innate_website`). Submission material: [`docs/submission/`](docs/submission/).
+Contest deadline **2026-12-03 23:59** (product online until 2026-12-11). Next: collect real sessions from consenting participants, real bots via `adb`/`dispatchGesture`, retrain and recalibrate, a controlled re-enrolment path, deployment (the Vercel preview currently fails) and a mobile demo app. The website (landing page + web demo) is in [`web/`](web/). Submission material: [`docs/submission/`](docs/submission/).
