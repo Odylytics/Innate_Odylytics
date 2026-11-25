@@ -30,7 +30,7 @@ Gợi ý: giữ câu ngẫu nhiên làm cổng chống bot/phát lại; câu c�
 
 ## Bot có bị bắt không?
 - **Bot ngây thơ** (script, `adb`, mã độc cơ bản): có, kênh chạm/vuốt và PIN đã bắt ~100%; kênh chuyển động thêm "không có tay cầm".
-- **Bot khôn** (lấy mẫu từ dân số, giả cảm biến): **không đảm bảo**. Đây là giới hạn đã biết (E4b: 20–73%; ActReal). Lợi thế duy nhất của hợp nhất là buộc kẻ tấn công giả nhất quán nhiều kênh.
+- **Bot khôn** (lấy mẫu từ dân số, giả cảm biến): **không đảm bảo**. Đây là giới hạn đã biết (E4b: 20–73%; ActReal). E24/E27 (chạy đúng chuỗi `/score`, StrokePIN, chưa có kênh chuyển động và câu gõ) đo cụ thể: bot **biết mẫu chuẩn** của nạn nhân được `allow` 75–82%, phát lại có nhiễu ±15–30% được `allow` 48–72%; bot lấy mẫu dân số (CT4) chỉ `allow` 7% ([`../../research/results/e24_end_to_end.md`](../../research/results/e24_end_to_end.md)). Lợi thế duy nhất của hợp nhất là buộc kẻ tấn công giả nhất quán nhiều kênh; chưa đo kênh chuyển động và câu gõ có kéo các con số này xuống không.
 - **Độc lập thì nhân, tương quan thì không:** nếu 4 kênh độc lập, FAR có thể nhân (vd. 37,5% × 43% ≈ 16%), nhưng cùng một tư thế, cùng một máy, cùng một phiên thì chúng **tương quan**, đừng nhân khi chưa đo.
 
 ## Việc nên làm tiếp (theo giá trị)

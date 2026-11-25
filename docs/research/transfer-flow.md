@@ -64,7 +64,7 @@ Không có bộ dữ liệu công khai nào cho việc chọn ngân hàng trong 
 | Ô số tài khoản | Dùng tạm `fields[name="recipient"]`: chỉ có thời gian, loại sự kiện, số ký tự; **không có toạ độ chạm** | Thêm danh sách chạm cho ô số tài khoản (như `pin_taps` nhưng không có nhãn phím), hoặc tính đặc trưng ngay trên máy |
 | Chọn ngân hàng | Không có | Thêm sự kiện chọn: thời điểm, có chạm thật đi trước hay không, các cú cuộn |
 | Luật `set_text` / chọn không có chạm | Chỉ có cho ô số tiền | Mở rộng cho số tài khoản và ngân hàng |
-| Mô hình người hay máy cho ô văn bản (E11) | Chỉ trong `research/`, chưa gắn vào `/score` | Gắn vào, rồi huấn luyện lại cho chữ số |
+| Mô hình người hay máy cho ô văn bản (E11) | Đã gắn một phần: LightGBM người/máy trong `/score` dùng 7 đặc trưng `fld_*` (`bot_features.py`: tỉ lệ `set_text`/dán/xoá, nhịp giữa phím trung bình và CV, `set_text` ở ô số tiền). Chưa có các thống kê nhịp bổ sung của E11 | Thêm thống kê nhịp còn thiếu, rồi huấn luyện lại cho chữ số |
 | Nhận ra chủ qua nhịp gõ số tài khoản | Không có | Đặc trưng không phụ thuộc nội dung (mục 2), chạy E14 trước |
 
 ## 4. Thí nghiệm đề xuất
@@ -143,4 +143,6 @@ Nguồn: [Timo](https://timo.vn/blogs/so-tai-khoan-ngan-hang-la-gi-nhung-dieu-ba
 3. Người biết PIN: gõ tay mọi bước → nhịp gõ số tài khoản và PIN không khớp chủ → `step_up`.
 4. (Tuỳ chọn) Nạn nhân bị lừa: dán số tài khoản lạ, người nhận mới, số tiền lớn → `step_up` vì ngữ cảnh, kèm cảnh báo. Nói rõ trên sân khấu đây là ngữ cảnh, không phải nhận ra kẻ lừa.
 
-Bước 2 và 3 của kịch bản cần **app native**: web không thấy `set_text` và chọn không có chạm.
+Bước 3 không chắc ra `step_up`: theo E24 (toàn hệ thống, StrokePIN), kẻ biết PIN vẫn được `allow` 28%, và 90% nếu tắt hai mô hình học (API online hiện chỉ chạy luật, xem [`../plan/web-demo.md`](../plan/web-demo.md)). Trên sân khấu nên nói "thường bị hỏi thêm", không nói "luôn bị chặn".
+
+Bước 2 của kịch bản cần **app native**: web không thấy `set_text` và chọn không có chạm.

@@ -1,7 +1,7 @@
 # Demo trên website cho ban giám khảo
 
 > Ghi chú 25/11/2026. Nhóm dùng Mac + iPhone, app native chưa có. Mục tiêu: một link giám khảo mở được ngay (yêu cầu "dùng thử online" của thể lệ), đến hết 11/12.
-> Code web nằm ở thư mục `web/` của repo này (landing `#/` + demo `#/demo` + kịch bản `#/demo?story=1` + vận hành `#/ops`). API ở `backend/`. (Repo `Innate_website` cũ đã được gộp vào đây ngày 26/11.)
+> Code web nằm ở thư mục `web/` của repo này (landing `#/` + demo `#/demo` + kịch bản `#/demo?story=1` + vận hành `#/ops`). API ở `backend/`. (Repo `Innate_website` cũ đã được gộp vào đây ngày 25/11.)
 
 ## 1. Giám khảo sẽ trải nghiệm gì
 
@@ -50,7 +50,9 @@ Web làm được phần lớn, trừ hai tín hiệu mã độc chỉ app nativ
 | Mã độc đặt thẳng số tài khoản (`set_text`) | **Không thu được** từ trình duyệt | Bảng điều khiển kẻ tấn công gửi phiên giả có `set_text`; API bắt bằng luật. Ghi rõ "mô phỏng" |
 | Mã độc chọn ngân hàng không có chạm | **Không thu được** | Như trên |
 
-Cần sửa API trước (xem [`../research/transfer-flow.md`](../research/transfer-flow.md) mục 3): ô số tài khoản có toạ độ chạm nhưng **không gửi nhãn phím**, sự kiện chọn ngân hàng, mở rộng luật `set_text` cho hai bước này. Sau đó mới thêm màn hình vào ví web và kịch bản.
+**Hiện trạng (25/11):** ví web đã có màn chọn ngân hàng và bàn phím số tài khoản (`web/README.md`), nhưng dùng tạm schema cũ: số tài khoản gửi vào `fields[name="recipient"]` (chỉ thời gian và số ký tự, không toạ độ, không nhãn phím); chưa có sự kiện chọn ngân hàng. Phiên mã độc giả (`synth.ts`) đặt `set_text` vào cả `recipient` lẫn `amount`, nhưng luật chỉ bắt `set_text` ở `amount`; `set_text` ở `recipient` chỉ đi vào mô hình học qua `fld_set_text_frac` (mà API online đang tắt).
+
+Còn phải sửa API (xem [`../research/transfer-flow.md`](../research/transfer-flow.md) mục 3): ô số tài khoản có toạ độ chạm nhưng **không gửi nhãn phím**, sự kiện chọn ngân hàng, mở rộng luật `set_text` cho hai bước này; rồi cập nhật ví web cho khớp.
 
 ## 5. Thứ tự đề xuất (hạn nộp 03/12)
 
