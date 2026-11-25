@@ -22,7 +22,7 @@ uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-- Swagger: http://localhost:8000/docs → bấm **Authorize**, nhập `demo-key` (key SDK). Muốn thử dashboard/export ở local thì đặt thêm `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`.
+- Swagger: http://localhost:8000/docs (`/` cũng chuyển về đây) → bấm **Authorize**, nhập `demo-key` (key SDK). Muốn thử dashboard/export ở local thì đặt thêm `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`.
 - Kiểm thử: `uv run pytest -q` (7 bài, ~2 giây). SQLite trong test bật kiểm tra khoá ngoại để giống Postgres.
 
 ### Biến môi trường
@@ -95,7 +95,7 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 ```
 
 - `name`: `amount | recipient | note | name`. `kind`: `key` (gõ ký tự), `paste` (dán), `delete`, `set_text` (văn bản đổi mà **không có sự kiện phím**, vd. Trợ năng `ACTION_SET_TEXT`; chỉ SDK native phát hiện được).
-- Web SDK (`wallet.html`) phát `key`, `paste`, `delete` từ sự kiện `input`; không phát `set_text`.
+- Web SDK cũ (`wallet.html`, đã bỏ) chỉ phát `key`, `paste`, `delete` từ sự kiện `input`; không phát `set_text`.
 - Luật baseline: `set_text` ở ô **số tiền** bị coi là máy (`text_set_without_keys`, giữ lệnh); ở ô khác chỉ trừ điểm nhẹ vì autofill/danh bạ cũng có thể đặt văn bản không qua phím. Ngưỡng **chưa kiểm chứng trên máy thật** (R9).
 - Nhịp gõ trong ô (≥ 4 phím) thành đặc trưng nhận dạng chủ `fld_<ô>_gap_mean/std`; muốn có trong mẫu chuẩn thì lượt đăng ký phải gõ cả các ô đó.
 
