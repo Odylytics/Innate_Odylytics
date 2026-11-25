@@ -1,0 +1,15 @@
+số âm tiết có chỗ chọn dấu thanh của từng câu:
+   5  tuần này trời nắng đẹp quá
+   6  tháng này tiền điện nước hơi nhiều
+   6  hẹn gặp lại bạn vào tuần sau
+   5  chuyển khoản tiền ăn tuần trước nhé
+   4  những buổi chiều mưa nhớ người xưa
+   4  cuối tuần mình ra biển chơi nhé
+   4  trời trong gió mát lòng người vui
+   4  hôm nay trời đẹp quá mình đi uống cà phê nhé
+
+AUC phân biệt chủ (p=0.8 muộn) và người khác (p=0.4), đăng ký 3 phiên cùng câu số âm tiết k:
+   k  |    1 |    2 |    3 |    4 |    5 |    6 |    8
+  AUC | 0.66 | 0.69 | 0.71 | 0.78 | 0.81 | 0.84 | 0.89
+
+khoảng cách thói quen nhỏ hơn (0.8 vs 0.6), k=5: 0.64 | lớn hơn (0.9 vs 0.2): 0.99

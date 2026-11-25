@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .db import DATABASE_URL, Base, SessionLocal, TouchSession, User, engine
-from .scoring import explain, features, fusion, human, human_model, owner, owner_model, replay
+from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
 
 def _keys(var: str, default: str = "") -> list[str]:
     return [k.strip() for k in os.environ.get(var, default).split(",") if k.strip()]
@@ -110,6 +110,12 @@ def health():
 
 
 v1 = APIRouter(prefix="/v1")
+
+
+@v1.get("/challenge", tags=["sdk"], dependencies=[SDK])
+def get_challenge():
+    """Cấp câu thử thách tiếng Việt + token ký. App hiển thị câu, người dùng gõ lại, gửi events kèm `token` trong fields[name=challenge]."""
+    return challenge.issue()
 
 
 @v1.post("/sessions", response_model=schemas.SessionCreated, tags=["sdk"], dependencies=[SDK])

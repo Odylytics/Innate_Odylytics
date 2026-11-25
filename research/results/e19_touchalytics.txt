@@ -1,0 +1,21 @@
+nét vuốt: 20896, người: 41
+
+(a) độ thẳng nét người thật: trung vị 0.975, p99 0.9999, tỉ lệ > 0.999: 5.2690%
+    phiên 3 nét có max-thẳng > 0.999 (luật gắn cờ): 13.3856% của 6888 phiên
+    bot vuốt thẳng của attacker: thẳng min 1.0000 -> bị luật bắt 100%
+    bot + nhiễu ngang σ= 0px: bị luật bắt 100%, thẳng trung vị 1.0000
+    bot + nhiễu ngang σ= 1px: bị luật bắt 93%, thẳng trung vị 0.9997
+    bot + nhiễu ngang σ= 2px: bị luật bắt 43%, thẳng trung vị 0.9988
+    bot + nhiễu ngang σ= 5px: bị luật bắt 4%, thẳng trung vị 0.9929
+    bot + nhiễu ngang σ=10px: bị luật bắt 0%, thẳng trung vị 0.9699
+    nét 3-5 điểm:   1521 nét, tỉ lệ thẳng > 0.999 = 30.05%
+    nét 6-9 điểm:   5262 nét, tỉ lệ thẳng > 0.999 = 11.16%
+    nét 10-19 điểm:   3425 nét, tỉ lệ thẳng > 0.999 = 1.66%
+    nét 20-+ điểm:  10688 nét, tỉ lệ thẳng > 0.999 = 0.00%
+
+(b) xác minh chủ bằng vuốt (đặc trưng backend: dur, len, straight, v_mean, v_peak)
+    đăng ký doc1-5, thử doc6-7 (7-14 ngày sau, khác loại tác vụ): 11 người, FAR@FRR5% = 0.878, AUC = 0.519
+    cùng tác vụ đọc: đăng ký doc1-3, thử doc6: 11 người, FAR@FRR5% = 0.909, AUC = 0.515
+    cùng tác vụ ảnh: đăng ký doc4-5, thử doc7: không đủ người
+    cùng ngày, cùng tác vụ: đăng ký doc1-2, thử doc3: 40 người, FAR@FRR5% = 0.972, AUC = 0.483
+    chỉ v_peak + v_mean: 11 người, FAR@FRR5% = 0.911, AUC = 0.596

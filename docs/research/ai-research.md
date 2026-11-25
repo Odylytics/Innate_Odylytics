@@ -367,6 +367,28 @@ Thiết lập: đăng ký k=3 lượt **ngồi**; kiểm thử chủ (cùng tư 
 1. **Khác thiết bị giữa các người.** 94 cặp kích thước phím khác nhau trên 97 người, nên nhiều khả năng mỗi người dùng một điện thoại. Lệch tâm và kích thước chạm vì thế mang cả thông tin **thiết bị**. Trong kịch bản B thật, kẻ gian cầm **đúng điện thoại của nạn nhân**, nên khác biệt này biến mất. Vì vậy cải thiện nhờ lệch tâm/kích thước (0,201 → 0,158) là cận trên; con số sát thực tế hơn là hàng "thời gian" (EER ~0,20).
 2. PIN do người nghiên cứu giao (20 PIN chung, nhiều PIN yếu như 111111, 123456), người dùng không gõ PIN riêng đã thuộc; mỗi cặp chỉ ~5 lượt mỗi tư thế, đăng ký và kiểm thử trong cùng một đợt thu (chưa có khoảng cách nhiều ngày).
 
+### E18–E20 — câu thử thách tiếng Việt và vuốt trên người thật (25/11)
+
+- **E18** (`research/experiments/e18_vi_variation.py`): đếm lý thuyết số cách gõ một câu bằng Telex/VNI; trần 3,0 bit cho "Hôm nay trời đẹp quá" và 6,6 bit cho câu nhiều dấu thanh. Không phải đo người.
+- **E19 — Touchalytics, 41 người thật, 20.896 nét vuốt** (`e19_touchalytics.py`, `results/e19_touchalytics.txt`):
+  - Luật cũ `swipe_straight_max > 0.999` **gắn cờ nhầm 13,4% phiên 3 nét của người thật** (nét ít điểm gần như tự thẳng: 30% nét 3–5 điểm).
+  - **Vận tốc đều** (CV vận tốc < 0,3) gặp **0/20.896 lần ở người thật**, bắt 100% bot vuốt đều và bot nhiễu thời gian ±6 ms (kể cả bot có nhiễu ngang 5–10 px mà luật cũ bỏ lọt). Đã thay luật (`swipe_robotic`, cue `swipe_uniform_speed`, tối đa 0,7). Cận trên 95% của FPR theo từng nét ≈ 3/20.896 = 0,014%; **bot vẫn là bộ sinh của đội**, bot thật có thể giả vận tốc người.
+  - **Nhận chủ bằng 5 đặc trưng vuốt: AUC 0,48–0,60 (ngang đoán mò)**, kể cả cùng ngày cùng tác vụ (FAR@FRR5% 0,88–0,97). Đã **loại `swipe_*` khỏi nhận chủ** (`owner.is_identity_feature`). Giới hạn: chỉ 5 đặc trưng, pixel khác theo máy nên so trong cùng máy, 11 người đủ dữ liệu cho phép thử ngày 1 vs 7–14 ngày sau.
+- **E20 — mô phỏng** (`e20_vi_style_sim.py`): với giả định mỗi người có xác suất cố định gõ dấu thanh muộn, AUC tăng từ 0,66 (1 âm tiết có chỗ chọn) lên 0,78 (4) và 0,89 (8) cho cặp p = 0,8 vs 0,4; còn 0,64 ở cặp 0,8 vs 0,6. Dùng để chọn câu (≥ 4 âm tiết có chỗ chọn), **không** là bằng chứng về người Việt thật.
+
+### E21 / E21b — chuẩn hoá theo cặp phím (học theo TypeNet, Gunetti–Picardi), Aalto 1.000 người (25/11)
+
+Mã: `research/experiments/aalto_note_chars.py` (giữ chữ cái, gitignored, chỉ nghiên cứu), `e21_digraph_norm.py`, `e21b_digraph_profile.py`; bảng: `research/results/e21_digraph_norm.md`, `e21b_digraph_profile.md`. Giao thức E13, câu thử khác câu đăng ký.
+
+| Đặc trưng (30 phím) | EER | FAR@FRR5% |
+|---|---|---|
+| E13 thô (6) | 0,249 [0,243, 0,259] | 0,498 [0,473, 0,524] |
+| chuẩn hoá theo cặp phím (6) | 0,245 [0,236, 0,253] | 0,479 [0,456, 0,501] |
+| thô + chuẩn hoá (12) | **0,238** [0,228, 0,245] | **0,467** [0,446, 0,489] |
+| chỉ hồ sơ cặp phổ biến (E21b) | 0,326 | 0,772 |
+
+**Kết quả gần như không đổi** (cải thiện ≤ 1,1 điểm EER, khoảng tin cậy chạm nhau). So hồ sơ theo từng cặp phím **làm tệ hơn** vì hai câu ngẫu nhiên chỉ chung ~6,5 cặp phổ biến ở 30 phím. Kết luận: với câu đổi mỗi lần, chuẩn hoá nội dung không phải đòn bẩy; kênh không phụ thuộc câu (kiểu gõ tiếng Việt) và nhiều phím hơn quan trọng hơn. Chưa đưa vào backend. Công trình liên quan: [`related-work.md`](related-work.md).
+
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).
