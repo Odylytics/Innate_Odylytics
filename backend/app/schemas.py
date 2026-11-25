@@ -60,6 +60,7 @@ class TextField(BaseModel):
     # challenge = câu thử thách do hệ thống sinh và hiển thị, người dùng gõ lại (xem docs/plan/innate-challenge.md)
     name: Literal["amount", "recipient", "note", "name", "challenge"]
     expected_len: int | None = Field(default=None, ge=1, le=200)  # độ dài câu thử thách (chỉ để phát hiện dán/đặt thẳng)
+    token: str | None = Field(default=None, max_length=200)  # token từ GET /challenge: máy chủ biết câu mà không cần nội dung gõ
     events: list[InputEvent] = Field(default_factory=list, max_length=600)
 
 

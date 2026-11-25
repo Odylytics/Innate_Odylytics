@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Innate IME probe</title>
+<!-- Mở trên điện thoại thật (Gboard/iOS, Telex và VNI), gõ "trời đẹp quá", rồi bấm Sao chép log và gửi cho đội. Không gửi gì lên mạng. -->
+<style>body{font:16px system-ui;margin:16px}textarea,input{width:100%;box-sizing:border-box;font-size:18px}pre{white-space:pre-wrap;font-size:12px}</style>
+<p>Bàn phím: <b id="ua"></b></p>
+<input id="t" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" lang="vi" placeholder="gõ: trời đẹp quá">
+<p><button id="copy">Sao chép log</button> <button id="clr">Xoá</button></p>
+<pre id="log"></pre>
+<script>
+const t=document.getElementById("t"),log=document.getElementById("log"),rows=[];let prev=0,t0=null;
+document.getElementById("ua").textContent=navigator.userAgent;
+const add=(e)=>{t0??=performance.now();const L=t.value.length;rows.push([Math.round(performance.now()-t0),e.type,e.inputType||"",e.keyCode??"",e.key??"",e.isComposing??"",L-prev].join("\t"));prev=L;log.textContent="t\ttype\tinputType\tkeyCode\tkey\tcomposing\tdLen\n"+rows.join("\n")};
+["keydown","beforeinput","input","compositionstart","compositionupdate","compositionend"].forEach((n)=>t.addEventListener(n,add));
+document.getElementById("copy").onclick=()=>navigator.clipboard?.writeText(log.textContent).catch(()=>{});
+document.getElementById("clr").onclick=()=>{rows.length=0;log.textContent="";t.value="";prev=0;t0=null};
+</script>

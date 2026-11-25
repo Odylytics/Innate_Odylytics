@@ -293,7 +293,7 @@ def test_enrolled_user_without_pin_evidence_is_not_allowed(client):
     no_swipe = [dict(human_session("pin_u", OWNER, rng), swipes=[]) for _ in range(3)]  # mẫu chuẩn không có đặc trưng vuốt
     _enroll(client, "pin_u", no_swipe)
     swipe_only = {"user_id": "pin_u", "pin_taps": [],
-                  "swipes": [{"points": [{"t": 0, "x": 200, "y": 600}, {"t": 40, "x": 230, "y": 470},
+                  "swipes": [{"points": [{"t": 0, "x": 200, "y": 600}, {"t": 40, "x": 230, "y": 540},
                                          {"t": 90, "x": 290, "y": 330}]}]}
     r = _score(client, _post_session(client, swipe_only))
     assert r["owner_match"] == 0 and r["action"] != "allow", r
@@ -400,3 +400,10 @@ def test_owner_model_is_optional(monkeypatch):
     from app.scoring import owner_model
     monkeypatch.setattr(owner_model, "_state", {"m": None})
     assert owner_model.predict({"pin_hold_0": 0.1}) is None and not owner_model.loaded()
+
+
+def test_challenge_endpoint_issues_signed_phrase(client):
+    from app.scoring import challenge
+    r = client.get("/v1/challenge", headers=H)
+    assert r.status_code == 200 and challenge.verify(r.json()["token"]) == r.json()["phrase"]
+    assert client.get("/v1/challenge", headers={"X-API-Key": "sai"}).status_code == 401

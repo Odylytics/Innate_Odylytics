@@ -1,6 +1,8 @@
 import math
 from statistics import fmean, pstdev
 
+from . import challenge, vi_ime
+
 
 def _swipe_stats(points: list[dict]) -> tuple[float, float, float, float, float]:
     """(thời gian, độ dài đường đi, độ thẳng, vận tốc TB, vận tốc đỉnh)."""
@@ -15,6 +17,15 @@ def _swipe_stats(points: list[dict]) -> tuple[float, float, float, float, float]
     v_mean = path / dur if dur > 0 else 0.0
     v_peak = max((d / dt for d, dt in seg if dt > 0), default=0.0)
     return dur, path, straight, v_mean, v_peak
+
+
+def _speed_cv(points: list[dict]) -> float | None:
+    """Độ biến thiên (độ lệch chuẩn / trung bình) vận tốc giữa các điểm của nét; None nếu < 2 đoạn."""
+    sp = [math.hypot(b["x"] - a["x"], b["y"] - a["y"]) / (b["t"] - a["t"]) for a, b in zip(points, points[1:]) if b["t"] > a["t"]]
+    return pstdev(sp) / fmean(sp) if len(sp) >= 2 and fmean(sp) > 0 else None
+
+
+ROBOTIC_SPEED_CV = 0.3  # E19: 0/20.896 nét người thật (Touchalytics) dưới ngưỡng này; bot vuốt đều/nhiễu thời gian ±30% đều dưới
 
 
 def _key_gaps(events: list[dict]) -> list[float]:
@@ -45,6 +56,9 @@ def extract(raw: dict) -> dict[str, float]:
         for j, name in enumerate(["dur", "len", "straight", "v_mean", "v_peak"]):
             f[f"swipe_{name}_mean"] = fmean(s[j] for s in stats)
         f["swipe_straight_max"] = max(s[2] for s in stats)
+        cvs = [c for c in (_speed_cv(s["points"]) for s in raw["swipes"]) if c is not None]
+        if cvs:
+            f["swipe_robotic"] = sum(c < ROBOTIC_SPEED_CV for c in cvs) / len(cvs)  # tỉ lệ nét có vận tốc đều bất thường
 
     waits = [s["t_first_touch"] - s["t_enter"] for s in raw.get("screens", []) if s.get("t_first_touch") is not None]
     if waits:
@@ -64,6 +78,11 @@ def extract(raw: dict) -> dict[str, float]:
         expected = max((fl.get("expected_len") or 0) for fl in chal)
         pasted = sum(e["n"] for fl in chal for e in fl["events"] if e["kind"] == "paste")
         f["fld_challenge_paste"] = float(expected > 0 and pasted >= 0.5 * expected)
+
+    for fl in chal:
+        phrase = challenge.verify(fl.get("token"))
+        if phrase:
+            f.update(vi_ime.style_features(fl["events"], phrase))
 
     for fld in raw.get("fields", []):
         gaps = _key_gaps(fld["events"])

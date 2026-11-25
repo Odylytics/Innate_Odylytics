@@ -41,7 +41,7 @@ def human_session(user_id: str, p: Persona, rng: random.Random) -> dict:
     for _ in range(2):
         v = max(0.3, rng.gauss(p.swipe_v, p.swipe_v * 0.1))
         pts = [{"t": i * 20.0, "x": 200 + p.curve * (i / 5) ** 2 + rng.gauss(0, 1),
-                "y": 600 - v * 20 * i} for i in range(6)]
+                "y": 600 - v * 100 * (i / 5) ** 2 * (3 - 2 * i / 5)} for i in range(6)]  # tăng rồi giảm tốc như ngón tay (E19: người thật không vuốt đều)
         swipes.append({"points": pts})
     return {"user_id": user_id, "device_id": "demo_phone", "pin_taps": taps, "swipes": swipes,
             "screens": [{"name": "transfer", "t_enter": 0, "t_first_touch": rng.gauss(1200, 200) % 3000}]}

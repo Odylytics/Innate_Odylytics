@@ -28,9 +28,13 @@ def score(f: dict[str, float]) -> tuple[float, list[str]]:
         dist = fmean(math.hypot(f[f"pin_dx_{i}"], f[f"pin_dy_{i}"]) for i in range(n))
         cues["tap_exact_center"] = _clip((0.06 - dist) / 0.06)  # người thật lệch tâm ~0.1–0.25 bề rộng phím
 
-    if "swipe_straight_max" in f:
-        # tín hiệu yếu: vuốt người thật cũng rất thẳng (~0.998), nên một mình nó tối đa trừ 0.5
-        cues["swipe_perfectly_straight"] = 0.5 * _clip((f["swipe_straight_max"] - 0.999) / 0.0009)
+    if "swipe_robotic" in f:
+        # E19 (Touchalytics, 20.896 nét người thật): vận tốc đều (CV < 0.3) gặp 0 lần ở người thật. Luật "thẳng > 0.999" cũ gắn cờ nhầm 13% phiên 3 nét.
+        cues["swipe_uniform_speed"] = 0.7 * f["swipe_robotic"]
+
+    if "vi_ime_coverage" in f:
+        # câu thử thách có dấu mà không có phím biến đổi nào: đặt/dán/adb/bàn phím không có tiếng Việt. Tín hiệu MỀM (người dùng bàn phím gợi ý từ cũng vậy), chưa đo trên người Việt thật
+        cues["challenge_no_ime"] = 0.3 * (1 - f["vi_ime_coverage"])
 
     # shortcut: ngưỡng chưa kiểm chứng trên máy thật (R9). Autofill/danh bạ cũng có thể đặt văn bản không qua phím,
     # nên chỉ ô số tiền (người thật không autofill số tiền) bị coi là bằng chứng mạnh; ô khác chỉ trừ điểm nhẹ.
