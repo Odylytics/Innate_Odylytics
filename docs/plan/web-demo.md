@@ -29,6 +29,8 @@ Phát hiện:
 - **Chuột hay ngón tay không đổi kết quả** trên phiên giả (kích thước chạm không nằm trong đặc trưng người/máy). Nhịp bấm chuột thật của giám khảo chưa đo.
 - **API online hiện chỉ chạy luật**: Vercel không cài `lightgbm`. Bản online hiện cho đúng cột "tắt AI" ở trên.
 
+> **Bổ sung 25/11 (E28, người thật):** cắt 4 lần chạm đầu của PIN 6 số StrokePIN (xấp xỉ PIN 4 số), 10 người chưa từng thấy bởi mô hình học: với PIN 4 số kẻ biết PIN được `allow` **68%** (6 số: 28%), nên kịch bản "người biết PIN bị hỏi thêm" ở bản 4 số chỉ đúng khoảng 30% lần với người thật. Xem `docs/research/ai-research.md` (E28).
+
 ## 3. Việc cần làm để demo web chạy được
 
 | # | Việc | Ai / ở đâu | Ghi chú |

@@ -94,6 +94,9 @@ Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2
 | Luật vuốt (Touchalytics, 41 người, 20.896 nét) | Luật "vận tốc đều" (CV < 0,3): 0 nét người thật bị gắn cờ, bắt 100% bot vuốt đều/nhiễu thời gian ±6 ms. Luật cũ "thẳng > 0.999" gắn cờ nhầm 13,4% phiên người thật (đã thay). Nhận chủ bằng vuốt: AUC 0,48–0,60 (đã bỏ khỏi nhận chủ) | Bot là bộ sinh của đội; bot thật có thể giả vận tốc |
 | Innate Challenge tiếng Việt | **Chưa đo trên người Việt.** Có số mô phỏng và đếm lý thuyết (3–6,6 bit biến thể gõ Telex/VNI) | `../plan/innate-challenge-vi.md`; cần thu dữ liệu và thử Gboard/iOS thật |
 | Chuẩn hoá nhịp theo cặp phím (Aalto, 1.000 người) | Gần như không đổi (EER 0,249 → 0,238 ở 30 phím); không đưa vào sản phẩm | Kết quả âm tính, ghi để minh bạch |
+| **Toàn hệ thống** (E24; 10 người chưa thấy bởi cả hai mô hình học; kẻ biết PIN dùng máy khác) | Chủ 80% allow / 19% step_up / 1% hold; kẻ biết PIN 28% / 70% / 2%; bot ngây thơ và phát lại ≤ ±10% 100% hold | Số liệu mô hình học đo ở môi trường nghiên cứu |
+| **Bot thích nghi** (E27) | Phát lại nhiễu ±15–30%: 48–72% được cho qua; bot biết mẫu chuẩn: 75–82% qua | Giới hạn nói trước |
+| PIN 4 số (web demo) so với 6 số (E28) | PIN 4 số: mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%); xấp xỉ bằng cách cắt PIN 6 số | Demo giữ PIN 4 số, nói rõ |
 | Số liệu trên dữ liệu của đội | `TODO` | |
 
 Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.

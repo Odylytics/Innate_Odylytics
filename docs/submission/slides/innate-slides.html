@@ -35,6 +35,7 @@ ul { padding-left:24px } li { margin-bottom:8px }
 .flow { display:flex; align-items:stretch; gap:14px } .flow .card { flex:1 } .flow .sep { align-self:center; font-size:34px; color:var(--acc) }
 table { border-collapse:collapse; width:100% } td, th { padding:10px 14px; border-bottom:1px solid var(--line); font-size:19px; text-align:left } th { color:var(--mute); font-weight:600 }
 .ph { width:200px; border:1px solid var(--line); border-radius:22px; background:#fff; overflow:hidden }
+ul.sm li { font-size:20px; margin-bottom:6px }
 </style>
 </head>
 <body>
@@ -114,23 +115,23 @@ table { border-collapse:collapse; width:100% } td, th { padding:10px 14px; borde
   <div class="grid2">
     <div>
       <div class="card" style="background:#0e1729"><p class="mute" style="font-size:18px">Hệ thống hiện (ngẫu nhiên mỗi lần):</p>
-        <p style="font-size:38px;font-weight:800;letter-spacing:.04em;margin:8px 0">mua 4 ca phe 27</p>
-        <p class="mute" style="font-size:18px">Người dùng gõ lại đúng câu · ~10 giây</p></div>
-      <ul style="margin-top:20px">
-        <li><b>Nhiều tín hiệu hơn</b> 6 lần chạm PIN</li>
-        <li><b>Khó điền sẵn</b>: đặt thẳng/dán cả câu = dấu hiệu máy</li>
-        <li><b>Không lưu dữ liệu riêng tư</b>: nội dung câu do hệ thống sinh</li>
+        <p style="font-size:28px;font-weight:800;margin:6px 0">hẹn gặp lại bạn vào tuần sau</p>
+        <p class="mute" style="font-size:17px">Câu tiếng Việt do máy chủ chọn, gõ lại (Telex/VNI) · ~10 giây</p></div>
+      <ul class="sm" style="margin-top:14px">
+        <li><b>Nhiều tín hiệu hơn</b> 6 lần chạm PIN; thêm kiểu gõ dấu tiếng Việt (chưa đo)</li>
+        <li><b>Khó điền sẵn</b>: dán/đặt cả câu = dấu hiệu máy; token dùng một lần</li>
+        <li><b>Không lưu nội dung</b>: câu do hệ thống sinh</li>
         <li><b>Human Centered</b>: chỉ hỏi khi cần, luôn có đường thay thế</li>
       </ul>
     </div>
     <div class="card">
-      <h3>Đo trên người thật gõ câu (2.260 người)</h3>
+      <h3>Đo trên người thật gõ câu tiếng Anh (2.260 người)</h3>
       <p class="mute" style="font-size:17px;margin-bottom:10px">Nhận chủ: kẻ gian lọt ở FRR 5% (thấp hơn là tốt)</p>
       <div class="row"><span class="lbl">6 phím (≈ PIN 6 số)</span><span class="bar" style="width:324px;background:var(--bad)"></span><span class="val">81%</span></div>
       <div class="row"><span class="lbl">10 phím</span><span class="bar" style="width:293px;background:var(--bad)"></span><span class="val">73%</span></div>
       <div class="row"><span class="lbl">20 phím</span><span class="bar" style="width:236px;background:var(--warn)"></span><span class="val">59%</span></div>
       <div class="row"><span class="lbl">30 phím</span><span class="bar" style="width:196px;background:var(--acc)"></span><span class="val">49%</span></div>
-      <p class="mute" style="font-size:16px;margin-top:12px">Chỉ thời gian giữa phím; câu kiểm thử khác câu đăng ký. Cải thiện rõ nhưng <b>chưa phải cổng chặn</b>.</p>
+      <p class="mute" style="font-size:16px;margin-top:12px">Chỉ thời gian giữa phím; câu kiểm thử khác câu đăng ký; thêm mô hình học còn ~43% ở 30 phím. Cải thiện rõ nhưng <b>chưa phải cổng chặn</b>. Tiếng Việt chưa đo.</p>
     </div>
   </div>
   <div class="foot"><span>Innate</span><span>5 / 10</span></div>
@@ -173,7 +174,7 @@ table { border-collapse:collapse; width:100% } td, th { padding:10px 14px; borde
       <div class="row s"><span class="lbl">+ học máy, đổi tư thế</span><span class="bar" style="width:142px;background:var(--bad)"></span><span class="val">71%</span></div>
     </div>
   </div>
-  <p class="mute" style="font-size:16px;margin-top:8px">* Do kiểm tra phát lại riêng; bộ phân loại một mình chỉ bắt 12–26% phát lại.</p>
+  <p class="mute" style="font-size:16px;margin-top:8px">* Do kiểm tra phát lại riêng; bộ phân loại một mình chỉ bắt 12–26% phát lại. <b>Toàn hệ thống</b> (10 người chưa thấy, người nhận quen): chủ qua 80%; bot ngây thơ và phát lại ≤ ±10% bị giữ lệnh 100%.</p>
   <p style="margin-top:10px;font-size:21px"><b>Điều đo được rút ra:</b> Innate bắt chắc bot ngây thơ, nhưng điểm "chủ" chỉ là <b>tín hiệu rủi ro</b>: nên kích hoạt xác thực thêm (step_up), không chặn cứng.</p>
   <div class="foot"><span>Nguồn: StrokePIN (97 người, PIN 6 số), Aalto (2.260 người). Bot do bộ giả lập sinh. Chưa phải dữ liệu của đội.</span><span>7 / 10</span></div>
 </section>
@@ -191,7 +192,7 @@ table { border-collapse:collapse; width:100% } td, th { padding:10px 14px; borde
     <div class="card"><h3>Kịch bản demo (4 bước)</h3>
       <ul><li>Đăng ký nhịp 3–5 lần</li><li>Chuyển tiền bằng chính chủ → qua</li><li>Người thứ hai biết PIN → hỏi thêm</li><li>Bảng điều khiển bot → bị giữ lệnh</li></ul></div>
     <div class="card"><h3>Đã có trong mã nguồn</h3>
-      <ul><li>36 bài kiểm thử tự động</li><li>Mô hình học tuỳ chọn, có dự phòng</li><li>Bộ giả lập bot 4 chiến thuật + <code>adb</code></li><li>Mọi con số chạy lại được (<code>research/</code>)</li></ul></div>
+      <ul><li>55 bài kiểm thử tự động (43 + 8 + 4)</li><li>Mô hình học tuỳ chọn, có dự phòng</li><li>Bộ giả lập bot 4 chiến thuật + <code>adb</code></li><li>Mọi con số chạy lại được (<code>research/</code>)</li></ul></div>
   </div>
   <p class="mute" style="margin-top:14px;font-size:18px">Link dùng thử và tài khoản demo: xem PDF hướng dẫn sử dụng (≤ 1 trang A4).</p>
   <div class="foot"><span>Innate</span><span>8 / 10</span></div>
@@ -204,7 +205,7 @@ table { border-collapse:collapse; width:100% } td, th { padding:10px 14px; borde
   <div class="grid2">
     <div class="card"><h3>Chưa thể làm</h3>
       <ul>
-        <li><span class="tag t-bad">yếu</span>Bot <b>giống người</b>: lấy mẫu dân số bắt 20–73%; phát lại có nhiễu ≥15% qua mặt kiểm tra</li>
+        <li><span class="tag t-bad">yếu</span>Bot <b>giống người</b>: lấy mẫu dân số bắt 20–73%; phát lại nhiễu ±15–30% và bot biết mẫu chuẩn được cho qua 48–82%</li>
         <li><span class="tag t-bad">yếu</span>Nhận chủ: ~38% kẻ biết PIN vẫn lọt ở FRR 5%</li>
         <li><span class="tag t-warn">hạn chế</span>Đổi tư thế gần như mất tín hiệu</li>
         <li><span class="tag t-warn">hạn chế</span>Web SDK không thấy văn bản đặt thẳng: cần SDK native</li>

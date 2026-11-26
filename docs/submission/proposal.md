@@ -1,7 +1,7 @@
 # Innate — Đề xuất ý tưởng
 
 > MoMo Tech Contest 2026 · Chủ đề: **An ninh mạng + Chống lừa đảo** · Đề bài: *Imagine the Future Workspace — Human Centered. AI Powered.*
-> Bản nháp 24/11/2026. Mục `[TODO]` cần đội điền. Mọi con số lấy từ [`../research/ai-research.md`](../research/ai-research.md) và chạy lại được bằng mã trong `research/`.
+> Cập nhật 25/11/2026. Mục `[TODO]` cần đội điền. Mọi con số lấy từ [`../research/ai-research.md`](../research/ai-research.md) và chạy lại được bằng mã trong `research/`.
 
 ## 1. Tóm tắt
 
@@ -29,7 +29,7 @@ Khi điện thoại bị chiếm quyền, tiền rời đi bằng chính app, PI
 
 1. **Lớp kiểm chứng con người ở bước xác nhận giao dịch**, bổ sung cho các lớp có sẵn (thiết bị, xác thực, rủi ro giao dịch). Vị trí trong chồng bảo mật: [`../plan/positioning.md`](../plan/positioning.md).
 2. **Ba phép so khớp 1:1 từ cùng một phiên thao tác:** người hay máy (không cần đăng ký), có phải chủ (cần 3–5 lần đăng ký), phát lại phiên cũ. Hợp nhất thành quyết định `allow / step_up / hold` + lý do.
-3. **Innate Challenge:** khi không chắc, thay vì OTP hay quét mặt, hệ thống hiện một câu ngắn gồm chữ và số ngẫu nhiên và người dùng gõ lại (~10 giây). Nhiều phím hơn cho nhiều tín hiệu hơn (đo: EER nhận chủ 0,364 → 0,245 khi từ 6 lên 30 phím; xem [`../plan/innate-challenge.md`](../plan/innate-challenge.md)). Nội dung câu do hệ thống sinh nên không phải dữ liệu riêng tư.
+3. **Innate Challenge:** khi không chắc, thay vì OTP hay quét mặt, hệ thống hiện một câu tiếng Việt ngẫu nhiên (máy chủ chọn, token ký dùng một lần) và người dùng gõ lại (~10 giây). Nhiều phím hơn cho nhiều tín hiệu hơn (đo trên câu tiếng Anh: EER nhận chủ 0,364 → 0,245 khi từ 6 lên 30 phím; thêm mô hình học thì kẻ gian lọt còn ~43%; xem [`../plan/innate-challenge.md`](../plan/innate-challenge.md)). Gõ tiếng Việt qua Telex/VNI để lại thêm dấu vết (vị trí phím dấu thanh, sửa lỗi, có dùng bộ gõ hay không) mà một nhịp gõ bị phát lại không mang theo: **đây là giả thuyết chưa đo trên người Việt** ([`../plan/innate-challenge-vi.md`](../plan/innate-challenge-vi.md)). Nội dung câu do hệ thống sinh nên không phải dữ liệu riêng tư.
 4. **Trung thực về năng lực:** điểm "chủ" là tín hiệu rủi ro, không phải cổng. Thiết kế quanh điều đó (step_up, đăng ký nhiều tư thế, đường thay thế).
 
 ## 5. AI bên dưới
@@ -52,7 +52,10 @@ Khi điện thoại bị chiếm quyền, tiền rời đi bằng chính app, PI
 | Nhận chủ (StrokePIN, 97 người, PIN 6 số, kẻ gian biết PIN, 3 lần đăng ký) | Học máy cắt kẻ gian lọt ở FRR 5% từ **57% xuống 38%**; không cải thiện EER (0,16). Đổi tư thế (ngồi→đi): EER ~0,31, kẻ gian lọt 71% |
 | Người/máy (người thật chưa từng thấy; bot sinh) | Bot ngây thơ (nhịp đều, nhiễu thời gian): **bắt 100%**; lấy mẫu từ dân số: 61%; phân loại một mình chỉ bắt 12–26% phát lại |
 | Kiểm tra phát lại (hiệu chỉnh trên người thật) | Bắt **100%** phát lại có nhiễu ≤ 10%, 29% ở ±15%, 0% từ ±20%; nhầm chủ ~0,1% |
-| Innate Challenge (2.260 người gõ câu) | Kẻ gian lọt ở FRR 5% từ **81% xuống 49%** khi từ 6 lên 30 phím; bắt bot gõ đều AUC 0,92 → 0,996 |
+| Innate Challenge (2.260 người gõ câu tiếng Anh) | Kẻ gian lọt ở FRR 5% từ **81% xuống 49%** khi từ 6 lên 30 phím (còn ~43% với mô hình học); bắt bot gõ đều AUC 0,92 → 0,996. Tiếng Việt chưa đo |
+| **Toàn hệ thống** (E24, 10 người chưa từng thấy, người nhận quen) | Chủ: 80% allow / 19% step_up / 1% hold. Kẻ biết PIN (máy khác): 28% / 70% / 2%. Bot ngây thơ và phát lại ≤ ±10%: **100% hold** |
+| **Bot thích nghi** (E27) | Phát lại nhiễu ±15–30%: 48–72% được cho qua; bot biết mẫu chuẩn của nạn nhân: 75–82% qua. Là giới hạn nói trước |
+| Luật vuốt (E19, 41 người, 20.896 nét) | Luật vận tốc đều: 0 nét người thật bị chặn nhầm; luật "thẳng" cũ chặn nhầm 13% phiên (đã thay) |
 
 ## 7. Tác động
 

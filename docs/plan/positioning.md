@@ -61,6 +61,7 @@ Hợp nhất: điểm người/máy + điểm khớp chủ + ngữ cảnh (ngư�
 
 - Điểm "chủ": **EER ~16%; ở FRR 5% còn 38–57% kẻ gian biết PIN lọt** (E9, E10b, E12b: 57% khoảng cách cơ bản, 38% mô hình học); đổi tư thế gần như mất tín hiệu. Đây là **tín hiệu rủi ro, không phải cổng xác thực**.
 - Bot giống người (chiến thuật phát lại, lấy mẫu dân số) bị bắt yếu; kẻ tấn công thích nghi cấp hệ thống có thể qua mặt cả chạm lẫn cảm biến (Wang 2026, ActReal: 71–77%).
+- **Đo toàn hệ thống (E24, E27, 10 người chưa từng thấy bởi mô hình học):** chủ qua 80%, bot ngây thơ và phát lại nhiễu ≤ ±10% bị giữ lệnh 100%; nhưng phát lại nhiễu ±15–30% và bot biết mẫu chuẩn của nạn nhân được cho qua 48–82%. PIN 4 số (web demo) làm mô hình chủ học không chạy (E28).
 - Web SDK không thấy được văn bản đặt thẳng không qua phím; cần SDK native.
 - Chưa có bot thật (`adb`, `dispatchGesture`) và chưa có dữ liệu của đội trong bất kỳ số đo nào.
 
