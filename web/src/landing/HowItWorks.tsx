@@ -111,7 +111,7 @@ function Panel({ step }: { step: number }) {
       <div className="rounded-xl bg-canvas/5 p-4">
         <p className="font-mono text-[11px] uppercase tracking-wider text-mint">{l({ en: 'For the user', vi: 'Cho người dùng' })}</p>
         <p className="mt-2 text-[15px] leading-relaxed text-canvas">
-          Looks like a real person, but not the account owner's habits (PIN rhythm 40% slower, taps land to the left). Please confirm with a face check before this transfer.
+          {l({ en: 'Looks like a real person, but not the account owner’s habits (PIN rhythm 40% slower, taps land to the left). Please type a short sentence to confirm this transfer.', vi: 'Thao tác giống người thật nhưng không khớp thói quen của chủ tài khoản (nhịp PIN chậm hơn 40%, chạm lệch trái). Vui lòng gõ một câu ngắn để xác nhận giao dịch này.' })}
         </p>
       </div>
       <div className="rounded-xl bg-canvas/5 p-4">

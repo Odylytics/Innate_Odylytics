@@ -37,7 +37,7 @@ export const PERSONAS: Persona[] = [
   {
     id: 'lananh', name: 'Nguyễn Lan Anh', initials: 'LA', tone: 'navy',
     role: { en: 'Head of risk', vi: 'Trưởng bộ phận rủi ro' }, org: WALLET,
-    does: { en: 'Sets the thresholds: ask for a face check before blocking, and never lock an account automatically.', vi: 'Đặt ngưỡng: xác thực thêm trước khi chặn, không bao giờ tự khoá tài khoản.' },
+    does: { en: 'Sets the thresholds: ask before blocking, and never lock an account automatically.', vi: 'Đặt ngưỡng: xác thực thêm trước khi chặn, không bao giờ tự khoá tài khoản.' },
   },
 ]
 

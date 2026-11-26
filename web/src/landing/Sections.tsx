@@ -364,7 +364,7 @@ export function Decisions() {
   const l = useL()
   const items: { a: Action; when: TT; body: TT }[] = [
     { a: 'allow', when: { en: 'risk < 0.25', vi: 'rủi ro < 0.25' }, body: { en: 'The owner, behaving like the owner. No prompts, no extra steps: security you never notice.', vi: 'Chủ ví, thao tác như chính mình. Không hỏi thêm, không thêm bước: bảo vệ mà bạn không hề nhận ra.' } },
-    { a: 'step_up', when: { en: '0.25 – 0.55', vi: '0.25 – 0.55' }, body: { en: 'Something is off. Ask for a face check before the money moves, instead of blocking outright.', vi: 'Có gì đó lạ. Yêu cầu xác thực khuôn mặt trước khi chuyển tiền, thay vì chặn thẳng.' } },
+    { a: 'step_up', when: { en: '0.25 – 0.55', vi: '0.25 – 0.55' }, body: { en: 'Something is off. Ask for a short typed sentence before the money moves, instead of blocking outright.', vi: 'Có gì đó lạ. Yêu cầu gõ một câu ngắn trước khi chuyển tiền, thay vì chặn thẳng.' } },
     { a: 'hold', when: { en: 'risk > 0.55 or bot', vi: 'rủi ro > 0.55 hoặc bot' }, body: { en: 'Pause the transfer and tell the person. Innate suggests; it never locks an account on its own.', vi: 'Tạm giữ lệnh và báo cho người dùng. Innate chỉ đề xuất, không bao giờ tự khoá tài khoản.' } },
   ]
   return (
@@ -498,8 +498,8 @@ export function Developers() {
     "tap_offset_left",
     "new_recipient"
   ],
-  "explanation": "Looks like a real person,
-    but not the account owner's habits…"
+  "explanation_vi": "Thao tác giống người thật
+    nhưng không khớp thói quen chủ…"
 }`}
             </pre>
           </div>

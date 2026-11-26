@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ApiError, api, reasonText, type Flagged } from './api'
+import { ApiError, api, explanationText, reasonText, type Flagged } from './api'
 import { useT } from './i18n'
 
 type L = { en: string; vi: string }
@@ -92,7 +92,7 @@ export default function Ops() {
                       <td className="mono mini">{r.user_id}</td>
                       <td>{r.action && <span className={`status ${r.action === 'allow' ? 'matched' : r.action === 'step_up' ? 'sent' : 'discrepancy'}`}>{t(`act_${r.action}`)}</span>}</td>
                       <td className="n">{r.risk_score == null ? '—' : `${Math.round(r.risk_score * 100)}%`}</td>
-                      <td title={r.explanation_vi ?? ''}>{r.reasons.map((x) => reasonText(x, lang)).join(' · ')}</td>
+                      <td title={explanationText(r, lang)}>{r.reasons.map((x) => reasonText(x, lang)).join(' · ')}</td>
                       <td>
                         <div className="row" role="group" aria-label={tx({ en: 'Label', vi: 'Nhãn' })}>
                           <button className={`btn small ${r.label === 'fraud' ? '' : 'ghost'}`} aria-pressed={r.label === 'fraud'} onClick={() => label(r.session_id, 'fraud')}>{tx({ en: 'Fraud', vi: 'Gian lận' })}</button>

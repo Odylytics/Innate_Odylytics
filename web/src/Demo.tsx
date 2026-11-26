@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, api, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { ApiError, api, explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
 import { store } from './App'
 import BehindScenes from './BehindScenes'
 import type { Recorder } from './capture'
@@ -224,7 +224,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
                   <Meter label={t('riskScore')} v={outcome.risk_score} text={pct(outcome.risk_score)} danger />
                 </div>
                 {outcome.reasons.length > 0 && <ul className="pills reasons">{outcome.reasons.map((r) => <li key={r}>{reasonText(r, lang)}</li>)}</ul>}
-                <p className="pretty">{outcome.explanation_vi}</p>
+                <p className="pretty">{explanationText(outcome, lang)}</p>
                 <p className="muted mini mono">session {outcome.session_id}</p>
               </>
             ) : (
