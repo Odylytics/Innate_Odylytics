@@ -28,7 +28,7 @@ Web (`web/package.json`; licences from the npm registry):
 
 | Package | Licence |
 |---|---|
-| React, React DOM, Lenis, Vite, Vitest, @vitejs/plugin-react | MIT |
+| React, React DOM, Lenis, Vite, Vitest, @vitejs/plugin-react, qrcode-generator | MIT |
 | TypeScript | Apache-2.0 |
 | @dicebear/core, @dicebear/notionists (dev dependencies, used to pre-render avatars) | MIT |
 | Tailwind CSS (landing page only, per `web/README.md`) | MIT (`TODO: confirm it is still used; it is not in package.json`) |

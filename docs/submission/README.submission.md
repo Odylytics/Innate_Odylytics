@@ -52,7 +52,7 @@ Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng
 | FastAPI, Uvicorn, SQLAlchemy, psycopg | Backend API và lưu trữ |
 | LightGBM, NumPy | Mô hình người/máy (tuỳ chọn) |
 | scikit-learn, pandas, NumPy, LightGBM | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
-| React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
+| React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT), qrcode-generator (MIT, mã QR trên trang thu dữ liệu); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
 | psycopg (**LGPL-3.0**) | Kết nối Postgres, dùng nguyên bản như thư viện phụ thuộc, không sao chép vào mã |
 | pytest, httpx | Kiểm thử |
 

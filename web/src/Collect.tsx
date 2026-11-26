@@ -3,6 +3,9 @@ import { ApiError, api, type Challenge, type CollectionMeta, type FieldEvent, ty
 import { Recorder } from './capture'
 import { ComposeRecorder } from './compose'
 import { LangContext } from './i18n'
+import { canPromptInstall, isIOS, isInstalled, isPhone, onInstallChange, promptInstall } from './device'
+import { AppIcon } from './landing/ui'
+import qrcode from 'qrcode-generator'
 import './collect.css'
 
 // Data-collection page (#/collect): one form (name, email, consent), then a 10-digit pad (+ delete) where the volunteer creates
@@ -22,6 +25,10 @@ function useTx() {
   return (en: string, vi: string) => (lang === 'en' ? en : vi)
 }
 
+// shown when the build has no SDK key (VITE_SDK_KEY) or the API rejects it: nothing could ever be saved
+const NO_KEY = ['This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.'] as const
+const isKeyError = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.status === 403)
+
 interface Person { name: string; email: string }
 
 // Stable id from the email (cyrb53), so all sessions of one person group together.
@@ -36,9 +43,6 @@ function idOf(email: string) {
   return 'e' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)
 }
 
-function isPhone() {
-  return window.matchMedia('(pointer: coarse)').matches && Math.min(window.innerWidth, window.innerHeight) <= 600
-}
 
 export default function Collect() {
   const tx = useTx()
@@ -47,7 +51,11 @@ export default function Collect() {
     html.dataset.page = 'collect'
     const robots = document.createElement('meta'); robots.name = 'robots'; robots.content = 'noindex'
     document.head.appendChild(robots)
-    return () => { delete html.dataset.page; robots.remove() }
+    // browser / status bar colour matches this light app while it is shown
+    const theme = document.querySelector('meta[name="theme-color"]')
+    const prevTheme = theme?.getAttribute('content') ?? null
+    theme?.setAttribute('content', '#f3f5f8')
+    return () => { delete html.dataset.page; robots.remove(); if (theme && prevTheme) theme.setAttribute('content', prevTheme) }
   }, [])
   const dev = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('dev') === '1'
   const [phone, setPhone] = useState(() => dev || isPhone())
@@ -58,13 +66,7 @@ export default function Collect() {
   }, [dev])
   const [person, setPerson] = useState<Person | null>(null)
 
-  if (!phone) {
-    return (
-      <div className="cl cl-gate"><h1>{tx('Open this page on your phone', 'Mở trang này trên điện thoại')}</h1>
-        <p>{tx('The data-collection page only works on a touchscreen phone. Please open this link again on your phone.',
-          'Trang thu thập dữ liệu chỉ chạy trên điện thoại cảm ứng. Hãy mở lại đường link này bằng điện thoại của bạn.')}</p></div>
-    )
-  }
+  if (!phone) return <PhoneGate />
   if (!person) return <Start onDone={setPerson} />
   return <PinRound person={person} onNext={() => setPerson(null)} />
 }
@@ -78,6 +80,8 @@ function Start({ onDone }: { onDone: (p: Person) => void }) {
   const valid = n.length >= 2 && n.length <= 100 && EMAIL.test(m) && m.length <= 254 && ok
   return (
     <div className="cl cl-page">
+      <AppBar />
+      <InstallHint />
       <h1>{tx('Touch data collection', 'Thu thập dữ liệu thao tác')}</h1>
       <label className="cl-field"><span>{tx('Full name', 'Họ và tên')}</span>
         <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={100} /></label>
@@ -101,7 +105,8 @@ function Start({ onDone }: { onDone: (p: Person) => void }) {
       </details>
       <label className="cl-check"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />
         <span>{tx('I agree to take part and will use a new PIN that does not match any password or PIN I really use.', 'Tôi đồng ý tham gia và sẽ đặt mã PIN mới, không trùng mật khẩu hay mã PIN nào tôi đang dùng.')}</span></label>
-      <button className="cl-btn" disabled={!valid} onClick={() => onDone({ name: n, email: m })}>{tx('Start', 'Bắt đầu')}</button>
+      {!api.hasSdkKey() && <p className="cl-err" role="alert">{tx(...NO_KEY)}</p>}
+      <button className="cl-btn" disabled={!valid || !api.hasSdkKey()} onClick={() => onDone({ name: n, email: m })}>{tx('Start', 'Bắt đầu')}</button>
     </div>
   )
 }
@@ -133,7 +138,7 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
       setState('done')
     } catch (e) {
       setMsg(e instanceof ApiError && e.status === 0 ? tx('No connection. Check your network and tap Resend.', 'Không có mạng. Kiểm tra kết nối rồi bấm Gửi lại.')
-        : e instanceof ApiError && (e.status === 401 || e.status === 403) ? tx('This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.')
+        : isKeyError(e) ? tx(...NO_KEY)
         : `${tx('Could not send the data', 'Lỗi gửi dữ liệu')}${e instanceof ApiError ? ` (${e.status})` : ''}. ${tx('Tap Resend.', 'Bấm Gửi lại.')}`)
       setState('failed')
     }
@@ -228,13 +233,13 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
 function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => void }) {
   const tx = useTx()
   const [ch, setCh] = useState<Challenge | null>(null)
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<'nokey' | 'other' | null>(null)
   const [typed, setTyped] = useState('')
   const input = useRef<HTMLInputElement>(null)
   const rec = useRef<ComposeRecorder | null>(null)
   useEffect(() => {
     let live = true
-    api.challenge().then((c) => { if (live) setCh(c) }).catch(() => { if (live) setFailed(true) })
+    api.challenge().then((c) => { if (live) setCh(c) }).catch((e) => { if (live) setFailed(isKeyError(e) ? 'nokey' : 'other') })
     return () => { live = false }
   }, [])
   useEffect(() => {
@@ -246,7 +251,8 @@ function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challeng
     <div className="cl-pin cl-phrase">
       <h2>{tx('Type this sentence again', 'Gõ lại câu này')}</h2>
       {!ch && !failed && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />{tx('Loading…', 'Đang tải…')}</div>}
-      {failed && <>
+      {failed === 'nokey' && <p className="cl-err" role="alert">{tx(...NO_KEY)}</p>}
+      {failed === 'other' && <>
         <p className="cl-err" role="alert">{tx('Could not load the sentence. You can skip this step.', 'Không tải được câu. Bạn có thể bỏ qua bước này.')}</p>
         <button className="cl-btn" onClick={() => onDone(null, 'phrase_unavailable')}>{tx('Skip', 'Bỏ qua')}</button>
       </>}
@@ -261,6 +267,77 @@ function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challeng
         <button className="cl-btn" disabled={!match} onClick={() => onDone({ challenge: ch, events: rec.current?.finish() ?? [] })}>{tx('Continue', 'Tiếp tục')}</button>
         <button className="cl-link" onClick={() => onDone(null, 'no_vi_keyboard')}>{tx('My keyboard cannot type Vietnamese tone marks', 'Bàn phím của tôi không gõ được dấu tiếng Việt')}</button>
       </>}
+    </div>
+  )
+}
+
+/** Top of the start screen: the app icon, a language switch and a way to the main Innate site.
+ *  Not shown during the PIN and phrase steps, so nothing near the keypad can be tapped by accident. */
+function AppBar() {
+  const tx = useTx()
+  const { lang, setLang } = useContext(LangContext)
+  return (
+    <header className="cl-bar">
+      <span className="cl-brand"><AppIcon size={30} /><b>Innate</b></span>
+      <span className="cl-bar-right">
+        <span className="cl-lang" role="group" aria-label={tx('Language', 'Ngôn ngữ')}>
+          {(['vi', 'en'] as const).map((k) => (
+            <button key={k} type="button" aria-pressed={lang === k} onClick={() => setLang(k)}>{k.toUpperCase()}</button>
+          ))}
+        </span>
+        <a className="cl-about" href="#/">{tx('About Innate', 'Về Innate')}</a>
+      </span>
+    </header>
+  )
+}
+
+/** "Add to Home Screen" tip: Android gets the browser's own install button, iPhone gets the Share-menu steps. Dismissable. */
+function InstallHint() {
+  const tx = useTx()
+  const [, force] = useState(0)
+  useEffect(() => onInstallChange(() => force((n) => n + 1)), [])
+  const [hidden, setHidden] = useState(() => { try { return localStorage.getItem('innate.installHint') === 'off' } catch { return false } })
+  if (hidden || isInstalled()) return null
+  const android = canPromptInstall()
+  if (!android && !isIOS()) return null
+  const close = () => { setHidden(true); try { localStorage.setItem('innate.installHint', 'off') } catch { /* private mode */ } }
+  return (
+    <div className="cl-install" role="note">
+      <AppIcon size={36} />
+      <p>{android
+        ? tx('Install Innate on your home screen to open it full screen, like an app.', 'Cài Innate ra màn hình chính để mở toàn màn hình như một ứng dụng.')
+        : tx('To use Innate like an app: tap Share, then “Add to Home Screen”.', 'Để dùng Innate như ứng dụng: bấm Chia sẻ, rồi “Thêm vào MH chính”.')}</p>
+      {android && <button className="cl-install-go" onClick={() => void promptInstall()}>{tx('Install', 'Cài đặt')}</button>}
+      <button className="cl-install-x" onClick={close} aria-label={tx('Hide', 'Ẩn')}>×</button>
+    </div>
+  )
+}
+
+/** On a laptop or tablet: point to the phone with a QR code of this page. */
+function PhoneGate() {
+  const tx = useTx()
+  const url = `${window.location.origin}${window.location.pathname}#/collect`
+  const local = /^(localhost|127\.|\[::1\])/.test(window.location.hostname)
+  const qr = qrcode(0, 'M')
+  qr.addData(url)
+  qr.make()
+  const n = qr.getModuleCount()
+  const cells: string[] = []
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) cells.push(`M${c} ${r}h1v1h-1z`)
+  return (
+    <div className="cl cl-gate">
+      <AppIcon size={56} className="cl-gate-icon" />
+      <h1>{tx('Open this page on your phone', 'Mở trang này trên điện thoại')}</h1>
+      <p>{tx('Innate collects touch data from a phone screen, so this page only works on a touchscreen phone. Scan the code with your phone camera.',
+        'Innate thu dữ liệu chạm trên màn hình điện thoại, nên trang này chỉ chạy trên điện thoại cảm ứng. Quét mã bằng camera điện thoại.')}</p>
+      <svg className="cl-qr" viewBox={`-2 -2 ${n + 4} ${n + 4}`} role="img" aria-label={url} shapeRendering="crispEdges">
+        <rect x="-2" y="-2" width={n + 4} height={n + 4} fill="#fff" />
+        <path d={cells.join('')} fill="#16202c" />
+      </svg>
+      <p className="cl-url">{url}</p>
+      {local && <p className="cl-note">{tx('This is a localhost address, which a phone cannot open. Start the dev server with --host and open the Network address it prints instead.',
+        'Đây là địa chỉ localhost, điện thoại không mở được. Chạy dev server với --host rồi mở địa chỉ Network nó in ra.')}</p>}
+      <a className="cl-about" href="#/">{tx('Back to the Innate site', 'Về trang Innate')}</a>
     </div>
   )
 }
