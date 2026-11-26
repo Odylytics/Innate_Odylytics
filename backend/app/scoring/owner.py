@@ -11,6 +11,9 @@ _SD_FLOOR = {"pin_hold": 15.0, "pin_flight": 25.0, "pin_total": 80.0, "pin_dx": 
 
 ALPHA = 0.1  # tốc độ cập nhật mẫu chuẩn
 DRIFT_CAP = 1.0  # mẫu chuẩn không được trôi quá 1 sd so với lúc đăng ký (chống "dạy dần")
+# E3 (StrokePIN): Platt cân bằng lớp, score = 1/(1+exp(K*(d-D0))). Mặc định "legacy" (d=2 -> 0.5): Platt chỉ đổi đường dự phòng và làm hỏng luồng người nhận mới, xem research/results/e24_platt_map.md
+_MAP = {"platt": (1.216, 1.143), "legacy": (2.0, 2.0)}
+MAP_K, MAP_D0 = _MAP[os.environ.get("NHIP_OWNER_MAP", "legacy")]
 FREEZE_DRIFT = 0.5  # E7: trôi trung bình > 0,5 sd thì đóng băng + cờ "frozen"; cần đăng ký lại có xác thực
 
 
@@ -74,8 +77,8 @@ def score(features: dict[str, float], tpl: dict) -> tuple[float | None, dict[str
     if not z:
         return None, z
     d = fmean(abs(v) for v in z.values())
-    # shortcut: ánh xạ khoảng cách -> [0,1] chưa hiệu chỉnh (d=2 -> 0.5); Người 1 thay bằng ngưỡng fit trên dữ liệu thật
-    return 1 / (1 + math.exp(min(2 * (d - 2), 700.0))), z  # chặn tràn số khi phiên lệch rất xa (trước đây OverflowError => 500)
+    # shortcut: Platt fit trên StrokePIN (E3), không phải dữ liệu đội; fit lại khi có dữ liệu thật
+    return 1 / (1 + math.exp(min(MAP_K * (d - MAP_D0), 700.0))), z  # chặn tràn số khi phiên lệch rất xa (trước đây OverflowError => 500)
 
 
 def drift(tpl: dict) -> float:
