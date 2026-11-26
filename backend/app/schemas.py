@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 Num = Annotated[float, Field(allow_inf_nan=False)]
 Ms = Annotated[float, Field(allow_inf_nan=False, ge=0)]
@@ -66,6 +66,22 @@ class TextField(BaseModel):
 
 
 Ident = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_.\-]+$")]
+
+
+class ParticipantIn(BaseModel):
+    """Người tình nguyện thu dữ liệu: chỉ email và họ tên. Không bao giờ có PIN."""
+
+    participant_id: Ident
+    email: Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
+    full_name: str = Field(min_length=2, max_length=100)
+
+    @model_validator(mode="after")
+    def _clean_name(self):
+        self.full_name = " ".join(self.full_name.split())
+        if any(c.isdigit() for c in self.full_name):
+            raise ValueError("họ tên không được chứa chữ số")
+        self.email = self.email.strip().lower()
+        return self
 
 
 class CollectionMeta(BaseModel):

@@ -424,6 +424,24 @@ def test_challenge_endpoint_issues_signed_phrase(client):
     assert client.get("/v1/challenge", headers={"X-API-Key": "sai"}).status_code == 401
 
 
+def test_participant_registration_stores_email_and_name(client):
+    body = {"participant_id": "u_test1", "email": "  Nguyen.An@Example.com ", "full_name": "Nguyễn  Văn An"}
+    assert client.post("/v1/participants", json=body, headers=H).json() == {"participant_id": "u_test1"}
+    from app.db import Participant, SessionLocal
+    with SessionLocal() as db:
+        p = db.get(Participant, "u_test1")
+        assert (p.email, p.full_name) == ("nguyen.an@example.com", "Nguyễn Văn An")
+    # gửi lại cùng id thì cập nhật, không lỗi
+    assert client.post("/v1/participants", json={**body, "full_name": "Nguyễn Văn Bình"}, headers=H).status_code == 200
+    # không kiểm export ở đây: từ 25/11 trang thu ghi email + họ tên vào meta phiên nên /v1/export có chúng (docs/plan/thu-du-lieu-doi.md)
+
+
+@pytest.mark.parametrize("bad", [{"email": "khong-phai-email"}, {"full_name": "An 2"}, {"full_name": "A"}, {"participant_id": "a b"}])
+def test_participant_rejects_bad_input(client, bad):
+    body = {"participant_id": "u_test2", "email": "a@b.vn", "full_name": "Trần Thị Lan", **bad}
+    assert client.post("/v1/participants", json=body, headers=H).status_code == 422
+
+
 def _challenge_session(client, user, token, phrase):
     from tests.synth_vi import type_phrase
     s = human_session(user, OWNER, random.Random(3))

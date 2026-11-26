@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
-import { ApiError, api, type CollectionMeta, type SessionIn } from './api'
+import { ApiError, api, type Challenge, type CollectionMeta, type FieldEvent, type SessionIn } from './api'
 import { Recorder } from './capture'
+import { ComposeRecorder } from './compose'
 import './collect.css'
 
 // Data-collection page (#/collect): one form (name, email, consent), then a 10-digit pad (+ delete) where the volunteer creates
-// a 6-digit PIN and types it 5 times in all. The 5 entries are sent together, with name + email in `meta`.
+// a 6-digit PIN and types it 5 times in all; after each entry they type a short random Vietnamese sentence (the "Innate Challenge",
+// docs/plan/innate-challenge-vi.md; only times, key kinds and lengths are sent). The 5 sessions are sent together, with name + email in `meta`.
 // The PIN digits are stored on purpose (pin_taps[].key, for per-key research); the form warns not to reuse a real one.
 // Phone only: on a desktop it shows a "open on your phone" notice (add ?dev=1 to test in devtools).
 const PIN_LEN = 6
@@ -76,7 +78,7 @@ function Start({ onDone }: { onDone: (p: Person) => void }) {
         <b> không được trùng</b> với mật khẩu hay mã PIN nào bạn đang dùng (ngân hàng, ví, thẻ ATM, mở khoá điện thoại, email...).</p>
       <details className="cl-more"><summary>Chúng tôi thu gì và dùng thế nào</summary>
         <ul>
-          <li>Thu: họ tên, email, mã PIN thử bạn đặt, thời điểm, vị trí và kích thước vùng chạm khi gõ. Không thu số điện thoại, ảnh, giọng nói, vị trí hay tin nhắn.</li>
+          <li>Thu: họ tên, email, mã PIN thử bạn đặt, thời điểm, vị trí và kích thước vùng chạm khi gõ; và cách bạn gõ một câu ngắn hiện trên màn hình (chỉ thời điểm, loại phím và độ dài, không ghi nội dung câu). Không thu số điện thoại, ảnh, giọng nói, vị trí hay tin nhắn.</li>
           <li>Mục đích: huấn luyện và đánh giá mô hình phát hiện bot và nhận ra chủ tài khoản của sản phẩm Innate (MoMo Tech Contest 2026); chỉ công bố số liệu tổng hợp.</li>
           <li>Lưu trong cơ sở dữ liệu của đội, không bán hay chia cho bên thứ ba. Bạn có thể rút lui, xem hoặc yêu cầu xoá dữ liệu bất cứ lúc nào: liên hệ {CONTACT}.</li>
           <li>Đây là dữ liệu cá nhân (dữ liệu thao tác có thể là dữ liệu nhạy cảm) theo Luật Bảo vệ dữ liệu cá nhân 2025; việc thu dựa trên sự đồng ý của bạn.</li>
@@ -96,7 +98,8 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
   const [shake, setShake] = useState(false)
   const [pressed, setPressed] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
-  const [state, setState] = useState<'pin' | 'sending' | 'failed' | 'done'>('pin')
+  const [state, setState] = useState<'pin' | 'phrase' | 'sending' | 'failed' | 'done'>('pin')
+  const pending = useRef<SessionIn | null>(null) // PIN entry waiting for its phrase
   const pin = useRef('') // the PIN made on entry 1; later entries must match it
   const rec = useRef(new Recorder())
   const queue = useRef<SessionIn[]>([])
@@ -135,14 +138,22 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
     window.setTimeout(() => {
       if (rec.current.taps.length < PIN_LEN) { reset(); return } // a digit came without a finger on the key
       if (count === 0) pin.current = next
-      // sitting/role are required by the API schema; this page has one kind of round only
-      const meta: CollectionMeta = { participant_id: id, sitting: 1, role: 'genuine', full_name: person.name, email: person.email }
-      queue.current.push({ ...rec.current.payload(id), meta })
-      rec.current = new Recorder(); rec.current.screen('pin'); setDigits('')
-      const n = count + 1
-      setCount(n)
-      if (n === ENTRIES) { pin.current = ''; void sendAll() }
+      if (count === 0) pin.current = next
+      pending.current = rec.current.payload(id)
+      setState('phrase')
     }, 0)
+  }
+  const finishPhrase = (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => {
+    // sitting/role are required by the API schema; this page has one kind of round only
+    const meta: CollectionMeta = { participant_id: id, sitting: 1, role: 'genuine', full_name: person.name, email: person.email, ...(note ? { note } : {}) }
+    const base = pending.current!
+    const fields = r ? [...(base.fields ?? []), { name: 'challenge' as const, token: r.challenge.token, expected_len: r.challenge.expected_len, events: r.events }] : base.fields
+    queue.current.push({ ...base, ...(fields ? { fields } : {}), meta })
+    pending.current = null
+    rec.current = new Recorder(); rec.current.screen('pin'); setDigits('')
+    const n = count + 1
+    setCount(n)
+    if (n === ENTRIES) { pin.current = ''; void sendAll() } else setState('pin')
   }
   const keyDown = (e: RPointerEvent<HTMLButtonElement>, k: string) => {
     if (k !== '⌫') rec.current.keyDown(e.nativeEvent, k, e.currentTarget)
@@ -158,6 +169,15 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
         <p>Đã ghi nhận {ENTRIES} lần nhập. Bạn có thể đóng trang.</p>
         <button className="cl-btn ghost" onClick={onNext}>Người khác tham gia</button>
       </div></div>
+    )
+  }
+
+  if (state === 'phrase') {
+    return (
+      <div className="cl cl-app">
+        <div className="cl-strip"><span>{person.name}</span><b>{count}/{ENTRIES}</b></div>
+        <PhraseStep now={() => rec.current.now()} onDone={finishPhrase} />
+      </div>
     )
   }
 
@@ -185,6 +205,46 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
             </div>
           )}
       </div>
+    </div>
+  )
+}
+
+/** Type the random Vietnamese sentence from the API. Paste/drop/cut are blocked; only timing, key kinds and lengths are recorded. */
+function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => void }) {
+  const [ch, setCh] = useState<Challenge | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [typed, setTyped] = useState('')
+  const input = useRef<HTMLInputElement>(null)
+  const rec = useRef<ComposeRecorder | null>(null)
+  useEffect(() => {
+    let live = true
+    api.challenge().then((c) => { if (live) setCh(c) }).catch(() => { if (live) setFailed(true) })
+    return () => { live = false }
+  }, [])
+  useEffect(() => {
+    if (ch && input.current && !rec.current) { rec.current = new ComposeRecorder(input.current, now); input.current.focus() }
+  }, [ch, now])
+  const nfc = (v: string) => v.normalize('NFC').trim()
+  const match = !!ch && nfc(typed) === nfc(ch.phrase)
+  return (
+    <div className="cl-pin cl-phrase">
+      <h2>Gõ lại câu này</h2>
+      {!ch && !failed && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />Đang tải…</div>}
+      {failed && <>
+        <p className="cl-err" role="alert">Không tải được câu. Bạn có thể bỏ qua bước này.</p>
+        <button className="cl-btn" onClick={() => onDone(null, 'phrase_unavailable')}>Bỏ qua</button>
+      </>}
+      {ch && <>
+        <p className="cl-sentence" lang="vi">{ch.phrase}</p>
+        <p className="cl-sub">Dùng bàn phím tiếng Việt quen thuộc của bạn (Telex hoặc VNI), gõ đủ dấu. Không dán được.</p>
+        <input ref={input} className="cl-type" type="text" lang="vi" value={typed} onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} enterKeyHint="done" inputMode="text"
+          onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()}
+          aria-label="Gõ lại câu" aria-invalid={typed.length >= ch.phrase.length && !match} />
+        {typed.length >= ch.phrase.length && !match && <p className="cl-err" role="alert">Chưa giống. Kiểm tra dấu và khoảng trắng.</p>}
+        <button className="cl-btn" disabled={!match} onClick={() => onDone({ challenge: ch, events: rec.current?.finish() ?? [] })}>Tiếp tục</button>
+        <button className="cl-link" onClick={() => onDone(null, 'no_vi_keyboard')}>Bàn phím của tôi không gõ được dấu tiếng Việt</button>
+      </>}
     </div>
   )
 }

@@ -10,8 +10,11 @@ export interface Tap {
 export interface Swipe { points: { t: number; x: number; y: number }[] }
 export interface ScreenVisit { name: string; t_enter: number; t_first_touch: number | null }
 // A field typed outside the PIN pad. Only time, kind and character count: never the digits themselves.
-export interface FieldEvent { t: number; kind: 'key' | 'paste' | 'delete' | 'set_text'; n?: number; cls?: 'digit' }
-export interface TextField { name: 'recipient' | 'amount'; events: FieldEvent[] }
+export interface FieldEvent { t: number; kind: 'key' | 'paste' | 'delete' | 'set_text'; n?: number; cls?: 'digit' | 'letter' | 'space' | 'symbol' }
+// `challenge` = the random Vietnamese phrase from GET /v1/challenge: the server knows the phrase from the signed token, so only times, kinds and lengths are sent.
+// A key event with n = 0 is an IME mark/tone key (Telex/VNI) that changed the text without adding a character.
+export interface TextField { name: 'recipient' | 'amount' | 'challenge'; events: FieldEvent[]; token?: string; expected_len?: number }
+export interface Challenge { token: string; phrase: string; expected_len: number; ttl_s: number }
 // Collection label (backend CollectionMeta): who really held the phone, which sitting, genuine owner or someone who saw the PIN.
 export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; note?: string; full_name?: string; email?: string }
 export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta }
@@ -52,6 +55,9 @@ async function call<T>(path: string, { method = 'GET', body, key = SDK_KEY }: { 
 
 export const api = {
   hasSdkKey: () => SDK_KEY.length > 0,
+  registerParticipant: (p: { participant_id: string; email: string; full_name: string }) =>
+    call<{ participant_id: string }>('/v1/participants', { method: 'POST', body: p }),
+  challenge: () => call<Challenge>('/v1/challenge'),
   createSession: (s: SessionIn) => call<{ session_id: string; n_features: number }>('/v1/sessions', { method: 'POST', body: s }),
   enroll: (userId: string, sessionId: string) =>
     call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll`, { method: 'POST', body: { session_id: sessionId } }),
@@ -81,6 +87,10 @@ export function reasonText(code: string, lang: 'en' | 'vi'): string {
     [/^timing_too_regular$/, 'Machine-regular timing', 'Nhịp bấm đều bất thường'],
     [/^tap_exact_center$/, 'Taps hit the exact key centre', 'Chạm đúng tâm nút'],
     [/^swipe_perfectly_straight$/, 'Perfectly straight swipe', 'Vuốt thẳng tuyệt đối'],
+    [/^swipe_uniform_speed$/, 'Swipe at machine-uniform speed', 'Vận tốc vuốt đều bất thường'],
+    [/^challenge_no_ime$/, 'Vietnamese phrase typed without any accent keys', 'Câu có dấu nhưng không có thao tác gõ dấu tiếng Việt'],
+    [/^challenge_token_replayed$/, 'Challenge phrase already used, expired or invalid', 'Câu thử thách đã dùng, hết hạn hoặc không hợp lệ'],
+    [/^challenge_pasted$/, 'Challenge phrase pasted instead of typed', 'Câu thử thách được dán thay vì gõ'],
     [/^text_set_without_keys$/, 'Field filled without any key press', 'Ô nhập được điền thẳng, không có phím nào'],
     [/^replayed_session$/, 'Copy of an earlier session', 'Lặp lại y hệt một phiên trước'],
     [/^ml_bot_pattern$/, 'AI model: machine-like pattern', 'Mô hình AI: dấu hiệu máy'],

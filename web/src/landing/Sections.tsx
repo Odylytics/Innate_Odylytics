@@ -76,6 +76,7 @@ export function Nav() {
             <a href="#/collect" className="whitespace-nowrap hover:text-ink">{l({ en: 'Join the study', vi: 'Tham gia thu dữ liệu' })}</a>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <LangSwitch />
             <Button href="#/demo?choose=1" className="!h-10 !px-4 text-sm sm:!px-5">
               {l({ en: 'Open demo', vi: 'Mở demo' })}
             </Button>
