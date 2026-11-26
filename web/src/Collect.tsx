@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
+import { useContext, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
 import { ApiError, api, type Challenge, type CollectionMeta, type FieldEvent, type SessionIn } from './api'
 import { Recorder } from './capture'
 import { ComposeRecorder } from './compose'
+import { LangContext } from './i18n'
 import './collect.css'
 
 // Data-collection page (#/collect): one form (name, email, consent), then a 10-digit pad (+ delete) where the volunteer creates
@@ -12,8 +13,14 @@ import './collect.css'
 const PIN_LEN = 6
 const ENTRIES = 5
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
-const CONTACT = (import.meta.env.VITE_COLLECT_CONTACT as string | undefined) ?? 'người mời bạn tham gia'
+const CONTACT = import.meta.env.VITE_COLLECT_CONTACT as string | undefined
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+
+/** the site language (LangContext from App.tsx); tx(english, vietnamese) picks one */
+function useTx() {
+  const { lang } = useContext(LangContext)
+  return (en: string, vi: string) => (lang === 'en' ? en : vi)
+}
 
 interface Person { name: string; email: string }
 
@@ -34,6 +41,7 @@ function isPhone() {
 }
 
 export default function Collect() {
+  const tx = useTx()
   useEffect(() => {
     const html = document.documentElement
     html.dataset.page = 'collect'
@@ -52,8 +60,9 @@ export default function Collect() {
 
   if (!phone) {
     return (
-      <div className="cl cl-gate"><h1>Mở trang này trên điện thoại</h1>
-        <p>Trang thu thập dữ liệu chỉ chạy trên điện thoại cảm ứng. Hãy mở lại đường link này bằng điện thoại của bạn.</p></div>
+      <div className="cl cl-gate"><h1>{tx('Open this page on your phone', 'Mở trang này trên điện thoại')}</h1>
+        <p>{tx('The data-collection page only works on a touchscreen phone. Please open this link again on your phone.',
+          'Trang thu thập dữ liệu chỉ chạy trên điện thoại cảm ứng. Hãy mở lại đường link này bằng điện thoại của bạn.')}</p></div>
     )
   }
   if (!person) return <Start onDone={setPerson} />
@@ -61,6 +70,7 @@ export default function Collect() {
 }
 
 function Start({ onDone }: { onDone: (p: Person) => void }) {
+  const tx = useTx()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [ok, setOk] = useState(false)
@@ -68,30 +78,36 @@ function Start({ onDone }: { onDone: (p: Person) => void }) {
   const valid = n.length >= 2 && n.length <= 100 && EMAIL.test(m) && m.length <= 254 && ok
   return (
     <div className="cl cl-page">
-      <h1>Thu thập dữ liệu thao tác</h1>
-      <label className="cl-field"><span>Họ và tên</span>
+      <h1>{tx('Touch data collection', 'Thu thập dữ liệu thao tác')}</h1>
+      <label className="cl-field"><span>{tx('Full name', 'Họ và tên')}</span>
         <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={100} /></label>
       <label className="cl-field"><span>Email</span>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" inputMode="email"
           autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={254} /></label>
-      <p className="cl-note">Bạn sẽ tự đặt một mã PIN 6 số rồi nhập 5 lần. <b>Mã này được lưu lại</b> để nghiên cứu, nên
-        <b> không được trùng</b> với mật khẩu hay mã PIN nào bạn đang dùng (ngân hàng, ví, thẻ ATM, mở khoá điện thoại, email...).</p>
-      <details className="cl-more"><summary>Chúng tôi thu gì và dùng thế nào</summary>
+      <p className="cl-note">{tx('You will make up a 6-digit PIN and type it 5 times. ', 'Bạn sẽ tự đặt một mã PIN 6 số rồi nhập 5 lần. ')}
+        <b>{tx('This PIN is stored', 'Mã này được lưu lại')}</b>{tx(' for research, so it ', ' để nghiên cứu, nên ')}
+        <b>{tx('must not match', 'không được trùng')}</b>{tx(' any password or PIN you really use (bank, wallet, ATM card, phone unlock, email...).',
+          ' với mật khẩu hay mã PIN nào bạn đang dùng (ngân hàng, ví, thẻ ATM, mở khoá điện thoại, email...).')}</p>
+      <details className="cl-more"><summary>{tx('What we collect and how we use it', 'Chúng tôi thu gì và dùng thế nào')}</summary>
         <ul>
-          <li>Thu: họ tên, email, mã PIN thử bạn đặt, thời điểm, vị trí và kích thước vùng chạm khi gõ; và cách bạn gõ một câu ngắn hiện trên màn hình (chỉ thời điểm, loại phím và độ dài, không ghi nội dung câu). Không thu số điện thoại, ảnh, giọng nói, vị trí hay tin nhắn.</li>
-          <li>Mục đích: huấn luyện và đánh giá mô hình phát hiện bot và nhận ra chủ tài khoản của sản phẩm Innate (MoMo Tech Contest 2026); chỉ công bố số liệu tổng hợp.</li>
-          <li>Lưu trong cơ sở dữ liệu của đội, không bán hay chia cho bên thứ ba. Bạn có thể rút lui, xem hoặc yêu cầu xoá dữ liệu bất cứ lúc nào: liên hệ {CONTACT}.</li>
-          <li>Đây là dữ liệu cá nhân (dữ liệu thao tác có thể là dữ liệu nhạy cảm) theo Luật Bảo vệ dữ liệu cá nhân 2025; việc thu dựa trên sự đồng ý của bạn.</li>
+          <li>{tx('Collected: full name, email, the practice PIN you make up, the time, position and contact size of each tap, and how you type a short sentence shown on screen (only timing, key kinds and length; the sentence text is not recorded). No phone number, photos, voice, location or messages.',
+            'Thu: họ tên, email, mã PIN thử bạn đặt, thời điểm, vị trí và kích thước vùng chạm khi gõ; và cách bạn gõ một câu ngắn hiện trên màn hình (chỉ thời điểm, loại phím và độ dài, không ghi nội dung câu). Không thu số điện thoại, ảnh, giọng nói, vị trí hay tin nhắn.')}</li>
+          <li>{tx('Purpose: to train and evaluate the bot-detection and account-owner models of the Innate product (MoMo Tech Contest 2026); only aggregate figures are published.',
+            'Mục đích: huấn luyện và đánh giá mô hình phát hiện bot và nhận ra chủ tài khoản của sản phẩm Innate (MoMo Tech Contest 2026); chỉ công bố số liệu tổng hợp.')}</li>
+          <li>{tx('Stored in the team database, never sold or shared with third parties. You can withdraw, view or ask for deletion of your data at any time: contact ', 'Lưu trong cơ sở dữ liệu của đội, không bán hay chia cho bên thứ ba. Bạn có thể rút lui, xem hoặc yêu cầu xoá dữ liệu bất cứ lúc nào: liên hệ ')}{CONTACT ?? tx('the person who invited you', 'người mời bạn tham gia')}.</li>
+          <li>{tx('This is personal data (touch data can be sensitive) under the 2025 Vietnamese Personal Data Protection Law; collection is based on your consent.',
+            'Đây là dữ liệu cá nhân (dữ liệu thao tác có thể là dữ liệu nhạy cảm) theo Luật Bảo vệ dữ liệu cá nhân 2025; việc thu dựa trên sự đồng ý của bạn.')}</li>
         </ul>
       </details>
       <label className="cl-check"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />
-        <span>Tôi đồng ý tham gia và sẽ đặt mã PIN mới, không trùng mật khẩu hay mã PIN nào tôi đang dùng.</span></label>
-      <button className="cl-btn" disabled={!valid} onClick={() => onDone({ name: n, email: m })}>Bắt đầu</button>
+        <span>{tx('I agree to take part and will use a new PIN that does not match any password or PIN I really use.', 'Tôi đồng ý tham gia và sẽ đặt mã PIN mới, không trùng mật khẩu hay mã PIN nào tôi đang dùng.')}</span></label>
+      <button className="cl-btn" disabled={!valid} onClick={() => onDone({ name: n, email: m })}>{tx('Start', 'Bắt đầu')}</button>
     </div>
   )
 }
 
 function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
+  const tx = useTx()
   const id = idOf(person.email)
   const [count, setCount] = useState(0) // correct entries so far (the first one creates the PIN)
   const [digits, setDigits] = useState('')
@@ -116,9 +132,9 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
       }
       setState('done')
     } catch (e) {
-      setMsg(e instanceof ApiError && e.status === 0 ? 'Không có mạng. Kiểm tra kết nối rồi bấm Gửi lại.'
-        : e instanceof ApiError && (e.status === 401 || e.status === 403) ? 'Bản này chưa cấu hình khoá API. Báo cho đội.'
-        : `Lỗi gửi dữ liệu${e instanceof ApiError ? ` (${e.status})` : ''}. Bấm Gửi lại.`)
+      setMsg(e instanceof ApiError && e.status === 0 ? tx('No connection. Check your network and tap Resend.', 'Không có mạng. Kiểm tra kết nối rồi bấm Gửi lại.')
+        : e instanceof ApiError && (e.status === 401 || e.status === 403) ? tx('This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.')
+        : `${tx('Could not send the data', 'Lỗi gửi dữ liệu')}${e instanceof ApiError ? ` (${e.status})` : ''}. ${tx('Tap Resend.', 'Bấm Gửi lại.')}`)
       setState('failed')
     }
   }
@@ -131,13 +147,12 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
     setDigits(next); setMsg(null)
     if (next.length < PIN_LEN) return
     if (count > 0 && next !== pin.current) {
-      setShake(true); setMsg('Không khớp mã đã tạo. Nhập lại.')
+      setShake(true); setMsg(tx('Does not match the PIN you made. Try again.', 'Không khớp mã đã tạo. Nhập lại.'))
       window.setTimeout(() => { setShake(false); reset() }, 450)
       return
     }
     window.setTimeout(() => {
       if (rec.current.taps.length < PIN_LEN) { reset(); return } // a digit came without a finger on the key
-      if (count === 0) pin.current = next
       if (count === 0) pin.current = next
       pending.current = rec.current.payload(id)
       setState('phrase')
@@ -165,9 +180,9 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
     return (
       <div className="cl cl-app"><div className="cl-ok">
         <span className="cl-tick" aria-hidden="true">✓</span>
-        <h2>Cảm ơn {person.name}!</h2>
-        <p>Đã ghi nhận {ENTRIES} lần nhập. Bạn có thể đóng trang.</p>
-        <button className="cl-btn ghost" onClick={onNext}>Người khác tham gia</button>
+        <h2>{tx('Thank you', 'Cảm ơn')} {person.name}!</h2>
+        <p>{tx(`Recorded ${ENTRIES} entries. You can close this page.`, `Đã ghi nhận ${ENTRIES} lần nhập. Bạn có thể đóng trang.`)}</p>
+        <button className="cl-btn ghost" onClick={onNext}>{tx('Someone else takes part', 'Người khác tham gia')}</button>
       </div></div>
     )
   }
@@ -185,22 +200,22 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
     <div className="cl cl-app">
       <div className="cl-strip"><span>{person.name}</span><b>{count}/{ENTRIES}</b></div>
       <div className="cl-pin">
-        <h2>{count === 0 ? 'Tạo mã PIN 6 số' : 'Nhập lại mã PIN'}</h2>
-        <p className="cl-sub">{count === 0 ? 'Mã mới, không trùng PIN/mật khẩu thật.' : `Lần ${count + 1}/${ENTRIES}: nhập đúng mã vừa tạo`}</p>
+        <h2>{count === 0 ? tx('Create a 6-digit PIN', 'Tạo mã PIN 6 số') : tx('Enter your PIN again', 'Nhập lại mã PIN')}</h2>
+        <p className="cl-sub">{count === 0 ? tx('A new PIN, not one you really use.', 'Mã mới, không trùng PIN/mật khẩu thật.') : tx(`Entry ${count + 1}/${ENTRIES}: enter the PIN you just made`, `Lần ${count + 1}/${ENTRIES}: nhập đúng mã vừa tạo`)}</p>
         <div className={`cl-dots ${shake ? 'shake' : ''}`} aria-label={`${digits.length}/${PIN_LEN}`}>
           {Array.from({ length: PIN_LEN }, (_, i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
         </div>
         {/* always rendered so the keypad does not jump when a message appears */}
         <p className="cl-err" role="alert">{msg}{' '}
-          {msg && state === 'failed' && <button className="cl-link" onClick={() => { setMsg(null); void sendAll() }}>Gửi lại</button>}</p>
+          {msg && state === 'failed' && <button className="cl-link" onClick={() => { setMsg(null); void sendAll() }}>{tx('Resend', 'Gửi lại')}</button>}</p>
         {state === 'sending' || state === 'failed'
-          ? state === 'sending' && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />Đang ghi nhận…</div>
+          ? state === 'sending' && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />{tx('Saving…', 'Đang ghi nhận…')}</div>
           : (
             <div className="cl-keys">
               {KEYS.map((k, i) => k === '' ? <span key={i} /> : (
                 <button key={i} className={`cl-key ${pressed === k ? 'down' : ''}`}
                   onPointerDown={(e) => keyDown(e, k)} onPointerUp={keyUp} onPointerCancel={keyUp} onClick={() => press(k)}
-                  aria-label={k === '⌫' ? 'Xoá' : k}>{k}</button>
+                  aria-label={k === '⌫' ? tx('Delete', 'Xoá') : k}>{k}</button>
               ))}
             </div>
           )}
@@ -211,6 +226,7 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
 
 /** Type the random Vietnamese sentence from the API. Paste/drop/cut are blocked; only timing, key kinds and lengths are recorded. */
 function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => void }) {
+  const tx = useTx()
   const [ch, setCh] = useState<Challenge | null>(null)
   const [failed, setFailed] = useState(false)
   const [typed, setTyped] = useState('')
@@ -228,22 +244,22 @@ function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challeng
   const match = !!ch && nfc(typed) === nfc(ch.phrase)
   return (
     <div className="cl-pin cl-phrase">
-      <h2>Gõ lại câu này</h2>
-      {!ch && !failed && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />Đang tải…</div>}
+      <h2>{tx('Type this sentence again', 'Gõ lại câu này')}</h2>
+      {!ch && !failed && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />{tx('Loading…', 'Đang tải…')}</div>}
       {failed && <>
-        <p className="cl-err" role="alert">Không tải được câu. Bạn có thể bỏ qua bước này.</p>
-        <button className="cl-btn" onClick={() => onDone(null, 'phrase_unavailable')}>Bỏ qua</button>
+        <p className="cl-err" role="alert">{tx('Could not load the sentence. You can skip this step.', 'Không tải được câu. Bạn có thể bỏ qua bước này.')}</p>
+        <button className="cl-btn" onClick={() => onDone(null, 'phrase_unavailable')}>{tx('Skip', 'Bỏ qua')}</button>
       </>}
       {ch && <>
         <p className="cl-sentence" lang="vi">{ch.phrase}</p>
-        <p className="cl-sub">Dùng bàn phím tiếng Việt quen thuộc của bạn (Telex hoặc VNI), gõ đủ dấu. Không dán được.</p>
+        <p className="cl-sub">{tx('Use the Vietnamese keyboard you normally use (Telex or VNI) and type all the tone marks. Pasting is blocked.', 'Dùng bàn phím tiếng Việt quen thuộc của bạn (Telex hoặc VNI), gõ đủ dấu. Không dán được.')}</p>
         <input ref={input} className="cl-type" type="text" lang="vi" value={typed} onChange={(e) => setTyped(e.target.value)}
           autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} enterKeyHint="done" inputMode="text"
           onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()}
-          aria-label="Gõ lại câu" aria-invalid={typed.length >= ch.phrase.length && !match} />
-        {typed.length >= ch.phrase.length && !match && <p className="cl-err" role="alert">Chưa giống. Kiểm tra dấu và khoảng trắng.</p>}
-        <button className="cl-btn" disabled={!match} onClick={() => onDone({ challenge: ch, events: rec.current?.finish() ?? [] })}>Tiếp tục</button>
-        <button className="cl-link" onClick={() => onDone(null, 'no_vi_keyboard')}>Bàn phím của tôi không gõ được dấu tiếng Việt</button>
+          aria-label={tx('Type the sentence again', 'Gõ lại câu')} aria-invalid={typed.length >= ch.phrase.length && !match} />
+        {typed.length >= ch.phrase.length && !match && <p className="cl-err" role="alert">{tx('Not the same yet. Check the tone marks and spaces.', 'Chưa giống. Kiểm tra dấu và khoảng trắng.')}</p>}
+        <button className="cl-btn" disabled={!match} onClick={() => onDone({ challenge: ch, events: rec.current?.finish() ?? [] })}>{tx('Continue', 'Tiếp tục')}</button>
+        <button className="cl-link" onClick={() => onDone(null, 'no_vi_keyboard')}>{tx('My keyboard cannot type Vietnamese tone marks', 'Bàn phím của tôi không gõ được dấu tiếng Việt')}</button>
       </>}
     </div>
   )
