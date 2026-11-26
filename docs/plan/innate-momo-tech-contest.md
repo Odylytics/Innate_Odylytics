@@ -233,7 +233,7 @@ Danh mục paper đầy đủ: [docs/research/paper-report.md](../research/paper
 | Bước | Ai làm | Mục đích |
 |---|---|---|
 | 1. Đăng ký | Giám khảo A làm 3–5 lượt chuyển tiền thử (~20 giây/lượt) trên điện thoại của đội | Học nhịp riêng |
-| 2. Công bố PIN | Cả 3 giám khảo biết PIN (vd. 1593) | Đúng kịch bản "kẻ gian biết PIN" |
+| 2. Công bố PIN | Cả 3 giám khảo biết PIN (vd. 159357) | Đúng kịch bản "kẻ gian biết PIN" |
 | 3. Thử | Giám khảo B, C → rồi **A làm lại** | Phải thấy chủ thật được chấp nhận, người khác bị yêu cầu xác thực thêm |
 | 4. Giải thích | Màn hình hiện điểm + lý do ("nhịp PIN chậm hơn 40%, chạm lệch phải, cuộn thẳng hơn") | AI là lõi + minh bạch |
 | 5. Tấn công bằng máy | "Bảng điều khiển hacker" tự bấm vào app từ máy khác | Mô phỏng mã độc Trợ năng → báo "không phải người thật" |

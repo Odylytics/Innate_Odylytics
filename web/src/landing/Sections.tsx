@@ -185,7 +185,7 @@ export function DemoPaths() {
     },
     {
       href: '#/demo',
-      tag: { en: 'PIN 1593 · live API', vi: 'PIN 1593 · API thật' },
+      tag: { en: 'PIN 159357 · live API', vi: 'PIN 159357 · API thật' },
       title: { en: 'Try the wallet yourself', vi: 'Tự thử ví demo' },
       body: {
         en: 'Enroll your rhythm with three PIN entries, send money, then let the attacker console replay malware or another person on the same screens.',

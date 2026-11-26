@@ -7,7 +7,7 @@
 
 1. Mở link → landing (`#/`): vấn đề, cách Innate trả lời, nút **Xem demo 2 phút** và **Tự thử ví demo**.
 2. **Xem demo 2 phút** (`#/demo?story=1`): kịch bản 8 bước tự chạy, có tiếng. Hà đăng ký nhịp → Hà chuyển cho mẹ (`allow`) → mã độc bấm PIN lúc 2 giờ sáng (`hold`) → Bảo biết PIN (`step_up`) → Khoa xem dashboard → chính sách. Phiên dựng sẵn nhưng **chấm thật trên API**.
-3. **Tự thử ví** (`#/demo`): giám khảo tự gõ PIN `1593` ba lần để đăng ký, chuyển tiền bằng nhịp của chính mình, rồi bấm "mã độc" hoặc "người khác" trong bảng điều khiển kẻ tấn công để thấy kết quả khác.
+3. **Tự thử ví** (`#/demo`): giám khảo tự gõ PIN `159357` ba lần để đăng ký, chuyển tiền bằng nhịp của chính mình, rồi bấm "mã độc" hoặc "người khác" trong bảng điều khiển kẻ tấn công để thấy kết quả khác.
 
 Phần chạy thật: thu chạm (Pointer Events trên bàn phím PIN tự vẽ và thanh vuốt xác nhận), chấm điểm, khoá đăng ký, lý do tiếng Việt. Phần giả lập: phiên của mã độc, Bảo và các nhân vật (sinh trong trình duyệt, gửi lên API chấm như phiên thật).
 
@@ -17,10 +17,10 @@ API chạy local, chấm đúng các phiên mà web demo tạo ra (`synth.ts`, c
 
 | PIN demo | AI (LightGBM) | Kịch bản: Hà / Bảo / mã độc | 25 chủ ví | 25 lần Bảo | 25 lần mã độc |
 |---|---|---|---|---|---|
-| 4 số `1593` (hiện tại) | tắt | allow / step_up / hold | 24 allow | 23 step_up, 2 hold | 25 hold |
-| 4 số `1593` (hiện tại) | bật | allow / **hold** / hold | 24 allow | 21 step_up, 4 hold | 25 hold |
-| 6 số `159357` | tắt | allow / step_up / hold | 25 allow | 22 step_up, 3 hold | 25 hold |
-| 6 số `159357` | bật | allow / **hold** / hold | **16 allow, 9 step_up** | 11 step_up, 14 hold | 25 hold |
+| 4 số `1593` (cũ) | tắt | allow / step_up / hold | 24 allow | 23 step_up, 2 hold | 25 hold |
+| 4 số `1593` (cũ) | bật | allow / **hold** / hold | 24 allow | 21 step_up, 4 hold | 25 hold |
+| 6 số `159357` (hiện tại) | tắt | allow / step_up / hold | 25 allow | 22 step_up, 3 hold | 25 hold |
+| 6 số `159357` (hiện tại) | bật | allow / **hold** / hold | **16 allow, 9 step_up** | 11 step_up, 14 hold | 25 hold |
 
 Phát hiện:
 - **Mô hình "có phải chủ" không chạy với PIN 4 số.** Nó học trên PIN 6 số (StrokePIN), nên với `1593` API lặng lẽ dùng phép so khoảng cách. Mô hình "người hay máy" thì có chạy.
@@ -37,7 +37,7 @@ Phát hiện:
 | 2 | Chốt bật AI trên API online hay không | nhóm | Bật: bằng chứng "AI là lõi" rõ hơn, nhưng phải sửa lời kịch bản bước Bảo (hoặc chọn hạt giống khác) và chấp nhận chủ ví đôi khi bị `step_up` |
 | 3 | Giữ PIN 4 số cho phần "tự thử" | web | Ổn định cho giám khảo. Nói thẳng trong slide: mô hình chủ học trên PIN 6 số, bản demo dùng so khoảng cách |
 | 4 | Thử trên iPhone thật và laptop thật | nhóm | Safari iOS hỗ trợ Pointer Events; chưa kiểm `width/height` chạm trên iOS. Thử nhanh qua mạng LAN: chạy Vite với `--host` và API với `--host 0.0.0.0`, mở `http://<IP máy Mac>:5173` trên iPhone |
-| 5 | Ghi "Hướng dẫn dùng thử" trên landing + PDF 1 trang | `web/` + `docs/submission/` | Link, PIN `1593`, 3 bước; tài liệu nộp hiện còn ghi ví cũ và PIN `159357` |
+| 5 | Ghi "Hướng dẫn dùng thử" trên landing + PDF 1 trang | `web/` + `docs/submission/` | Link, PIN `159357`, 3 bước |
 
 ## 4. Đưa luồng chuyển tiền mới vào web (số tài khoản → ngân hàng → PIN)
 

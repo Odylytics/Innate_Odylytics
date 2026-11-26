@@ -8,7 +8,7 @@
 
 | # | Thành phần | Định dạng và giới hạn | Nội dung cho Innate | Người phụ trách | Trạng thái |
 |---|---|---|---|---|---|
-| 1 | **Sản phẩm** | PDF ≤ 1 trang A4. Có link dùng thử online ngay, kèm tài khoản dùng thử nếu cần đăng nhập | Link ví demo (`/`) + Swagger (`/docs`). Ghi user demo, API key demo, PIN demo `1593`, 4 bước dùng | Người 3 | Chưa |
+| 1 | **Sản phẩm** | PDF ≤ 1 trang A4. Có link dùng thử online ngay, kèm tài khoản dùng thử nếu cần đăng nhập | Link ví demo (`/`) + Swagger (`/docs`). Ghi user demo, API key demo, PIN demo `159357`, 4 bước dùng | Người 3 | Chưa |
 | 2 | **Mã nguồn** | `.zip` toàn bộ code + `README` | README khai: cách chạy, công nghệ, **tài sản có sẵn, thư viện mã nguồn mở, công cụ AI đã dùng**, nguồn dữ liệu | Người 2 | Chưa |
 | 3 | **Tài liệu mô tả** | Slide PDF ≤ 10 trang. Dùng luôn cho chung kết, **không được sửa** | Vấn đề, giải pháp, kiến trúc, số liệu đánh giá, demo, hạn chế | Người 3 + Người 1 (số liệu) | Chưa |
 | 4 | **Video** | MP4 ≤ 3 phút (phần quá 3 phút không được xem) | Quay sản phẩm chạy thật: đăng ký nhịp → chuyển tiền chủ thật → người lạ → bot bị chặn | Người 3 | Chưa |

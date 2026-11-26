@@ -6,7 +6,7 @@ import type { Layout } from './synth'
 
 // The demo wallet: a fictional e-wallet with the Innate SDK inside. Home → transfer (swipe up to confirm) → PIN → result.
 // In enroll mode it goes straight to the PIN pad. A "ghost" script replays synthetic taps on the real keys (story, bot).
-export const DEMO_PIN = '1593'
+export const DEMO_PIN = '159357'
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
 type L = { en: string; vi: string }
 
@@ -260,7 +260,7 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
               ? (lang === 'en' ? `Enroll your rhythm · ${enrollStep}/3` : `Đăng ký nhịp · lần ${enrollStep}/3`)
               : (lang === 'en' ? `Confirm ${money(amount)} to ${toName}` : `Xác nhận ${money(amount)} cho ${toName}`)}</h3>
             <p className="w-hint">{ghost ? tx(ghost.label) : (lang === 'en' ? `Demo PIN ${DEMO_PIN}` : `PIN demo ${DEMO_PIN}`)}</p>
-            <div className={`w-dots ${shake ? 'shake' : ''}`} aria-label={`${digits.length}/4`}>
+            <div className={`w-dots ${shake ? 'shake' : ''}`} aria-label={`${digits.length}/${DEMO_PIN.length}`}>
               {[0, 1, 2, 3].map((i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
             </div>
             {note && <p className="w-note" role="status">{tx(note)}</p>}

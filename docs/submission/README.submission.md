@@ -18,7 +18,7 @@ Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở 
 | API | https://nhip-api-taupe.vercel.app (`/health` 200 ngày 25/11/2026) |
 | Swagger | https://nhip-api-taupe.vercel.app/docs (bấm Authorize, nhập key SDK) |
 | Tài khoản / API key demo | `TODO`: key SDK của bản deploy (đã nằm trong bản build web, xem `web/README.md`); web demo không cần đăng nhập |
-| PIN demo | `1593` (web demo, theo `web/README.md`; `TODO: xác nhận`) |
+| PIN demo | `159357` (web demo, 6 số, theo `web/README.md`) |
 
 Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền bằng chính chủ; (3) người thứ hai biết PIN thử → bị yêu cầu xác thực thêm; (4) bảng điều khiển bot → bị giữ lệnh. Sản phẩm phải online đến hết 11/12/2026: `TODO: xác nhận URL web cuối và theo dõi Vercel đến hết ngày đó`.
 

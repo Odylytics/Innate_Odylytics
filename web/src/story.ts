@@ -17,7 +17,7 @@ export const PERSONAS: Persona[] = [
   {
     id: 'bao', name: 'Phạm Quốc Bảo', initials: 'QB', tone: 'blue',
     role: { en: 'Colleague who saw her PIN', vi: 'Đồng nghiệp từng nhìn lén PIN' }, org: { en: 'Same office', vi: 'Cùng văn phòng' },
-    does: { en: 'Watched Hà type 1593 at lunch. Picks up her phone while she is away from her desk.', vi: 'Nhìn thấy Hà gõ 1593 lúc ăn trưa. Cầm điện thoại của Hà khi Hà rời bàn.' },
+    does: { en: 'Watched Hà type 159357 at lunch. Picks up her phone while she is away from her desk.', vi: 'Nhìn thấy Hà gõ 159357 lúc ăn trưa. Cầm điện thoại của Hà khi Hà rời bàn.' },
   },
   {
     id: 'an', name: 'Đỗ Gia An', initials: 'GA', tone: 'ice',
@@ -87,8 +87,8 @@ export const STEPS: StoryStep[] = [
     who: 'an', also: ['ha'], cue: 'duplicate', act: 'bot', seconds: 11,
     title: { en: '2 a.m.: the malware types the PIN', vi: '2 giờ sáng: mã độc tự gõ PIN' },
     body: {
-      en: 'The malware opens the wallet and taps 1593 to send 20,000,000 to a new account. The PIN is right, but every tap lands on the exact centre of the key at a machine-steady rhythm. Innate holds the transfer.',
-      vi: 'Mã độc mở ví và bấm 1593 để chuyển 20.000.000 cho tài khoản lạ. PIN đúng, nhưng mọi cú chạm rơi đúng tâm phím với nhịp đều như máy. Innate giữ lệnh lại.',
+      en: 'The malware opens the wallet and taps 159357 to send 20,000,000 to a new account. The PIN is right, but every tap lands on the exact centre of the key at a machine-steady rhythm. Innate holds the transfer.',
+      vi: 'Mã độc mở ví và bấm 159357 để chuyển 20.000.000 cho tài khoản lạ. PIN đúng, nhưng mọi cú chạm rơi đúng tâm phím với nhịp đều như máy. Innate giữ lệnh lại.',
     },
   },
   {
