@@ -12,7 +12,7 @@
 
 ## 3 cách xem (khoảng 3 phút)
 1. **Xem kịch bản:** mở `#/demo?story=1`. Tám bước tự chạy: chủ ví đăng ký nhịp, chuyển tiền được qua (`allow`); người biết PIN bị yêu cầu xác thực thêm (`step_up`) kèm lý do; mã độc tự bấm bị giữ lệnh (`hold`).
-2. **Tự thử ví:** mở `#/demo`, nhập PIN `1593` ba lần để đăng ký nhịp, rồi chuyển tiền (chọn người nhận đã lưu hoặc nhập số tài khoản và chọn ngân hàng). Đưa máy cho người khác nhập cùng PIN để xem kết quả khác đi.
+2. **Tự thử ví:** mở `#/demo`, nhập PIN `159357` ba lần để đăng ký nhịp, rồi chuyển tiền (chọn người nhận đã lưu hoặc nhập số tài khoản và chọn ngân hàng). Đưa máy cho người khác nhập cùng PIN để xem kết quả khác đi.
 3. **Mã độc giả lập:** trong bảng điều khiển kẻ tấn công, bấm "mã độc" (điền thẳng số tài khoản rồi bấm PIN) hoặc "người khác" để xem Innate chấm điểm ngay trên API thật.
 
 ## Đọc kết quả
