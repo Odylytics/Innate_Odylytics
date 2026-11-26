@@ -159,6 +159,38 @@ Không có điểm tối ưu cho cả hai phía.
 
 **E7, đầu độc mẫu chuẩn (dữ liệu giả):** không có trần trôi thì kẻ gian được chấp nhận 100% và chủ bị khoá ngoài (0,58). Đóng băng khi trôi >0,5 sd cho 0,77 (so 0,85 của trần 1 sd), kèm cờ cảnh báo. Đã cài trong `owner.update`; chưa lộ cờ ra API.
 
+### 5.6 Kiểm lại trên cả 97 người (E29, E30): số này thay bảng 10 người ở mục 5.4 khi trích dẫn
+
+**E29:** E24 chạy lại bằng cross-validation 5 phần theo người. Mỗi phần huấn luyện lại hai mô hình học chỉ trên người ngoài phần đó. 97 người, tối đa 6 PIN mỗi người, khoảng tin cậy bootstrap theo người. Người nhận quen, A=0,25, B=0,55:
+
+| Nhóm | giữ lệnh | xác thực thêm | cho qua |
+|---|---|---|---|
+| Chủ, ngồi | 1% | 23% | 76% [73, 79] |
+| Chủ, đi | 1% | 50% | 49% [45, 53] |
+| Kẻ biết PIN (máy khác) | 1% | 77% | **22% [20, 24]** |
+| Bot đều / nhiễu thời gian / phát lại ±5% / ±10% | 100% | 0% | 0% |
+| Bot lấy mẫu dân số (CT4) | 32% | 65% | 3% |
+| Phát lại ±15% | 29% | 20% | 51% [48, 54] |
+| Phát lại ±20% | 3% | 39% | 58% [55, 62] |
+| Phát lại ±30% | 6% | 62% | 32% [28, 35] |
+| Bot biết mẫu chuẩn (scale 1,0) | 4% | 24% | 72% [69, 76] |
+| Bot biết mẫu chuẩn (scale 0,5) | 5% | 9% | 87% [84, 89] |
+
+- Kết luận của E24 không đổi, và hẹp hơn: kẻ biết PIN lọt **22% (không phải 28%)**, chủ đang đi chỉ được qua 49% (E24: 63%).
+- Người nhận mới: chủ ngồi chỉ được allow 7%, kẻ biết PIN 0%, bot biết mẫu chuẩn 6% (scale 1,0) đến 22% (scale 0,5).
+- Quét A: A=0,20 chặn kẻ biết PIN 95% nhưng chủ chỉ qua 53%; A=0,30 cho chủ qua 89% nhưng chặn kẻ biết PIN 58%.
+- **Phân bố theo nạn nhân:** trung vị kẻ biết PIN được allow 21%, phân vị 90% là 33%, lớn nhất 58%, Gini 0,28. Không có nạn nhân nào bị allow trên 90%; 1/97 trên 50%. Tức không có người "lọt mãi mãi" ở cấu hình này.
+
+**E30, số lượt đăng ký (nhận chủ bằng khoảng cách, ngồi, 97 người):**
+
+| k | EER | FAR@FRR5% |
+|---|---|---|
+| 2 | 0,167 | 0,857 [0,661, 0,923] |
+| 3 | 0,146 | 0,503 [0,421, 0,627] |
+| 4 | 0,138 | 0,429 [0,360, 0,534] |
+
+Đăng ký nhiều hơn thì kẻ gian lọt ít hơn, giảm rõ nhất từ 2 lên 3 lượt. k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử vì StrokePIN chỉ có tối đa 5 lượt ngồi mỗi người–PIN, và k=4 chỉ kiểm thử trên 1 lượt. Prior dân số lấy từ file của backend, không loại riêng từng nạn nhân nên có thể lạc quan nhẹ.
+
 ### 5.5 Hiệu năng và hạ tầng
 
 - **E26:** `/score` p50 3,7 ms, p95 5,2 ms, max 36,5 ms (local, sau khi nạp sẵn mô hình; trước đó lần đầu ~1 s). Không gồm mạng và cold start.
@@ -169,7 +201,7 @@ Không có điểm tối ưu cho cả hai phía.
 
 1. Chưa có dữ liệu của đội và bot thật; train và test bot dùng chung 4 bộ sinh.
 2. Nhận chủ bằng nhịp chạm yếu (FAR ~50% ở FRR 5%), đổi tư thế mất tín hiệu; kẻ biết PIN trong đo lường dùng máy khác nên số lạc quan.
-3. Bot biết mẫu chuẩn hoặc phát lại ±15% trở lên qua mặt 48–82%; chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
+3. Bot biết mẫu chuẩn qua mặt 72–87% và phát lại ±15% đến ±20% qua 51–58% (E29, 97 người); chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
 4. Mô hình học dùng dữ liệu StrokePIN (CC BY-NC-SA 4.0) nên cả repo theo giấy phép đó; mô hình là tạm thời cho đến khi có dữ liệu đội.
 5. Chưa có đường đăng ký lại có kiểm soát (thiết kế ở `../plan/dang-ky-lai.md`); mẫu bị đóng băng chưa có cách mở.
 6. Kiểu gõ tiếng Việt chưa kiểm chứng trên bàn phím thật; chưa nối `vi_*` vào nhận chủ.
