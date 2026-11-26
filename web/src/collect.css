@@ -69,3 +69,34 @@ html[data-page='collect'], html[data-page='collect'] body { background: #f3f5f8;
 .cl-sentence { margin: 6px 0 4px; padding: 14px 12px; font-size: 1.15rem; line-height: 1.5; font-weight: 600; text-align: center; background: #eef4fa; border-radius: 10px; user-select: none; -webkit-user-select: none; }
 .cl-type { width: 100%; box-sizing: border-box; font: inherit; font-size: 1.05rem; padding: 12px; margin: 4px 0 12px; border: 1px solid #c5ced9; border-radius: 10px; background: #fff; }
 .cl-type[aria-invalid='true'] { border-color: #b3261e; }
+
+/* ── app mode: feels like an installed app on a phone ─────────────────────────────────────────────── */
+/* no rubber-band / pull-to-refresh while typing, no grey tap flash, no double-tap zoom (pinch zoom stays for accessibility) */
+html[data-page='collect'], html[data-page='collect'] body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+.cl { touch-action: manipulation; }
+/* keep clear of the notch, the status bar (installed app) and the home bar */
+.cl-page, .cl-gate { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px)); padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+.cl-app { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+/* app bar (start screen only) */
+.cl-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 20px; }
+.cl-brand { display: inline-flex; align-items: center; gap: 10px; font-family: Sora, Manrope, system-ui, sans-serif; font-size: 1.05rem; }
+.cl-bar-right { display: inline-flex; align-items: center; gap: 12px; }
+.cl-lang { display: inline-flex; padding: 2px; border: 1px solid #c5ced9; border-radius: 999px; }
+.cl-lang button { min-width: 36px; min-height: 30px; padding: 0 8px; border: 0; border-radius: 999px; background: none; color: #5b6878; font-size: .75rem; font-weight: 700; }
+.cl-lang button[aria-pressed='true'] { background: #16202c; color: #fff; }
+.cl-about { color: #0b6e99; font-weight: 700; font-size: .85rem; text-decoration: none; padding: 8px 0; }
+
+/* install tip */
+.cl-install { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; margin: 0 0 18px; padding: 10px 10px 10px 12px; border-radius: 14px; background: #eef4fa; }
+.cl-install p { margin: 0; font-size: .82rem; line-height: 1.35; color: #34414f; }
+.cl-install-go { border: 0; border-radius: 999px; padding: 8px 14px; background: #16202c; color: #fff; font-weight: 700; font-size: .82rem; }
+.cl-install-x { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: #5b6878; font-size: 1.3rem; line-height: 1; }
+
+/* laptop gate */
+.cl-gate { justify-items: center; gap: 4px; }
+.cl-gate p { max-width: 380px; color: #5b6878; line-height: 1.5; }
+.cl-gate-icon { margin-bottom: 12px; }
+.cl-qr { width: 220px; height: 220px; margin: 14px 0 6px; border-radius: 16px; box-shadow: 0 1px 3px rgba(22, 32, 44, .12); }
+.cl-url { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .78rem; word-break: break-all; }
+.cl-gate .cl-note { text-align: left; }
