@@ -122,7 +122,7 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
     const t0 = ghost.taps[0]?.t_down ?? 0
     ghost.taps.forEach((tp, i) => {
       timers.push(window.setTimeout(() => setPressed(tp.key), lead + tp.t_down - t0 + 250))
-      timers.push(window.setTimeout(() => { setPressed(null); setDigits((d) => (d + tp.key).slice(0, 4)); if (i === ghost.taps.length - 1) setScreen('wait') }, lead + tp.t_up - t0 + 250))
+      timers.push(window.setTimeout(() => { setPressed(null); setDigits((d) => (d + tp.key).slice(0, DEMO_PIN.length)); if (i === ghost.taps.length - 1) setScreen('wait') }, lead + tp.t_up - t0 + 250))
     })
     return () => timers.forEach((id) => window.clearTimeout(id))
   }, [ghost])
@@ -261,7 +261,7 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
               : (lang === 'en' ? `Confirm ${money(amount)} to ${toName}` : `Xác nhận ${money(amount)} cho ${toName}`)}</h3>
             <p className="w-hint">{ghost ? tx(ghost.label) : (lang === 'en' ? `Demo PIN ${DEMO_PIN}` : `PIN demo ${DEMO_PIN}`)}</p>
             <div className={`w-dots ${shake ? 'shake' : ''}`} aria-label={`${digits.length}/${DEMO_PIN.length}`}>
-              {[0, 1, 2, 3].map((i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
+              {Array.from({ length: DEMO_PIN.length }, (_, i) => i).map((i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
             </div>
             {note && <p className="w-note" role="status">{tx(note)}</p>}
             {screen === 'wait'

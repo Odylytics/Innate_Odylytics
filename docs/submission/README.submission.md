@@ -20,6 +20,8 @@ Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở 
 | Tài khoản / API key demo | `TODO`: key SDK của bản deploy (đã nằm trong bản build web, xem `web/README.md`); web demo không cần đăng nhập |
 | PIN demo | `159357` (web demo, 6 số, theo `web/README.md`) |
 
+**Chế độ của bản online:** luật thuần (so khoảng cách chuẩn hoá + luật người/máy + kiểm tra phát lại); mô hình học (LightGBM) tắt, `/health` báo `models: false`. Số liệu mô hình học ở mục 6 là đo trong `research/`.
+
 Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền bằng chính chủ; (3) người thứ hai biết PIN thử → bị yêu cầu xác thực thêm; (4) bảng điều khiển bot → bị giữ lệnh. Sản phẩm phải online đến hết 11/12/2026: `TODO: xác nhận URL web cuối và theo dõi Vercel đến hết ngày đó`.
 
 ## 3. Cách chạy local
@@ -96,7 +98,7 @@ Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2
 | Chuẩn hoá nhịp theo cặp phím (Aalto, 1.000 người) | Gần như không đổi (EER 0,249 → 0,238 ở 30 phím); không đưa vào sản phẩm | Kết quả âm tính, ghi để minh bạch |
 | **Toàn hệ thống** (E24; 10 người chưa thấy bởi cả hai mô hình học; kẻ biết PIN dùng máy khác) | Chủ 80% allow / 19% step_up / 1% hold; kẻ biết PIN 28% / 70% / 2%; bot ngây thơ và phát lại ≤ ±10% 100% hold | Số liệu mô hình học đo ở môi trường nghiên cứu |
 | **Bot thích nghi** (E27) | Phát lại nhiễu ±15–30%: 48–72% được cho qua; bot biết mẫu chuẩn: 75–82% qua | Giới hạn nói trước |
-| PIN 4 số (web demo) so với 6 số (E28) | PIN 4 số: mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%); xấp xỉ bằng cách cắt PIN 6 số | Demo giữ PIN 4 số, nói rõ |
+| PIN 4 số so với 6 số (E28) | PIN 4 số: mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%); xấp xỉ bằng cách cắt PIN 6 số | Vì vậy web demo dùng PIN 6 số `159357` |
 | Số liệu trên dữ liệu của đội | `TODO` | |
 
 Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.

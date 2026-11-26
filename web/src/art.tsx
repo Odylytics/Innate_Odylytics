@@ -31,7 +31,7 @@ export function HeroPhone() {
       <rect x="40" y="76" width="220" height="440" rx="28" {...S} strokeWidth={2.5} style={{ fill: 'var(--surface)' }} />
       <rect x="120" y="90" width="60" height="10" rx="5" {...S} />
       <path d="M70 150h90" {...S} strokeWidth={3} />
-      <g>{[0, 1, 2, 3].map((i) => <circle key={i} cx={104 + i * 30} cy={196} r={7} {...S} style={i < 3 ? { fill: 'currentColor' } : undefined} />)}</g>
+      <g>{[0, 1, 2, 3, 4, 5].map((i) => <circle key={i} cx={90 + i * 24} cy={196} r={7} {...S} style={i < 3 ? { fill: 'currentColor' } : undefined} />)}</g>
       <Pad x={70} y={240} k={46} gap={12} hit={[0, 4, 8, 2]} dots />
       <path d="M124 488h52" {...S} strokeWidth={3} />
     </svg>
