@@ -8,15 +8,13 @@ dependencies = [
     "uvicorn>=0.30",
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
-    "lightgbm>=4.0",  # mô hình học người/máy và nhận chủ; thiếu thư viện hoặc libgomp thì backend tự rơi về luật (xem /health)
-    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
-ml = []  # giữ để lệnh `uv sync --extra ml` cũ vẫn chạy: lightgbm và numpy nay là phụ thuộc mặc định
+ml = []  # giữ để lệnh `uv sync --extra ml` cũ vẫn chạy. Suy luận mô hình học dùng app/scoring/lgbm_text.py (Python thuần), không cần lightgbm/numpy/libgomp
 
 [dependency-groups]
-dev = ["pytest>=8", "httpx>=0.27"]
+dev = ["pytest>=8", "httpx>=0.27", "lightgbm>=4.0"]  # lightgbm chỉ để kiểm tương đương trong tests/test_lgbm_text.py
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

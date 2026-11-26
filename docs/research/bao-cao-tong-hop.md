@@ -39,7 +39,7 @@ Mẫu chuẩn chỉ cập nhật khi: không phải phiên đăng ký, action = 
 
 **Hai cấu hình chạy (quan trọng khi trích số liệu).** Mô hình học (LightGBM người/máy và nhận chủ) là tuỳ chọn có dự phòng luật.
 - **Có mô hình học:** cấu hình đo ở E24, E29 (bảng 5.6) và các thí nghiệm khác.
-- **Luật thuần:** người/máy chỉ bằng luật, nhận chủ chỉ bằng khoảng cách chuẩn hoá (`/health` báo `models` false). **Đây là cấu hình bản demo online và video** (chốt 26/11). Số đo của cấu hình này ở bảng "Chỉ luật" trong 5.6; nó yếu hơn rõ rệt với người biết PIN và bot thích nghi.
+- **Luật thuần:** (cho đến 26/11 bản online rơi về đây vì lightgbm không nạp được trên Vercel; đã sửa trong mã bằng bộ đọc mô hình thuần Python `lgbm_text.py`, chỉ có tác dụng sau khi deploy lại và `/health` báo true) người/máy chỉ bằng luật, nhận chủ chỉ bằng khoảng cách chuẩn hoá (`/health` báo `models` false). **Đây là cấu hình bản demo online và video** (chốt 26/11). Số đo của cấu hình này ở bảng "Chỉ luật" trong 5.6; nó yếu hơn rõ rệt với người biết PIN và bot thích nghi.
 
 **Hai tầng và bốn kịch bản (thiết kế 26/11, `../plan/bon-cong-pipeline.md` mục 7).** Tầng 1 là người hay máy (không cần đăng ký), tầng 2 là người với người (cần đăng ký; chỉ là tín hiệu rủi ro, dẫn tới `step_up`, không tự chặn). Bốn kịch bản là (Android hoặc iPhone) × (chiếm từ xa hoặc trộm máy). Android bị chiếm từ xa nghiêng về tầng 1 (`hold`); trộm máy nghiêng về tầng 2 (`step_up`). iPhone bị chiếm từ xa ngoài phạm vi theo nhận định của đội, chưa kiểm chứng bằng tài liệu. Chưa có số đo tách theo iPhone hay Android.
 

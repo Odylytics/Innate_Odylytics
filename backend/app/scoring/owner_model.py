@@ -10,6 +10,8 @@ import json
 import os
 from pathlib import Path
 
+from .lgbm_text import TextBooster
+
 MODEL_DIR = Path(os.environ.get("NHIP_MODEL_DIR", Path(__file__).parent.parent / "models"))
 _state: dict = {}
 
@@ -19,10 +21,8 @@ def _load():
         try:
             if os.environ.get("NHIP_OWNER_MODEL", "on") == "off":
                 raise RuntimeError("tắt bằng biến môi trường")
-            import lightgbm as lgb  # noqa: PLC0415
-
             meta = json.loads((MODEL_DIR / "owner_lgbm.json").read_text(encoding="utf-8"))
-            _state["m"] = (lgb.Booster(model_file=str(MODEL_DIR / "owner_lgbm.txt")), meta)
+            _state["m"] = (TextBooster.from_file(MODEL_DIR / "owner_lgbm.txt"), meta)
         except Exception:
             _state["m"] = None
     return _state["m"]

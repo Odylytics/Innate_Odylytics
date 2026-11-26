@@ -44,6 +44,8 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 - Team data pipeline (dry-run tested on SYNTHETIC data only): `research/experiments/team_data_dryrun.py` (local backend -> export -> analysis -> train), `team_analysis.py export.jsonl` (T1-T5 with bootstrap CIs by person), `train_human_model.py --export export.jsonl --out DIR` (--out or --overwrite is mandatory with --export so it cannot silently replace backend/app/models). Challenge tokens are single-use (`challenge_nonces` table, cue `challenge_token_replayed`).
 - Not built yet: ops dashboard, trained LightGBM/RF model, real data. Replay check exists (`scoring/replay.py`, wired in `/score`, threshold from SYNTHETIC data, recalibrate on real data).
 
+- Learned models (human/owner LightGBM) are evaluated by `backend/app/scoring/lgbm_text.py` (pure Python parser of the `.txt` model, no lightgbm/numpy/libgomp; equals lightgbm within 1e-9, `tests/test_lgbm_text.py`). Why: on Vercel lightgbm failed to import (no libgomp) so the online API ran rules only (`/health` models false). lightgbm is now a dev/research dependency only. After deploying, check `/health` shows models true.
+
 ## Commands (PowerShell-style in READMEs; uses `uv`)
 - Backend: `cd backend; uv sync; uv run uvicorn app.main:app --reload --port 8000` (Swagger at /docs, key `demo-key`)
 - Backend tests: `cd backend; uv run pytest -q`

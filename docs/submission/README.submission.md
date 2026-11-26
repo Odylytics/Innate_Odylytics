@@ -28,7 +28,7 @@ Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền b
 
 ```bash
 cd backend
-uv sync --extra ml          # hoặc: pip install fastapi uvicorn sqlalchemy "psycopg[binary]" lightgbm numpy
+uv sync                     # hoặc: pip install fastapi uvicorn sqlalchemy "psycopg[binary]" (mô hình học chạy bằng Python thuần, không cần lightgbm)
 uv run uvicorn app.main:app --reload --port 8000     # /docs = Swagger, key mặc định demo-key
 uv run pytest -q            # 40 bài
 cd ../attacker && uv sync && uv run pytest -q         # 8 bài
@@ -50,7 +50,7 @@ Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng
 | Thư viện | Dùng cho |
 |---|---|
 | FastAPI, Uvicorn, SQLAlchemy, psycopg | Backend API và lưu trữ |
-| LightGBM, NumPy | Mô hình người/máy (tuỳ chọn) |
+| LightGBM (chỉ để huấn luyện trong `research/` và kiểm tương đương trong test), NumPy (chỉ `research/`) | Mô hình người/máy và nhận chủ được huấn luyện bằng LightGBM; backend đọc file mô hình văn bản và dự đoán bằng Python thuần (`backend/app/scoring/lgbm_text.py`) |
 | scikit-learn, pandas, NumPy, LightGBM | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
 | React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT), qrcode-generator (MIT, mã QR trên trang thu dữ liệu); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
 | psycopg (**LGPL-3.0**) | Kết nối Postgres, dùng nguyên bản như thư viện phụ thuộc, không sao chép vào mã |
