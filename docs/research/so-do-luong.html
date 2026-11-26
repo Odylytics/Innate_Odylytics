@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Innate: sơ đồ luồng và mô hình</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: một cột đọc; mỗi hình một ý, chú thích bên dưới; thẻ mô hình ở cuối */
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --fg:#17201d; --muted:#5b6762; --line:#d3d9d6; --soft:#eef2f0;
+  --accent:#0f6b5c; --ok:#1f7a45; --warn:#9a6200; --bad:#b3261e;
+  --ok-bg:#e3f2e8; --warn-bg:#fbf0d9; --bad-bg:#fbe5e3; --acc-bg:#dcefe9;
+  --display:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101614; --surface:#18211e; --fg:#e8eeeb; --muted:#9aa8a2; --line:#34413c; --soft:#212c28;
+  --accent:#4fc3ab; --ok:#6fd194; --warn:#e8b04a; --bad:#ff8a80;
+  --ok-bg:#183323; --warn-bg:#3a2d12; --bad-bg:#3d1f1c; --acc-bg:#16332d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101614; --surface:#18211e; --fg:#e8eeeb; --muted:#9aa8a2; --line:#34413c; --soft:#212c28;
+  --accent:#4fc3ab; --ok:#6fd194; --warn:#e8b04a; --bad:#ff8a80;
+  --ok-bg:#183323; --warn-bg:#3a2d12; --bad-bg:#3d1f1c; --acc-bg:#16332d; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.6;
+  padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(28px,5vw,40px)} h2{font-size:21px} h3{font-size:16px}
+p{margin:0} code{font-size:13px;background:var(--soft);padding:1px 5px;border-radius:3px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lead{font-size:16px;max-width:64ch}
+section{display:flex;flex-direction:column;gap:14px}
+figure{margin:0;display:flex;flex-direction:column;gap:10px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px}
+.fig svg{display:block;min-width:720px;width:100%;height:auto;color:var(--fg)}
+figcaption{font-size:14px;color:var(--muted);max-width:72ch}
+svg text{fill:currentColor;font-family:var(--body);font-size:12px}
+svg .s{font-size:11px;fill:var(--muted)}
+svg .h{font-weight:600;font-size:13px}
+svg .box{fill:var(--surface);stroke:currentColor;stroke-width:1.2}
+svg .soft{fill:var(--soft);stroke:var(--line);stroke-width:1}
+svg .ln{stroke:currentColor;stroke-width:1.4;fill:none}
+svg .dash{stroke-dasharray:5 4}
+svg .ok{fill:var(--ok-bg);stroke:var(--ok);stroke-width:1.5} svg .warn{fill:var(--warn-bg);stroke:var(--warn);stroke-width:1.5} svg .bad{fill:var(--bad-bg);stroke:var(--bad);stroke-width:1.5}
+svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card dl{margin:0;display:grid;grid-template-columns:76px 1fr;gap:4px 10px;font-size:14px}
+.card dt{color:var(--muted);font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;padding-top:2px}
+.card dd{margin:0;min-width:0}
+.tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;align-self:flex-start;white-space:nowrap}
+.tag.ok{background:var(--ok-bg);color:var(--ok)} .tag.warn{background:var(--warn-bg);color:var(--warn)} .tag.bad{background:var(--bad-bg);color:var(--bad)}
+.head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+</style>
+
+</head>
+<body>
+<main>
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <span class="eyebrow">Innate · cập nhật 26/11/2026</span>
+    <h1>Luồng ý tưởng và cách các mô hình chạy</h1>
+    <p class="lead">PIN có thể bị nhìn lén, nhưng cách một người chạm và gõ thì khó bắt chước. Innate đọc cách chạm lúc xác nhận giao dịch, rồi đề xuất cho qua, hỏi thêm hoặc giữ lệnh. Nó không bao giờ tự khoá tài khoản.</p>
+  </header>
+
+  <section>
+    <h2>1. Vòng đời của một tài khoản</h2>
+    <figure>
+      <div class="fig"><svg viewBox="0 0 760 190" role="img" aria-label="Vòng đời: đăng ký ba lần tạo mẫu chuẩn, mỗi giao dịch được chấm điểm và ra quyết định, phiên allow chắc chắn cập nhật nhẹ mẫu chuẩn.">
+        <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <g class="h">
+          <rect class="box" x="0" y="30" width="130" height="70" rx="6"/><text x="65" y="58" text-anchor="middle">Đăng ký</text><text class="s" x="65" y="76" text-anchor="middle">nhập PIN 3 lần</text>
+          <rect class="box" x="158" y="30" width="130" height="70" rx="6"/><text x="223" y="58" text-anchor="middle">Mẫu chuẩn</text><text class="s" x="223" y="76" text-anchor="middle">trung bình + độ lệch</text>
+          <rect class="box" x="316" y="30" width="130" height="70" rx="6"/><text x="381" y="58" text-anchor="middle">Giao dịch</text><text class="s" x="381" y="76" text-anchor="middle">nhập PIN (+ câu)</text>
+          <rect class="acc" x="474" y="30" width="130" height="70" rx="6"/><text x="539" y="58" text-anchor="middle">Chấm điểm</text><text class="s" x="539" y="76" text-anchor="middle">/score, ~4 ms</text>
+          <rect class="box" x="632" y="30" width="128" height="70" rx="6"/><text x="696" y="58" text-anchor="middle">Quyết định</text><text class="s" x="696" y="76" text-anchor="middle">allow · step_up · hold</text>
+        </g>
+        <g class="ln"><line x1="130" y1="65" x2="156" y2="65" marker-end="url(#a1)"/><line x1="288" y1="65" x2="314" y2="65" marker-end="url(#a1)"/><line x1="446" y1="65" x2="472" y2="65" marker-end="url(#a1)"/><line x1="604" y1="65" x2="630" y2="65" marker-end="url(#a1)"/>
+          <path d="M696 100 V150 H223 V102" marker-end="url(#a1)" class="dash"/></g>
+        <text class="s" x="460" y="144" text-anchor="middle">allow chắc chắn: cập nhật nhẹ mẫu chuẩn</text>
+        <text class="s" x="460" y="168" text-anchor="middle">cổng: không phải phiên đăng ký, owner ≥ 0,8, human ≥ 0,8, trôi ≤ 1 sd</text>
+        <text class="s" x="144" y="22" text-anchor="middle">sau đó /enroll trả 409</text>
+      </svg></div>
+      <figcaption>Đăng ký chỉ lưu trung bình và độ dao động của từng đặc trưng. Không huấn luyện mô hình riêng cho từng người, vì chỉ có 3 đến 5 mẫu.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>2. Một lần chấm điểm đi qua những gì</h2>
+    <figure>
+      <div class="fig"><svg viewBox="0 0 760 520" role="img" aria-label="Phiên được tách thành ba nhánh: người hay máy, phát lại, có phải chủ. Ba điểm cộng với ngữ cảnh giao dịch được hợp nhất thành rủi ro, rồi so với ngưỡng 0,25 và 0,55 để ra allow, step_up hoặc hold.">
+        <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <rect class="soft" x="110" y="0" width="540" height="50" rx="6"/>
+        <text class="h" x="380" y="21" text-anchor="middle">Phiên → đặc trưng (features.extract)</text>
+        <text class="s" x="380" y="39" text-anchor="middle">giữ phím, cách phím, lệch tâm, kích thước chạm · vuốt · nhịp gõ câu · dán / đặt văn bản</text>
+        <g class="ln"><path d="M200 50 V76 H118 V92" marker-end="url(#a2)"/><line x1="380" y1="50" x2="380" y2="92" marker-end="url(#a2)"/><path d="M560 50 V76 H642 V92" marker-end="url(#a2)"/></g>
+
+        <rect class="box" x="0" y="94" width="236" height="168" rx="6"/>
+        <text class="h" x="12" y="116">Người hay máy?</text><text class="s" x="12" y="132">không cần đăng ký</text>
+        <text x="12" y="154">Luật bắt dấu hiệu máy:</text>
+        <text class="s" x="12" y="170">nhịp quá đều · chạm đúng tâm phím</text>
+        <text class="s" x="12" y="184">vuốt vận tốc đều · đặt / dán văn bản</text>
+        <text x="12" y="206">LightGBM trên ~30 đặc trưng</text>
+        <text class="s" x="12" y="222">học từ người thật + bot do đội sinh</text>
+        <text class="h" x="12" y="248">human = min(luật, mô hình)</text>
+
+        <rect class="box" x="262" y="94" width="236" height="168" rx="6"/>
+        <text class="h" x="274" y="116">Phát lại?</text><text class="s" x="274" y="132">so với phiên cũ của chính tài khoản</text>
+        <text x="274" y="154">Khoảng cách tương đối của</text>
+        <text class="s" x="274" y="170">giữ phím, cách phím, lệch tâm</text>
+        <text x="274" y="192">tới phiên cũ gần nhất</text>
+        <text x="274" y="214">≤ 0,07 → coi là phát lại</text>
+        <text class="s" x="274" y="230">người thật không lặp lại đến từng ms</text>
+        <text class="h" x="274" y="248">trúng → human ≤ 0,1, hold</text>
+
+        <rect class="box" x="524" y="94" width="236" height="168" rx="6"/>
+        <text class="h" x="536" y="116">Có phải chủ?</text><text class="s" x="536" y="132">cần mẫu chuẩn</text>
+        <text x="536" y="154">z = (x − mu) / sd</text>
+        <text class="s" x="536" y="170">sd co rút về phương sai dân số</text>
+        <text x="536" y="192">d = trung bình |z| → điểm khoảng cách</text>
+        <text x="536" y="214">PIN đủ 6 phím: LightGBM trên |z|</text>
+        <text class="s" x="536" y="230">thay điểm khoảng cách</text>
+        <text class="h" x="536" y="248">owner (0–1)</text>
+
+        <g class="ln"><path d="M118 262 V276 H260 V288" marker-end="url(#a2)"/><line x1="380" y1="262" x2="380" y2="288" marker-end="url(#a2)"/><path d="M642 262 V276 H500 V288" marker-end="url(#a2)"/></g>
+
+        <rect class="soft" x="0" y="300" width="150" height="66" rx="6"/>
+        <text class="h" x="75" y="322" text-anchor="middle">Ngữ cảnh</text>
+        <text class="s" x="75" y="340" text-anchor="middle">người nhận mới</text><text class="s" x="75" y="354" text-anchor="middle">số tiền lệch lịch sử</text>
+        <rect class="acc" x="190" y="290" width="380" height="86" rx="6"/>
+        <text class="h" x="380" y="314" text-anchor="middle">Hợp nhất rủi ro (fusion)</text>
+        <text x="380" y="336" text-anchor="middle">0,40·(1−human) + 0,35·(1−owner)</text>
+        <text x="380" y="354" text-anchor="middle">+ 0,15·người nhận mới + 0,10·số tiền</text>
+        <line class="ln" x1="150" y1="333" x2="188" y2="333" marker-end="url(#a2)"/>
+        <rect class="bad" x="610" y="300" width="150" height="66" rx="6"/>
+        <text class="h" x="685" y="322" text-anchor="middle">hold ngay</text>
+        <text class="s" x="685" y="340" text-anchor="middle">human &lt; 0,3 hoặc</text><text class="s" x="685" y="354" text-anchor="middle">phát lại</text>
+        <line class="ln dash" x1="610" y1="333" x2="572" y2="333" marker-end="url(#a2)"/>
+
+        <g class="ln"><path d="M380 376 V396 H118 V412" marker-end="url(#a2)"/><line x1="380" y1="376" x2="380" y2="412" marker-end="url(#a2)"/><path d="M380 376 V396 H642 V412" marker-end="url(#a2)"/></g>
+        <text class="s" x="118" y="392" text-anchor="middle">rủi ro &lt; 0,25</text><text class="s" x="642" y="392" text-anchor="middle">rủi ro &gt; 0,55</text>
+        <rect class="ok" x="0" y="414" width="236" height="56" rx="6"/><text class="h" x="118" y="438" text-anchor="middle">allow</text><text class="s" x="118" y="456" text-anchor="middle">cho qua</text>
+        <rect class="warn" x="262" y="414" width="236" height="56" rx="6"/><text class="h" x="380" y="438" text-anchor="middle">step_up</text><text class="s" x="380" y="456" text-anchor="middle">0,25 ≤ rủi ro ≤ 0,55: xác thực thêm</text>
+        <rect class="bad" x="524" y="414" width="236" height="56" rx="6"/><text class="h" x="642" y="438" text-anchor="middle">hold</text><text class="s" x="642" y="456" text-anchor="middle">giữ lệnh, chờ người duyệt</text>
+        <text class="s" x="380" y="496" text-anchor="middle">explain.py: lý do bằng tiếng Việt từ luật đã kích hoạt và độ lệch từng đặc trưng. Chỉ giải thích, không tham gia quyết định.</text>
+      </svg></div>
+      <figcaption>Ba nhánh chạy độc lập trên cùng một phiên. Người hay máy và phát lại là phần có số liệu mạnh. Nhánh nhận chủ chỉ là một tín hiệu cộng vào rủi ro, không phải cổng chặn.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>3. Trạng thái của mẫu chuẩn</h2>
+    <figure>
+      <div class="fig"><svg viewBox="0 0 760 240" role="img" aria-label="Mẫu chuẩn đi từ chưa có, có mẫu sau ba lượt đăng ký, đang cập nhật nhẹ, rồi đóng băng khi trôi quá 0,5 độ lệch chuẩn; đăng ký lại có kiểm soát là đường mở băng, chưa được cài.">
+        <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <g class="h">
+          <rect class="box" x="0" y="50" width="130" height="64" rx="6"/><text x="65" y="78" text-anchor="middle">Chưa có mẫu</text><text class="s" x="65" y="96" text-anchor="middle">owner = None</text>
+          <rect class="box" x="210" y="50" width="130" height="64" rx="6"/><text x="275" y="78" text-anchor="middle">Có mẫu</text><text class="s" x="275" y="96" text-anchor="middle">khoá đăng ký</text>
+          <rect class="acc" x="420" y="50" width="130" height="64" rx="6"/><text x="485" y="78" text-anchor="middle">Cập nhật nhẹ</text><text class="s" x="485" y="96" text-anchor="middle">α = 0,1, trần 1 sd</text>
+          <rect class="bad" x="630" y="50" width="130" height="64" rx="6"/><text x="695" y="78" text-anchor="middle">Đóng băng</text><text class="s" x="695" y="96" text-anchor="middle">cờ frozen</text>
+          <rect class="soft dash" x="630" y="160" width="130" height="64" rx="6"/><text x="695" y="188" text-anchor="middle">Đăng ký lại</text><text class="s" x="695" y="206" text-anchor="middle">có xác thực, chưa cài</text>
+        </g>
+        <g class="ln"><line x1="130" y1="82" x2="208" y2="82" marker-end="url(#a3)"/><line x1="340" y1="82" x2="418" y2="82" marker-end="url(#a3)"/><line x1="550" y1="82" x2="628" y2="82" marker-end="url(#a3)"/><line class="dash" x1="695" y1="114" x2="695" y2="158" marker-end="url(#a3)"/>
+          <path class="dash" d="M630 192 H275 V116" marker-end="url(#a3)"/></g>
+        <text class="s" x="169" y="72" text-anchor="middle">3 lượt</text>
+        <text class="s" x="379" y="64" text-anchor="middle">allow chắc</text><text class="s" x="379" y="76" text-anchor="middle">+ cổng 0,8</text>
+        <text class="s" x="589" y="64" text-anchor="middle">trôi TB</text><text class="s" x="589" y="76" text-anchor="middle">&gt; 0,5 sd</text>
+        <text class="s" x="460" y="186" text-anchor="middle">dựng lại mẫu từ mọi lượt, xoá cờ</text>
+      </svg></div>
+      <figcaption>Khi mẫu trôi một hướng thì nghi bị "dạy dần" và dừng cập nhật (E7). Nét đứt là phần mới thiết kế (<code>docs/plan/dang-ky-lai.md</code>), chưa có trong code.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>4. Từng mô hình làm gì, chắc đến đâu</h2>
+    <div class="cards">
+      <article class="card"><div class="head"><h3>Luật người/máy</h3><span class="tag ok">Chắc với bot ngây thơ</span></div>
+        <dl><dt>Vào</dt><dd>Đặc trưng PIN, vuốt, ô văn bản của một phiên.</dd>
+        <dt>Cách chạy</dt><dd>Mỗi dấu hiệu cho một điểm nghi 0 đến 1: nhịp đều (CV &lt; 0,08), chạm đúng tâm, vuốt vận tốc đều, đặt hoặc dán văn bản. Lấy dấu hiệu mạnh nhất.</dd>
+        <dt>Ra</dt><dd><code>human = 1 − max</code>, kèm mã lý do.</dd>
+        <dt>Số đo</dt><dd>Bắt bot đều và nhiễu thời gian 100%, chỉ 5% phát lại có nhiễu, 1% bot lấy mẫu dân số (E4b).</dd></dl></article>
+
+      <article class="card"><div class="head"><h3>LightGBM người/máy</h3><span class="tag warn">Yếu với bot lạ</span></div>
+        <dl><dt>Vào</dt><dd>Vector ~30 đặc trưng cố định (thiếu thì NaN).</dd>
+        <dt>Cách chạy</dt><dd>Cây quyết định tăng cường, học từ người thật StrokePIN và bot do đội sinh. Điểm được ánh xạ để ngưỡng FRR 5% bằng 0,5.</dd>
+        <dt>Ra</dt><dd>Điểm 0 đến 1; hệ thống lấy min với luật.</dd>
+        <dt>Số đo</dt><dd>Thấy loại bot: phát lại 26%, lấy mẫu dân số 73%. Bỏ loại bot đó khỏi huấn luyện: 9% và 20% (E4b).</dd></dl></article>
+
+      <article class="card"><div class="head"><h3>Phát hiện phát lại</h3><span class="tag ok">Chắc tới nhiễu ±10%</span></div>
+        <dl><dt>Vào</dt><dd>Phiên hiện tại và lịch sử phiên cũ của cùng tài khoản.</dd>
+        <dt>Cách chạy</dt><dd>Sai khác tương đối trung bình của giữ phím, cách phím, cộng lệch tâm. Lấy phiên cũ gần nhất; ≤ 0,07 là phát lại.</dd>
+        <dt>Ra</dt><dd>human ép về ≤ 0,1, nên hold.</dd>
+        <dt>Số đo</dt><dd>Bắt 100% tới ±10%, 30% ở ±15%, 1% ở ±20%. Chặn nhầm chủ 0,28% (3 phiên cũ) đến 0,64% (8 phiên) (E5b).</dd></dl></article>
+
+      <article class="card"><div class="head"><h3>Nhận chủ bằng khoảng cách</h3><span class="tag bad">Yếu, không làm cổng</span></div>
+        <dl><dt>Vào</dt><dd>Phiên và mẫu chuẩn (mu, sd mỗi đặc trưng).</dd>
+        <dt>Cách chạy</dt><dd>z = (x − mu) / sd, d = trung bình |z|, đổi sang điểm bằng hàm sigmoid. sd của đặc trưng thời gian co rút về phương sai của dân số (nu = 5) vì chỉ có 3 mẫu.</dd>
+        <dt>Ra</dt><dd>owner 0 đến 1; thiếu bằng chứng PIN thì 0.</dd>
+        <dt>Số đo</dt><dd>EER 0,20, FAR 0,57 ở FRR 5% khi cùng tư thế; đổi tư thế EER 0,32 (E9).</dd></dl></article>
+
+      <article class="card"><div class="head"><h3>LightGBM nhận chủ</h3><span class="tag warn">Tốt hơn, vẫn yếu</span></div>
+        <dl><dt>Vào</dt><dd>|z| của 24 đặc trưng, không có kích thước chạm (tránh học theo thiết bị).</dd>
+        <dt>Cách chạy</dt><dd>Học đặc trưng nào quan trọng hơn thay vì coi mọi đặc trưng ngang nhau. Chỉ chạy khi PIN đủ 6 phím; PIN 4 số rơi về khoảng cách.</dd>
+        <dt>Ra</dt><dd>Thay điểm owner, ngưỡng FRR 5% là 0,5.</dd>
+        <dt>Số đo</dt><dd>FAR@FRR5% giảm 0,573 → 0,375 (ngồi), 0,944 → 0,708 (đi) (E12b).</dd></dl></article>
+
+      <article class="card"><div class="head"><h3>Hợp nhất rủi ro</h3><span class="tag warn">Không có điểm tối ưu</span></div>
+        <dl><dt>Vào</dt><dd>human, owner, người nhận mới, số tiền lệch lịch sử.</dd>
+        <dt>Cách chạy</dt><dd>Tổng có trọng số, rồi hai ngưỡng A = 0,25 và B = 0,55. Không phải ba cổng AND nối tiếp, vì như vậy tỷ lệ chặn nhầm chủ cộng dồn.</dd>
+        <dt>Ra</dt><dd>risk, action, các phần đóng góp.</dd>
+        <dt>Số đo</dt><dd>A = 0,25: chủ ngồi allow 80%, kẻ biết PIN không được allow 72%. Tăng A thì chủ dễ qua hơn nhưng kẻ biết PIN lọt nhiều hơn (E25).</dd></dl></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Luồng thu dữ liệu của đội</h2>
+    <figure>
+      <div class="fig"><svg viewBox="0 0 760 130" role="img" aria-label="Tình nguyện viên đồng ý, tạo PIN sáu số, lặp năm lần nhập PIN rồi gõ một câu tiếng Việt, gửi năm phiên, sau đó phân tích và huấn luyện.">
+        <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <g class="h">
+          <rect class="box" x="0" y="20" width="130" height="70" rx="6"/><text x="65" y="48" text-anchor="middle">Đồng ý</text><text class="s" x="65" y="66" text-anchor="middle">tên, email, phiếu</text>
+          <rect class="box" x="158" y="20" width="130" height="70" rx="6"/><text x="223" y="48" text-anchor="middle">Tạo PIN 6 số</text><text class="s" x="223" y="66" text-anchor="middle">nhập hai lần</text>
+          <rect class="acc" x="316" y="20" width="130" height="70" rx="6"/><text x="381" y="48" text-anchor="middle">5 lần lặp</text><text class="s" x="381" y="66" text-anchor="middle">nhập PIN → gõ câu</text>
+          <rect class="box" x="474" y="20" width="130" height="70" rx="6"/><text x="539" y="48" text-anchor="middle">Gửi 5 phiên</text><text class="s" x="539" y="66" text-anchor="middle">kèm meta</text>
+          <rect class="box" x="632" y="20" width="128" height="70" rx="6"/><text x="696" y="48" text-anchor="middle">Phân tích</text><text class="s" x="696" y="66" text-anchor="middle">T1–T5, huấn luyện</text>
+        </g>
+        <g class="ln"><line x1="130" y1="55" x2="156" y2="55" marker-end="url(#a4)"/><line x1="288" y1="55" x2="314" y2="55" marker-end="url(#a4)"/><line x1="446" y1="55" x2="472" y2="55" marker-end="url(#a4)"/><line x1="604" y1="55" x2="630" y2="55" marker-end="url(#a4)"/></g>
+        <text class="s" x="380" y="116" text-anchor="middle">chỉ lưu thời điểm, toạ độ, loại phím, độ dài; không lưu nội dung câu. Có lưu PIN thử và họ tên + email (đã đồng ý).</text>
+      </svg></div>
+      <figcaption>Đường ống đã thử bằng dữ liệu giả. Chưa có người thật nào đi qua nó, nên mọi số đo ở trên vẫn đến từ bộ dữ liệu công khai.</figcaption>
+    </figure>
+  </section>
+</main>
+</body>
+</html>

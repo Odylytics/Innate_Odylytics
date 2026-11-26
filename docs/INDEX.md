@@ -8,6 +8,7 @@
 | Innate là gì, nằm ở đâu trong chồng bảo mật | [`plan/positioning.md`](plan/positioning.md), [`plan/how-it-works.md`](plan/how-it-works.md) |
 | Số đo hiện tại, giới hạn | [`research/ai-research.md`](research/ai-research.md) (mục 6b: mọi thí nghiệm), bảng chỉ mục [`../research/EXPERIMENTS.md`](../research/EXPERIMENTS.md) |
 | Báo cáo tổng hợp: flow hệ thống, flow thu dữ liệu, mọi số liệu thực nghiệm, hạn chế | [`research/bao-cao-tong-hop.md`](research/bao-cao-tong-hop.md) |
+| Sơ đồ luồng và cách từng mô hình chạy (mở bằng trình duyệt) | [`research/so-do-luong.html`](research/so-do-luong.html) |
 | Nộp bài thiếu gì, hạn, thể lệ | [`contest/submission-checklist.md`](contest/submission-checklist.md), [`contest/the-le-cuoc-thi.md`](contest/the-le-cuoc-thi.md), [`contest/dang-ky-va-cau-hoi-btc.md`](contest/dang-ky-va-cau-hoi-btc.md) |
 | Giấy phép, tài sản có sẵn, dữ liệu | [`../LICENSE`](../LICENSE), [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md), [`research/datasets.md`](research/datasets.md) |
 | Thu dữ liệu của đội ra sao | [`plan/thu-du-lieu-doi.md`](plan/thu-du-lieu-doi.md) (kế hoạch + phiếu đồng ý + lệnh phân tích) |

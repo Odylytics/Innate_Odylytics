@@ -1,6 +1,6 @@
 # Báo cáo tổng hợp Innate: flow đề tài và số liệu thực nghiệm
 
-> Lập 26/11/2026 từ mã và kết quả có trong repo (`research/results/`, `research/EXPERIMENTS.md`, `backend/`). Mọi con số dẫn tới file kết quả. **Dữ liệu người thật đều là bộ công khai (StrokePIN, Aalto, Touchalytics, CMU), chưa có dữ liệu của đội. Mọi bot là bộ sinh của đội, chưa có bot thật.** Đọc kèm [`../plan/how-it-works.md`](../plan/how-it-works.md) và [`../plan/positioning.md`](../plan/positioning.md).
+> Sơ đồ luồng, trạng thái mẫu chuẩn và thẻ từng mô hình: [`so-do-luong.html`](so-do-luong.html). Lập 26/11/2026 từ mã và kết quả có trong repo (`research/results/`, `research/EXPERIMENTS.md`, `backend/`). Mọi con số dẫn tới file kết quả. **Dữ liệu người thật đều là bộ công khai (StrokePIN, Aalto, Touchalytics, CMU), chưa có dữ liệu của đội. Mọi bot là bộ sinh của đội, chưa có bot thật.** Đọc kèm [`../plan/how-it-works.md`](../plan/how-it-works.md) và [`../plan/positioning.md`](../plan/positioning.md).
 
 ## 1. Đề tài một đoạn
 
