@@ -37,6 +37,16 @@ Mẫu chuẩn chỉ cập nhật khi: không phải phiên đăng ký, action = 
   - trần trôi 1 sd mỗi đặc trưng; trôi trung bình > 0,5 sd thì đóng băng (E7, cờ frozen)
 ```
 
+**Hai cấu hình chạy (quan trọng khi trích số liệu).** Mô hình học (LightGBM người/máy và nhận chủ) là tuỳ chọn có dự phòng luật.
+- **Có mô hình học:** cấu hình đo ở E24, E29 (bảng 5.6) và các thí nghiệm khác.
+- **Luật thuần:** người/máy chỉ bằng luật, nhận chủ chỉ bằng khoảng cách chuẩn hoá (`/health` báo `models` false). **Đây là cấu hình bản demo online và video** (chốt 26/11). Số đo của cấu hình này ở bảng "Chỉ luật" trong 5.6; nó yếu hơn rõ rệt với người biết PIN và bot thích nghi.
+
+**Hai tầng và bốn kịch bản (thiết kế 26/11, `../plan/bon-cong-pipeline.md` mục 7).** Tầng 1 là người hay máy (không cần đăng ký), tầng 2 là người với người (cần đăng ký; chỉ là tín hiệu rủi ro, dẫn tới `step_up`, không tự chặn). Bốn kịch bản là (Android hoặc iPhone) × (chiếm từ xa hoặc trộm máy). Android bị chiếm từ xa nghiêng về tầng 1 (`hold`); trộm máy nghiêng về tầng 2 (`step_up`). iPhone bị chiếm từ xa ngoài phạm vi theo nhận định của đội, chưa kiểm chứng bằng tài liệu. Chưa có số đo tách theo iPhone hay Android.
+
+**Luồng ví demo (đã cài, `web/src/Wallet.tsx`):** nhập PIN lúc mở ví chỉ ghi, không chấm điểm, không chặn; chấm điểm một lần ở bước xác nhận chuyển tiền, phiên mang cả nhịp PIN lẫn thao tác chuyển tiền. Hai kịch bản thử: Android bị chiếm từ xa (mã độc, mong đợi `hold`) và trộm máy (kẻ biết PIN, mong đợi `step_up`). Thứ tự này khác nơi E24 đến E29 đo (PIN ngay lúc xác nhận); đặc trưng của phiên vẫn gồm nhịp PIN nên số đo gần đúng, nhưng chưa đo riêng.
+
+**Hành động ở `step_up`:** lời giải thích trả về giờ là "Đề nghị gõ một câu ngắn để xác nhận trước khi chuyển" (Innate Challenge, câu ngẫu nhiên), chưa chắc nữa thì khuôn mặt hoặc OTP. Gõ câu **không phải cổng**: ở 30 phím kẻ gian vẫn lọt 43–52% (E22), nên kết quả quay lại `fusion` làm thêm bằng chứng.
+
 **Innate Challenge (bước xác thực thêm):** `GET /v1/challenge` cấp câu tiếng Việt ngẫu nhiên có ≥4 âm tiết có chỗ chọn dấu thanh, kèm token ký, dùng một lần. App gửi `fields[challenge]` (token, độ dài, sự kiện). `features.extract` thêm đặc trưng `vi_*` qua `vi_ime.py`. Hiện chỉ có tín hiệu mềm `challenge_no_ime` (≤0,3); `vi_*` chưa vào nhận chủ vì chưa có dữ liệu tiếng Việt thật.
 
 **Ràng buộc thiết kế:** chỉ lưu thời gian, toạ độ, nhãn phím; không lưu PIN tài khoản thật; `pressure` và `isTrusted` không được dựa vào; mẫu chuẩn không dạy dần; hệ thống không khoá tài khoản. Ngoại lệ có chủ đích: trang `#/collect` lưu chữ số PIN thử do tình nguyện viên tự đặt, kèm họ tên và email (có đồng ý).
@@ -181,6 +191,24 @@ Không có điểm tối ưu cho cả hai phía.
 - Quét A: A=0,20 chặn kẻ biết PIN 95% nhưng chủ chỉ qua 53%; A=0,30 cho chủ qua 89% nhưng chặn kẻ biết PIN 58%.
 - **Phân bố theo nạn nhân:** trung vị kẻ biết PIN được allow 21%, phân vị 90% là 33%, lớn nhất 58%, Gini 0,28. Không có nạn nhân nào bị allow trên 90%; 1/97 trên 50%. Tức không có người "lọt mãi mãi" ở cấu hình này.
 
+**Cấu hình bản demo online (chỉ luật, mô hình học tắt), cùng 97 người, người nhận quen** (`e29_rules_only.md`):
+
+| Nhóm | giữ lệnh | xác thực thêm | cho qua |
+|---|---|---|---|
+| Chủ, ngồi | 1% | 4% | 95% [94, 96] |
+| Chủ, đi | 0% | 13% | 87% [84, 89] |
+| Kẻ biết PIN (máy khác) | 0% | 10% | **89% [88, 91]** |
+| Bot đều / nhiễu thời gian / phát lại ±5% / ±10% | 100% | 0% | 0% |
+| Bot lấy mẫu dân số (CT4) | 0% | 22% | 78% [75, 81] |
+| Phát lại ±15% | 27% | 1% | 72% [70, 74] |
+| Phát lại ±20% / ±30% | 1% / 0% | 1% / 1% | 98% / 99% |
+| Bot biết mẫu chuẩn (scale 1,0 / 0,5) | 1% / 2% | 5% / 2% | 95% / 95% |
+
+- **Chỉ luật gần như không phân biệt được người khác biết PIN với chủ:** 89% được cho qua so với 22% khi có mô hình học. Phân bố theo nạn nhân: trung vị 92%, 54/97 nạn nhân bị cho qua trên 90%.
+- Chủ thì thoải mái hơn (95% qua) vì hệ thống ít nghi hơn, không phải vì phân biệt tốt hơn.
+- Phần luật vẫn bắt chắc bot ngây thơ và phát lại ≤±10% (100% giữ lệnh).
+- **Hệ quả cho demo:** kịch bản "Bảo biết PIN bị `step_up`" dùng persona tổng hợp có thói quen khác rõ rệt, nên chạy được trên bản luật thuần, nhưng trên người thật số đo của cấu hình này là 89% được cho qua. Không nói "Innate chặn người biết PIN" dựa trên bản demo online; nói bằng số có mô hình học (22% lọt) và nói rõ bản online chạy luật thuần.
+
 **E30, số lượt đăng ký (nhận chủ bằng khoảng cách, ngồi, 97 người):**
 
 | k | EER | FAR@FRR5% |
@@ -197,16 +225,17 @@ Không có điểm tối ưu cho cả hai phía.
 
 - **E26:** `/score` p50 3,7 ms, p95 5,2 ms, max 36,5 ms (local, sau khi nạp sẵn mô hình; trước đó lần đầu ~1 s). Không gồm mạng và cold start.
 - **R6:** 100 lần `GET /health` tới `nhip-api-taupe.vercel.app`: min 0,16 s, p50 0,22 s, p95 0,48 s, max 1,27 s. Chưa đo `/score`, cold start sau thời gian rảnh, giới hạn gói free.
-- Kiểm thử: backend 50, attacker 8, web 7 test đều qua; `vite build` thành công.
+- Kiểm thử: backend 50, attacker 8, web 8 test đều qua; `vite build` thành công.
 
 ## 6. Hạn chế đã biết (nên ghi nguyên văn trên slide)
 
 1. Chưa có dữ liệu của đội và bot thật; train và test bot dùng chung 4 bộ sinh.
-2. Nhận chủ bằng nhịp chạm yếu (FAR ~50% ở FRR 5%), đổi tư thế mất tín hiệu; kẻ biết PIN trong đo lường dùng máy khác nên số lạc quan.
-3. Bot biết mẫu chuẩn qua mặt 72–87% và phát lại ±15% đến ±20% qua 51–58% (E29, 97 người); chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
-4. Mô hình học dùng dữ liệu StrokePIN (CC BY-NC-SA 4.0) nên cả repo theo giấy phép đó; mô hình là tạm thời cho đến khi có dữ liệu đội.
-5. Chưa có đường đăng ký lại có kiểm soát (thiết kế ở `../plan/dang-ky-lai.md`); mẫu bị đóng băng chưa có cách mở.
-6. Kiểu gõ tiếng Việt chưa kiểm chứng trên bàn phím thật; chưa nối `vi_*` vào nhận chủ.
+2. **Bản demo online chạy luật thuần: kẻ biết PIN được cho qua 89% trên người thật (E29 chỉ luật)**; số tốt hơn chỉ có khi bật mô hình học.
+3. Nhận chủ bằng nhịp chạm yếu (FAR ~50% ở FRR 5%), đổi tư thế mất tín hiệu; kẻ biết PIN trong đo lường dùng máy khác nên số lạc quan.
+4. Bot biết mẫu chuẩn qua mặt 72–87% và phát lại ±15% đến ±20% qua 51–58% (E29, 97 người); chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
+5. Mô hình học dùng dữ liệu StrokePIN (CC BY-NC-SA 4.0) nên cả repo theo giấy phép đó; mô hình là tạm thời cho đến khi có dữ liệu đội.
+6. Chưa có đường đăng ký lại có kiểm soát (thiết kế ở `../plan/dang-ky-lai.md`); mẫu bị đóng băng chưa có cách mở.
+7. Kiểu gõ tiếng Việt chưa kiểm chứng trên bàn phím thật; chưa nối `vi_*` vào nhận chủ.
 
 ## 7. Việc còn lại (đến 03/12)
 
@@ -215,6 +244,7 @@ Không có điểm tối ưu cho cả hai phía.
 | Thu dữ liệu đội, chạy `team_analysis`, huấn luyện lại | Người tham gia |
 | Bot thật qua `adb` làm tập test độc lập | Điện thoại Android |
 | Đo kích thước chạm (R2) trên Android Chrome và iOS Safari | Điện thoại thật |
+| Chốt bật hay tắt mô hình học trên bản online (hiện luật thuần: kẻ biết PIN lọt 89%, E29 chỉ luật) và sửa lời kịch bản nếu bật | Quyết định của đội |
 | Deploy lại web với PIN 6 số, quay video | Quyết định deploy |
 | Điền hồ sơ nộp (tên đội, URL, key demo, README, slide) | Đội |
 | Nếu muốn bật Platt: dời A/B và `UPDATE_MIN_OWNER`, đo lại E24/E25 | Dữ liệu đội |

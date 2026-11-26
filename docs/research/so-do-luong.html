@@ -63,6 +63,18 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
   </header>
 
   <section>
+    <h2>Đọc trước: hai cấu hình chạy</h2>
+    <div class="cards">
+      <article class="card"><div class="head"><h3>Có mô hình học</h3><span class="tag warn">Cấu hình nghiên cứu</span></div>
+        <dl><dt>Gồm</dt><dd>Luật + LightGBM người/máy, khoảng cách + LightGBM nhận chủ, phát lại.</dd>
+        <dt>Số đo</dt><dd>97 người (E29): kẻ biết PIN được cho qua <b>22%</b>, chủ ngồi 76%, chủ đi 49%.</dd></dl></article>
+      <article class="card"><div class="head"><h3>Luật thuần</h3><span class="tag bad">Bản demo online và video</span></div>
+        <dl><dt>Gồm</dt><dd>Luật người/máy + khoảng cách chuẩn hoá + phát lại; mô hình học tắt (<code>/health</code> báo models false).</dd>
+        <dt>Số đo</dt><dd>97 người (E29b): kẻ biết PIN được cho qua <b>89%</b>, chủ ngồi 95%. Bot ngây thơ và phát lại ≤±10% vẫn 100% hold.</dd></dl></article>
+    </div>
+  </section>
+
+  <section>
     <h2>1. Vòng đời của một tài khoản</h2>
     <figure>
       <div class="fig"><svg viewBox="0 0 760 190" role="img" aria-label="Vòng đời: đăng ký ba lần tạo mẫu chuẩn, mỗi giao dịch được chấm điểm và ra quyết định, phiên allow chắc chắn cập nhật nhẹ mẫu chuẩn.">
@@ -70,7 +82,7 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
         <g class="h">
           <rect class="box" x="0" y="30" width="130" height="70" rx="6"/><text x="65" y="58" text-anchor="middle">Đăng ký</text><text class="s" x="65" y="76" text-anchor="middle">nhập PIN 3 lần</text>
           <rect class="box" x="158" y="30" width="130" height="70" rx="6"/><text x="223" y="58" text-anchor="middle">Mẫu chuẩn</text><text class="s" x="223" y="76" text-anchor="middle">trung bình + độ lệch</text>
-          <rect class="box" x="316" y="30" width="130" height="70" rx="6"/><text x="381" y="58" text-anchor="middle">Giao dịch</text><text class="s" x="381" y="76" text-anchor="middle">nhập PIN (+ câu)</text>
+          <rect class="box" x="316" y="30" width="130" height="70" rx="6"/><text x="381" y="58" text-anchor="middle">Giao dịch</text><text class="s" x="381" y="76" text-anchor="middle">PIN rồi chuyển tiền</text>
           <rect class="acc" x="474" y="30" width="130" height="70" rx="6"/><text x="539" y="58" text-anchor="middle">Chấm điểm</text><text class="s" x="539" y="76" text-anchor="middle">/score, ~4 ms</text>
           <rect class="box" x="632" y="30" width="128" height="70" rx="6"/><text x="696" y="58" text-anchor="middle">Quyết định</text><text class="s" x="696" y="76" text-anchor="middle">allow · step_up · hold</text>
         </g>
@@ -80,7 +92,7 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
         <text class="s" x="460" y="168" text-anchor="middle">cổng: không phải phiên đăng ký, owner ≥ 0,8, human ≥ 0,8, trôi ≤ 1 sd</text>
         <text class="s" x="144" y="22" text-anchor="middle">sau đó /enroll trả 409</text>
       </svg></div>
-      <figcaption>Đăng ký chỉ lưu trung bình và độ dao động của từng đặc trưng. Không huấn luyện mô hình riêng cho từng người, vì chỉ có 3 đến 5 mẫu.</figcaption>
+      <figcaption>Ví demo ghi nhịp PIN lúc mở ví nhưng chưa chấm điểm, và chấm một lần ở xác nhận chuyển tiền, phiên mang cả hai. Đăng ký chỉ lưu trung bình và độ dao động của từng đặc trưng. Không huấn luyện mô hình riêng cho từng người, vì chỉ có 3 đến 5 mẫu.</figcaption>
     </figure>
   </section>
 
@@ -139,7 +151,7 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
         <g class="ln"><path d="M380 376 V396 H118 V412" marker-end="url(#a2)"/><line x1="380" y1="376" x2="380" y2="412" marker-end="url(#a2)"/><path d="M380 376 V396 H642 V412" marker-end="url(#a2)"/></g>
         <text class="s" x="118" y="392" text-anchor="middle">rủi ro &lt; 0,25</text><text class="s" x="642" y="392" text-anchor="middle">rủi ro &gt; 0,55</text>
         <rect class="ok" x="0" y="414" width="236" height="56" rx="6"/><text class="h" x="118" y="438" text-anchor="middle">allow</text><text class="s" x="118" y="456" text-anchor="middle">cho qua</text>
-        <rect class="warn" x="262" y="414" width="236" height="56" rx="6"/><text class="h" x="380" y="438" text-anchor="middle">step_up</text><text class="s" x="380" y="456" text-anchor="middle">0,25 ≤ rủi ro ≤ 0,55: xác thực thêm</text>
+        <rect class="warn" x="262" y="414" width="236" height="56" rx="6"/><text class="h" x="380" y="438" text-anchor="middle">step_up</text><text class="s" x="380" y="456" text-anchor="middle">0,25 ≤ rủi ro ≤ 0,55: gõ một câu ngắn</text>
         <rect class="bad" x="524" y="414" width="236" height="56" rx="6"/><text class="h" x="642" y="438" text-anchor="middle">hold</text><text class="s" x="642" y="456" text-anchor="middle">giữ lệnh, chờ người duyệt</text>
         <text class="s" x="380" y="496" text-anchor="middle">explain.py: lý do bằng tiếng Việt từ luật đã kích hoạt và độ lệch từng đặc trưng. Chỉ giải thích, không tham gia quyết định.</text>
       </svg></div>
@@ -183,6 +195,7 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
         <dl><dt>Vào</dt><dd>Vector ~30 đặc trưng cố định (thiếu thì NaN).</dd>
         <dt>Cách chạy</dt><dd>Cây quyết định tăng cường, học từ người thật StrokePIN và bot do đội sinh. Điểm được ánh xạ để ngưỡng FRR 5% bằng 0,5.</dd>
         <dt>Ra</dt><dd>Điểm 0 đến 1; hệ thống lấy min với luật.</dd>
+        <dt>Cấu hình</dt><dd>Tắt ở bản demo online.</dd>
         <dt>Số đo</dt><dd>Thấy loại bot: phát lại 26%, lấy mẫu dân số 73%. Bỏ loại bot đó khỏi huấn luyện: 9% và 20% (E4b).</dd></dl></article>
 
       <article class="card"><div class="head"><h3>Phát hiện phát lại</h3><span class="tag ok">Chắc tới nhiễu ±10%</span></div>
@@ -201,13 +214,14 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
         <dl><dt>Vào</dt><dd>|z| của 24 đặc trưng, không có kích thước chạm (tránh học theo thiết bị).</dd>
         <dt>Cách chạy</dt><dd>Học đặc trưng nào quan trọng hơn thay vì coi mọi đặc trưng ngang nhau. Chỉ chạy khi PIN đủ 6 phím; PIN 4 số rơi về khoảng cách.</dd>
         <dt>Ra</dt><dd>Thay điểm owner, ngưỡng FRR 5% là 0,5.</dd>
+        <dt>Cấu hình</dt><dd>Tắt ở bản demo online.</dd>
         <dt>Số đo</dt><dd>FAR@FRR5% giảm 0,573 → 0,375 (ngồi), 0,944 → 0,708 (đi) (E12b).</dd></dl></article>
 
       <article class="card"><div class="head"><h3>Hợp nhất rủi ro</h3><span class="tag warn">Không có điểm tối ưu</span></div>
         <dl><dt>Vào</dt><dd>human, owner, người nhận mới, số tiền lệch lịch sử.</dd>
         <dt>Cách chạy</dt><dd>Tổng có trọng số, rồi hai ngưỡng A = 0,25 và B = 0,55. Không phải ba cổng AND nối tiếp, vì như vậy tỷ lệ chặn nhầm chủ cộng dồn.</dd>
         <dt>Ra</dt><dd>risk, action, các phần đóng góp.</dd>
-        <dt>Số đo</dt><dd>A = 0,25: chủ ngồi allow 80%, kẻ biết PIN không được allow 72%. Tăng A thì chủ dễ qua hơn nhưng kẻ biết PIN lọt nhiều hơn (E25).</dd></dl></article>
+        <dt>Số đo</dt><dd>A = 0,25, 97 người (E29, có mô hình học): chủ ngồi allow 76%, kẻ biết PIN không được allow 78%. Tăng A thì chủ dễ qua hơn nhưng kẻ biết PIN lọt nhiều hơn. Chỉnh trọng số trên dữ liệu chỉ thêm ~2 điểm, nên giữ nguyên (E31).</dd></dl></article>
     </div>
   </section>
 

@@ -18,6 +18,8 @@ from nhip_attacker import tactics  # noqa: E402
 import strokepin_loader  # noqa: E402
 
 SEED, FOLDS, N_PINS, FRR = 29, 5, 6, 0.05
+import os
+RULES_ONLY = os.environ.get('E29_MODELS') == 'off'  # bản demo online chạy luật thuần (/health models: false)
 rng = random.Random(SEED)
 S = strokepin_loader.load()
 for e in S:
@@ -134,6 +136,7 @@ t0 = time.time()
 for fi in range(FOLDS):
     FOLD[0] = fi; test = set(us[fi::FOLDS]); rest = [u for u in us if u not in test]; val, fit = rest[:12], rest[12:]
     train_human(fit, val); train_owner(fit, val)
+    if RULES_ONLY: human_model._state['m'] = None; owner_model._state['m'] = None  # như bản demo online: luật thuần (vẫn huấn luyện để giữ cùng chuỗi ngẫu nhiên)
     print(f"phần {fi + 1}/{FOLDS}: {len(test)} người kiểm thử, mô hình đã huấn luyện ({time.time() - t0:.0f}s)", flush=True)
     for u in sorted(test):
         pins = [p for (uu, p), post in by.items() if uu == u and len(post["sit"]) >= 5]
@@ -176,7 +179,7 @@ def rate(rows, col, A, B, what):
 
 
 fmt = lambda t: f"{100 * t[0]:.0f}% [{100 * t[1]:.0f}, {100 * t[2]:.0f}]"  # noqa: E731
-L = ["# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người)", "",
+L = ["# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người)" + (" — CHỈ LUẬT, mô hình học tắt (cấu hình bản demo online)" if RULES_ONLY else ""), "",
      f"Mỗi phần huấn luyện lại hai mô hình học chỉ trên người ngoài phần đó. {len(USERS)} người, tối đa {N_PINS} PIN mỗi người, ngưỡng A={A0}, B={B0}. "
      "Ô: **tỉ lệ [CI 95% bootstrap theo người]**. Kẻ biết PIN dùng MÁY KHÁC (lẫn nhiễu thiết bị); bot là bộ sinh của đội. Số phiên mỗi nhóm ở cột n.", "",
      "## Người nhận quen", "", "| Nhóm | n | hold | step_up | allow |", "|---|---|---|---|---|"]
@@ -195,5 +198,5 @@ srt = np.sort(v); n = len(srt); gini = float((2 * np.arange(1, n + 1) - n - 1).d
 L += ["", "## Phân bố theo nạn nhân (kẻ biết PIN, người nhận quen, A=0,25)", "",
       f"Tỉ lệ kẻ biết PIN được allow, tính riêng từng nạn nhân ({n} người): trung vị {100 * np.median(v):.0f}%, phân vị 90% {100 * np.quantile(v, .9):.0f}%, lớn nhất {100 * v.max():.0f}%.",
       f"Hệ số Gini {gini:.2f} (0 = đều giữa các nạn nhân, 1 = dồn vào vài người). Số nạn nhân bị allow > 50%: {(v > 0.5).sum()}/{n}; > 90%: {(v > 0.9).sum()}/{n}.", ""]
-Path(ROOT / "research/results/e29_cv_end_to_end.md").write_text("\n".join(L), encoding="utf-8")
+Path(ROOT / "research/results" / ("e29_rules_only.md" if RULES_ONLY else "e29_cv_end_to_end.md")).write_text("\n".join(L), encoding="utf-8")
 print("\n".join(L)); print(f"xong sau {time.time() - t0:.0f}s")

@@ -99,6 +99,7 @@ Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2
 | **Toàn hệ thống** (E24; 10 người chưa thấy bởi cả hai mô hình học; kẻ biết PIN dùng máy khác) | Chủ 80% allow / 19% step_up / 1% hold; kẻ biết PIN 28% / 70% / 2%; bot ngây thơ và phát lại ≤ ±10% 100% hold | Số liệu mô hình học đo ở môi trường nghiên cứu |
 | **Bot thích nghi** (E27) | Phát lại nhiễu ±15–30%: 48–72% được cho qua; bot biết mẫu chuẩn: 75–82% qua | Giới hạn nói trước |
 | PIN 4 số so với 6 số (E28) | PIN 4 số: mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%); xấp xỉ bằng cách cắt PIN 6 số | Vì vậy web demo dùng PIN 6 số `159357` |
+| **Toàn hệ thống trên 97 người** (E29, cross-validation theo người, mô hình học huấn luyện lại mỗi phần) | Có mô hình học: kẻ biết PIN được allow 22% [20, 24], chủ ngồi 76%, chủ đi 49%, bot biết mẫu chuẩn 72–87%. **Chỉ luật (cấu hình bản online): kẻ biết PIN được allow 89%**, chủ ngồi 95%; bot ngây thơ và phát lại ≤ ±10% vẫn 100% hold | Số 22% là cấu hình nghiên cứu, không phải bản online; xem `research/results/e29_*.md` |
 | Số liệu trên dữ liệu của đội | `TODO` | |
 
 Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.

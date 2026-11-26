@@ -74,7 +74,7 @@ Thiết kế đề xuất:
 2. **Kẽ hở "chủ mở khoá rồi đưa máy" (hoặc bị giật máy sau khi mở khoá):** PIN đúng nhịp chủ, nhưng người chuyển tiền là kẻ khác. Cần kiểm tra **cùng một người xuyên suốt phiên**, so nhịp bấm ở bước chuyển với nhịp PIN trong cùng phiên. Đây là giả thuyết, chưa có thí nghiệm.
 3. **Mã độc có thể không cần nhập PIN** nếu chiếm phiên đang mở; khi đó phần bằng chứng PIN trống và chỉ còn bước chuyển tiền + chuyển động, nên cần luật `missing_pin_evidence` được cân nhắc lại (hiện chỉ là lý do, xem `api.ts`).
 4. **Số liệu cũ (E24–E28) đo với PIN nằm ngay lúc xác nhận.** Khi tách PIN ra khỏi bước xác nhận, các số này không còn áp dụng nguyên vẹn và phải đo lại.
-5. **Tác động lên code và demo:** schema `SessionIn` hiện gom `pin_taps`, `fields`, `swipes` vào một phiên; cần liên kết hai phiên (đăng nhập và chuyển tiền) hoặc thêm trường. Ví demo (`Wallet.tsx`) đang đi theo thứ tự chuyển tiền → vuốt → PIN → chấm điểm, video script và PDF hướng dẫn mô tả theo thứ tự đó, nên đổi flow là đổi cả ba.
+5. **Tác động lên code và demo:** schema `SessionIn` hiện gom `pin_taps`, `fields`, `swipes` vào một phiên; cần liên kết hai phiên (đăng nhập và chuyển tiền) hoặc thêm trường. **Cập nhật 26/11: ví demo (`Wallet.tsx`) đã đổi sang PIN-trước** (mở ví bằng PIN chỉ ghi, chấm điểm ở xác nhận chuyển tiền, một phiên mang cả hai); video script và PDF hướng dẫn cần khớp thứ tự này. Phần chưa làm là đo lại E24–E29 theo thứ tự mới và liên kết hai phiên ở API.
 
 ### 7.5 Việc nên làm tiếp (theo giá trị)
 1. Chốt với đội: PIN-trước có thay flow demo và video hay chỉ là mô tả thiết kế (tác động ở 7.4 mục 5).
