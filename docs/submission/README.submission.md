@@ -20,7 +20,7 @@ Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở 
 | Tài khoản / API key demo | `TODO`: key SDK của bản deploy (đã nằm trong bản build web, xem `web/README.md`); web demo không cần đăng nhập |
 | PIN demo | `159357` (web demo, 6 số, theo `web/README.md`) |
 
-**Chế độ của bản online:** luật thuần (so khoảng cách chuẩn hoá + luật người/máy + kiểm tra phát lại); mô hình học (LightGBM) tắt, `/health` báo `models: false`. Số liệu mô hình học ở mục 6 là đo trong `research/`.
+**Chế độ của bản online:** có mô hình học (người/máy và nhận chủ); `/health` báo `models: {human: true, owner: true}` (kiểm 26/11 sau khi sửa). Mô hình huấn luyện bằng LightGBM và chạy bằng bộ đọc Python thuần `backend/app/scoring/lgbm_text.py`, nên không cần thư viện hệ thống nào trên máy chủ. Kiểm lại bất cứ lúc nào: `python backend/scripts/check_online.py <URL API>` (thoát mã 1 nếu mô hình không nạp). Tắt mô hình bằng `NHIP_HUMAN_MODEL=off`, `NHIP_OWNER_MODEL=off`; khi tắt, hệ thống chạy luật thuần và yếu hơn rõ rệt (xem mục 6, E29).
 
 Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền bằng chính chủ; (3) người thứ hai biết PIN thử → bị yêu cầu xác thực thêm; (4) bảng điều khiển bot → bị giữ lệnh. Sản phẩm phải online đến hết 11/12/2026: `TODO: xác nhận URL web cuối và theo dõi Vercel đến hết ngày đó`.
 
@@ -30,7 +30,7 @@ Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền b
 cd backend
 uv sync                     # hoặc: pip install fastapi uvicorn sqlalchemy "psycopg[binary]" (mô hình học chạy bằng Python thuần, không cần lightgbm)
 uv run uvicorn app.main:app --reload --port 8000     # /docs = Swagger, key mặc định demo-key
-uv run pytest -q            # 40 bài
+uv run pytest -q            # 53 bài
 cd ../attacker && uv sync && uv run pytest -q         # 8 bài
 cd .. && node --test sdk/innate-compose.test.js        # 4 bài (SDK nhập liệu điện thoại)
 cd web && npm install && npm test && npm run dev       # trang web demo (Vite)
@@ -40,7 +40,7 @@ Biến môi trường: `DATABASE_URL`, `NHIP_API_KEYS` (SDK), `NHIP_OPS_KEYS` (d
 
 ## 4. Công nghệ
 
-Python 3.11+, FastAPI, SQLAlchemy (SQLite khi chạy local, Postgres khi deploy), LightGBM (mô hình người/máy, tuỳ chọn), web demo React 18 + TypeScript + Vite trong `web/` (có SDK thu sự kiện chạm), SDK nhập liệu cho điện thoại `sdk/innate-compose.js`. Hạ tầng: Vercel (API và web, hai project) + Neon Postgres (theo `CLAUDE.md`; `TODO: xác nhận`).
+Python 3.11+, FastAPI, SQLAlchemy (SQLite khi chạy local, Postgres khi deploy), mô hình người/máy và nhận chủ huấn luyện bằng LightGBM, chạy bằng Python thuần (`lgbm_text.py`), web demo React 18 + TypeScript + Vite trong `web/` (có SDK thu sự kiện chạm), SDK nhập liệu cho điện thoại `sdk/innate-compose.js`. Hạ tầng: Vercel (API và web, hai project) + Neon Postgres (theo `CLAUDE.md`; `TODO: xác nhận`).
 
 Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng thời gian/toạ độ → (A) người hay máy: luật + LightGBM + kiểm tra phát lại → (B) có phải chủ: so với mẫu chuẩn bằng khoảng cách chuẩn hoá (co rút phương sai về dân số cho đặc trưng thời gian) rồi **LightGBM học trọng số** trên độ lệch → (C) hợp nhất có trọng số + giải thích bằng mẫu câu.
 
@@ -51,8 +51,9 @@ Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng
 |---|---|
 | FastAPI, Uvicorn, SQLAlchemy, psycopg | Backend API và lưu trữ |
 | LightGBM (chỉ để huấn luyện trong `research/` và kiểm tương đương trong test), NumPy (chỉ `research/`) | Mô hình người/máy và nhận chủ được huấn luyện bằng LightGBM; backend đọc file mô hình văn bản và dự đoán bằng Python thuần (`backend/app/scoring/lgbm_text.py`) |
-| scikit-learn, pandas, NumPy, LightGBM | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
-| React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT), qrcode-generator (MIT, mã QR trên trang thu dữ liệu); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
+| scikit-learn, pandas | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
+| `backend/app/scoring/lgbm_text.py` (mã của đội, viết mới) | Đọc định dạng văn bản của mô hình LightGBM (MIT); kiểm bằng test so với lightgbm |
+| React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT), Tailwind CSS và `@tailwindcss/vite` (MIT, chỉ trang landing), qrcode-generator (MIT, mã QR trên trang thu dữ liệu); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
 | psycopg (**LGPL-3.0**) | Kết nối Postgres, dùng nguyên bản như thư viện phụ thuộc, không sao chép vào mã |
 | pytest, httpx | Kiểm thử |
 
@@ -71,6 +72,7 @@ Bot trong `attacker/` là **dữ liệu tự sinh** (4 chiến thuật), không 
 | Tài sản | Nguồn | Ghi chú |
 |---|---|---|
 | Hệ thiết kế và khung giao diện web | **Movago**, trang demo web trước đây của một thành viên (team Odylytics), dùng lại: `styles.css`, `ui.tsx`, `smooth.ts`, `sound.ts`, `Intro.tsx`, `StoryBar.tsx`... | Nội dung Innate, ví, SDK, client API, các trang và hình vẽ là mới |
+| Logo, biểu tượng ứng dụng, wordmark (`web/public/brand/`) | `TODO: xác nhận nguồn` (README web ghi lấy từ Figma brand kit của đội) | Không dùng logo hay tên MoMo |
 | Tham chiếu bố cục | Mẫu Movora (Framer Marketplace) qua `DESIGN.md` của Movago | Chỉ lưới, khoảng cách, hình khối; không dùng ảnh, logo, chữ của Movora |
 | Phông chữ | Sora, Manrope, JetBrains Mono (SIL OFL, Google Fonts) | Sora không có glyph tiếng Việt: tiêu đề tiếng Việt dùng Manrope |
 
@@ -99,7 +101,7 @@ Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2
 | **Toàn hệ thống** (E24; 10 người chưa thấy bởi cả hai mô hình học; kẻ biết PIN dùng máy khác) | Chủ 80% allow / 19% step_up / 1% hold; kẻ biết PIN 28% / 70% / 2%; bot ngây thơ và phát lại ≤ ±10% 100% hold | Số liệu mô hình học đo ở môi trường nghiên cứu |
 | **Bot thích nghi** (E27) | Phát lại nhiễu ±15–30%: 48–72% được cho qua; bot biết mẫu chuẩn: 75–82% qua | Giới hạn nói trước |
 | PIN 4 số so với 6 số (E28) | PIN 4 số: mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%); xấp xỉ bằng cách cắt PIN 6 số | Vì vậy web demo dùng PIN 6 số `159357` |
-| **Toàn hệ thống trên 97 người** (E29, cross-validation theo người, mô hình học huấn luyện lại mỗi phần) | Có mô hình học: kẻ biết PIN được allow 22% [20, 24], chủ ngồi 76%, chủ đi 49%, bot biết mẫu chuẩn 72–87%. **Chỉ luật (cấu hình bản online): kẻ biết PIN được allow 89%**, chủ ngồi 95%; bot ngây thơ và phát lại ≤ ±10% vẫn 100% hold | Số 22% là cấu hình nghiên cứu, không phải bản online; xem `research/results/e29_*.md` |
+| **Toàn hệ thống trên 97 người** (E29, cross-validation theo người, mô hình học huấn luyện lại mỗi phần) | Có mô hình học: kẻ biết PIN được allow 22% [20, 24], chủ ngồi 76%, chủ đi 49%, bot biết mẫu chuẩn 72–87%. **Chỉ luật (khi tắt mô hình học): kẻ biết PIN được allow 89%**, chủ ngồi 95%; bot ngây thơ và phát lại ≤ ±10% vẫn 100% hold | Bản online hiện có mô hình học bật (kiểm `/health`), nhưng số 22% đo trong `research/`, chưa đo trên bản online; xem `research/results/e29_*.md` |
 | Số liệu trên dữ liệu của đội | `TODO` | |
 
 Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.

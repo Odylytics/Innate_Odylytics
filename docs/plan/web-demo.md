@@ -36,7 +36,7 @@ Phát hiện:
 | # | Việc | Ai / ở đâu | Ghi chú |
 |---|---|---|---|
 | 1 | Deploy `web/` (Root Directory = `web`) với `VITE_SDK_KEY` | người deploy | Thiếu key → API trả 401, demo báo lỗi |
-| 2 | Chốt bật AI trên API online hay không | nhóm | **Đã chốt (26/11): demo và video chạy luật thuần, mô hình học tắt** (`/health` báo `models: false`); kịch bản bước Bảo khớp với chế độ này. Nếu sau này bật: bằng chứng "AI là lõi" rõ hơn, nhưng phải sửa lời kịch bản bước Bảo (hoặc chọn hạt giống khác) và chấp nhận chủ ví đôi khi bị `step_up` |
+| 2 | Chốt bật AI trên API online hay không | nhóm | **Cập nhật 26/11:** từ nay bản online có mô hình học (sửa bằng `lgbm_text.py`; `/health` báo true; kiểm bằng `backend/scripts/check_online.py`). Kịch bản bước Bảo được viết cho luật thuần, nên phải chạy thử lại và sửa lời (Bảo có thể bị `hold` thay vì `step_up`; chủ đôi khi bị `step_up`) |
 | 3 | ~~Giữ PIN 4 số~~ **Đã chốt PIN 6 số `159357`** (26/11): ví demo, kịch bản và tài liệu đều dùng 6 số | web | PIN 4 số làm mất mô hình chủ học và để kẻ biết PIN lọt nhiều hơn (E28) |
 | 4 | Thử trên iPhone thật và laptop thật | nhóm | Safari iOS hỗ trợ Pointer Events; chưa kiểm `width/height` chạm trên iOS. Thử nhanh qua mạng LAN: chạy Vite với `--host` và API với `--host 0.0.0.0`, mở `http://<IP máy Mac>:5173` trên iPhone |
 | 5 | Ghi "Hướng dẫn dùng thử" trên landing + PDF 1 trang | `web/` + `docs/submission/` | Link, PIN `159357`, 3 bước |

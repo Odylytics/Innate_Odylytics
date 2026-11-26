@@ -21,8 +21,8 @@ Python (`backend/pyproject.toml`, `attacker/pyproject.toml`; licences from insta
 | FastAPI, SQLAlchemy, pydantic, pytest | MIT | |
 | Uvicorn, Starlette, httpx | BSD-3-Clause | |
 | **psycopg / psycopg-binary** | **LGPL-3.0-only** | Used unmodified as a dependency (Postgres driver); not copied into this repo. Keep it replaceable (do not vendor it) |
-| LightGBM | MIT | optional extra `ml` |
-| NumPy, scikit-learn, pandas | BSD-3-Clause (NumPy bundles BSD/0BSD/MIT/Zlib/CC0 parts) | `research/` only (scikit-learn, pandas) |
+| LightGBM | MIT | Huấn luyện mô hình (`research/`) và kiểm tương đương trong test (dev dependency). **Không chạy trong sản phẩm:** `backend/app/scoring/lgbm_text.py` (mã của đội) đọc file mô hình văn bản bằng Python thuần |
+| NumPy, scikit-learn, pandas | BSD-3-Clause (NumPy bundles BSD/0BSD/MIT/Zlib/CC0 parts) | `research/` only (not a runtime dependency of the backend since 26/11) |
 
 Web (`web/package.json`; licences from the npm registry):
 
@@ -31,7 +31,7 @@ Web (`web/package.json`; licences from the npm registry):
 | React, React DOM, Lenis, Vite, Vitest, @vitejs/plugin-react, qrcode-generator | MIT |
 | TypeScript | Apache-2.0 |
 | @dicebear/core, @dicebear/notionists (dev dependencies, used to pre-render avatars) | MIT |
-| Tailwind CSS (landing page only, per `web/README.md`) | MIT (`TODO: confirm it is still used; it is not in package.json`) |
+| Tailwind CSS, @tailwindcss/vite (landing page only; devDependencies in `web/package.json`) | MIT |
 
 Research-only code in `research/external/` (git-ignored, not shipped): **TypeFormer** (MIT, Stragapede et al.).
 
@@ -51,7 +51,7 @@ Research-only code in `research/external/` (git-ignored, not shipped): **TypeFor
 | Tool | Use |
 |---|---|
 | Claude Code (Anthropic), model Claude Sonnet 5.5 | Code, experiments, documents, paper review. Every reported number is produced by code in `research/` and can be re-run |
-| Claude (Anthropic) web search and the claude.ai Artifact feature | Related-work search; two private helper pages (statistics chart, phone keyboard probe) |
+| Claude (Anthropic) web search and the claude.ai Artifact feature | Related-work search; private helper pages (progress report, result charts, flow diagram, statistics chart, phone keyboard probe) |
 
 ## 5. Papers
 

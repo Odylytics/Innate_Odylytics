@@ -39,7 +39,7 @@ Mẫu chuẩn chỉ cập nhật khi: không phải phiên đăng ký, action = 
 
 **Hai cấu hình chạy (quan trọng khi trích số liệu).** Mô hình học (LightGBM người/máy và nhận chủ) là tuỳ chọn có dự phòng luật.
 - **Có mô hình học:** cấu hình đo ở E24, E29 (bảng 5.6) và các thí nghiệm khác.
-- **Luật thuần:** (cho đến 26/11 bản online rơi về đây vì lightgbm không nạp được trên Vercel; đã sửa trong mã bằng bộ đọc mô hình thuần Python `lgbm_text.py`, chỉ có tác dụng sau khi deploy lại và `/health` báo true) người/máy chỉ bằng luật, nhận chủ chỉ bằng khoảng cách chuẩn hoá (`/health` báo `models` false). **Đây là cấu hình bản demo online và video** (chốt 26/11). Số đo của cấu hình này ở bảng "Chỉ luật" trong 5.6; nó yếu hơn rõ rệt với người biết PIN và bot thích nghi.
+- **Luật thuần:** người/máy chỉ bằng luật, nhận chủ chỉ bằng khoảng cách chuẩn hoá (`/health` báo `models` false). Đây là cấu hình bản online **cho đến 26/11**, khi lightgbm không nạp được trên Vercel (thiếu thư viện hệ thống). Đã sửa bằng bộ đọc mô hình thuần Python `lgbm_text.py`; sau khi deploy lại, `/health` báo true (kiểm 26/11). Luật thuần vẫn là chế độ dự phòng và khi tắt mô hình bằng công tắc. Số đo ở bảng "Chỉ luật" trong 5.6; nó yếu hơn rõ rệt với người biết PIN và bot thích nghi.
 
 **Hai tầng và bốn kịch bản (thiết kế 26/11, `../plan/bon-cong-pipeline.md` mục 7).** Tầng 1 là người hay máy (không cần đăng ký), tầng 2 là người với người (cần đăng ký; chỉ là tín hiệu rủi ro, dẫn tới `step_up`, không tự chặn). Bốn kịch bản là (Android hoặc iPhone) × (chiếm từ xa hoặc trộm máy). Android bị chiếm từ xa nghiêng về tầng 1 (`hold`); trộm máy nghiêng về tầng 2 (`step_up`). iPhone bị chiếm từ xa ngoài phạm vi theo nhận định của đội, chưa kiểm chứng bằng tài liệu. Chưa có số đo tách theo iPhone hay Android.
 
@@ -207,7 +207,7 @@ Không có điểm tối ưu cho cả hai phía.
 - **Chỉ luật gần như không phân biệt được người khác biết PIN với chủ:** 89% được cho qua so với 22% khi có mô hình học. Phân bố theo nạn nhân: trung vị 92%, 54/97 nạn nhân bị cho qua trên 90%.
 - Chủ thì thoải mái hơn (95% qua) vì hệ thống ít nghi hơn, không phải vì phân biệt tốt hơn.
 - Phần luật vẫn bắt chắc bot ngây thơ và phát lại ≤±10% (100% giữ lệnh).
-- **Hệ quả cho demo:** kịch bản "Bảo biết PIN bị `step_up`" dùng persona tổng hợp có thói quen khác rõ rệt, nên chạy được trên bản luật thuần, nhưng trên người thật số đo của cấu hình này là 89% được cho qua. Không nói "Innate chặn người biết PIN" dựa trên bản demo online; nói bằng số có mô hình học (22% lọt) và nói rõ bản online chạy luật thuần.
+- **Hệ quả cho demo:** kịch bản "Bảo biết PIN bị `step_up`" dùng persona tổng hợp có thói quen khác rõ rệt, nên chạy được trên bản luật thuần; với mô hình học bật, kết quả demo thay đổi (số đo cũ: Bảo bị `hold` 14/25 lần) và phải quay thử lại. Trên người thật, luật thuần cho 89% được cho qua và mô hình học cho 22%. Không dùng demo (phiên mô phỏng) làm bằng chứng "chặn được người biết PIN"; dùng số đo E29.
 
 **E30, số lượt đăng ký (nhận chủ bằng khoảng cách, ngồi, 97 người):**
 
@@ -230,7 +230,7 @@ Không có điểm tối ưu cho cả hai phía.
 ## 6. Hạn chế đã biết (nên ghi nguyên văn trên slide)
 
 1. Chưa có dữ liệu của đội và bot thật; train và test bot dùng chung 4 bộ sinh.
-2. **Bản demo online chạy luật thuần: kẻ biết PIN được cho qua 89% trên người thật (E29 chỉ luật)**; số tốt hơn chỉ có khi bật mô hình học.
+2. **Khi mô hình học tắt (lỗi nạp hoặc công tắc), hệ thống rơi về luật thuần và kẻ biết PIN được cho qua 89% trên người thật (E29 chỉ luật)**; số tốt hơn (22%) chỉ có khi mô hình học bật. Đã có test và script `check_online.py` để canh điều này.
 3. Nhận chủ bằng nhịp chạm yếu (FAR ~50% ở FRR 5%), đổi tư thế mất tín hiệu; kẻ biết PIN trong đo lường dùng máy khác nên số lạc quan.
 4. Bot biết mẫu chuẩn qua mặt 72–87% và phát lại ±15% đến ±20% qua 51–58% (E29, 97 người); chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
 5. Mô hình học dùng dữ liệu StrokePIN (CC BY-NC-SA 4.0) nên cả repo theo giấy phép đó; mô hình là tạm thời cho đến khi có dữ liệu đội.
@@ -244,7 +244,7 @@ Không có điểm tối ưu cho cả hai phía.
 | Thu dữ liệu đội, chạy `team_analysis`, huấn luyện lại | Người tham gia |
 | Bot thật qua `adb` làm tập test độc lập | Điện thoại Android |
 | Đo kích thước chạm (R2) trên Android Chrome và iOS Safari | Điện thoại thật |
-| Chốt bật hay tắt mô hình học trên bản online (hiện luật thuần: kẻ biết PIN lọt 89%, E29 chỉ luật) và sửa lời kịch bản nếu bật | Quyết định của đội |
+| Quay thử lại demo với mô hình học bật (đã bật từ 26/11) và sửa lời kịch bản bước Bảo; chạy `check_online.py` trước khi quay và trước 03/12, 11/12 | Đội |
 | Deploy lại web với PIN 6 số, quay video | Quyết định deploy |
 | Điền hồ sơ nộp (tên đội, URL, key demo, README, slide) | Đội |
 | Nếu muốn bật Platt: dời A/B và `UPDATE_MIN_OWNER`, đo lại E24/E25 | Dữ liệu đội |

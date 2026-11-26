@@ -1,4 +1,4 @@
-# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người) — CHỈ LUẬT, mô hình học tắt (cấu hình bản demo online)
+# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người) — CHỈ LUẬT, mô hình học tắt (chế độ dự phòng)
 
 Mỗi phần huấn luyện lại hai mô hình học chỉ trên người ngoài phần đó. 97 người, tối đa 6 PIN mỗi người, ngưỡng A=0.25, B=0.55. Ô: **tỉ lệ [CI 95% bootstrap theo người]**. Kẻ biết PIN dùng MÁY KHÁC (lẫn nhiễu thiết bị); bot là bộ sinh của đội. Số phiên mỗi nhóm ở cột n.
 

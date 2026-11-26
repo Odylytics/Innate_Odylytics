@@ -65,11 +65,11 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
   <section>
     <h2>Đọc trước: hai cấu hình chạy</h2>
     <div class="cards">
-      <article class="card"><div class="head"><h3>Có mô hình học</h3><span class="tag warn">Cấu hình nghiên cứu</span></div>
+      <article class="card"><div class="head"><h3>Có mô hình học</h3><span class="tag ok">Bản online hiện tại (từ 26/11)</span></div>
         <dl><dt>Gồm</dt><dd>Luật + LightGBM người/máy, khoảng cách + LightGBM nhận chủ, phát lại.</dd>
         <dt>Số đo</dt><dd>97 người (E29): kẻ biết PIN được cho qua <b>22%</b>, chủ ngồi 76%, chủ đi 49%.</dd></dl></article>
-      <article class="card"><div class="head"><h3>Luật thuần</h3><span class="tag bad">Bản demo online và video</span></div>
-        <dl><dt>Gồm</dt><dd>Luật người/máy + khoảng cách chuẩn hoá + phát lại; mô hình học tắt (<code>/health</code> báo models false).</dd>
+      <article class="card"><div class="head"><h3>Luật thuần</h3><span class="tag bad">Dự phòng, hoặc khi tắt mô hình</span></div>
+        <dl><dt>Gồm</dt><dd>Luật người/máy + khoảng cách chuẩn hoá + phát lại; mô hình học tắt (<code>/health</code> báo models false). Bản online ở trong trạng thái này cho đến 26/11, vì lightgbm không nạp được trên Vercel; đã sửa.</dd>
         <dt>Số đo</dt><dd>97 người (E29b): kẻ biết PIN được cho qua <b>89%</b>, chủ ngồi 95%. Bot ngây thơ và phát lại ≤±10% vẫn 100% hold.</dd></dl></article>
     </div>
   </section>

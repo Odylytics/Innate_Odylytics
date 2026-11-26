@@ -43,7 +43,7 @@ Gợi ý: giữ câu ngẫu nhiên làm cổng chống bot/phát lại; câu c�
 ## 7. Flow mới (26/11/2026, thiết kế, chưa cài, chưa đo)
 
 ### 7.1 Hai tầng chấm điểm
-1. **Tầng 1, người hay máy** (không cần đăng ký): luật + LightGBM tuỳ chọn + kiểm tra phát lại (`human.py`, `human_model.py`, `replay.py`). Đã có. Bản online hiện chạy luật thuần (`/health`: `human:false, owner:false`).
+1. **Tầng 1, người hay máy** (không cần đăng ký): luật + LightGBM tuỳ chọn + kiểm tra phát lại (`human.py`, `human_model.py`, `replay.py`). Đã có. Bản online có mô hình học bật từ 26/11 (`/health`: `human:true, owner:true`; trước đó rơi về luật vì lightgbm không nạp được trên Vercel).
 2. **Tầng 2, người với người** (cần đăng ký): so thao tác với mẫu của chủ (`owner.py`, `owner_model.py` tuỳ chọn). Đã có; chỉ là **tín hiệu rủi ro, không phải cổng** (kẻ biết PIN lọt 38–57% ở FRR 5%).
 3. Hợp nhất trong `fusion.py` rồi `allow | step_up | hold`. Tầng 2 chỉ dẫn tới `step_up`, không bao giờ tự chặn.
 

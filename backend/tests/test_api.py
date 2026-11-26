@@ -478,3 +478,14 @@ def test_template_freezes_when_drift_is_directional():
         tpl = owner.update(tpl, far)
     assert tpl["frozen"] and owner.drift(tpl) > owner.FREEZE_DRIFT
     assert owner.update(tpl, feats[1]) is tpl  # đóng băng: không nhận thêm phiên nào
+
+
+def test_learned_models_load_by_default(client):
+    """Bản nộp phải có mô hình học chạy ngay khi cài đặt mặc định (không cần lightgbm/libgomp): /health báo true và file mô hình có mặt."""
+    from pathlib import Path
+    from app.scoring import human_model, owner_model
+    models = Path(__file__).parents[1] / "app" / "models"
+    for f in ("human_lgbm.txt", "human_lgbm.json", "owner_lgbm.txt", "owner_lgbm.json"):
+        assert (models / f).is_file(), f
+    assert client.get("/health").json()["models"] == {"human": True, "owner": True}
+    assert human_model.loaded() and owner_model.loaded()

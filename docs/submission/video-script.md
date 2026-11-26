@@ -1,6 +1,6 @@
 # Kịch bản video giới thiệu (≤ 3 phút, MP4)
 
-> Quay **sản phẩm chạy thật** (thể lệ). **Bản quay chạy luật thuần, không có mô hình học** (`/health` báo `models: false`): lời đọc không nói "AI/mô hình học" cho phần demo; PIN demo 6 số `159357`. Phần quá 3:00 không được xem: mục tiêu 2:45. ~380 từ lời đọc. `[TODO]` = cần quay khi có URL demo.
+> Quay **sản phẩm chạy thật** (thể lệ). **Quay sau khi `python backend/scripts/check_online.py` báo OK (mô hình học đã nạp).** Kịch bản dưới đây viết cho luật thuần, nên phải **quay thử và sửa lại lời** cho khớp kết quả thật của bản có mô hình học (người biết PIN có thể bị `hold` thay vì `step_up`, chủ đôi khi bị `step_up`); PIN demo 6 số `159357`. Phần quá 3:00 không được xem: mục tiêu 2:45. ~380 từ lời đọc. `[TODO]` = cần quay khi có URL demo.
 
 | Thời gian | Hình | Lời đọc |
 |---|---|---|
@@ -14,4 +14,4 @@
 | 2:30–2:50 | Slide hạn chế + dòng chữ "Tín hiệu rủi ro, không phải chìa khoá" + dashboard vận hành | "Innate không thay PIN hay khuôn mặt, và không tự khoá tài khoản. Chúng tôi đo trung thực, và nói rõ giới hạn. Đội vận hành nhận bằng chứng có giải thích để quyết định." |
 | 2:50–3:00 | Logo + "PIN is what you know. Innate is how you are." + tên đội | "Innate: lớp kiểm chứng con người cho ví điện tử." |
 
-**Lưu ý quay:** ghi màn hình điện thoại thật; phiên của mã độc và "người biết PIN" trong bảng điều khiển là **mô phỏng** (sinh trong trình duyệt, chấm thật trên API): ghi chú "mô phỏng" trên hình (persona mô phỏng có thói quen khác chủ rõ rệt; trên người thật bản luật thuần cho kẻ biết PIN qua 89%, xem E29: không nói "chặn được người biết PIN" trên demo); bật sẵn dữ liệu đã đăng ký để khỏi chờ; có bản dự phòng nếu mạng chậm; không để lộ API key; không dùng logo hay tên thương hiệu của bên thứ ba.
+**Lưu ý quay:** ghi màn hình điện thoại thật; phiên của mã độc và "người biết PIN" trong bảng điều khiển là **mô phỏng** (sinh trong trình duyệt, chấm thật trên API): ghi chú "mô phỏng" trên hình (persona mô phỏng có thói quen khác chủ rõ rệt; trên người thật có mô hình học cho kẻ biết PIN qua 22% [20, 24], 97 người, nhưng các phiên trong demo là mô phỏng nên không nói "chặn được người biết PIN" bằng chính bản demo); bật sẵn dữ liệu đã đăng ký để khỏi chờ; có bản dự phòng nếu mạng chậm; không để lộ API key; không dùng logo hay tên thương hiệu của bên thứ ba.

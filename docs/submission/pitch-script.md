@@ -65,10 +65,10 @@ Chúng tôi tìm và **không thấy công trình công bố nào** dùng kiểu
 Thử trên StrokePIN (E23): chuyển động cho EER 0,04 nhưng đó là nhiễu thiết bị (mỗi người một máy) và mất hết khi đổi tư thế; dữ liệu chỉ 5 Hz nên không kiểm được cú giật khi chạm. Chúng tôi coi đó là ứng viên chống bot ("có tay cầm"), chưa tuyên bố.
 
 **16. Bản online chạy mô hình học chưa?**
-Chưa: bản demo và video chạy luật thuần (`/health` báo `models: false`). Trên người thật (E29, 97 người), luật thuần cho kẻ biết PIN qua 89%, còn có mô hình học thì 22%: ta nói rõ điều này, không nói demo chặn được người biết PIN. Mô hình học là tuỳ chọn có dự phòng luật; số liệu có mô hình học là đo ở môi trường nghiên cứu, không phải thứ giám khảo thấy trên demo. `[TODO: kiểm lại /health lúc nộp]`
+Rồi: `/health` báo cả hai mô hình đã nạp, mô hình chạy bằng Python thuần nên không phụ thuộc thư viện hệ thống. Mô hình có dự phòng luật nếu lỗi. Trên người thật (E29, 97 người), có mô hình học thì kẻ biết PIN được cho qua 22%, tắt mô hình thì 89%. Số này đo trong `research/`, chưa đo trên bản online; các phiên trong demo là mô phỏng. `[TODO: chạy backend/scripts/check_online.py lúc nộp và trước 11/12]`
 
 **17. Vì sao demo dùng PIN 6 số?**
-Mô hình chủ học trên PIN 6 số (StrokePIN), và với PIN 4 số kẻ biết PIN lọt nhiều hơn rõ rệt (E28: 68% so với 28% được `allow`), nên demo dùng PIN 6 số `159357`. Bản demo online chạy **luật thuần** (so khoảng cách chuẩn hoá + luật người/máy, mô hình học tắt); chúng tôi nói thẳng điều này.
+Mô hình chủ học trên PIN 6 số (StrokePIN), và với PIN 4 số kẻ biết PIN lọt nhiều hơn rõ rệt (E28: 68% so với 28% được `allow`), nên demo dùng PIN 6 số `159357`. Mô hình học đang bật trên bản online; nếu nó tắt (lỗi hay công tắc), hệ thống tự rơi về luật và yếu hơn, và chúng tôi nói thẳng điều này.
 
 ## Nguyên tắc khi trả lời
 Nêu giới hạn **trước** khi bị hỏi; dùng "tín hiệu rủi ro", "rất khó", không dùng "không thể", "bắt mọi mã độc"; số liệu nào chưa phải dữ liệu của đội thì nói rõ.

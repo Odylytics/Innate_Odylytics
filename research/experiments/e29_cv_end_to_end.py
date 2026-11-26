@@ -19,7 +19,7 @@ import strokepin_loader  # noqa: E402
 
 SEED, FOLDS, N_PINS, FRR = 29, 5, 6, 0.05
 import os
-RULES_ONLY = os.environ.get('E29_MODELS') == 'off'  # bản demo online chạy luật thuần (/health models: false)
+RULES_ONLY = os.environ.get('E29_MODELS') == 'off'  # luật thuần = chế độ dự phòng khi mô hình học tắt (bản online ở chế độ này đến 26/11)
 rng = random.Random(SEED)
 S = strokepin_loader.load()
 for e in S:
@@ -136,7 +136,7 @@ t0 = time.time()
 for fi in range(FOLDS):
     FOLD[0] = fi; test = set(us[fi::FOLDS]); rest = [u for u in us if u not in test]; val, fit = rest[:12], rest[12:]
     train_human(fit, val); train_owner(fit, val)
-    if RULES_ONLY: human_model._state['m'] = None; owner_model._state['m'] = None  # như bản demo online: luật thuần (vẫn huấn luyện để giữ cùng chuỗi ngẫu nhiên)
+    if RULES_ONLY: human_model._state['m'] = None; owner_model._state['m'] = None  # luật thuần (vẫn huấn luyện để giữ cùng chuỗi ngẫu nhiên)
     print(f"phần {fi + 1}/{FOLDS}: {len(test)} người kiểm thử, mô hình đã huấn luyện ({time.time() - t0:.0f}s)", flush=True)
     for u in sorted(test):
         pins = [p for (uu, p), post in by.items() if uu == u and len(post["sit"]) >= 5]
@@ -179,7 +179,7 @@ def rate(rows, col, A, B, what):
 
 
 fmt = lambda t: f"{100 * t[0]:.0f}% [{100 * t[1]:.0f}, {100 * t[2]:.0f}]"  # noqa: E731
-L = ["# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người)" + (" — CHỈ LUẬT, mô hình học tắt (cấu hình bản demo online)" if RULES_ONLY else ""), "",
+L = ["# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người)" + (" — CHỈ LUẬT, mô hình học tắt (chế độ dự phòng)" if RULES_ONLY else ""), "",
      f"Mỗi phần huấn luyện lại hai mô hình học chỉ trên người ngoài phần đó. {len(USERS)} người, tối đa {N_PINS} PIN mỗi người, ngưỡng A={A0}, B={B0}. "
      "Ô: **tỉ lệ [CI 95% bootstrap theo người]**. Kẻ biết PIN dùng MÁY KHÁC (lẫn nhiễu thiết bị); bot là bộ sinh của đội. Số phiên mỗi nhóm ở cột n.", "",
      "## Người nhận quen", "", "| Nhóm | n | hold | step_up | allow |", "|---|---|---|---|---|"]
