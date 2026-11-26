@@ -11,7 +11,7 @@ type L = { en: string; vi: string }
 /** [offset 0–1, dx px, dy px, opacity, scale] */
 type P = [number, number, number, number?, number?]
 interface Actor { who?: PersonaId; icon?: IconName; label?: string | L; tone?: 'light' | 'dark' | 'blue'; x: number; y: number; size?: number; path?: P[] }
-interface Vignette { place: L; caption: L; seconds: number; set: 'office' | 'port' | 'desk'; actors: Actor[] }
+interface Vignette { id: string; place: L; caption: L; seconds: number; set: 'office' | 'port' | 'desk'; actors: Actor[] }
 
 const show = (from: number, to = 1): P[] => [[0, 0, 0, 0], [from, 0, 0, 0], [from + 0.04, 0, 0, 1], [to, 0, 0, 1], [Math.min(1, to + 0.04), 0, 0, 0], [1, 0, 0, 0]]
 const pop = (at: number, until = 0.96): P[] => [[0, 0, 6, 0, 0.8], [at, 0, 6, 0, 0.8], [at + 0.06, 0, 0, 1, 1], [until, 0, 0, 1, 1], [1, 0, -4, 0, 1]]
@@ -19,10 +19,10 @@ const bob: P[] = [[0, 0, 0], [0.5, 0, -3], [1, 0, 0]]
 const api: Actor = { icon: 'laptop', label: 'Innate API', tone: 'dark', x: 230, y: 12 }
 const fly = (from: number, dx: number, dy: number): P[] => [[0, 0, 0, 0], [from, 0, 0, 0], [from + 0.04, 0, 0, 1], [from + 0.3, dx, dy, 1], [from + 0.34, dx, dy, 0], [1, dx, dy, 0]]
 
-// one vignette per story step (story.ts STEPS), same order
+// one vignette per story step id (story.ts)
 const VIGNETTES: Vignette[] = [
   {
-    set: 'desk', seconds: 9,
+    id: 'sdk', set: 'desk', seconds: 9,
     place: { en: 'Demo Wallet · mobile team', vi: 'Ví Demo · đội mobile' },
     caption: { en: 'Vy drops the SDK into the PIN pad. Each session leaves the phone as timings and positions.', vi: 'Vy gắn SDK vào bàn phím PIN. Mỗi phiên rời điện thoại dưới dạng thời điểm và vị trí chạm.' },
     actors: [
@@ -34,7 +34,7 @@ const VIGNETTES: Vignette[] = [
     ],
   },
   {
-    set: 'office', seconds: 9,
+    id: 'enroll', set: 'office', seconds: 9,
     place: { en: 'Hà’s desk', vi: 'Bàn làm việc của Hà' },
     caption: { en: 'Three PIN entries become Hà’s template. Then enrollment locks.', vi: 'Ba lần nhập PIN thành mẫu chuẩn của Hà. Sau đó việc đăng ký khoá lại.' },
     actors: [
@@ -47,7 +47,7 @@ const VIGNETTES: Vignette[] = [
     ],
   },
   {
-    set: 'office', seconds: 8,
+    id: 'owner', set: 'office', seconds: 8,
     place: { en: 'Hà’s desk', vi: 'Bàn làm việc của Hà' },
     caption: { en: 'Her own rhythm, a known recipient: allowed in one step.', vi: 'Đúng nhịp của Hà, người nhận quen: cho qua ngay.' },
     actors: [
@@ -58,7 +58,7 @@ const VIGNETTES: Vignette[] = [
     ],
   },
   {
-    set: 'office', seconds: 9,
+    id: 'officer', set: 'office', seconds: 9,
     place: { en: 'A phone call at night', vi: 'Một cuộc gọi buổi tối' },
     caption: { en: 'A fake officer sends a fake app. It asks for Accessibility, so it can tap for Hà.', vi: 'Cán bộ giả gửi ứng dụng giả. Ứng dụng xin quyền Trợ năng để bấm thay Hà.' },
     actors: [
@@ -70,9 +70,9 @@ const VIGNETTES: Vignette[] = [
     ],
   },
   {
-    set: 'desk', seconds: 8,
+    id: 'bot', set: 'desk', seconds: 8,
     place: { en: '2 a.m., Hà asleep', vi: '2 giờ sáng, Hà đang ngủ' },
-    caption: { en: 'The malware taps the PIN at a machine rhythm. Innate holds the transfer.', vi: 'Mã độc bấm PIN với nhịp đều như máy. Innate giữ lệnh lại.' },
+    caption: { en: 'The malware taps the PIN at a machine rhythm. Innate holds the transfer.', vi: 'Mã độc bấm PIN với nhịp đều như máy. Innate tạm hoãn lệnh.' },
     actors: [
       api,
       { who: 'an', x: 16, y: 94, size: 56, path: bob },
@@ -81,35 +81,46 @@ const VIGNETTES: Vignette[] = [
     ],
   },
   {
-    set: 'office', seconds: 8,
+    id: 'friend', set: 'office', seconds: 8,
     place: { en: 'Lunch break, Hà’s desk', vi: 'Giờ nghỉ trưa, bàn của Hà' },
-    caption: { en: 'Bảo knows the PIN but not Hà’s touch. Innate asks for a face check.', vi: 'Bảo biết PIN nhưng không có nhịp chạm của Hà. Innate yêu cầu xác thực khuôn mặt.' },
+    caption: { en: 'Bảo knows the PIN but not Hà’s touch. Innate asks him to type a short sentence.', vi: 'Bảo biết PIN nhưng không có nhịp chạm của Hà. Innate yêu cầu Bảo gõ một câu ngắn.' },
     actors: [
       api,
       { who: 'bao', x: 16, y: 94, size: 56, path: bob },
       { icon: 'phone', label: '2.000.000', tone: 'blue', x: 96, y: 112, path: fly(0.1, 130, -96) },
-      { icon: 'eye', label: { en: 'Face check', vi: 'Xác thực khuôn mặt' }, tone: 'dark', x: 150, y: 60, path: pop(0.5) },
+      { icon: 'doc', label: { en: 'Type a sentence', vi: 'Gõ một câu' }, tone: 'dark', x: 150, y: 60, path: pop(0.5) },
     ],
   },
   {
-    set: 'desk', seconds: 8,
+    id: 'ops', set: 'desk', seconds: 8,
     place: { en: 'Demo Wallet · fraud ops', vi: 'Ví Demo · vận hành chống gian lận' },
-    caption: { en: 'Two flagged sessions, each with its reasons. Khoa labels them fraud.', vi: 'Hai phiên bị gắn cờ, mỗi phiên kèm lý do. Khoa gắn nhãn gian lận.' },
+    caption: { en: 'A flagged session with its reasons. Khoa labels it fraud.', vi: 'Một phiên bị gắn cờ kèm lý do. Khoa gắn nhãn gian lận.' },
     actors: [
       { who: 'khoa', x: 16, y: 94, size: 56, path: bob },
       { icon: 'laptop', label: { en: 'Dashboard', vi: 'Bảng vận hành' }, x: 110, y: 122 },
-      { icon: 'bell', label: { en: '2 flagged', vi: '2 bị gắn cờ' }, tone: 'blue', x: 120, y: 60, path: pop(0.15) },
-      { icon: 'check', label: { en: 'Fraud ×2', vi: 'Gian lận ×2' }, tone: 'dark', x: 200, y: 96, path: pop(0.55) },
+      { icon: 'bell', label: { en: '1 flagged', vi: '1 bị gắn cờ' }, tone: 'blue', x: 120, y: 60, path: pop(0.15) },
+      { icon: 'check', label: { en: 'Fraud', vi: 'Gian lận' }, tone: 'dark', x: 200, y: 96, path: pop(0.55) },
     ],
   },
   {
-    set: 'office', seconds: 8,
+    id: 'policy', set: 'office', seconds: 8,
     place: { en: 'Demo Wallet · risk team', vi: 'Ví Demo · bộ phận rủi ro' },
-    caption: { en: 'Step up before blocking; people decide. Hà’s account stays open.', vi: 'Xác thực thêm trước khi chặn; con người quyết định. Tài khoản của Hà vẫn mở.' },
+    caption: { en: 'Ask before blocking; people decide. Hà’s account stays open.', vi: 'Hỏi thêm trước khi chặn; con người quyết định. Tài khoản của Hà vẫn mở.' },
     actors: [
       { who: 'lananh', x: 16, y: 94, size: 56, path: bob },
       { icon: 'rules', label: { en: 'Thresholds', vi: 'Ngưỡng' }, x: 110, y: 70, path: pop(0.1) },
       { who: 'ha', x: 230, y: 94, size: 56, path: pop(0.45) },
+    ],
+  },
+  {
+    id: 'steal', set: 'office', seconds: 9,
+    place: { en: 'Lunch break, Hà’s desk', vi: 'Giờ nghỉ trưa, bàn của Hà' },
+    caption: { en: 'Bảo saw the PIN. He picks up Hà’s phone while she is away: the PIN works, so nothing stops him yet.', vi: 'Bảo đã thấy PIN. Khi Hà rời bàn, Bảo cầm điện thoại: PIN đúng nên chưa gì chặn được.' },
+    actors: [
+      { who: 'bao', x: 16, y: 94, size: 56, path: bob },
+      { who: 'ha', x: 230, y: 94, size: 56, path: show(0.05, 0.45) },
+      { icon: 'eye', label: '159357', tone: 'blue', x: 96, y: 60, path: pop(0.2) },
+      { icon: 'phone', label: { en: 'Unlocked', vi: 'Đã mở khoá' }, tone: 'dark', x: 96, y: 112, path: pop(0.55) },
     ],
   },
 ]
@@ -141,10 +152,10 @@ function ActorEl({ a, seconds }: { a: Actor; seconds: number }) {
   )
 }
 
-export default function BehindScenes({ step }: { step: number }) {
+export default function BehindScenes({ id }: { id: string }) {
   const { lang } = useT()
   const [open, setOpen] = useState(() => window.innerWidth > 640)
-  const v = VIGNETTES[step]
+  const v = VIGNETTES.find((x) => x.id === id)
   if (!v) return null
   const label = lang === 'en' ? 'Behind the scenes' : 'Hậu trường'
   if (!open) {
@@ -162,13 +173,13 @@ export default function BehindScenes({ step }: { step: number }) {
         </button>
       </div>
       <div className="pip-frame">
-        <div className={`pip-canvas set-${v.set}`} key={step}>
+        <div className={`pip-canvas set-${v.set}`} key={id}>
           <Backdrop set={v.set} />
           {v.actors.map((a, i) => <ActorEl key={i} a={a} seconds={v.seconds} />)}
         </div>
       </div>
-      <div className="pip-bar" key={`bar-${step}`}><i style={{ animationDuration: `${v.seconds}s` }} /></div>
-      <p className="pip-cap" key={`cap-${step}`}>{v.caption[lang]}</p>
+      <div className="pip-bar" key={`bar-${id}`}><i style={{ animationDuration: `${v.seconds}s` }} /></div>
+      <p className="pip-cap" key={`cap-${id}`}>{v.caption[lang]}</p>
     </aside>
   )
 }

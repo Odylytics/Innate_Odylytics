@@ -4,8 +4,9 @@ import { Recorder } from './capture'
 import { useT } from './i18n'
 import type { Layout } from './synth'
 
-// The demo wallet: a fictional e-wallet with the Innate SDK inside. Home → transfer (swipe up to confirm) → PIN → result.
-// In enroll mode it goes straight to the PIN pad. A "ghost" script replays synthetic taps on the real keys (story, bot).
+// The demo wallet: a fictional e-wallet with the Innate SDK inside. Flow (docs/plan/bon-cong-pipeline.md §7.4):
+// unlock with the PIN (recorded, not scored, never blocks) → home → transfer → swipe up to confirm → Innate scores → result.
+// In enroll mode it only shows the PIN pad. A "ghost" script replays synthetic taps on the real keys (story, attacker cases).
 export const DEMO_PIN = '159357'
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']
 type L = { en: string; vi: string }
@@ -59,6 +60,8 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
   }
 
   // a fresh recording for every attempt
+  // pay mode keeps the unlock PIN's recording until the transfer is confirmed, so one session carries PIN + transfer taps
+  const toTransfer = () => { rec.current.screen('transfer'); setNote(null); setBank(null); setAcct(''); setScreen('transfer') }
   const begin = (s: Screen) => { rec.current = new Recorder(); rec.current.screen(s); setDigits(''); setNote(null); setBank(null); setAcct(''); setScreen(s) }
   const bankLen = BANKS.find((b) => b.id === bank)?.len ?? 14
   const acctReady = !!bank && acct.length === bankLen
@@ -69,17 +72,21 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
     if (!k || acct.length >= bankLen) return
     setAcct(acct + k); rec.current.field('recipient', 'key')
   }
-  useEffect(() => { if (mode === 'enroll') begin('pin'); else setScreen('home') }, [mode, enrollStep]) // eslint-disable-line react-hooks/exhaustive-deps
-  // pay mode: a result shows the result screen; clearing it goes back home
-  useEffect(() => { if (mode === 'pay') setScreen((s) => (outcome ? 'result' : s === 'result' ? 'home' : s)) }, [outcome, mode])
-  // while the API works the pad turns into a spinner; afterwards enroll starts a fresh attempt
+  useEffect(() => { begin('pin') }, [mode, enrollStep]) // eslint-disable-line react-hooks/exhaustive-deps
   const screenRef = useRef(screen)
   screenRef.current = screen
+  // pay mode: a result shows the result screen; clearing it locks the wallet again (next attempt starts at the PIN)
   useEffect(() => {
-    if (busy) { setScreen((s) => (s === 'pin' ? 'wait' : s)); return }
+    if (mode !== 'pay') return
+    if (outcome) setScreen('result')
+    else if (screenRef.current === 'result') begin('pin')
+  }, [outcome, mode]) // eslint-disable-line react-hooks/exhaustive-deps
+  // while the API works the screen turns into a spinner (enroll: after the PIN; pay: after the transfer confirm)
+  useEffect(() => {
+    if (busy) { setScreen((s) => (s === 'pin' || s === 'transfer' ? 'wait' : s)); return }
     if (screenRef.current !== 'wait') return
-    if (mode === 'enroll') begin('pin')
-    else { setDigits(''); setScreen(outcome ? 'result' : 'home') } // no result (error, or enrollment just finished): start over
+    if (mode === 'pay' && outcome) setScreen('result')
+    else begin('pin') // enrolment attempt done, or no result (error): start over
   }, [busy]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // the real key centres on screen, for synthetic sessions
@@ -101,29 +108,31 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
     return () => { window.removeEventListener('resize', measure); window.removeEventListener('scroll', measure) }
   }, [screen, onLayout])
 
-  // ghost playback: light the keys at the synthetic times
+  // ghost playback: light the PIN keys at the synthetic times (unlock first), then fill the account, then wait for the score
   useEffect(() => {
     if (!ghost) return
     if (ghost.pay) { setRecipient(ghost.pay.recipient); setAmount(ghost.pay.amount) }
-    setDigits(''); setNote(null)
+    setDigits(''); setNote(null); setScreen('pin')
     const timers: number[] = []
     const a = ghost.pay?.account
-    let lead = 0
+    const t0 = ghost.taps[0]?.t_down ?? 0
+    let end = 0
+    ghost.taps.forEach((tp) => {
+      timers.push(window.setTimeout(() => setPressed(tp.key), tp.t_down - t0 + 250))
+      end = tp.t_up - t0 + 250
+      timers.push(window.setTimeout(() => { setPressed(null); setDigits((d) => (d + tp.key).slice(0, DEMO_PIN.length)) }, end))
+    })
+    let lead = 0 // the same lead time Demo.replay waits for
     if (a) {
-      setScreen('account'); setBank(a.bank); setAcct('')
-      if (!a.typing) { timers.push(window.setTimeout(() => setAcct(a.acct), 700)); lead = 1900 }
+      timers.push(window.setTimeout(() => { setScreen('account'); setBank(a.bank); setAcct('') }, end))
+      if (!a.typing) { timers.push(window.setTimeout(() => setAcct(a.acct), end + 700)); lead = 1900 }
       else {
         let t = 500
-        a.typing.forEach((dt, i) => { t += dt; timers.push(window.setTimeout(() => setAcct(a.acct.slice(0, i + 1)), t)) })
+        a.typing.forEach((dt, i) => { t += dt; timers.push(window.setTimeout(() => setAcct(a.acct.slice(0, i + 1)), end + t)) })
         lead = t + 900
       }
-      timers.push(window.setTimeout(() => setScreen('pin'), lead))
-    } else setScreen('pin')
-    const t0 = ghost.taps[0]?.t_down ?? 0
-    ghost.taps.forEach((tp, i) => {
-      timers.push(window.setTimeout(() => setPressed(tp.key), lead + tp.t_down - t0 + 250))
-      timers.push(window.setTimeout(() => { setPressed(null); setDigits((d) => (d + tp.key).slice(0, 4)); if (i === ghost.taps.length - 1) setScreen('wait') }, lead + tp.t_up - t0 + 250))
-    })
+    }
+    timers.push(window.setTimeout(() => setScreen('wait'), end + lead))
     return () => timers.forEach((id) => window.clearTimeout(id))
   }, [ghost])
 
@@ -146,7 +155,8 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
         setNote({ en: 'Tap the keys with a finger or mouse; the keyboard leaves no rhythm to measure.', vi: 'Hãy bấm phím bằng ngón tay hoặc chuột; bàn phím không để lại nhịp để đo.' })
         return
       }
-      onPin(rec.current, ctx())
+      if (mode === 'enroll') onPin(rec.current, ctx())
+      else { setDigits(''); rec.current.screen('home'); setScreen('home') } // unlock: recorded now, scored at the transfer
     }, 0)
   }
 
@@ -160,12 +170,13 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
   const swipe = {
     onPointerDown: (e: RPointerEvent<HTMLDivElement>) => { e.currentTarget.setPointerCapture(e.pointerId); rec.current.swipeStart(e.nativeEvent) },
     onPointerMove: (e: RPointerEvent<HTMLDivElement>) => rec.current.swipeMove(e.nativeEvent),
-    onPointerUp: () => { if (rec.current.swipeEnd() < -60) toPin() },
+    onPointerUp: () => { if (rec.current.swipeEnd() < -60) confirm() },
   }
   const needAcct = recipient === 'new' && !acctReady
-  const toPin = () => {
+  // confirming the transfer is where Innate scores the session (PIN recorded at unlock + this transfer)
+  const confirm = () => {
     if (needAcct) { rec.current.screen('account'); setScreen('account'); return }
-    rec.current.screen('pin'); setScreen('pin')
+    onPin(rec.current, ctx())
   }
 
   const c = CONTACTS.find((x) => x.id === recipient)!
@@ -183,7 +194,7 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
             <span className="w-hello">{lang === 'en' ? 'Hi, Hà' : 'Chào Hà'}</span>
             <div className="w-balance"><span>{lang === 'en' ? 'Balance' : 'Số dư'}</span><b>{money(12_450_000)}</b></div>
             <div className="w-actions">
-              <button className="w-act primary" onClick={() => begin('transfer')}>{lang === 'en' ? 'Transfer' : 'Chuyển tiền'}</button>
+              <button className="w-act primary" onClick={toTransfer}>{lang === 'en' ? 'Transfer' : 'Chuyển tiền'}</button>
               <button className="w-act" disabled>{lang === 'en' ? 'Top up' : 'Nạp tiền'}</button>
               <button className="w-act" disabled>{lang === 'en' ? 'Bills' : 'Hóa đơn'}</button>
             </div>
@@ -219,7 +230,7 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
               </div>
             </fieldset>
             <div className="w-swipe" {...swipe} role="button" tabIndex={0} aria-label={lang === 'en' ? 'Swipe up to continue' : 'Vuốt lên để tiếp tục'}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toPin() }}>
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') confirm() }}>
               <span className="w-swipe-arrow" aria-hidden="true">↑</span>
               {lang === 'en' ? 'Swipe up to continue' : 'Vuốt lên để tiếp tục'}
             </div>
@@ -258,10 +269,11 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
           <div className="w-pin">
             <h3>{mode === 'enroll'
               ? (lang === 'en' ? `Enroll your rhythm · ${enrollStep}/3` : `Đăng ký nhịp · lần ${enrollStep}/3`)
-              : (lang === 'en' ? `Confirm ${money(amount)} to ${toName}` : `Xác nhận ${money(amount)} cho ${toName}`)}</h3>
-            <p className="w-hint">{ghost ? tx(ghost.label) : (lang === 'en' ? `Demo PIN ${DEMO_PIN}` : `PIN demo ${DEMO_PIN}`)}</p>
+              : (lang === 'en' ? 'Unlock your wallet' : 'Mở ví bằng PIN')}</h3>
+            <p className="w-hint">{ghost ? tx(ghost.label) : mode === 'enroll' ? (lang === 'en' ? `Demo PIN ${DEMO_PIN}` : `PIN demo ${DEMO_PIN}`)
+              : (lang === 'en' ? `Demo PIN ${DEMO_PIN} · recorded, not scored yet` : `PIN demo ${DEMO_PIN} · chỉ ghi, chưa chấm điểm`)}</p>
             <div className={`w-dots ${shake ? 'shake' : ''}`} aria-label={`${digits.length}/${DEMO_PIN.length}`}>
-              {[0, 1, 2, 3].map((i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
+              {Array.from({ length: DEMO_PIN.length }, (_, i) => i).map((i) => <i key={i} className={i < digits.length ? 'on' : ''} />)}
             </div>
             {note && <p className="w-note" role="status">{tx(note)}</p>}
             {screen === 'wait'
@@ -282,11 +294,11 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
           <div className={`w-result ${act}`}>
             <span className="w-res-ico" aria-hidden="true">{act === 'allow' ? '✓' : act === 'step_up' ? '◎' : '■'}</span>
             <h3>{act === 'allow' ? (lang === 'en' ? 'Sent' : 'Đã chuyển')
-              : act === 'step_up' ? (lang === 'en' ? 'Verify your face to continue' : 'Xác thực khuôn mặt để tiếp tục')
+              : act === 'step_up' ? (lang === 'en' ? 'Type a short sentence to continue' : 'Gõ một câu ngắn để tiếp tục')
               : (lang === 'en' ? 'Transfer on hold' : 'Lệnh đang được tạm giữ')}</h3>
             <p>{act === 'allow' ? `${money(amount)} → ${toName}`
-              : act === 'step_up' ? (lang === 'en' ? 'This doesn’t look like your usual touch. One quick face check keeps your money safe.' : 'Thao tác không giống thói quen của bạn. Một bước xác thực khuôn mặt giúp giữ tiền an toàn.')
-              : (lang === 'en' ? 'We paused this transfer and will contact you. Your account is not locked.' : 'Lệnh chuyển đã tạm dừng và chúng tôi sẽ liên hệ bạn. Tài khoản của bạn không bị khoá.')}</p>
+              : act === 'step_up' ? (lang === 'en' ? 'This doesn’t look like your usual touch. Typing one short sentence keeps your money safe.' : 'Thao tác không giống thói quen của bạn. Gõ một câu ngắn để xác nhận giúp giữ tiền an toàn.')
+              : (lang === 'en' ? 'We put this transfer on hold and are notifying the owner. Your account is not locked.' : 'Lệnh chuyển được tạm hoãn và chúng tôi đang báo cho chủ tài khoản. Tài khoản không bị khoá.')}</p>
             <span className={`status ${act === 'allow' ? 'matched' : act === 'step_up' ? 'sent' : 'discrepancy'}`}>{t(`act_${act!}`)}</span>
             <button className="w-act primary" onClick={onDone}>{lang === 'en' ? 'Back to home' : 'Về trang chủ'}</button>
           </div>

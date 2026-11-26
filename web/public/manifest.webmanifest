@@ -1,0 +1,17 @@
+{
+  "name": "Innate",
+  "short_name": "Innate",
+  "description": "Innate touch data collection: create a practice PIN and type it a few times.",
+  "id": "./?app=innate",
+  "start_url": "./#/collect",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f5f8",
+  "theme_color": "#16202c",
+  "icons": [
+    { "src": "brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,17 +1,17 @@
 # Kịch bản video giới thiệu (≤ 3 phút, MP4)
 
-> Quay **sản phẩm chạy thật** (thể lệ). Phần quá 3:00 không được xem: mục tiêu 2:45. ~380 từ lời đọc. `[TODO]` = cần quay khi có URL demo.
+> Quay **sản phẩm chạy thật** (thể lệ). **Bản quay chạy luật thuần, không có mô hình học** (`/health` báo `models: false`): lời đọc không nói "AI/mô hình học" cho phần demo; PIN demo 6 số `159357`. Phần quá 3:00 không được xem: mục tiêu 2:45. ~380 từ lời đọc. `[TODO]` = cần quay khi có URL demo.
 
 | Thời gian | Hình | Lời đọc |
 |---|---|---|
 | 0:00–0:15 | Chữ lớn "PIN có thể bị đánh cắp." rồi "Thói quen chạm thì rất khó." + logo Innate | "Một chiếc điện thoại bị chiếm quyền. Tiền rời đi bằng chính app, chính PIN của nạn nhân. Mọi lớp bảo mật đều nói: đúng chủ." |
 | 0:15–0:35 | Hoạt hoạ: mã độc Trợ năng tự bấm PIN; người đứng cạnh nhìn lén PIN | "Có hai cách. Mã độc điều khiển từ xa tự bấm thay bạn. Hoặc người quen biết PIN. Câu hỏi còn thiếu là: ai, hay cái gì, đang chạm vào màn hình?" |
-| 0:35–0:55 | Màn hình ví demo: nhập PIN, hiện điểm "người thật" | "Innate là lớp kiểm chứng con người chạy ngầm ở bước xác nhận giao dịch. AI so khớp cách bạn chạm và gõ với thói quen đã đăng ký và với hình mẫu người thật." |
-| 0:55–1:20 | **[TODO quay]** Đăng ký nhịp 3–5 lần; rồi chuyển tiền bằng chính chủ → `allow` | "Bạn đăng ký vài lần, như Face ID. Những lần sau, Innate tự đối chiếu. Chính chủ chuyển tiền: được qua, không thêm bước nào." |
-| 1:20–1:50 | **[TODO quay]** Người thứ hai biết PIN thử → `step_up`, hiện lý do "nhịp PIN chậm hơn 40%, chạm lệch phải" | "Một người khác biết PIN thử chuyển tiền. PIN đúng, nhưng thói quen không khớp. Innate không chặn cứng: nó yêu cầu xác thực thêm và nói rõ vì sao." |
+| 0:35–0:55 | Màn hình ví demo: nhập PIN, hiện điểm "người thật" | "Innate là lớp kiểm chứng con người chạy ngầm ở bước xác nhận giao dịch. Innate so khớp cách bạn chạm và gõ với thói quen đã đăng ký và với những dấu hiệu của thao tác máy." |
+| 0:55–1:20 | **[TODO quay]** Đăng ký nhịp 3 lần (PIN `159357`, sau lần thứ ba mẫu khoá lại); rồi chuyển tiền bằng chính chủ → `allow` | "Bạn đăng ký ba lần, như Face ID. Những lần sau, Innate tự đối chiếu. Chính chủ chuyển tiền: được qua, không thêm bước nào." |
+| 1:20–1:50 | **[TODO quay]** Người thứ hai biết PIN thử → `step_up`, hiện lý do đọc đúng từ màn hình (nhịp PIN chậm hơn, chạm lệch trái và xuống dưới; **kiểm số % khi quay**) | "Một người khác biết PIN thử chuyển tiền. PIN đúng, nhưng thói quen không khớp. Innate không chặn cứng: nó yêu cầu xác thực thêm và nói rõ vì sao." |
 | 1:50–2:10 | **[TODO quay]** Bảng điều khiển hacker bấm tự động → `hold`, lý do "nhịp đều bất thường, chạm đúng tâm nút" | "Còn mã độc tự bấm thì sao? Nhịp quá đều, chạm đúng tâm phím: Innate nhận ra đây không phải ngón tay người và giữ lệnh." |
-| 2:10–2:30 | Màn hình Innate Challenge: câu "hẹn gặp lại bạn vào tuần sau"; biểu đồ 81% → 49% (ghi "đo trên câu tiếng Anh") | "Khi chưa chắc, Innate có thể yêu cầu gõ một câu tiếng Việt ngắn thay vì OTP. Nhiều phím hơn cho nhiều tín hiệu hơn: kẻ gian lọt giảm từ tám mươi mốt xuống bốn mươi chín phần trăm trên dữ liệu gõ tiếng Anh. Kiểu gõ dấu tiếng Việt là thử nghiệm của chúng tôi, chưa đo xong." |
+| 2:10–2:30 | **Slide/hoạt hoạ (không có trong ví demo, ghi "thiết kế + đo trên dữ liệu công khai")**, Innate Challenge: câu "hẹn gặp lại bạn vào tuần sau"; biểu đồ 81% → 49% (ghi "đo trên câu tiếng Anh") | "Khi chưa chắc, Innate có thể yêu cầu gõ một câu tiếng Việt ngắn thay vì OTP. Nhiều phím hơn cho nhiều tín hiệu hơn: kẻ gian lọt giảm từ tám mươi mốt xuống bốn mươi chín phần trăm trên dữ liệu gõ tiếng Anh. Kiểu gõ dấu tiếng Việt là thử nghiệm của chúng tôi, chưa đo xong." |
 | 2:30–2:50 | Slide hạn chế + dòng chữ "Tín hiệu rủi ro, không phải chìa khoá" + dashboard vận hành | "Innate không thay PIN hay khuôn mặt, và không tự khoá tài khoản. Chúng tôi đo trung thực, và nói rõ giới hạn. Đội vận hành nhận bằng chứng có giải thích để quyết định." |
 | 2:50–3:00 | Logo + "PIN is what you know. Innate is how you are." + tên đội | "Innate: lớp kiểm chứng con người cho ví điện tử." |
 
-**Lưu ý quay:** ghi màn hình điện thoại thật (không mô phỏng); bật sẵn dữ liệu đã đăng ký để khỏi chờ; có bản dự phòng nếu mạng chậm; không để lộ API key; không dùng logo hay tên thương hiệu của bên thứ ba.
+**Lưu ý quay:** ghi màn hình điện thoại thật; phiên của mã độc và "người biết PIN" trong bảng điều khiển là **mô phỏng** (sinh trong trình duyệt, chấm thật trên API): ghi chú "mô phỏng" trên hình; bật sẵn dữ liệu đã đăng ký để khỏi chờ; có bản dự phòng nếu mạng chậm; không để lộ API key; không dùng logo hay tên thương hiệu của bên thứ ba.

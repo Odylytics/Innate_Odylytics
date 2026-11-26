@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LangContext, dict, useT, type Lang } from './i18n'
 import DemoChoice from './DemoChoice'
+import type { StoryCase } from './story'
 import Footer from './Footer'
 import LandingPage from './landing/LandingPage'
 import { Atmosphere } from './landing/Atmosphere'
@@ -169,7 +170,8 @@ function Site() {
   const [path, query] = hash.replace(/^#/, '').split('?')
   const isDemo = path.startsWith('/demo')
   const isOps = path.startsWith('/ops')
-  const story = new URLSearchParams(query ?? '').get('story') === '1'
+  const sv = new URLSearchParams(query ?? '').get('story') // 1 = remote (old links), remote, stolen
+  const storyCase: StoryCase | null = sv === 'stolen' ? 'stolen' : sv === '1' || sv === 'remote' ? 'remote' : null
   const choose = new URLSearchParams(query ?? '').get('choose') === '1'
 
   useEffect(() => {
@@ -183,7 +185,7 @@ function Site() {
           <AppPage />
           <div className="app-atmos" aria-hidden="true">{theme === 'dark' ? <Atmosphere dark /> : <Atmosphere />}</div>
           <Nav path={path} theme={theme} setTheme={setTheme} />
-          <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isDemo ? <><Demo key={String(story)} story={story} />{choose && <DemoChoice />}</> : <Ops />}</main>
+          <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isDemo ? <><Demo key={String(storyCase)} storyCase={storyCase} />{choose && <DemoChoice />}</> : <Ops />}</main>
           {!isDemo && <Footer />}
         </>
       ) : (
@@ -196,7 +198,11 @@ function Site() {
 // #/collect is a standalone phone-only page (no site nav, footer or smooth scroll), so it is routed before the site mounts.
 export default function App() {
   // The language lives here so the standalone collection page follows the same language as the site.
-  const [lang, setLang] = useState<Lang>(() => (store.get('innate.lang') === 'vi' ? 'vi' : 'en'))
+  // The collection page is for Vietnamese volunteers, so it defaults to Vietnamese until they pick a language.
+  const [lang, setLang] = useState<Lang>(() => {
+    const saved = store.get('innate.lang')
+    return saved === 'vi' || saved === 'en' ? saved : window.location.hash.startsWith('#/collect') ? 'vi' : 'en'
+  })
   useEffect(() => { document.documentElement.lang = lang; store.set('innate.lang', lang) }, [lang])
   const hash = useHash()
   return (

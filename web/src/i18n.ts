@@ -26,8 +26,10 @@ export const dict = {
   reasons: { en: 'Reasons', vi: 'Lý do' },
 
   chooseTitle: { en: 'How would you like to see Innate?', vi: 'Bạn muốn xem Innate theo cách nào?' },
-  choiceAuto: { en: 'Watch it play by itself', vi: 'Xem demo tự chạy' },
-  choiceAutoSub: { en: 'About 2 minutes, with sound · calls the live API', vi: 'Khoảng 2 phút, có âm thanh · gọi API thật' },
+  choiceRemote: { en: 'Case 1 · Android hijacked remotely', vi: 'Trường hợp 1 · Android bị chiếm từ xa' },
+  choiceRemoteSub: { en: 'Malware taps the PIN at 2 a.m. · about 80 seconds, with sound · calls the live API', vi: 'Mã độc bấm PIN lúc 2 giờ sáng · khoảng 80 giây, có âm thanh · gọi API thật' },
+  choiceStolen: { en: 'Case 2 · Phone stolen', vi: 'Trường hợp 2 · Bị trộm điện thoại' },
+  choiceStolenSub: { en: 'Someone who saw the PIN picks up the phone · about 80 seconds, with sound · calls the live API', vi: 'Người từng thấy PIN cầm điện thoại · khoảng 80 giây, có âm thanh · gọi API thật' },
   choiceTry: { en: 'Try the demo wallet yourself', vi: 'Tự thử ví demo' },
   choiceTrySub: { en: 'Enroll your rhythm, then hand the phone to a friend', vi: 'Đăng ký nhịp của bạn, rồi đưa máy cho người khác thử' },
 
@@ -40,8 +42,8 @@ export const dict = {
   play: { en: 'Play', vi: 'Phát' },
   pause: { en: 'Pause', vi: 'Tạm dừng' },
   replay: { en: 'Replay', vi: 'Xem lại' },
-  startTitle: { en: 'One wallet, three people, one PIN', vi: 'Một ví, ba người, một mã PIN' },
-  startSub: { en: 'The owner, a colleague who saw her PIN, and remote-control malware all type the same PIN. Every score in the story comes from the live Innate API.', vi: 'Chủ ví, đồng nghiệp từng nhìn lén PIN và mã độc điều khiển từ xa cùng nhập một mã PIN. Mọi điểm số trong tình huống đều lấy từ API Innate thật.' },
+  startRemoteSub: { en: 'The owner and remote-control malware type the same PIN, but only one of them has fingers. Every score in the story comes from the live Innate API.', vi: 'Chủ ví và mã độc điều khiển từ xa nhập cùng một PIN, nhưng chỉ một bên có ngón tay thật. Mọi điểm số trong tình huống lấy từ API Innate thật.' },
+  startStolenSub: { en: 'The owner and a colleague who saw her PIN type the same PIN, and the wallet cannot tell by the PIN alone. Every score in the story comes from the live Innate API.', vi: 'Chủ ví và đồng nghiệp từng nhìn lén PIN nhập cùng một mã PIN, chỉ dựa vào PIN thì ví không phân biệt được. Mọi điểm số trong tình huống lấy từ API Innate thật.' },
   playSound: { en: 'Play with sound', vi: 'Phát có âm thanh' },
   playMuted: { en: 'Play muted', vi: 'Phát không tiếng' },
   exploreSelf: { en: 'Try it myself', vi: 'Tự thử' },

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, api, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { ApiError, api, explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
 import { store } from './App'
 import BehindScenes from './BehindScenes'
 import type { Recorder } from './capture'
 import { useT } from './i18n'
 import { isMuted, play, setMuted, unlock } from './sound'
-import { STEPS, persona, type PersonaId } from './story'
+import { STORIES, stepsOf, persona, type PersonaId, type StoryCase } from './story'
 import { StoryBar, StoryStart } from './StoryBar'
 import { FRIEND, OWNER, botSession, humanSession, rng, withAccount, type Layout } from './synth'
 import { T, Tx } from './ui'
@@ -29,7 +29,9 @@ const WHO: Record<'you' | 'owner' | 'friend' | 'bot', L> = {
   bot: { en: 'Malware', vi: 'Mã độc' },
 }
 
-export default function Demo({ story }: { story: boolean }) {
+export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
+  const story = storyCase !== null
+  const STEPS = storyCase ? stepsOf(storyCase) : []
   const { t, lang, money, pct } = useT()
   const tx = (x: L) => x[lang]
 
@@ -181,14 +183,19 @@ export default function Demo({ story }: { story: boolean }) {
       <div className="ws-head">
         <div>
           <span className="chip sim"><T k="live" /></span>
-          <h1>{story ? tx({ en: 'One PIN, three people', vi: 'Một PIN, ba người' }) : tx({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}</h1>
+          <h1>{storyCase ? tx(STORIES[storyCase].title) : tx({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}</h1>
           <p className="muted">{story
             ? tx({ en: 'Every score below comes from the live Innate API.', vi: 'Mọi điểm số dưới đây lấy từ API Innate thật.' })
             : tx({ en: `Enroll your rhythm with three PIN entries (${DEMO_PIN}), then make a transfer, hand the phone to a friend, or let the malware try.`, vi: `Đăng ký nhịp bằng ba lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền, đưa máy cho người khác thử, hoặc để mã độc thử.` })}</p>
         </div>
         <div className="row">
-          {story ? <a className="btn ghost small" href="#/demo">{tx({ en: 'Try it myself', vi: 'Tự thử' })}</a>
-            : <a className="btn ghost small" href="#/demo?story=1">{tx({ en: 'Watch the story', vi: 'Xem tình huống' })}</a>}
+          {storyCase ? <>
+            <a className="btn ghost small" href={`#/demo?story=${storyCase === 'remote' ? 'stolen' : 'remote'}`}>{tx(STORIES[storyCase === 'remote' ? 'stolen' : 'remote'].title)}</a>
+            <a className="btn ghost small" href="#/demo">{tx({ en: 'Try it myself', vi: 'Tự thử' })}</a>
+          </> : <>
+            <a className="btn ghost small" href="#/demo?story=remote">{tx(STORIES.remote.title)}</a>
+            <a className="btn ghost small" href="#/demo?story=stolen">{tx(STORIES.stolen.title)}</a>
+          </>}
         </div>
       </div>
 
@@ -217,7 +224,7 @@ export default function Demo({ story }: { story: boolean }) {
                   <Meter label={t('riskScore')} v={outcome.risk_score} text={pct(outcome.risk_score)} danger />
                 </div>
                 {outcome.reasons.length > 0 && <ul className="pills reasons">{outcome.reasons.map((r) => <li key={r}>{reasonText(r, lang)}</li>)}</ul>}
-                <p className="pretty">{outcome.explanation_vi}</p>
+                <p className="pretty">{explanationText(outcome, lang)}</p>
                 <p className="muted mini mono">session {outcome.session_id}</p>
               </>
             ) : (
@@ -229,11 +236,17 @@ export default function Demo({ story }: { story: boolean }) {
 
           {!story && (
             <section className="box">
-              <div className="box-head"><h2>{tx({ en: 'Attacker console', vi: 'Bảng điều khiển hacker' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
-              <p className="muted">{tx({ en: 'Synthetic sessions on the same keys, scored by the live API. Real attacks run from attacker/ (adb).', vi: 'Phiên tổng hợp trên chính các phím này, chấm bởi API thật. Tấn công thật chạy bằng attacker/ (adb).' })}</p>
-              <div className="row" style={{ marginTop: 12 }}>
+              <div className="box-head"><h2>{tx({ en: 'Two cases to try', vi: 'Hai trường hợp để thử' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
+              <p className="muted">{tx({ en: 'The PIN is recorded when the wallet unlocks and never blocks; Innate scores at the transfer confirmation. Synthetic sessions on the same keys, scored by the live API. Real attacks run from attacker/ (adb).', vi: 'PIN được ghi lúc mở ví và không chặn; Innate chấm điểm ở bước xác nhận chuyển tiền. Phiên tổng hợp trên chính các phím này, chấm bởi API thật. Tấn công thật chạy bằng attacker/ (adb).' })}</p>
+              <p style={{ marginTop: 12 }}><b>{tx({ en: 'Case 1 · Android hijacked remotely', vi: 'Trường hợp 1 · Android bị chiếm từ xa' })}</b></p>
+              <p className="muted mini">{tx({ en: 'Accessibility malware fills the account and taps the PIN by itself. Expected: machine, hold.', vi: 'Mã độc Trợ năng tự điền số tài khoản và bấm PIN. Kỳ vọng: máy, tạm hoãn.' })}</p>
+              <div className="row" style={{ marginTop: 8 }}>
                 <button className="btn small" onClick={botAttack} disabled={busy || !!ghost}>{tx({ en: 'Malware taps the PIN', vi: 'Mã độc bấm PIN' })}</button>
-                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || !status.template_ready}>{tx({ en: 'Someone who knows the PIN', vi: 'Người biết PIN thử' })}</button>
+              </div>
+              <p style={{ marginTop: 16 }}><b>{tx({ en: 'Case 2 · Phone stolen', vi: 'Trường hợp 2 · Bị trộm điện thoại' })}</b></p>
+              <p className="muted mini">{tx({ en: 'A thief who knows the PIN types it, then transfers by hand. Expected: a human but not the owner, type a sentence.', vi: 'Kẻ trộm biết PIN gõ PIN rồi tự chuyển tiền. Kỳ vọng: người thật nhưng không phải chủ, gõ một câu.' })}</p>
+              <div className="row" style={{ marginTop: 8 }}>
+                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || !status.template_ready}>{tx({ en: 'Thief who knows the PIN', vi: 'Kẻ trộm biết PIN thử' })}</button>
               </div>
             </section>
           )}
@@ -262,7 +275,7 @@ export default function Demo({ story }: { story: boolean }) {
       </div>
 
       {story && !started && (
-        <StoryStart onStart={(withSound) => {
+        <StoryStart storyCase={storyCase!} onStart={(withSound) => {
           unlock(); setMuted(!withSound); setMutedState(!withSound)
           setStarted(true); setStep(0); setPlaying(true)
         }} />
@@ -270,8 +283,8 @@ export default function Demo({ story }: { story: boolean }) {
       {story && started && (
         <>
           <div className="story-pad" aria-hidden="true" />
-          <BehindScenes step={step} />
-          <StoryBar step={step} goto={goto} playing={playing} setPlaying={setPlaying} muted={muted} toggleMute={toggleMute}
+          <BehindScenes id={STEPS[step].id} />
+          <StoryBar storyCase={storyCase!} step={step} goto={goto} playing={playing} setPlaying={setPlaying} muted={muted} toggleMute={toggleMute}
             hold={acting} onExit={() => { window.location.hash = '#/demo' }} />
         </>
       )}
@@ -320,6 +333,18 @@ function ActPanel({ act, attempts, sample }: { act: string; attempts: Attempt[];
       </section>
     )
   }
+  if (act === 'steal') {
+    return (
+      <section className="box act-panel">
+        <div className="box-head"><h2>{tx({ en: 'What Bảo knows', vi: 'Bảo biết gì' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
+        <ul className="ctl-list compact">
+          <li><span className="status matched">{tx({ en: 'Knows', vi: 'Biết' })}</span> {tx({ en: 'the PIN 159357 (watched her type it)', vi: 'mã PIN 159357 (nhìn Hà gõ)' })}</li>
+          <li><span className="status discrepancy">{tx({ en: 'Cannot copy', vi: 'Không bắt chước được' })}</span> {tx({ en: 'her hold times, key gaps and where her finger lands', vi: 'thời gian giữ phím, khoảng nghỉ và chỗ ngón tay của Hà chạm' })}</li>
+        </ul>
+        <p className="muted mini">{tx({ en: 'Unlocking with the right PIN is only recorded. Innate decides when the transfer is confirmed.', vi: 'Mở khoá bằng PIN đúng chỉ được ghi lại. Innate quyết định khi xác nhận chuyển tiền.' })}</p>
+      </section>
+    )
+  }
   if (act === 'ops') {
     const flagged = attempts.filter((a) => a.score.action !== 'allow')
     return (
@@ -333,7 +358,7 @@ function ActPanel({ act, attempts, sample }: { act: string; attempts: Attempt[];
               <span className="status discrepancy">{tx({ en: 'Fraud', vi: 'Gian lận' })}</span>
             </li>
           ))}
-          {flagged.length === 0 && <li className="muted">{tx({ en: 'Play steps 5 and 6 first.', vi: 'Hãy xem bước 5 và 6 trước.' })}</li>}
+          {flagged.length === 0 && <li className="muted">{tx({ en: 'Play the earlier steps first.', vi: 'Hãy xem các bước trước trước.' })}</li>}
         </ul>
         <a className="btn ghost small" href="#/ops">{tx({ en: 'Open the real dashboard', vi: 'Mở bảng vận hành thật' })}</a>
       </section>
@@ -345,8 +370,8 @@ function ActPanel({ act, attempts, sample }: { act: string; attempts: Attempt[];
         <div className="box-head"><h2>{tx({ en: 'Policy', vi: 'Chính sách' })}</h2><span className="chip">{who('lananh')}</span></div>
         <ul className="ctl-list compact">
           <li><span className="status matched">{t('act_allow')}</span> {tx({ en: 'owner, normal context', vi: 'chủ ví, bối cảnh bình thường' })}</li>
-          <li><span className="status sent">{t('act_step_up')}</span> {tx({ en: 'a human who is not the owner, or doubtful context', vi: 'người thật nhưng không phải chủ, hoặc bối cảnh đáng ngờ' })}</li>
-          <li><span className="status discrepancy">{t('act_hold')}</span> {tx({ en: 'machine input, or very high risk', vi: 'thao tác máy, hoặc rủi ro rất cao' })}</li>
+          <li><span className="status sent">{t('act_step_up')}</span> {tx({ en: 'a human who is not the owner, or doubtful context: type a short sentence', vi: 'người thật nhưng không phải chủ, hoặc bối cảnh đáng ngờ: gõ một câu ngắn' })}</li>
+          <li><span className="status discrepancy">{t('act_hold')}</span> {tx({ en: 'machine input, or very high risk: pause and tell the owner', vi: 'thao tác máy, hoặc rủi ro rất cao: tạm hoãn và báo chủ ví' })}</li>
         </ul>
         <p className="muted mini">{tx({ en: 'Innate never locks an account. Thresholds are configurable per wallet.', vi: 'Innate không bao giờ tự khoá tài khoản. Ngưỡng chỉnh được theo từng ví.' })}</p>
       </section>

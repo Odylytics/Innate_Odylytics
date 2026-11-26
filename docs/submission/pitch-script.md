@@ -64,11 +64,11 @@ Chúng tôi tìm và **không thấy công trình công bố nào** dùng kiểu
 **15. Sao không dùng cảm biến chuyển động (con quay, gia tốc)?**
 Thử trên StrokePIN (E23): chuyển động cho EER 0,04 nhưng đó là nhiễu thiết bị (mỗi người một máy) và mất hết khi đổi tư thế; dữ liệu chỉ 5 Hz nên không kiểm được cú giật khi chạm. Chúng tôi coi đó là ứng viên chống bot ("có tay cầm"), chưa tuyên bố.
 
-**16. Bản online chạy mô hình học chưa?** `[TODO: cập nhật theo /health của bản nộp]`
-Mô hình học là tuỳ chọn có dự phòng luật. Nói đúng trạng thái của bản đang online; số liệu có mô hình học là đo ở môi trường nghiên cứu.
+**16. Bản online chạy mô hình học chưa?**
+Chưa: bản demo và video chạy luật thuần (`/health` báo `models: false`). Mô hình học là tuỳ chọn có dự phòng luật; số liệu có mô hình học là đo ở môi trường nghiên cứu, không phải thứ giám khảo thấy trên demo. `[TODO: kiểm lại /health lúc nộp]`
 
-**17. Vì sao demo dùng PIN 4 số mà mô hình chủ học trên 6 số?**
-Mô hình chủ học chỉ chạy với PIN 6 số; PIN 4 số dùng phép so khoảng cách (E28: kẻ biết PIN được qua nhiều hơn). Chúng tôi giữ 4 số cho phần tự thử vì ổn định và nói thẳng điều này.
+**17. Vì sao demo dùng PIN 6 số?**
+Mô hình chủ học trên PIN 6 số (StrokePIN), và với PIN 4 số kẻ biết PIN lọt nhiều hơn rõ rệt (E28: 68% so với 28% được `allow`), nên demo dùng PIN 6 số `159357`. Bản demo online chạy **luật thuần** (so khoảng cách chuẩn hoá + luật người/máy, mô hình học tắt); chúng tôi nói thẳng điều này.
 
 ## Nguyên tắc khi trả lời
 Nêu giới hạn **trước** khi bị hỏi; dùng "tín hiệu rủi ro", "rất khó", không dùng "không thể", "bắt mọi mã độc"; số liệu nào chưa phải dữ liệu của đội thì nói rõ.

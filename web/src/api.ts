@@ -70,6 +70,14 @@ export const api = {
     call<{ session_id: string; label: string }>(`/v1/sessions/${sessionId}/label`, { method: 'POST', body: { label }, key: opsKey }),
 }
 
+/** The API explains in Vietnamese only (explanation_vi); in English the sentence is rebuilt from the reason codes. */
+export function explanationText(s: { reasons: string[]; action: Action | null; explanation_vi: string | null }, lang: 'en' | 'vi'): string {
+  if (lang === 'vi') return s.explanation_vi ?? ''
+  const why = s.reasons.map((r) => reasonText(r, 'en')).join('; ')
+  const act = s.action === 'allow' ? 'Allow the transfer.' : s.action === 'step_up' ? 'Ask for a short typed sentence before sending.' : s.action === 'hold' ? 'Hold the transfer and tell the owner.' : ''
+  return `${why ? `${why}. ` : ''}${act}`
+}
+
 /** Vietnamese/English text for each reason code the API returns (backend/app/scoring/explain.py). */
 export function reasonText(code: string, lang: 'en' | 'vi'): string {
   const pct = code.match(/_(\d+)pct$/)?.[1]

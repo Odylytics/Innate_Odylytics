@@ -3,19 +3,20 @@ import { T } from './ui'
 import Avatar from './Avatar'
 import { useT } from './i18n'
 import { play } from './sound'
-import { PERSONAS, STEPS, persona, type PersonaId } from './story'
+import { STORIES, castOf, persona, stepsOf, type PersonaId, type StoryCase, type StoryStep } from './story'
 
-const firstStepOf = (id: PersonaId) => {
-  const own = STEPS.findIndex((s) => s.who === id)
-  return own >= 0 ? own : STEPS.findIndex((s) => s.also.includes(id))
+const firstStepOf = (steps: StoryStep[], id: PersonaId) => {
+  const own = steps.findIndex((s) => s.who === id)
+  return own >= 0 ? own : steps.findIndex((s) => s.also.includes(id))
 }
 
 /** Bottom story player: cast strip, step progress you can click, the speaker's line and transport controls. */
-export function StoryBar({ step, goto, playing, setPlaying, muted, toggleMute, hold, onExit }: {
-  step: number; goto: (n: number) => void; playing: boolean; setPlaying: (p: boolean) => void
+export function StoryBar({ storyCase, step, goto, playing, setPlaying, muted, toggleMute, hold, onExit }: {
+  storyCase: StoryCase; step: number; goto: (n: number) => void; playing: boolean; setPlaying: (p: boolean) => void
   muted: boolean; toggleMute: () => void; hold: boolean; onExit: () => void
 }) {
   const { t, lang } = useT()
+  const STEPS = stepsOf(storyCase)
   const s = STEPS[step]
   const who = persona(s.who)
   // progress belongs to a step, so a stale value never ends the next step early
@@ -54,8 +55,8 @@ export function StoryBar({ step, goto, playing, setPlaying, muted, toggleMute, h
   return (
     <div className="story" role="region" aria-label={t('storyLabel')}>
       <div className="story-cast">
-        {PERSONAS.map((p) => {
-          const n = firstStepOf(p.id)
+        {castOf(storyCase).map((p) => {
+          const n = firstStepOf(STEPS, p.id)
           const state = p.id === s.who ? 'speaking' : s.also.includes(p.id) ? 'mentioned' : ''
           return (
             <button key={p.id} className={`cast-btn ${state}`} title={`${p.name} · ${p.role[lang]}`} aria-label={`${p.name}, ${p.role[lang]}`}
@@ -99,16 +100,16 @@ export function StoryBar({ step, goto, playing, setPlaying, muted, toggleMute, h
 }
 
 /** Start gate: browsers only allow sound after a click, and it introduces the cast. */
-export function StoryStart({ onStart }: { onStart: (withSound: boolean) => void }) {
+export function StoryStart({ storyCase, onStart }: { storyCase: StoryCase; onStart: (withSound: boolean) => void }) {
   const { t, lang } = useT()
   return (
     <div className="modal-c story-start">
       <div className="modal start-card" role="dialog" aria-modal="true" aria-labelledby="start-title">
         <span className="chip sim"><T k="fictional" /></span>
-        <h2 id="start-title"><T k="startTitle" /></h2>
-        <p className="muted"><T k="startSub" /></p>
+        <h2 id="start-title">{STORIES[storyCase].title[lang]}</h2>
+        <p className="muted"><T k={storyCase === 'remote' ? 'startRemoteSub' : 'startStolenSub'} /></p>
         <ul className="start-cast">
-          {PERSONAS.map((p) => (
+          {castOf(storyCase).map((p) => (
             <li key={p.id}><Avatar p={p} size={44} /><span><b>{p.name}</b><span>{p.role[lang]}</span></span></li>
           ))}
         </ul>

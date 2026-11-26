@@ -36,8 +36,8 @@ Phát hiện:
 | # | Việc | Ai / ở đâu | Ghi chú |
 |---|---|---|---|
 | 1 | Deploy `web/` (Root Directory = `web`) với `VITE_SDK_KEY` | người deploy | Thiếu key → API trả 401, demo báo lỗi |
-| 2 | Chốt bật AI trên API online hay không | nhóm | Bật: bằng chứng "AI là lõi" rõ hơn, nhưng phải sửa lời kịch bản bước Bảo (hoặc chọn hạt giống khác) và chấp nhận chủ ví đôi khi bị `step_up` |
-| 3 | Giữ PIN 4 số cho phần "tự thử" | web | Ổn định cho giám khảo. Nói thẳng trong slide: mô hình chủ học trên PIN 6 số, bản demo dùng so khoảng cách |
+| 2 | Chốt bật AI trên API online hay không | nhóm | **Đã chốt (26/11): demo và video chạy luật thuần, mô hình học tắt** (`/health` báo `models: false`); kịch bản bước Bảo khớp với chế độ này. Nếu sau này bật: bằng chứng "AI là lõi" rõ hơn, nhưng phải sửa lời kịch bản bước Bảo (hoặc chọn hạt giống khác) và chấp nhận chủ ví đôi khi bị `step_up` |
+| 3 | ~~Giữ PIN 4 số~~ **Đã chốt PIN 6 số `159357`** (26/11): ví demo, kịch bản và tài liệu đều dùng 6 số | web | PIN 4 số làm mất mô hình chủ học và để kẻ biết PIN lọt nhiều hơn (E28) |
 | 4 | Thử trên iPhone thật và laptop thật | nhóm | Safari iOS hỗ trợ Pointer Events; chưa kiểm `width/height` chạm trên iOS. Thử nhanh qua mạng LAN: chạy Vite với `--host` và API với `--host 0.0.0.0`, mở `http://<IP máy Mac>:5173` trên iPhone |
 | 5 | Ghi "Hướng dẫn dùng thử" trên landing + PDF 1 trang | `web/` + `docs/submission/` | Link, PIN `159357`, 3 bước |
 
@@ -56,7 +56,7 @@ Cần sửa API trước (xem [`../research/transfer-flow.md`](../research/trans
 
 ## 5. Thứ tự đề xuất (hạn nộp 03/12)
 
-1. Deploy web như hiện tại (PIN 4 số, API chỉ luật) để có link chạy ổn định sớm. **Đây là bản an toàn.**
+1. Deploy web như hiện tại (PIN 6 số, API chỉ luật) để có link chạy ổn định sớm. **Đây là bản an toàn.**
 2. Thử trên iPhone và laptop thật của nhóm; sửa giao diện nếu cần.
 3. Quyết định bật AI trên API; nếu bật thì sửa lời kịch bản bước Bảo cho khớp và kiểm lại.
 4. Thêm số tài khoản + ngân hàng vào API, rồi vào ví web và kịch bản.

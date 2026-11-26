@@ -4,8 +4,8 @@ import { Arrow, SectionHead, useL } from './ui'
 type Tap = { key: string; down: number; up: number; dx: number; dy: number }
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '']
-const LEN = 4
-const BOT_PIN = ['1', '5', '9', '3']
+const LEN = 6
+const BOT_PIN = ['1', '5', '9', '3', '5', '7']
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
 const cv = (xs: number[]) => {
@@ -97,7 +97,7 @@ export function SignalDemo() {
           eyebrow={l({ en: '02 · Live signal', vi: '02 · Tín hiệu trực tiếp' })}
           title={
             <>
-              {l({ en: 'Tap any four keys.', vi: 'Chạm bốn phím bất kỳ.' })}
+              {l({ en: 'Tap any six keys.', vi: 'Chạm sáu phím bất kỳ.' })}
               <br />
               <span className="text-jade">{l({ en: 'Watch your rhythm appear.', vi: 'Xem nhịp của bạn hiện ra.' })}</span>
             </>

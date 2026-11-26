@@ -17,7 +17,7 @@ _BOT_VI = {
 }
 _ACTION_VI = {
     "allow": "Cho phép giao dịch.",
-    "step_up": "Đề nghị xác thực khuôn mặt trước khi chuyển.",
+    "step_up": "Đề nghị gõ một câu ngắn để xác nhận trước khi chuyển.",
     "hold": "Đề nghị tạm giữ lệnh và báo cho người dùng.",
 }
 Z_MIN = 1.5  # nhóm đặc trưng lệch ít hơn mức này không được nêu làm lý do
