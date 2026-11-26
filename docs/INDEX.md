@@ -7,6 +7,7 @@
 |---|---|
 | Innate là gì, nằm ở đâu trong chồng bảo mật | [`plan/positioning.md`](plan/positioning.md), [`plan/how-it-works.md`](plan/how-it-works.md) |
 | Số đo hiện tại, giới hạn | [`research/ai-research.md`](research/ai-research.md) (mục 6b: mọi thí nghiệm), bảng chỉ mục [`../research/EXPERIMENTS.md`](../research/EXPERIMENTS.md) |
+| Báo cáo tổng hợp: flow hệ thống, flow thu dữ liệu, mọi số liệu thực nghiệm, hạn chế | [`research/bao-cao-tong-hop.md`](research/bao-cao-tong-hop.md) |
 | Nộp bài thiếu gì, hạn, thể lệ | [`contest/submission-checklist.md`](contest/submission-checklist.md), [`contest/the-le-cuoc-thi.md`](contest/the-le-cuoc-thi.md), [`contest/dang-ky-va-cau-hoi-btc.md`](contest/dang-ky-va-cau-hoi-btc.md) |
 | Giấy phép, tài sản có sẵn, dữ liệu | [`../LICENSE`](../LICENSE), [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md), [`research/datasets.md`](research/datasets.md) |
 | Thu dữ liệu của đội ra sao | [`plan/thu-du-lieu-doi.md`](plan/thu-du-lieu-doi.md) (kế hoạch + phiếu đồng ý + lệnh phân tích) |
@@ -41,6 +42,6 @@ papers/                           52 PDF bài báo (bản quyền nhà xuất b�
 Ngoài repo (máy người thu dữ liệu): `/Users/nguyenminhquan/Desktop/Projects/Innate/data.zip` (Touchalytics), `processed_typing_data.zip` (Aalto), đã giải nén vào `research/data/`.
 
 ## Quy ước
-- Số hiệu thí nghiệm: E1–E14 như trong `ai-research.md` (E14 = chuỗi số mới, do đội web làm); E18–E27 bổ sung 25/11. **E15–E17 không dùng** (đổi thành E19–E21 để khỏi trùng E14).
+- Số hiệu thí nghiệm: E1–E14 như trong `ai-research.md` (E14 = chuỗi số mới, do đội web làm); E18–E28 bổ sung 25–26/11. **E15–E17 không dùng** (đổi thành E19–E21 để khỏi trùng E14).
 - Mọi con số trong tài liệu do mã trong `research/experiments/` sinh ra; không có số nào chỉnh tay. Số trên dữ liệu giả chỉ để thử đường ống, không đưa lên slide.
 - Dữ liệu người dùng: chỉ thời gian, toạ độ, loại sự kiện, số ký tự; không lưu nội dung PIN, số tiền, nội dung gõ.
