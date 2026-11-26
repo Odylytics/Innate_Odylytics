@@ -6,6 +6,7 @@
 | E | Câu hỏi | Dữ liệu | Mã `experiments/` | Kết quả `results/` | Kết luận ngắn |
 |---|---|---|---|---|---|
 | E1/E2 | Co rút phương sai về dân số có giúp few-shot? | thật (CMU, bàn phím máy tính) | `e1_fewshot_owner.py` | `e1_dsl.md` | Giảm FAR@FRR5% 7–11 điểm, EER không đổi |
+| E3 | Hiệu chỉnh ánh xạ điểm chủ `d → score` | thật (StrokePIN) | `e3_calibrate_owner.py` | `e3_calibrate_owner.md` | Ánh xạ cũ cho 84% kẻ biết PIN qua 0,5; Platt cân bằng lớp còn 27% (chủ 90%); FAR@FRR5% vẫn 50% |
 | E4 | LightGBM người/máy, bỏ-một-chiến-thuật | giả | `e4_human_bot_lgbm.py` | `e4_human_bot_lgbm.md` | Số đẹp là học tắt; bot lạ sập |
 | E4b | Người/máy với người thật | thật (StrokePIN) | `e4b_human_bot_real.py` | `e4b_human_bot_real.md` | CT1/2 100%; CT3 9–26%, CT4 20–73% |
 | E5 | Phát hiện phát lại, nhiễu thích nghi | giả | `e5_replay.py` | `e5_replay.md` | Bắt tới ±10–15% |
@@ -28,7 +29,7 @@
 | E26 | Độ trễ API local | giả | `e26_latency.py` | `e26_latency.md` | `/score` p50 3,7 ms, max 36 ms sau khi nạp sẵn mô hình (trước: lần đầu ~1 s) |
 | E27/E27b | Bot thích nghi; ngưỡng phát lại | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Phát lại ±15% trở lên và bot biết mẫu chuẩn qua mặt |
 
-**Chưa chạy / chưa có số:** E3 (hiệu chỉnh ánh xạ điểm chủ trên dữ liệu đội), E6, E8 (kế hoạch trong `docs/research/research-plan.md`); gộp PIN + câu; kiểu gõ tiếng Việt trên người thật; bot thật; dữ liệu của đội. Đường ống cho dữ liệu đội: `team_analysis.py` (T1–T5), `team_data_dryrun.py` (thử ống bằng dữ liệu giả), `train_human_model.py --export ... --out ...`.
+**Chưa chạy / chưa có số:** E3 trên dữ liệu đội (đã chạy trên StrokePIN), E6, E8 (kế hoạch trong `docs/research/research-plan.md`); gộp PIN + câu; kiểu gõ tiếng Việt trên người thật; bot thật; dữ liệu của đội. Đường ống cho dữ liệu đội: `team_analysis.py` (T1–T5), `team_data_dryrun.py` (thử ống bằng dữ liệu giả), `train_human_model.py --export ... --out ...`.
 
 ## Chạy lại
 - Môi trường: `numpy pandas scikit-learn lightgbm` (+ `fastapi httpx` cho `e26`, `team_data_dryrun`). Dữ liệu tải riêng vào `research/data/` (git-ignored).

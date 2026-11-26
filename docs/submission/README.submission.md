@@ -110,4 +110,4 @@ research/   mã thí nghiệm + kết quả            docs/       kế hoạch,
 
 ## 8. Quyền riêng tư và pháp lý
 
-Chỉ lưu thời gian, toạ độ, loại sự kiện và số ký tự; **không lưu nội dung PIN, số tiền, nội dung chuyển khoản**. Dữ liệu chạm/gõ coi là dữ liệu nhạy cảm (Luật Bảo vệ dữ liệu cá nhân 2025 và NĐ 356/2025, hiệu lực 01/01/2026): người tham gia thu dữ liệu đã đồng ý bằng phiếu (`TODO: đính kèm mẫu phiếu`). Không dùng logo hay tên thương hiệu của bên thứ ba; giao diện demo là minh hoạ.
+Chỉ lưu thời gian, toạ độ, loại sự kiện và số ký tự; **không lưu nội dung PIN, số tiền, nội dung chuyển khoản**. Dữ liệu chạm/gõ coi là dữ liệu nhạy cảm (Luật Bảo vệ dữ liệu cá nhân 2025 và NĐ 356/2025, hiệu lực 01/01/2026): người tham gia thu dữ liệu đã đồng ý bằng phiếu (mẫu phiếu: `docs/plan/thu-du-lieu-doi.md` (mục "Phiếu đồng ý"), đính kèm vào zip). Không dùng logo hay tên thương hiệu của bên thứ ba; giao diện demo là minh hoạ.

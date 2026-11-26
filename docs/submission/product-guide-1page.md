@@ -12,7 +12,7 @@
 | **PIN demo** | `159357` |
 
 ## 4 bước dùng thử (khoảng 3 phút)
-1. **Đăng ký nhịp:** mở trang demo → *Đăng ký nhịp thao tác* → nhập PIN `159357` ba đến năm lần, cầm máy như bình thường.
+1. **Đăng ký nhịp:** mở trang demo → *Đăng ký nhịp thao tác* → nhập PIN `1593` ba đến năm lần, cầm máy như bình thường.
 2. **Chuyển tiền bằng chính bạn:** nhập số người nhận và số tiền → nhập PIN → kết quả **allow** (qua).
 3. **Người thứ hai biết PIN:** đưa máy cho người khác nhập cùng PIN → kết quả **step_up** (yêu cầu xác thực thêm) kèm lý do ("nhịp PIN chậm hơn…, chạm lệch…").
 4. **Bot:** chạy bộ giả lập `[TODO: cách chạy hoặc nút trên trang]` → kết quả **hold** (giữ lệnh), lý do "nhịp đều bất thường".

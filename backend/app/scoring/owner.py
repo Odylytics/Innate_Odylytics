@@ -11,6 +11,7 @@ _SD_FLOOR = {"pin_hold": 15.0, "pin_flight": 25.0, "pin_total": 80.0, "pin_dx": 
 
 ALPHA = 0.1  # tốc độ cập nhật mẫu chuẩn
 DRIFT_CAP = 1.0  # mẫu chuẩn không được trôi quá 1 sd so với lúc đăng ký (chống "dạy dần")
+FREEZE_DRIFT = 0.5  # E7: trôi trung bình > 0,5 sd thì đóng băng + cờ "frozen"; cần đăng ký lại có xác thực
 
 
 def is_identity_feature(k: str) -> bool:
@@ -77,7 +78,14 @@ def score(features: dict[str, float], tpl: dict) -> tuple[float | None, dict[str
     return 1 / (1 + math.exp(min(2 * (d - 2), 700.0))), z  # chặn tràn số khi phiên lệch rất xa (trước đây OverflowError => 500)
 
 
+def drift(tpl: dict) -> float:
+    """Độ trôi trung bình của mẫu chuẩn so với lúc đăng ký, đơn vị sd."""
+    return fmean(abs(tpl["mu"][k] - tpl["mu0"][k]) / tpl["sd"][k] for k in tpl["mu"])
+
+
 def update(tpl: dict, features: dict[str, float]) -> dict:
+    if tpl.get("frozen"):
+        return tpl
     mu = dict(tpl["mu"])
     for k in mu:
         if k in features:
@@ -85,4 +93,5 @@ def update(tpl: dict, features: dict[str, float]) -> dict:
             lo = tpl["mu0"][k] - DRIFT_CAP * tpl["sd"][k]
             hi = tpl["mu0"][k] + DRIFT_CAP * tpl["sd"][k]
             mu[k] = min(max(moved, lo), hi)
-    return {**tpl, "mu": mu, "updates": tpl["updates"] + 1}
+    new = {**tpl, "mu": mu, "updates": tpl["updates"] + 1}
+    return {**new, "frozen": True} if drift(new) > FREEZE_DRIFT else new

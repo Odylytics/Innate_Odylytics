@@ -447,3 +447,16 @@ def test_expired_challenge_token_is_flagged(client):
     c = challenge.issue(now=_t.time() - 10_000)
     r = _score(client, _challenge_session(client, "tok_exp", c["token"], c["phrase"]))
     assert "challenge_token_replayed" in r["reasons"]
+
+
+def test_template_freezes_when_drift_is_directional():
+    rng = random.Random(3)
+    from app.scoring import features
+
+    feats = [features.extract(human_session("u", OWNER, rng)) for _ in range(3)]
+    tpl = owner.build_template(feats)
+    far = {k: v + 1000 for k, v in feats[0].items()}
+    for _ in range(50):
+        tpl = owner.update(tpl, far)
+    assert tpl["frozen"] and owner.drift(tpl) > owner.FREEZE_DRIFT
+    assert owner.update(tpl, feats[1]) is tpl  # đóng băng: không nhận thêm phiên nào

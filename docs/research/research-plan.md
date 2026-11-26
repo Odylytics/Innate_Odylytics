@@ -35,3 +35,7 @@ Nhóm làm web/demo riêng sau. Phần ví demo (`backend/app/static/wallet.html
 
 - Đối chiếu số liệu kế hoạch với 7 paper gốc và đọc phần tóm tắt các paper còn lại: [`../plan/mo-ta-du-an-va-kiem-chung.md`](../plan/mo-ta-du-an-va-kiem-chung.md).
 - Tìm kiếm ban đầu cho R1, R2: xem [`tech-notes.md`](tech-notes.md). **Chưa có kết luận** vì tài liệu công khai không nói về phía phòng thủ, cần thí nghiệm.
+
+## Đo hạ tầng R6 (26/11)
+
+100 yêu cầu tuần tự `GET /health` tới `nhip-api-taupe.vercel.app` từ máy dev: min 0,16 s, p50 0,22 s, p95 0,48 s, max 1,27 s. Mới đo `/health` (không chạm DB, không `/score`); chưa đo cold start thật sau thời gian rảnh, chưa đo giới hạn gói free. Ngưỡng 200 ms của R6 chưa đạt ở p50 do độ trễ mạng từ máy dev.
