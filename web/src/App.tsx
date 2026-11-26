@@ -196,7 +196,11 @@ function Site() {
 // #/collect is a standalone phone-only page (no site nav, footer or smooth scroll), so it is routed before the site mounts.
 export default function App() {
   // The language lives here so the standalone collection page follows the same language as the site.
-  const [lang, setLang] = useState<Lang>(() => (store.get('innate.lang') === 'vi' ? 'vi' : 'en'))
+  // The collection page is for Vietnamese volunteers, so it defaults to Vietnamese until they pick a language.
+  const [lang, setLang] = useState<Lang>(() => {
+    const saved = store.get('innate.lang')
+    return saved === 'vi' || saved === 'en' ? saved : window.location.hash.startsWith('#/collect') ? 'vi' : 'en'
+  })
   useEffect(() => { document.documentElement.lang = lang; store.set('innate.lang', lang) }, [lang])
   const hash = useHash()
   return (
