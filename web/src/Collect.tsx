@@ -25,6 +25,10 @@ function useTx() {
   return (en: string, vi: string) => (lang === 'en' ? en : vi)
 }
 
+// shown when the build has no SDK key (VITE_SDK_KEY) or the API rejects it: nothing could ever be saved
+const NO_KEY = ['This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.'] as const
+const isKeyError = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.status === 403)
+
 interface Person { name: string; email: string }
 
 // Stable id from the email (cyrb53), so all sessions of one person group together.
@@ -101,7 +105,8 @@ function Start({ onDone }: { onDone: (p: Person) => void }) {
       </details>
       <label className="cl-check"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />
         <span>{tx('I agree to take part and will use a new PIN that does not match any password or PIN I really use.', 'Tôi đồng ý tham gia và sẽ đặt mã PIN mới, không trùng mật khẩu hay mã PIN nào tôi đang dùng.')}</span></label>
-      <button className="cl-btn" disabled={!valid} onClick={() => onDone({ name: n, email: m })}>{tx('Start', 'Bắt đầu')}</button>
+      {!api.hasSdkKey() && <p className="cl-err" role="alert">{tx(...NO_KEY)}</p>}
+      <button className="cl-btn" disabled={!valid || !api.hasSdkKey()} onClick={() => onDone({ name: n, email: m })}>{tx('Start', 'Bắt đầu')}</button>
     </div>
   )
 }
@@ -133,7 +138,7 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
       setState('done')
     } catch (e) {
       setMsg(e instanceof ApiError && e.status === 0 ? tx('No connection. Check your network and tap Resend.', 'Không có mạng. Kiểm tra kết nối rồi bấm Gửi lại.')
-        : e instanceof ApiError && (e.status === 401 || e.status === 403) ? tx('This build has no API key configured. Tell the team.', 'Bản này chưa cấu hình khoá API. Báo cho đội.')
+        : isKeyError(e) ? tx(...NO_KEY)
         : `${tx('Could not send the data', 'Lỗi gửi dữ liệu')}${e instanceof ApiError ? ` (${e.status})` : ''}. ${tx('Tap Resend.', 'Bấm Gửi lại.')}`)
       setState('failed')
     }
@@ -228,13 +233,13 @@ function PinRound({ person, onNext }: { person: Person; onNext: () => void }) {
 function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challenge: Challenge; events: FieldEvent[] } | null, note?: string) => void }) {
   const tx = useTx()
   const [ch, setCh] = useState<Challenge | null>(null)
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<'nokey' | 'other' | null>(null)
   const [typed, setTyped] = useState('')
   const input = useRef<HTMLInputElement>(null)
   const rec = useRef<ComposeRecorder | null>(null)
   useEffect(() => {
     let live = true
-    api.challenge().then((c) => { if (live) setCh(c) }).catch(() => { if (live) setFailed(true) })
+    api.challenge().then((c) => { if (live) setCh(c) }).catch((e) => { if (live) setFailed(isKeyError(e) ? 'nokey' : 'other') })
     return () => { live = false }
   }, [])
   useEffect(() => {
@@ -246,7 +251,8 @@ function PhraseStep({ now, onDone }: { now: () => number; onDone: (r: { challeng
     <div className="cl-pin cl-phrase">
       <h2>{tx('Type this sentence again', 'Gõ lại câu này')}</h2>
       {!ch && !failed && <div className="cl-wait" role="status"><span className="cl-spin" aria-hidden="true" />{tx('Loading…', 'Đang tải…')}</div>}
-      {failed && <>
+      {failed === 'nokey' && <p className="cl-err" role="alert">{tx(...NO_KEY)}</p>}
+      {failed === 'other' && <>
         <p className="cl-err" role="alert">{tx('Could not load the sentence. You can skip this step.', 'Không tải được câu. Bạn có thể bỏ qua bước này.')}</p>
         <button className="cl-btn" onClick={() => onDone(null, 'phrase_unavailable')}>{tx('Skip', 'Bỏ qua')}</button>
       </>}
