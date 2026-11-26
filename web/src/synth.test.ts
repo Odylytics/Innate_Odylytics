@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { reasonText } from './api'
-import { FRIEND, OWNER, botSession, humanSession, rng, type Layout } from './synth'
+import { FRIEND, OWNER, botSession, humanSession, rng, withAccount, type Layout } from './synth'
 
 const layout: Layout = Object.fromEntries(
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((k, i) => [k, { cx: 60 + (i % 3) * 100, cy: 400 + Math.floor(i / 3) * 70, w: 90, h: 60 }]),
@@ -34,5 +34,10 @@ describe('reason texts', () => {
     expect(reasonText('pin_rhythm_slower_40pct', 'vi')).toBe('Nhịp PIN chậm hơn 40%')
     expect(reasonText('tap_exact_center', 'en')).toBe('Taps hit the exact key centre')
     expect(reasonText('something_new', 'vi')).toBe('something_new')
+  })
+  it('the account step comes after the PIN (unlock first, transfer second)', () => {
+    const { session } = withAccount(humanSession('u', '159357', layout, OWNER, rng(7)), 'typed', 14, rng(8))
+    const pinEnd = Math.max(...session.pin_taps.map((t) => t.t_up))
+    expect(Math.min(...session.fields![0].events.map((e) => e.t))).toBeGreaterThan(pinEnd)
   })
 })

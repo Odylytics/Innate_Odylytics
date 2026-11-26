@@ -229,11 +229,17 @@ export default function Demo({ story }: { story: boolean }) {
 
           {!story && (
             <section className="box">
-              <div className="box-head"><h2>{tx({ en: 'Attacker console', vi: 'Bảng điều khiển hacker' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
-              <p className="muted">{tx({ en: 'Synthetic sessions on the same keys, scored by the live API. Real attacks run from attacker/ (adb).', vi: 'Phiên tổng hợp trên chính các phím này, chấm bởi API thật. Tấn công thật chạy bằng attacker/ (adb).' })}</p>
-              <div className="row" style={{ marginTop: 12 }}>
+              <div className="box-head"><h2>{tx({ en: 'Two cases to try', vi: 'Hai trường hợp để thử' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
+              <p className="muted">{tx({ en: 'The PIN is recorded when the wallet unlocks and never blocks; Innate scores at the transfer confirmation. Synthetic sessions on the same keys, scored by the live API. Real attacks run from attacker/ (adb).', vi: 'PIN được ghi lúc mở ví và không chặn; Innate chấm điểm ở bước xác nhận chuyển tiền. Phiên tổng hợp trên chính các phím này, chấm bởi API thật. Tấn công thật chạy bằng attacker/ (adb).' })}</p>
+              <p style={{ marginTop: 12 }}><b>{tx({ en: 'Case 1 · Android hijacked remotely', vi: 'Trường hợp 1 · Android bị chiếm từ xa' })}</b></p>
+              <p className="muted mini">{tx({ en: 'Accessibility malware fills the account and taps the PIN by itself. Expected: machine, hold.', vi: 'Mã độc Trợ năng tự điền số tài khoản và bấm PIN. Kỳ vọng: máy, tạm hoãn.' })}</p>
+              <div className="row" style={{ marginTop: 8 }}>
                 <button className="btn small" onClick={botAttack} disabled={busy || !!ghost}>{tx({ en: 'Malware taps the PIN', vi: 'Mã độc bấm PIN' })}</button>
-                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || !status.template_ready}>{tx({ en: 'Someone who knows the PIN', vi: 'Người biết PIN thử' })}</button>
+              </div>
+              <p style={{ marginTop: 16 }}><b>{tx({ en: 'Case 2 · Phone stolen', vi: 'Trường hợp 2 · Bị trộm điện thoại' })}</b></p>
+              <p className="muted mini">{tx({ en: 'A thief who knows the PIN types it, then transfers by hand. Expected: a human but not the owner, type a sentence.', vi: 'Kẻ trộm biết PIN gõ PIN rồi tự chuyển tiền. Kỳ vọng: người thật nhưng không phải chủ, gõ một câu.' })}</p>
+              <div className="row" style={{ marginTop: 8 }}>
+                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || !status.template_ready}>{tx({ en: 'Thief who knows the PIN', vi: 'Kẻ trộm biết PIN thử' })}</button>
               </div>
             </section>
           )}
