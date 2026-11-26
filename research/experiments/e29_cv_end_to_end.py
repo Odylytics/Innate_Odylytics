@@ -113,25 +113,26 @@ def decide(raw, f, tpl, history, new_recipient):
     if o:
         m = owner_model.predict(z); o = o if m is None else m
     risk, action, _ = fusion.fuse(h, o, new_recipient, 0.0)
-    return risk, action, h
+    return risk, action, h, o
 
 
 GROUPS = ["chủ, cùng tư thế (ngồi)", "chủ, đổi tư thế (đi)", "kẻ biết PIN (người khác, máy khác)", "bot CT1 đều", "bot CT2 nhiễu thời gian",
           "bot CT3 phát lại ±5%", "bot CT4 lấy mẫu dân số", "phát lại ±10%", "phát lại ±15%", "phát lại ±20%", "phát lại ±30%",
           "bot biết mẫu chuẩn (scale 1.0)", "bot biết mẫu chuẩn (scale 0.5)"]
+FOLD = [0]
 R = {g: [] for g in GROUPS}  # g -> [(user, risk_known, risk_new, human)]
 
 
 def record(g, u, raw, tpl, hist):
     f = features.extract(raw)
-    rk, _, h = decide(raw, f, tpl, hist, False); rn, _, _ = decide(raw, f, tpl, hist, True)
-    R[g].append((u, rk, rn, h))
+    rk, _, h, o = decide(raw, f, tpl, hist, False); rn, _, _, _ = decide(raw, f, tpl, hist, True)
+    R[g].append((u, rk, rn, h, o, FOLD[0]))
 
 
 us = USERS[:]; random.Random(SEED).shuffle(us)
 t0 = time.time()
 for fi in range(FOLDS):
-    test = set(us[fi::FOLDS]); rest = [u for u in us if u not in test]; val, fit = rest[:12], rest[12:]
+    FOLD[0] = fi; test = set(us[fi::FOLDS]); rest = [u for u in us if u not in test]; val, fit = rest[:12], rest[12:]
     train_human(fit, val); train_owner(fit, val)
     print(f"phần {fi + 1}/{FOLDS}: {len(test)} người kiểm thử, mô hình đã huấn luyện ({time.time() - t0:.0f}s)", flush=True)
     for u in sorted(test):
@@ -152,6 +153,8 @@ for fi in range(FOLDS):
                 for gi, n in ((7, 0.10), (8, 0.15), (9, 0.20), (10, 0.30)): record(GROUPS[gi], u, strip(noisy_replay(src, n)), tpl, hist)
                 for gi, sc in ((11, 1.0), (12, 0.5)): record(GROUPS[gi], u, strip(mimic(victim[:6], sc)), tpl, hist)
 
+import os, pickle
+if os.environ.get('E29_DUMP'): pickle.dump({g: R[g] for g in GROUPS}, open(os.environ['E29_DUMP'], 'wb'))
 A0, B0 = fusion.THRESHOLD_A, fusion.THRESHOLD_B
 
 

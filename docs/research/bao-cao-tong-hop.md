@@ -191,6 +191,8 @@ Không có điểm tối ưu cho cả hai phía.
 
 Đăng ký nhiều hơn thì kẻ gian lọt ít hơn, giảm rõ nhất từ 2 lên 3 lượt. k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử vì StrokePIN chỉ có tối đa 5 lượt ngồi mỗi người–PIN, và k=4 chỉ kiểm thử trên 1 lượt. Prior dân số lấy từ file của backend, không loại riêng từng nạn nhân nên có thể lạc quan nhẹ.
 
+**E31, chỉnh trọng số fusion và ngưỡng A trên dữ liệu E29** (tune 3 phần, kiểm 2 phần khác người): cấu hình tốt nhất tìm được (wb 0,50, wo 0,30, A 0,26) chỉ tăng tỉ lệ không-allow trung bình của 7 nhóm tấn công thích nghi từ 55% lên 57% trên phần kiểm, đồng thời hạ chặn kẻ biết PIN từ 81% xuống 77%. Cải thiện nhỏ hơn dao động giữa các phần, nên **giữ trọng số và ngưỡng hiện tại**. Bài học: đây không phải vấn đề chỉnh tham số mà là giới hạn của tín hiệu.
+
 ### 5.5 Hiệu năng và hạ tầng
 
 - **E26:** `/score` p50 3,7 ms, p95 5,2 ms, max 36,5 ms (local, sau khi nạp sẵn mô hình; trước đó lần đầu ~1 s). Không gồm mạng và cold start.

@@ -1,4 +1,4 @@
-# Chỉ mục thí nghiệm (E1–E30)
+# Chỉ mục thí nghiệm (E1–E31)
 
 > Cập nhật 25/11/2026. Diễn giải, giả thuyết và giới hạn của từng thí nghiệm: [`../docs/research/ai-research.md`](../docs/research/ai-research.md) (mục 6b). Mã trong `experiments/`, bảng kết quả trong `results/`. Dữ liệu: [`../docs/research/datasets.md`](../docs/research/datasets.md). Giấy phép dữ liệu: [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
 > Cột "Dữ liệu": **thật** = người thật công khai; **giả** = tự sinh (không đưa lên slide). Bot luôn là bộ sinh của đội (chưa có bot thật).
@@ -30,6 +30,7 @@
 | E28 | PIN 4 số (demo) hay 6 số: quyết định của hệ thống | thật (StrokePIN cắt 4 chạm, xấp xỉ) | `e28_pin_length.py` | `e28_pin_length.md` | PIN 4 số: mô hình chủ học không chạy; kẻ biết PIN được allow 68% (6 số: 28%) |
 | E29 | E24 trên cả 97 người (CV 5 phần theo người, huấn luyện lại mô hình), CI | thật + bot | `e29_cv_end_to_end.py` | `e29_cv_end_to_end.md` | Kẻ biết PIN allow 22% [20,24]; chủ ngồi 76%, đi 49%; bot biết mẫu chuẩn allow 72–87%; không nạn nhân nào bị allow >90% (Gini 0,28) |
 | E30 | Số lượt đăng ký k=2,3,4 và Gini theo nạn nhân | thật (StrokePIN) | `e30_enroll_curve.py` | `e30_enroll_curve.md` | FAR@FRR5% 0,857 (k=2) → 0,503 (k=3) → 0,429 (k=4) |
+| E31 | Chỉnh trọng số fusion + ngưỡng A trên E29 (tune 3 phần, kiểm 2 phần) | thật + bot | `e31_tune_fusion.py` (đọc pickle của `e29` với `E29_DUMP`) | `e31_tune_fusion.md` | Tốt nhất wb 0,50 / wo 0,30 / A 0,26 chỉ hơn +2 điểm trên phần kiểm (55% → 57%) và hạ chặn kẻ biết PIN 81% → 77%: nằm trong dao động, GIỮ cấu hình hiện tại |
 | E27/E27b | Bot thích nghi; ngưỡng phát lại | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Phát lại ±15% trở lên và bot biết mẫu chuẩn qua mặt |
 
 **Chưa chạy / chưa có số:** E3 trên dữ liệu đội (đã chạy trên StrokePIN), E6, E8 (kế hoạch trong `docs/research/research-plan.md`); gộp PIN + câu; kiểu gõ tiếng Việt trên người thật; bot thật; dữ liệu của đội. Đường ống cho dữ liệu đội: `team_analysis.py` (T1–T5), `team_data_dryrun.py` (thử ống bằng dữ liệu giả), `train_human_model.py --export ... --out ...`.
