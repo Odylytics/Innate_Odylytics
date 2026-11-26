@@ -68,6 +68,8 @@ html[data-page='app'] body { background: transparent; }
 .nav .abtn { min-width: 0; min-height: 40px; padding: 0 20px; background: var(--lime); color: #0a1522; font-family: var(--f-body); font-weight: 700; font-size: 14px; }
 .nav .abtn:hover { background: var(--lime-hover); }
 .nav .abtn .abtn-ico { display: none; }
+/* the square hairline frame (.edge::before) shows as a stray box around the pill */
+.nav .abtn::before { display: none; }
 /* keep the label on small screens too (styles.css hides it there and shows only the icon) */
 .nav .abtn .abtn-label { display: inline; }
 @media (max-width: 420px) { .nav .abtn { padding: 0 14px; font-size: 13px; } }
