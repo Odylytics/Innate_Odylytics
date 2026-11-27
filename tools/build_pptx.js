@@ -298,7 +298,6 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   T(s, 'PIN is what you know.', { x: 0.75, y: 4.2, w: 11.83, h: 0.75, fontFace: H, fontSize: 38, bold: true, color: 'FFFFFF', align: 'center' })
   T(s, 'Innate is how you are.', { x: 0.75, y: 4.95, w: 11.83, h: 0.75, fontFace: H, fontSize: 38, bold: true, color: MINT, align: 'center' })
   T(s, URL + '  ·  Team Odylytics', { x: 0.75, y: 5.95, w: 11.83, h: 0.3, fontSize: 13, color: MUTED_D, align: 'center' })
-  src(s, 'Code, data licences, open-source libraries and AI tools are declared in the submission README.', true)
   s.addNotes('Close on the line, then point to the QR on slide 6.')
 }
 
