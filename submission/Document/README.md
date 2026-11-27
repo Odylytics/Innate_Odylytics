@@ -27,6 +27,8 @@ Features (timing, coordinates, event type, character count) feed three checks, f
 
 Design notes: [`docs/plan/how-it-works.md`](docs/plan/how-it-works.md), positioning: [`docs/plan/positioning.md`](docs/plan/positioning.md).
 
+**Language note.** This README and `THIRD_PARTY_NOTICES.md` are in English. The design notes in `docs/`, the research log in `research/` and many code comments are in Vietnamese, the language of the contest and of our users. The decision reasons and explanations Innate shows to wallet users are in Vietnamese by design (the website switches between English and Vietnamese).
+
 ## 3. Run locally
 
 ```bash
