@@ -36,6 +36,7 @@ for (const [name, dark] of [['LIGHT', false], ['DARK', true]]) {
 }
 pres.defineSlideMaster({ title: 'COVER', background: { path: A + 'bg-dark-gesture.png' }, objects: [] })
 pres.defineSlideMaster({ title: 'DARKBG', background: { path: A + 'bg-dark-gesture.png' }, objects: [...footer(true), { placeholder: { options: { name: 'title', type: 'title', x: 0.75, y: 0.78, w: 11.8, h: 1.0, fontFace: H, fontSize: 28, bold: true, color: 'FFFFFF', valign: 'top', align: 'left', margin: 0, fit: 'shrink' }, text: '' } }], slideNumber: { x: 11.6, y: 6.81, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: MUTED_D, align: 'right' } })
+pres.defineSlideMaster({ title: 'DARKCLOSE', background: { path: A + 'bg-dark-gesture.png' }, objects: [{ placeholder: { options: { name: 'title', type: 'title', x: 0.75, y: 0.78, w: 11.8, h: 1.0, fontFace: H, fontSize: 28, bold: true, color: 'FFFFFF', valign: 'top', align: 'left', margin: 0, fit: 'shrink' }, text: '' } }], slideNumber: { x: 11.6, y: 6.81, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: MUTED_D, align: 'right' } })
 
 const fixq = (t) => typeof t === 'string' ? t.replace(/'/g, '\u2019') : Array.isArray(t) ? t.map((r) => (typeof r.text === 'string' ? Object.assign({}, r, { text: r.text.replace(/'/g, '\u2019') }) : r)) : t
 const T = (s, text, o) => s.addText(fixq(text), Object.assign({ isTextBox: true, fontFace: B, fontSize: 14, color: INK, margin: 0, valign: 'top' }, o))
@@ -269,46 +270,50 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 8, 'Limits and roadmap')
   s.addText('Where it stands, and what comes next', { placeholder: 'title' })
   cap(s, 'Known edges', 0.75, 1.9, 5)
-  const E = [['Weak', CORAL, 'Human-like bots: replay with 15 to 30% noise\nand template-aware bots pass 32 to 87%.'], ['Limit', AMBER, 'The owner walking instead of sitting\nis allowed only 49% of the time.'], ['Limit', AMBER, 'The web SDK cannot see text set\ndirectly; a native SDK can.'], ['Missing', MUTED, 'Team-collected data and real\nmalware sessions.']]
+  const E = [['Weak', 'B04436', 'Bots copying a rhythm: 32 to 87% pass.'], ['Limit', '8A5F00', 'Owner walking, not sitting: 49% allowed.'], ['Missing', MUTED, 'Real data and real malware sessions.']]
   E.forEach(([t, c, d], i) => {
-    const y = 2.3 + i * 0.9
-    if (i) hair(s, 0.75, y - 0.12, 5.6)
-    T(s, t, { x: 0.75, y, w: 1.15, h: 0.35, fontFace: H, fontSize: 15, bold: true, color: c === AMBER ? '8A5F00' : c === CORAL ? 'B04436' : MUTED })
-    T(s, d, { x: 1.95, y, w: 4.45, h: 0.65, fontSize: 15 })
+    const y = 2.4 + i * 1.08
+    if (i) hair(s, 0.75, y - 0.22, 5.6)
+    T(s, t, { x: 0.75, y, w: 1.2, h: 0.4, fontFace: H, fontSize: 16, bold: true, color: c })
+    T(s, d, { x: 2.0, y, w: 4.35, h: 0.7, fontSize: 16 })
   })
-  T(s, 'So Innate steps up, never blocks: one layer of several.', { x: 0.75, y: 5.95, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
+  T(s, 'So Innate steps up, never blocks: one layer of several.', { x: 0.75, y: 5.75, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.85, y: 1.8, w: 5.73, h: 4.75, rectRadius: 0.12, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   cap(s, 'Next', 7.2, 2.0, 4)
-  const N = [['Real data', 'Consented volunteers and real bots,\nthen retrain and recalibrate.'], ['Fine-tuned Transformer', 'TypeFormer on StrokePIN: EER 0.29 to 0.20\non 30 unseen people. Planned for the API.'], ['Native SDK', 'Sees text set directly and device motion\n(a phone lying still while taps arrive).']]
+  const N = [['Real data', 'Consented volunteers and real bots.'], ['Fine-tuned Transformer', 'EER 0.29 to 0.20 on 30 unseen people.'], ['Native SDK', 'Sees pasted text and phone motion.']]
   N.forEach(([h, d], i) => {
-    const y = 2.4 + i * 0.86
-    T(s, [{ text: h + '\n', options: { bold: true, fontSize: 15 } }, { text: d, options: { fontSize: 13, color: '2F4A4C' } }], { x: 7.2, y, w: 5.2, h: 0.82 })
+    const y = 2.45 + i * 0.78
+    T(s, [{ text: h + '\n', options: { bold: true, fontSize: 16 } }, { text: d, options: { fontSize: 14, color: '2F4A4C' } }], { x: 7.2, y, w: 5.2, h: 0.72 })
   })
-  T(s, [{ text: 'Innate Challenge: ', options: { bold: true, fontSize: 15 } }, { text: 'impostor pass rate by keys typed, %', options: { fontSize: 13, color: '2F4A4C' } }], { x: 7.2, y: 5.0, w: 5.2, h: 0.3 })
-  s.addChart(pres.charts.BAR, [{ name: 'Impostor pass rate', labels: ['6 keys (PIN)', '10 keys', '20 keys', '30 keys'], values: [81, 73, 59, 49] }], { x: 7.1, y: 5.28, w: 5.35, h: 1.25, barDir: 'bar', chartColors: [CORAL, CORAL, AMBER, JADE], showLegend: false, showTitle: false, showValue: true, dataLabelPosition: 'outEnd', dataLabelFontFace: B, dataLabelFontSize: 12, dataLabelColor: INK, catAxisLabelFontFace: B, catAxisLabelFontSize: 11, catAxisLabelColor: INK, catAxisLineShow: false, valAxisHidden: true, valAxisLineShow: false, valAxisMinVal: 0, valAxisMaxVal: 100, valGridLine: { style: 'none' }, catGridLine: { style: 'none' }, catAxisOrientation: 'maxMin', barGapWidthPct: 45 })
+  T(s, [{ text: 'Innate Challenge: ', options: { bold: true, fontSize: 16 } }, { text: 'more keys, fewer impostors (%)', options: { fontSize: 14, color: '2F4A4C' } }], { x: 7.2, y: 4.85, w: 5.2, h: 0.3 })
+  s.addChart(pres.charts.BAR, [{ name: 'Impostor pass rate', labels: ['6 keys (PIN)', '10 keys', '20 keys', '30 keys'], values: [81, 73, 59, 49] }], { x: 7.1, y: 5.15, w: 5.35, h: 1.35, barDir: 'bar', chartColors: [CORAL, CORAL, AMBER, JADE], showLegend: false, showTitle: false, showValue: true, dataLabelPosition: 'outEnd', dataLabelFontFace: B, dataLabelFontSize: 12, dataLabelColor: INK, catAxisLabelFontFace: B, catAxisLabelFontSize: 11, catAxisLabelColor: INK, catAxisLineShow: false, valAxisHidden: true, valAxisLineShow: false, valAxisMinVal: 0, valAxisMaxVal: 100, valGridLine: { style: 'none' }, catGridLine: { style: 'none' }, catAxisOrientation: 'maxMin', barGapWidthPct: 45 })
   src(s, 'Innate Challenge: Aalto typing37k (Palin et al., MobileHCI 2019), 2,260 typists, timing only. TypeFormer: Stragapede et al., 2023. Adaptive attackers: Wang et al., ActReal, 2026 (preprint); Tey et al., NDSS 2013.')
-  s.addNotes('Be direct about the weak spots; they explain why the design steps up instead of blocking.')
+  s.addNotes('Be direct about the weak spots; they explain why the design steps up instead of blocking. The web SDK cannot see text that is set directly, only a native SDK can; this is the Native SDK item.')
 }
 
-// ---- 10 Impact (dark)
+// ---- 10 Impact (dark): the PIN is the last gate. No logo or sources line here, by design.
 {
-  const s = pres.addSlide({ masterName: 'DARKBG' }); head(s, 9, 'Impact', true)
-  s.addText('Security the user never has to think about', { placeholder: 'title' })
-  // big number (E29, slide 8) + the decision screen it comes from
-  T(s, '78%', { x: 0.75, y: 1.75, w: 5.6, h: 1.5, fontFace: H, fontSize: 96, bold: true, color: MINT, valign: 'middle' })
-  s.addText([{ text: 'of thieves who know the PIN are held or asked for more. Rules only: ', options: { color: 'FFFFFF' } }, { text: '11%', options: { color: CORAL, bold: true } }, { text: '.', options: { color: 'FFFFFF' } }], { x: 0.75, y: 3.3, w: 5.4, h: 0.8, fontFace: B, fontSize: 17, margin: 0, valign: 'top' })
-  s.addImage({ path: S + 'decision-hold.png', x: 6.9, y: 1.85, w: 5.68, h: 2.59, altText: 'Innate decision screen: hold, with the reasons listed' })
-  T(s, 'Every answer comes with reasons the wallet can show.', { x: 6.9, y: 4.5, w: 5.68, h: 0.3, fontSize: 12, color: MUTED_D, align: 'center' })
-  const C = [['Users', 'Protected on every transfer, no extra steps. Asked for more only when it looks off.'], ['The wallet', 'Catches what PIN, OTP and device checks cannot: right credentials, wrong hands.'], ['Operations', 'Fewer vague alerts, more explained evidence. Analyst labels train the model.']]
-  const CW = 11.83 / 3
-  C.forEach(([h, d], i) => {
-    const x = 0.75 + i * CW
-    T(s, h, { x: x + 0.05, y: 4.95, w: CW - 0.1, h: 0.35, fontFace: H, fontSize: 16, bold: true, color: MINT, align: 'center' })
-    T(s, d, { x: x + 0.05, y: 5.32, w: CW - 0.1, h: 0.6, fontSize: 13, color: 'DCE7E6', align: 'center' })
+  const s = pres.addSlide({ masterName: 'DARKCLOSE' }); head(s, 9, 'Impact', true)
+  s.addText('The PIN is the last gate. Innate guards it.', { placeholder: 'title' })
+  const K = [['scan-face', 'Scans can fail', 'Face, fingerprint and retina fall back to the PIN.'], ['lock', 'The PIN is the gate', 'Anyone who knows it gets in.'], ['touch', 'Innate checks the touch', 'The owner does nothing new.']]
+  const KW = 3.75, KG = (11.83 - 3 * KW) / 2
+  K.forEach(([ic, h, d], i) => {
+    const x = 0.75 + i * (KW + KG), y = 1.95
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: KW, h: 2.0, rectRadius: 0.12, fill: { color: '0E2527' }, line: { color: '1F3C3E', width: 0.75 } })
+    s.addImage({ path: A + 'icons/' + ic + '.png', x: x + 0.3, y: y + 0.3, w: 0.6, h: 0.6, altText: h })
+    T(s, h, { x: x + 0.3, y: y + 1.02, w: KW - 0.6, h: 0.36, fontFace: H, fontSize: 18, bold: true, color: 'FFFFFF' })
+    T(s, d, { x: x + 0.3, y: y + 1.42, w: KW - 0.6, h: 0.5, fontSize: 14, color: MUTED_D })
+    if (i < 2) link(s, x + KW, x + KW + KG, y + 1.0, MINT, 0.04)
   })
-  s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.0, w: 11.83, h: 0.6, fontFace: H, fontSize: 26, bold: true, align: 'center', margin: 0, valign: 'middle' })
-  src(s, 'Team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026), 97 people, 5-fold CV by person, known recipient; bots from the team simulator.', true)
-  s.addNotes('Close on the line, then point to the QR on slide 6.')
+  // the number: a PIN check alone stops nobody who knows the PIN; with Innate 78% (E29, slide 8)
+  T(s, '0%', { x: 2.3, y: 4.2, w: 3.0, h: 1.0, fontFace: H, fontSize: 64, bold: true, color: CORAL, align: 'center', valign: 'middle' })
+  T(s, 'PIN check alone', { x: 2.3, y: 5.2, w: 3.0, h: 0.3, fontSize: 14, color: MUTED_D, align: 'center' })
+  link(s, 5.5, 7.8, 4.7, MINT, 0.1)
+  T(s, '78%', { x: 8.0, y: 4.2, w: 3.0, h: 1.0, fontFace: H, fontSize: 64, bold: true, color: MINT, align: 'center', valign: 'middle' })
+  T(s, 'with Innate', { x: 8.0, y: 5.2, w: 3.0, h: 0.3, fontSize: 14, color: MUTED_D, align: 'center' })
+  T(s, 'of people who know the PIN are challenged or held (97 people, slide 8)', { x: 0.75, y: 5.6, w: 11.83, h: 0.3, fontSize: 13, color: MUTED_D, align: 'center' })
+  s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.1, w: 11.83, h: 0.6, fontFace: H, fontSize: 26, bold: true, align: 'center', margin: 0, valign: 'middle' })
+  s.addNotes('Face, fingerprint and retina scans fail sometimes, and the wallet falls back to the PIN. So the PIN is the last gate, and today anyone who knows it passes. Innate adds the touch as a second signature with nothing new for the owner. On 97 real people it challenged or held 78% of people who know the PIN (slide 8). Close on the line, then point to the QR on slide 6.')
 }
 
 ;(async () => { await pres.writeFile({ fileName: OUT }); await applyTheme(OUT, THEME); console.log('wrote', OUT) })()
