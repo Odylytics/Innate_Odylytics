@@ -1,6 +1,6 @@
 # Bản đồ tài liệu và mã (đọc file này trước)
 
-> Cập nhật 25/11/2026. Thư mục gốc của dự án: `momo_contest-main/` (repo `Odylytics/Innate_Odylytics`). Ngôn ngữ tài liệu: tiếng Việt; `README.md` gốc là cổng vào bằng tiếng Anh.
+> Cập nhật 27/11/2026. Thư mục gốc của dự án: `Innate_Odylytics/` (repo `Odylytics/Innate_Odylytics`; trước đây `momo_contest-main/`). Ngôn ngữ tài liệu: tiếng Việt; `README.md` gốc là cổng vào bằng tiếng Anh.
 
 ## Muốn biết... thì đọc...
 | Câu hỏi | Đọc |
@@ -16,7 +16,8 @@
 | 4 kênh bằng chứng (chuyển động, PIN, câu, vuốt) | [`plan/bon-cong-pipeline.md`](plan/bon-cong-pipeline.md) |
 | Bài báo liên quan, ta học được gì | [`research/related-work.md`](research/related-work.md), [`research/paper-report.md`](research/paper-report.md) |
 | Web demo cho giám khảo | [`plan/web-demo.md`](plan/web-demo.md), [`research/transfer-flow.md`](research/transfer-flow.md), `../web/README.md` |
-| Slide, video, PDF 1 trang, README nộp | [`submission/`](submission/) |
+| Hồ sơ nộp (PDF 1 trang, slide PPTX + PDF, README, zip) | thư mục gốc `submission/` (sinh bằng `tools/build_submission.sh`); kịch bản video và thuyết trình: [`submission/`](submission/) trong `docs/` |
+| Fine-tune TypeFormer | [`../research/finetune/README.md`](../research/finetune/README.md), kết quả [`../research/results/e32_typeformer_finetune.md`](../research/results/e32_typeformer_finetune.md) |
 
 ## Cây thư mục (đường dẫn tính từ gốc repo)
 ```
@@ -35,12 +36,15 @@ research/                         thí nghiệm
   experiments/                    mã (E1–E27, huấn luyện, phân tích dữ liệu đội, dry-run)
   results/                        bảng kết quả sinh ra (.md/.txt)
   models/                         mô hình dữ liệu giả, chỉ tham khảo
+  finetune/                       E32: fine-tune TypeFormer lên StrokePIN (chỉ nghiên cứu, chưa vào API)
   data/, external/                dữ liệu và mã bên thứ ba: GIT-IGNORED, không nộp
+tools/                            dựng hồ sơ nộp: build_submission.sh, build_pptx.js (slide sửa được), product-guide.html, assets, fonts
+submission/                       hồ sơ nộp SINH RA (Product, Slide, Document); zip mã nguồn không đưa vào git
 docs/                             tài liệu (xem bảng trên)
-  contest/  plan/  research/  submission/  (research/notes/ = ghi chú đọc paper theo nhóm)
+  contest/  plan/  research/  submission/  brand/  (research/notes/ = ghi chú đọc paper theo nhóm; brand/ = brand kit + asset-pack Innate)
 papers/                           52 PDF bài báo (bản quyền nhà xuất bản: không nộp; danh mục ở docs/research/paper-report.md)
 ```
-Ngoài repo (máy người thu dữ liệu): `/Users/nguyenminhquan/Desktop/Projects/Innate/data.zip` (Touchalytics), `processed_typing_data.zip` (Aalto), đã giải nén vào `research/data/`.
+Dữ liệu tải về (git-ignored): `research/data/` (đã giải nén) và bản zip gốc ở `research/data/_archives/` (Touchalytics, Aalto).
 
 ## Quy ước
 - Số hiệu thí nghiệm: E1–E14 như trong `ai-research.md` (E14 = chuỗi số mới, do đội web làm); E18–E28 bổ sung 25–26/11. **E15–E17 không dùng** (đổi thành E19–E21 để khỏi trùng E14).

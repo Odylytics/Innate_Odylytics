@@ -40,12 +40,13 @@ Nộp sản phẩm có từ trước · người ngoài đội tham gia · chia 
 | 08/12 | Công bố top 5 |
 | 11/12 | Chung kết tại TP.HCM; sản phẩm phải còn online |
 
-## Tiến độ hồ sơ (24/11)
+## Tiến độ hồ sơ (27/11)
 
 | Thành phần | Trạng thái |
 |---|---|
-| Slide ≤ 10 trang | **Bản nháp đã có**: `tools/build_submission.sh` (nguồn: `tools/build_pptx.js`, ra `submission/Slide/` gồm PPTX + PDF). Còn `[TÊN ĐỘI]` cần điền; **không sửa được sau khi nộp** |
-| Video ≤ 3 phút | Kịch bản có ([`video-script.md`](../submission/video-script.md)); **chưa quay** (cần URL demo) |
-| PDF hướng dẫn 1 trang | Bản nháp ([`product-guide-1page.md`](../submission/product-guide-1page.md)); thiếu URL và tài khoản demo |
-| README nộp bài | Khung ([`README.submission.md`](../submission/README.submission.md)); còn `TODO` |
-| Đề xuất, kịch bản thuyết trình + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) |
+| Slide ≤ 10 trang | **Xong bản đầy đủ** (tiếng Anh, đội Odylytics): `submission/Slide/` (PPTX sửa được + PDF xuất từ PowerPoint + phông). Nguồn `tools/build_pptx.js`, dựng bằng `tools/build_submission.sh`. **Không sửa được sau khi nộp** |
+| Video ≤ 3 phút | Kịch bản có ([`video-script.md`](../submission/video-script.md)); **chưa quay** (URL demo đã có: https://innate.odylytics.com) |
+| PDF hướng dẫn 1 trang | **Xong**: `submission/Product/Innate-product-guide.pdf` (QR, link, PIN demo, ảnh các bước) |
+| README nộp bài | **Xong bản tiếng Anh**: `submission/Document/README.md`; còn `TODO` số liệu dữ liệu đội tự thu |
+| Zip mã nguồn | Dựng bằng `tools/build_submission.sh` → `submission/Document/Innate-source-code.zip` (không đưa vào git) |
+| Đề xuất, kịch bản thuyết trình + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) (tiếng Việt, chưa đồng bộ với slide mới) |

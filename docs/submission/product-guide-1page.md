@@ -1,3 +1,5 @@
+> **SUPERSEDED (27/11):** bản chính thức là `submission/Product/Innate-product-guide.pdf`, sinh từ `tools/product-guide.html` bằng `tools/build_submission.sh`. File này chỉ giữ làm bản nháp tiếng Việt.
+
 # Innate — Hướng dẫn dùng thử (≤ 1 trang A4, bản NHÁP)
 
 > **Chưa dùng được để nộp:** cần điền URL web demo và key (nếu cần). Khi xong, xuất PDF 1 trang A4 (thể lệ: chứa **link sản phẩm** và **tài khoản dùng thử**). Không đưa khoá bí mật vào file này: key SDK nằm sẵn trong bản build web, giám khảo không cần nhập.
