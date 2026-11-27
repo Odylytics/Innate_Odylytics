@@ -49,4 +49,4 @@ Submitting a pre-existing product · people outside the team take part · sharin
 | 1-page guide PDF | **Done**: `submission/Product/Innate-product-guide.pdf` (QR, link, demo PIN, images of the steps) |
 | Submission README | **English version done**: `submission/Document/README.md`; the `TODO` for the team's self-collected data figures remains |
 | Source code zip | Built with `tools/build_submission.sh` → `submission/Document/Innate-source-code.zip` (not put into git) |
-| Proposal, presentation script + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) (Vietnamese, not yet in sync with the new slides) |
+| Proposal, presentation script + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) (English, synced with the final deck on 27/11/2026) |

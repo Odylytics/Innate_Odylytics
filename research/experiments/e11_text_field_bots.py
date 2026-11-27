@@ -1,6 +1,6 @@
 """E11: human/bot task on a FREE-TEXT FIELD (transfer note) with REAL HUMANS (Aalto) and generated bots.
 
-Humans = real typing rhythm of 2,263 people (Aalto typing37k; only timing, event type, character class; NO content), split by person.
+Humans = real typing rhythm of about 2,260 people (the generated result file reports 2,260) (Aalto typing37k; only timing, event type, character class; NO content), split by person.
 Bots = 4 tactics in attacker/nhip_attacker/fields.py, ONLY the `note` field (Aalto has no amount/recipient fields):
   1 set text directly (ACTION_SET_TEXT)   2 even typing via an automation tool   3 replay the rhythm of a real person (±5%)   4 sample from the population
 Features: (a) the existing `fld_*` in backend/bot_features.py; (b) "extended" = (a) + a few rhythm statistics computed inside the experiment,

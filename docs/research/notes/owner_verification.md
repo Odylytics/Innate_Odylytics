@@ -1,6 +1,6 @@
 # Foundation papers for Innate — Model 2 "Có phải chủ tài khoản?" ("Is this the account owner?") (plan §5.0, §5.2)
 
-Local PDFs: `C:/TuanNghia/Project/Momo_Odylytics/papers/owner-verification/` (14 files, all checked for a `%PDF` header, all < 11 MB).
+Local PDFs: `papers/owner-verification/` (13 PDFs, git-ignored and not in the submission zip). The table below lists 16 papers: the three without a PDF were not downloaded (for example paywalled) and are marked where only the abstract or a secondary source was read.
 All numbers below were read from the downloaded PDF text unless marked otherwise. DOIs marked "(from memory, verify)" were not checked against the publisher page.
 
 ## Paper index

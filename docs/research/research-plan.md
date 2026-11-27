@@ -4,7 +4,7 @@
 
 ## Scope (updated 24/11)
 
-The team builds the web/demo separately later. The demo wallet (`backend/app/static/wallet.html`) and the API deploy (`nhip-api`) are **no longer being developed**; code is not deleted. R6 (infrastructure) and R8 (dashboard) are postponed. The focus is the AI core: see [`ai-research.md`](ai-research.md) (task A human/machine, task B account owner, task C fusion and explanation; experiments E1–E7).
+The team builds the web/demo separately later. The demo wallet (`backend/app/static/wallet.html`) and the API deploy (`nhip-api`) are **no longer being developed** (`wallet.html` has since been removed); code is not deleted. R6 (infrastructure) and R8 (dashboard) are postponed. The focus is the AI core: see [`ai-research.md`](ai-research.md) (task A human/machine, task B account owner, task C fusion and explanation; experiments E1–E7).
 
 ## Principles
 

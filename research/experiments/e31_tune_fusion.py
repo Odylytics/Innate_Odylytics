@@ -1,7 +1,7 @@
 """E31: tune the fusion weights and threshold A on the E29 results, tuning on 3 folds, TESTING on the other 2 folds (entirely different people).
 
 Input: pickle exported by e29 (E29_DUMP): each row (person, known-recipient risk, new-recipient risk, human, owner, fold). Risk is recomputed as wb·(1−human) + wo·(1−owner) (+ wn for a new recipient).
-Objective: among configurations where the sitting owner is still allowed >= the current level (76% on the tune folds), pick the one that maximizes the mean NOT-allow rate of the "adaptive attacker" groups
+Objective: among configurations where the sitting owner is still allowed >= the current level (77% on the tune folds), pick the one that maximizes the mean NOT-allow rate of the "adaptive attacker" groups
 (PIN-knowing impostor, T4, template-aware bot 1.0 and 0.5, replay ±15/20/30%). B kept at 0.55, HUMAN_HOLD 0.3, amount 0.
 Run: python research/experiments/e31_tune_fusion.py <path to pickle>
 """
