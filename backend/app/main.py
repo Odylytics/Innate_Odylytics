@@ -34,6 +34,7 @@ SCOPE_KEYS = {
 }
 CORS_ORIGINS = os.environ.get("NHIP_CORS_ORIGINS", "*").split(",")
 MIN_ENROLL = 3
+MAX_ENROLL = 10  # đăng ký để ngỏ (keep_open) tự khoá ở lượt này
 EXPORT_BYTE_BUDGET = 3 * 1024 * 1024  # mỗi trang export dừng ở ~3 MB dữ liệu thô: dưới giới hạn phản hồi 4,5 MB của Vercel
 UPDATE_MIN_OWNER = 0.8  # chỉ cập nhật mẫu chuẩn sau phiên được cho qua với điểm khớp cao
 UPDATE_MIN_HUMAN = 0.8
@@ -96,10 +97,20 @@ def _get_session(db: Session, session_id: str) -> TouchSession:
     return s
 
 
+def _enrolled(db: Session, user_id: str) -> list[TouchSession]:
+    return db.scalars(select(TouchSession).where(
+        TouchSession.user_id == user_id, TouchSession.is_enrollment).order_by(TouchSession.created_at)).all()
+
+
+def _enroll_closed(user: User) -> bool:
+    # mẫu chuẩn cũ không có cờ "open" => coi là đã khoá (giữ sửa bảo mật 409)
+    return user.template is not None and not user.template.get("open", False)
+
+
 def _enroll_status(db: Session, user: User) -> dict:
-    n = len(db.scalars(select(TouchSession.id).where(
-        TouchSession.user_id == user.id, TouchSession.is_enrollment)).all())
-    return {"user_id": user.id, "enrolled_sessions": n, "template_ready": user.template is not None}
+    enrolled = _enrolled(db, user.id)
+    return {"user_id": user.id, "enrolled_sessions": len(enrolled), "template_ready": user.template is not None,
+            "enroll_open": not _enroll_closed(user), "consistency": owner.consistency([e.features for e in enrolled])}
 
 
 @app.get("/", include_in_schema=False)
@@ -174,22 +185,36 @@ def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
 
 @v1.post("/users/{user_id}/enroll", response_model=schemas.EnrollOut, tags=["sdk"], dependencies=[SDK])
 def enroll(user_id: str, body: schemas.EnrollIn, db: Session = Depends(get_db)):
-    """Đánh dấu một phiên là lượt đăng ký nhịp. Đủ 3 lượt thì dựng mẫu chuẩn và khoá đăng ký."""
+    """Đánh dấu một phiên là lượt đăng ký nhịp. Đủ 3 lượt thì dựng mẫu chuẩn và khoá đăng ký,
+    trừ khi keep_open=true: khi đó mỗi lượt dựng lại mẫu, khoá khi gọi /enroll/finish hoặc đủ MAX_ENROLL lượt."""
     s = _get_session(db, body.session_id)
     if s.user_id != user_id:
         raise HTTPException(400, "Phiên không thuộc người dùng này")
     if "pin_hold_0" not in s.features:
         raise HTTPException(400, "Phiên đăng ký phải có thao tác nhập PIN")
     user = db.get(User, user_id)
-    if user.template is not None:
+    if _enroll_closed(user):
         # chặn kẻ gian chèn nhịp của mình vào mẫu chuẩn đã có; đăng ký lại phải qua luồng đặt lại có xác thực
         raise HTTPException(409, "Tài khoản đã đăng ký nhịp, không thể thêm lượt đăng ký")
     s.is_enrollment = True
     db.flush()
-    enrolled = db.scalars(select(TouchSession).where(
-        TouchSession.user_id == user_id, TouchSession.is_enrollment)).all()
+    enrolled = _enrolled(db, user_id)
     if len(enrolled) >= MIN_ENROLL:
-        user.template = owner.build_template([e.features for e in enrolled])
+        keep = body.keep_open and len(enrolled) < MAX_ENROLL
+        user.template = {**owner.build_template([e.features for e in enrolled]), **({"open": True} if keep else {})}
+    db.commit()
+    return _enroll_status(db, user)
+
+
+@v1.post("/users/{user_id}/enroll/finish", response_model=schemas.EnrollOut, tags=["sdk"], dependencies=[SDK])
+def finish_enroll(user_id: str, db: Session = Depends(get_db)):
+    """Khoá đăng ký để ngỏ. Cần đủ MIN_ENROLL lượt (đã có mẫu chuẩn)."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(404, "Không tìm thấy người dùng")
+    if user.template is None:
+        raise HTTPException(400, f"Cần ít nhất {MIN_ENROLL} lượt đăng ký")
+    user.template = {k: v for k, v in user.template.items() if k != "open"}
     db.commit()
     return _enroll_status(db, user)
 

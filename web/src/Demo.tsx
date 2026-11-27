@@ -10,6 +10,7 @@ import { StoryBar, StoryStart } from './StoryBar'
 import { FRIEND, OWNER, botSession, humanSession, rng, withAccount, type Layout } from './synth'
 import { T, Tx } from './ui'
 import Wallet, { DEMO_PIN, type Account, type Ghost, type PayCtx } from './Wallet'
+import { MAX_ENROLL, MIN_JUDGE_ENROLL, impostorStopped } from './enrollCurve'
 
 type L = { en: string; vi: string }
 interface Attempt { id: string; who: L; ctx: PayCtx; score: Score; at: Date }
@@ -21,6 +22,9 @@ const DEFAULT_LAYOUT: Layout = Object.fromEntries(
 const STORY_SEED = 2 // checked against the live API: owner allow, Bảo step_up, bot hold
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms))
 const newId = (p: string) => `${p}_${Math.random().toString(36).slice(2, 10)}`
+// one account per person on a shared demo phone: the name is the login (anyone may type another judge's name to play the thief)
+const nameId = (name: string) => `judge_${name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd')
+  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50)}`
 
 const WHO: Record<'you' | 'owner' | 'friend' | 'bot', L> = {
   you: { en: 'You', vi: 'Bạn' },
@@ -41,6 +45,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
     if (saved) return saved
     const id = newId('web'); store.set('innate.user', id); return id
   })
+  const [name, setName] = useState(() => (story ? '' : store.get('innate.name') ?? ''))
   const [status, setStatus] = useState<UserStatus>({ user_id: userId, enrolled_sessions: 0, template_ready: false })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<L | null>(null)
@@ -53,7 +58,10 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
   statusRef.current = status
 
   useEffect(() => {
-    api.user(userId).then(setStatus).catch((e) => { if (!(e instanceof ApiError && e.status === 404)) fail(e) })
+    api.user(userId).then(setStatus).catch((e) => {
+      if (e instanceof ApiError && e.status === 404) setStatus({ user_id: userId, enrolled_sessions: 0, template_ready: false })
+      else fail(e)
+    })
   }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function fail(e: unknown) {
@@ -65,7 +73,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
 
   async function enrollWith(s: SessionIn) {
     const { session_id } = await api.createSession(s)
-    try { setStatus(await api.enroll(s.user_id, session_id)) } catch (e) {
+    try { setStatus(await api.enroll(s.user_id, session_id, !story)) } catch (e) {
       if (!(e instanceof ApiError && e.status === 409)) throw e
       setStatus(await api.user(s.user_id)) // already enrolled and locked (e.g. a story step replayed)
     }
@@ -86,7 +94,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
   // your own taps on the wallet
   const onPin = (rec: Recorder, ctx: PayCtx) => guarded(async () => {
     const s = rec.payload(userId)
-    if (statusRef.current.template_ready) await scoreWith(s, ctx, WHO.you)
+    if (statusRef.current.template_ready && !enrollingNow(statusRef.current)) await scoreWith(s, ctx, WHO.you)
     else await enrollWith(s)
   })
 
@@ -121,10 +129,15 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
     await scoreWith(s, ctx, WHO.friend)
     setGhost(null)
   })
-  const resetUser = () => {
-    const id = newId('web'); store.set('innate.user', id)
+  const switchUser = (id: string, who: string) => {
+    store.set('innate.user', id); store.set('innate.name', who); setName(who)
     setUserId(id); setStatus({ user_id: id, enrolled_sessions: 0, template_ready: false }); setOutcome(null); setAttempts([]); setError(null)
   }
+  const resetUser = () => switchUser(newId('web'), '')
+  const login = (who: string) => { const n = who.trim(); if (nameId(n) !== 'judge_') switchUser(nameId(n), n) }
+  const finishEnroll = () => guarded(async () => { setStatus(await api.finishEnroll(userId)) })
+  // story enrolls 3 and locks; your own account stays open until you press Done (5-10 entries)
+  const enrollingNow = (st: UserStatus) => !st.template_ready || (!story && st.enroll_open === true)
 
   // ===== story =====
   const [autostart] = useState(() => { try { return story && sessionStorage.getItem('innate.autostart') === '1' } catch { return false } })
@@ -176,7 +189,8 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
   }, [step, started]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const act = story && started ? STEPS[step].act : null
-  const mode = status.template_ready ? 'pay' : 'enroll'
+  const mode = enrollingNow(status) ? 'enroll' : 'pay'
+  const enrollOf = story ? 3 : MAX_ENROLL
 
   return (
     <div className={`ws wrap demo ${story ? 'is-story' : ''}`} lang={lang}>
@@ -186,7 +200,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
           <h1>{storyCase ? tx(STORIES[storyCase].title) : tx({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}</h1>
           <p className="muted">{story
             ? tx({ en: 'Every score below comes from the live Innate API.', vi: 'Mọi điểm số dưới đây lấy từ API Innate thật.' })
-            : tx({ en: `Enroll your rhythm with three PIN entries (${DEMO_PIN}), then make a transfer, hand the phone to a friend, or let the malware try.`, vi: `Đăng ký nhịp bằng ba lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền, đưa máy cho người khác thử, hoặc để mã độc thử.` })}</p>
+            : tx({ en: `Log in with your name, enroll your rhythm with ${MIN_JUDGE_ENROLL} to ${MAX_ENROLL} PIN entries (${DEMO_PIN}), then make a transfer. Another person can log in with your name and try.`, vi: `Đăng nhập bằng tên, đăng ký nhịp bằng ${MIN_JUDGE_ENROLL} đến ${MAX_ENROLL} lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền. Người khác có thể đăng nhập bằng tên bạn để thử.` })}</p>
         </div>
         <div className="row">
           {storyCase ? <>
@@ -203,8 +217,9 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
 
       <div className="demo-grid">
         <div className="demo-phone">
-          <Wallet mode={mode} enrollStep={Math.min(status.enrolled_sessions + 1, 3)} busy={busy || (acting && !ghost)} outcome={outcome} ghost={ghost}
+          <Wallet mode={mode} enrollStep={Math.min(status.enrolled_sessions + 1, enrollOf)} enrollOf={enrollOf} busy={busy || (acting && !ghost)} outcome={outcome} ghost={ghost}
             onLayout={onLayout} onPin={onPin} onDone={() => setOutcome(null)} />
+          {!story && mode === 'enroll' && <AccuracyCheck status={status} busy={busy} onFinish={finishEnroll} />}
         </div>
 
         <div className="demo-side">
@@ -230,7 +245,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
             ) : (
               <p className="muted">{status.template_ready
                 ? tx({ en: 'Make a transfer to see how Innate scores it.', vi: 'Chuyển tiền để xem Innate chấm điểm thế nào.' })
-                : tx({ en: `Enrollment ${status.enrolled_sessions}/3. Type the PIN on the wallet as you normally would.`, vi: `Đăng ký ${status.enrolled_sessions}/3. Gõ PIN trên ví như bình thường.` })}</p>
+                : tx({ en: `Enrollment ${status.enrolled_sessions}/${enrollOf}. Type the PIN on the wallet as you normally would.`, vi: `Đăng ký ${status.enrolled_sessions}/${enrollOf}. Gõ PIN trên ví như bình thường.` })}</p>
             )}
           </section>
 
@@ -246,7 +261,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
               <p style={{ marginTop: 16 }}><b>{tx({ en: 'Case 2 · Phone stolen', vi: 'Trường hợp 2 · Bị trộm điện thoại' })}</b></p>
               <p className="muted mini">{tx({ en: 'A thief who knows the PIN types it, then transfers by hand. Expected: a human but not the owner, type a sentence.', vi: 'Kẻ trộm biết PIN gõ PIN rồi tự chuyển tiền. Kỳ vọng: người thật nhưng không phải chủ, gõ một câu.' })}</p>
               <div className="row" style={{ marginTop: 8 }}>
-                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || !status.template_ready}>{tx({ en: 'Thief who knows the PIN', vi: 'Kẻ trộm biết PIN thử' })}</button>
+                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || enrollingNow(status)}>{tx({ en: 'Thief who knows the PIN', vi: 'Kẻ trộm biết PIN thử' })}</button>
               </div>
             </section>
           )}
@@ -254,12 +269,13 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
           <section className="box">
             <div className="box-head">
               <h2>{tx({ en: 'Account', vi: 'Tài khoản' })}</h2>
-              {!story && <button className="btn ghost small" onClick={resetUser} disabled={busy}>{tx({ en: 'Start over', vi: 'Làm lại từ đầu' })}</button>}
+              {!story && <button className="btn ghost small" onClick={resetUser} disabled={busy}>{name ? tx({ en: 'Log out', vi: 'Đăng xuất' }) : tx({ en: 'Start over', vi: 'Làm lại từ đầu' })}</button>}
             </div>
+            {!story && <NameLogin name={name} busy={busy} onLogin={login} />}
             <p className="muted mono mini">{userId}</p>
-            <p className="muted">{status.template_ready
-              ? tx({ en: 'Rhythm enrolled and locked.', vi: 'Đã đăng ký nhịp và khoá mẫu chuẩn.' })
-              : tx({ en: `Enrolled ${status.enrolled_sessions}/3`, vi: `Đã đăng ký ${status.enrolled_sessions}/3` })}</p>
+            <p className="muted">{!enrollingNow(status)
+              ? tx({ en: `Rhythm enrolled (${status.enrolled_sessions} entries) and locked.`, vi: `Đã đăng ký nhịp (${status.enrolled_sessions} lần) và khoá mẫu chuẩn.` })
+              : tx({ en: `Enrolled ${status.enrolled_sessions}/${enrollOf}`, vi: `Đã đăng ký ${status.enrolled_sessions}/${enrollOf}` })}</p>
             {attempts.length > 0 && (
               <div className="table-scroll" style={{ marginTop: 12 }}>
                 <table className="mini">
@@ -289,6 +305,48 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
         </>
       )}
     </div>
+  )
+}
+
+/** Under the wallet while enrolling: how many PIN-knowing impostors this many entries stops (E30), plus the person's own steadiness. */
+function AccuracyCheck({ status, busy, onFinish }: { status: UserStatus; busy: boolean; onFinish: () => void }) {
+  const { lang } = useT()
+  const tx = (x: L) => x[lang]
+  const k = status.enrolled_sessions
+  const { value, measured } = impostorStopped(k)
+  const c = status.consistency
+  return (
+    <section className="box accuracy-check" aria-live="polite" style={{ marginTop: 16 }}>
+      <div className="box-head">
+        <h2>Accuracy check</h2>
+        <b className="mono">{Math.round(value * 100)}%</b>
+      </div>
+      <span className="meter-track" style={{ display: 'block', margin: '8px 0' }}><i style={{ width: `${value * 100}%` }} /></span>
+      <p className="muted mini">{tx({
+        en: `After ${k} entries, about ${Math.round(value * 100)}% of people who know your PIN would be stopped (with 5% of your own transfers asked to confirm). ${measured ? 'Measured on real phone PINs (E30).' : 'Above 4 entries this is extrapolated, not yet measured.'}`,
+        vi: `Sau ${k} lần nhập, khoảng ${Math.round(value * 100)}% người biết PIN của bạn sẽ bị chặn (chấp nhận 5% lần chuyển của chính bạn phải xác nhận thêm). ${measured ? 'Đo trên PIN điện thoại thật (E30).' : 'Trên 4 lần là ngoại suy, chưa đo.'}`,
+      })}</p>
+      {c != null && <p className="mini" style={{ marginTop: 6 }}>{tx({ en: 'Your rhythm steadiness', vi: 'Độ ổn định nhịp của bạn' })}: <b className="mono">{Math.round(c * 100)}%</b>
+        {c < 0.5 && <span className="muted"> · {tx({ en: 'your entries differ a lot; type a few more', vi: 'các lần nhập khác nhau nhiều, nhập thêm vài lần' })}</span>}</p>}
+      <div className="row" style={{ marginTop: 10 }}>
+        <button className="btn small" onClick={onFinish} disabled={busy || k < MIN_JUDGE_ENROLL}>
+          {k < MIN_JUDGE_ENROLL ? tx({ en: `Done (at least ${MIN_JUDGE_ENROLL})`, vi: `Xong (ít nhất ${MIN_JUDGE_ENROLL} lần)` }) : tx({ en: 'Done, save my rhythm', vi: 'Xong, lưu nhịp của tôi' })}
+        </button>
+      </div>
+    </section>
+  )
+}
+
+function NameLogin({ name, busy, onLogin }: { name: string; busy: boolean; onLogin: (n: string) => void }) {
+  const { lang } = useT()
+  const [v, setV] = useState('')
+  if (name) return <p>{lang === 'en' ? 'Logged in as ' : 'Đang đăng nhập: '}<b>{name}</b></p>
+  return (
+    <form className="row" style={{ gap: 8, margin: '8px 0' }} onSubmit={(e) => { e.preventDefault(); onLogin(v); setV('') }}>
+      <input aria-label={lang === 'en' ? 'Your name' : 'Tên của bạn'} placeholder={lang === 'en' ? 'Your name' : 'Tên của bạn'} value={v}
+        onChange={(e) => setV(e.target.value)} maxLength={40} style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 8 }} />
+      <button className="btn small" type="submit" disabled={busy || !v.trim()}>{lang === 'en' ? 'Log in' : 'Đăng nhập'}</button>
+    </form>
   )
 }
 

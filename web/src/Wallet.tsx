@@ -31,9 +31,10 @@ export type Ghost = { id: number; taps: Tap[]; label: L; pay?: { recipient: stri
 
 type Screen = 'home' | 'transfer' | 'account' | 'pin' | 'wait' | 'result'
 
-export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayout, onPin, onDone }: {
+export default function Wallet({ mode, enrollStep, enrollOf = 3, busy, outcome, ghost, onLayout, onPin, onDone }: {
   mode: 'enroll' | 'pay'
   enrollStep: number
+  enrollOf?: number
   busy: boolean
   outcome: Score | null
   ghost: Ghost | null
@@ -268,7 +269,7 @@ export default function Wallet({ mode, enrollStep, busy, outcome, ghost, onLayou
         {(screen === 'pin' || screen === 'wait') && (
           <div className="w-pin">
             <h3>{mode === 'enroll'
-              ? (lang === 'en' ? `Enroll your rhythm · ${enrollStep}/3` : `Đăng ký nhịp · lần ${enrollStep}/3`)
+              ? (lang === 'en' ? `Enroll your rhythm · ${enrollStep}/${enrollOf}` : `Đăng ký nhịp · lần ${enrollStep}/${enrollOf}`)
               : (lang === 'en' ? 'Unlock your wallet' : 'Mở ví bằng PIN')}</h3>
             <p className="w-hint">{ghost ? tx(ghost.label) : mode === 'enroll' ? (lang === 'en' ? `Demo PIN ${DEMO_PIN}` : `PIN demo ${DEMO_PIN}`)
               : (lang === 'en' ? `Demo PIN ${DEMO_PIN} · recorded, not scored yet` : `PIN demo ${DEMO_PIN} · chỉ ghi, chưa chấm điểm`)}</p>

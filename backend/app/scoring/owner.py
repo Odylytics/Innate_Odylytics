@@ -98,3 +98,13 @@ def update(tpl: dict, features: dict[str, float]) -> dict:
             mu[k] = min(max(moved, lo), hi)
     new = {**tpl, "mu": mu, "updates": tpl["updates"] + 1}
     return {**new, "frozen": True} if drift(new) > FREEZE_DRIFT else new
+
+
+def consistency(feature_list: list[dict[str, float]]) -> float | None:
+    """Độ ổn định nhịp khi đăng ký: mỗi lượt chấm với mẫu dựng từ các lượt còn lại (leave-one-out), lấy trung bình.
+    Cao = người đó gõ đều tay giữa các lượt. Không phải độ chính xác nhận người (xem E30 cho FAR theo số lượt)."""
+    if len(feature_list) < 3:  # mẫu từ các lượt còn lại cần >= 2 lượt để có độ lệch chuẩn
+        return None
+    scores = [score(f, build_template(feature_list[:i] + feature_list[i + 1:]))[0] for i, f in enumerate(feature_list)]
+    scores = [s for s in scores if s is not None]
+    return round(fmean(scores), 3) if scores else None

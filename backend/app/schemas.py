@@ -147,12 +147,15 @@ class SessionCreated(BaseModel):
 
 class EnrollIn(BaseModel):
     session_id: str
+    keep_open: bool = False  # true: không khoá ở lượt thứ 3, chờ /enroll/finish (tối đa MAX_ENROLL lượt)
 
 
 class EnrollOut(BaseModel):
     user_id: str
     enrolled_sessions: int
     template_ready: bool
+    enroll_open: bool = True
+    consistency: float | None = None  # trung bình điểm khớp của mỗi lượt so với mẫu dựng từ các lượt còn lại
 
 
 class UserOut(EnrollOut):

@@ -74,6 +74,7 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 - Synthetic-human results (attacker README table) must not go on slides; re-measure on real data.
 
 ## Known gaps
+- **Open enrollment (demo, 27/11):** `/enroll` with `keep_open=true` keeps enrolling up to 10 entries until `/enroll/finish`; web demo uses it with name login (`judge_<name>`, no password) and an "Accuracy check" bar (E30 measured k<=4, extrapolated above). See `docs/research/person-vs-person.md`.
 - **Enrollment lock vs multi-posture enrolment:** `/enroll` now returns 409 once a template exists (security fix by tuannghia2457, prevents injecting someone else's rhythm). But E9 shows enrolment must cover several postures/sittings (sit->walk breaks the signal), so a controlled re-enrol path (e.g. after a step-up authentication) is still needed. Not designed yet.
 - API keys are scoped by role: SDK `NHIP_API_KEYS`, dashboard `NHIP_OPS_KEYS`, ML export `NHIP_ML_KEYS` (ops/ml closed when unset).
 - Replay (tactic 3): threshold 0.07, calibrated on REAL humans (E5b): catches 100% up to ±10% attacker noise, 29% at ±15%, 0% from ±20%. Human FPR grows with history size (~0.1% at 8 sessions, extrapolated ~0.7% at 50); recalibrate on team data with long histories.
