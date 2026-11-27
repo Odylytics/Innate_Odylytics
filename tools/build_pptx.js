@@ -291,7 +291,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addNotes('Be direct about the weak spots; they explain why the design steps up instead of blocking. The web SDK cannot see text that is set directly, only a native SDK can; this is the Native SDK item.')
 }
 
-// ---- 10 Business impact (dark): expected loss vs friction. No footer logo or sources line; each figure carries its source in the caption.
+// ---- 10 Business impact (dark): expected loss vs friction. No footer logo; sources line kept.
 {
   const s = pres.addSlide({ masterName: 'DARKCLOSE' }); head(s, 9, 'Impact', true)
   s.addText('What it is worth: less loss, priced against friction', { placeholder: 'title' })
@@ -313,6 +313,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.75, y: 5.15, w: 11.83, h: 0.75, rectRadius: 0.12, fill: { color: '0E2527' }, line: { color: '1F3C3E', width: 0.75 } })
   T(s, 'Start in shadow mode, tune on the wallet\u2019s own data, spend friction where loss per case is highest.', { x: 1.05, y: 5.15, w: 11.23, h: 0.75, fontSize: 16, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' })
   s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.15, w: 11.83, h: 0.5, fontFace: H, fontSize: 20, bold: true, align: 'center', margin: 0, valign: 'middle' })
+  T(s, 'Sources: VND 8 trillion+: Ministry of Public Security, 2025, as reported by Saigon Giai Phong and VnEconomy. 100% to 22% and 24%: team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026), 97 people, impostor on a different phone, known recipient.', { x: 0.75, y: 6.7, w: 10.6, h: 0.5, fontSize: 9, italic: true, color: MUTED_D, valign: 'middle' })
   s.addNotes('Business case in one line: expected loss is transfers times fraud rate times loss per case times the share that gets through. Innate attacks the last factor: a PIN check alone lets every person who knows the PIN through, Innate lets 22 percent through in our test on 97 people (E29, slide 8). That test used a different phone for the impostor, so treat 78 percent as an upper bound, and a step-up is a challenge, not a guaranteed stop. The cost is friction: about 24 percent of normal owner transfers are asked for more when sitting, 51 percent when walking. We have no wallet fraud rate or loss per case, so we do not state a revenue figure; the wallet can plug its own numbers into the formula. The VND 8 trillion figure is national losses from all online scams (Ministry of Public Security, press reports), not only PIN theft. Strategy: shadow mode first, tune the threshold on real data, then spend step-ups where loss per case is highest. Close on the line, then point to the QR on slide 6.')
 }
 
