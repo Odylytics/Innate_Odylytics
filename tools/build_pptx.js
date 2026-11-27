@@ -56,12 +56,12 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addImage({ path: A + 'lockup-dark.png', x: 0.75, y: 0.6, w: 2.1, h: 2.1 / 5.0420, altText: 'innate' })
   s.addShape(pres.shapes.RECTANGLE, { x: 3.12, y: 0.62, w: 0.012, h: 0.4, fill: { color: '3A5557' }, line: { color: '3A5557', width: 0 } })
   T(s, 'Powered by', { x: 3.3, y: 0.62, w: 1.2, h: 0.4, fontSize: 13, color: MUTED_D, valign: 'middle' })
-  s.addImage({ path: A + 'odylytics-on-dark.png', x: 4.45, y: 0.67, w: 1.4, h: 1.4 * 549 / 1813, altText: 'Odylytics' })
+  s.addImage({ path: A + 'odylytics-on-dark.png', x: 4.45, y: 0.6, w: 1.4, h: 1.4 * 549 / 1813, altText: 'Odylytics' })
   cap(s, 'MoMo Tech Contest 2026  ·  Cybersecurity + Anti-fraud', 0.75, 2.2, 8, true)
   T(s, 'Silent human verification for every transfer', { x: 0.75, y: 2.6, w: 8.6, h: 2.0, fontFace: H, fontSize: 44, bold: true, color: 'FFFFFF', lineSpacingMultiple: 0.98 })
   T(s, 'Everyone taps a PIN in their own rhythm: how long the finger stays down, the gap between taps, where it lands. Innate learns that pattern and checks it silently on every transfer. The owner does nothing extra.', { x: 0.75, y: 4.4, w: 6.9, h: 1.2, fontSize: 16, color: MUTED_D, lineSpacingMultiple: 1.15 })
   T(s, 'Your behavior is your signature', { x: 0.75, y: 5.95, w: 7, h: 0.4, fontFace: H, fontSize: 20, bold: true, color: MINT })
-  T(s, 'Team Odylytics', { x: 10.2, y: 6.95, w: 2.38, h: 0.3, fontSize: 11, color: MUTED_D, align: 'right' })
+  T(s, 'MoMo Tech Day: Imagine the Future Workspace', { x: 7.2, y: 6.95, w: 5.38, h: 0.3, fontSize: 11, color: MUTED_D, align: 'right' })
   s.addNotes('Open with the one-line promise: a layer that verifies the human at the moment of transfer, with no extra step for the owner.')
 }
 
