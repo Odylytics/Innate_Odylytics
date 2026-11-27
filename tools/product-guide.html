@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Innate - Product guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Sora:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Innate Brand Identity Kit v1.0 */
+@page{size:A4;margin:0}
+:root{--ink:#071A1C;--teal:#0F4F4C;--jade:#11B88F;--mint:#63E6BE;--mist:#CFF7EE;--cloud:#F5FBF9;--stone:#DDE8E5;--soft:rgba(7,26,28,.68)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font:12.5px/1.5 'Manrope',system-ui,sans-serif;color:var(--ink);background:var(--cloud);width:210mm;height:297mm;overflow:hidden;position:relative}
+.top{background:var(--ink);color:#fff;padding:10mm 15mm 7mm;position:relative;overflow:hidden}
+.top .sg{position:absolute;right:-18mm;top:-22mm;width:80mm;height:80mm;opacity:1}
+.top .sg svg{width:100%;height:100%}
+.top h1{font:600 20px/1.2 'Sora',sans-serif;margin-top:6mm;max-width:130mm;letter-spacing:-.01em;position:relative}
+.top .team{margin-top:3mm;color:rgba(255,255,255,.72);font-size:11.5px;position:relative}
+.main{padding:6.5mm 15mm 0}
+.lbl{font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:7px;margin:5mm 0 2mm}
+.lbl::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--jade)}
+table{border-collapse:separate;border-spacing:0;width:100%;background:#fff;border:1px solid var(--stone);border-radius:10px;overflow:hidden}
+td{padding:7px 12px;border-bottom:1px solid var(--stone);vertical-align:top}tr:last-child td{border-bottom:0}
+td:first-child{width:30%;font-family:'Sora',sans-serif;font-weight:600;font-size:11.5px;background:var(--mist)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:var(--cloud);border:1px solid var(--stone);padding:0 4px;border-radius:4px}
+b.u{font-family:'Sora',sans-serif;font-weight:600;font-size:13px}
+ol{list-style:none;counter-reset:n}ol li{counter-increment:n;position:relative;padding:0 0 7px 30px}
+ol li::before{content:counter(n);position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font:600 11px/20px 'Sora';text-align:center}
+.dec{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dec div{background:#fff;border:1px solid var(--stone);border-radius:10px;padding:9px 12px}
+.dec i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px}
+.dec b{font-family:'Sora',sans-serif;font-weight:600}
+ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}ul li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;border-radius:50%;background:var(--jade)}
+.qr{width:30mm;height:30mm;border:1px solid var(--stone);border-radius:8px;overflow:hidden;flex:none}.qr svg{width:100%;height:100%;display:block}
+.try{display:flex;gap:6mm;align-items:center;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:4mm 5mm}
+.try table{border:0;border-radius:0}.try td{border:0;padding:2px 0;background:none}.try td:first-child{width:24%;font-size:11px;background:none;color:var(--teal)}
+.pw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);margin-top:9px}.pw img{height:20px}
+.note{position:absolute;left:15mm;right:15mm;bottom:9mm;font-size:10.5px;color:var(--soft);border-top:1px solid var(--stone);padding-top:6px}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.stp{background:#fff;border:1px solid var(--stone);border-radius:10px;padding:7px 8px 8px;display:flex;flex-direction:column}
+.stp .hd{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.stp .hd i{font-style:normal;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font:600 10.5px/18px 'Sora';text-align:center;flex:none}
+.stp .hd b{font-family:'Sora',sans-serif;font-weight:600;font-size:11.5px}
+.stp .im{height:31mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
+.stp .im img{width:100%;height:100%;object-fit:contain;display:block}
+.stp p{font-size:10.6px;line-height:1.38;margin-top:6px;color:var(--soft)}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
+.res figure{margin:0;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:6px}
+.res img{width:100%;display:block;border-radius:5px}
+.res figcaption{font-size:10.4px;line-height:1.35;color:var(--soft);margin-top:5px}
+.res figcaption b{color:var(--ink)}
+.dotk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+</style></head>
+<body>
+<div class="top"><div class="sg">@GESTURE@</div><div style="display:flex;align-items:center;gap:16px;position:relative">@LOCK_DARK_34@<span style="width:1px;height:26px;background:rgba(255,255,255,.25)"></span><span style="font-size:12px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:9px">Powered by <img src="@ASSETS@/odylytics-on-dark.png" style="height:22px" alt="Odylytics"></span></div>
+<h1>Your behavior is your signature.</h1>
+<div class="team">Human verification for wallet transfers · Product guide · Team Odylytics · MoMo Tech Contest 2026</div></div>
+<div class="main">
+<div class="lbl" style="margin-top:0">Open the product</div>
+<div class="try"><div class="qr">@QR@</div>
+<table>
+<tr><td>Link</td><td><b class="u">@WEB_URL@</b> · any browser, no sign-up</td></tr>
+<tr><td>Login</td><td>None needed. Demo PIN <code>159357</code> (6 digits). The SDK key is built into the page.</td></tr>
+<tr><td>Developers</td><td>API docs https://nhip-api-taupe.vercel.app/docs · status /health</td></tr>
+</table></div>
+<div class="lbl">Try it in 3 minutes: open <code style="font-size:10.5px">@WEB_URL@/#/demo</code></div>
+<div class="steps">
+<div class="stp"><div class="hd"><i>1</i><b>Enroll your rhythm</b></div><div class="im"><img src="@ASSETS@/shots/wallet-top.png" alt="Wallet PIN pad"></div><p>Type PIN <b>159357</b> on the wallet three times, as you normally would. Innate learns how you tap.</p></div>
+<div class="stp"><div class="hd"><i>2</i><b>Run a case</b></div><div class="im"><img src="@ASSETS@/shots/cases-zoom.png" alt="Two cases to try"></div><p>Press <b>Malware taps the PIN</b> (a bot) or <b>Thief who knows the PIN</b>, then hand the phone to a friend.</p></div>
+<div class="stp"><div class="hd"><i>3</i><b>Watch the guided story</b></div><div class="im"><img src="@ASSETS@/shots/story-modal.png" alt="Guided story"></div><p>Prefer to watch? Open <code>@WEB_URL@/#/demo?story=1</code>: 8 steps, about 90 seconds, scored live.</p></div>
+</div>
+<div class="lbl">Read the result: every answer comes with reasons</div>
+<div class="res">
+<figure><img src="@ASSETS@/shots/decision-allow.png" alt="Allow decision"><figcaption><span class="dotk" style="background:var(--jade)"></span><b>allow</b>: the owner's own rhythm. Nothing changes for the user.</figcaption></figure>
+<figure><img src="@ASSETS@/shots/decision-hold.png" alt="Hold decision with reasons"><figcaption><span class="dotk" style="background:#FF7A6B"></span><b>hold</b>: machine-regular timing, taps on exact key centers. <span class="dotk" style="background:#F5B941"></span><b>step_up</b> sits in between and asks for face or OTP.</figcaption></figure>
+</div>
+<div class="lbl">What the AI does</div>
+<ul>
+<li><b>Human or bot:</b> rules plus a LightGBM model trained on real people and simulated bots.</li>
+<li><b>The owner:</b> PIN rhythm against 3–5 enrollment sessions. A fine-tuned Transformer is under evaluation, not in the live API.</li>
+</ul>
+</div>
+<p class="note">The wallet UI and characters are fictional and not any wallet's app. The owner score is a risk signal, not a replacement for PIN, OTP or face. Only timing, coordinates and event types are stored, never the PIN or any content. License CC BY-NC-SA 4.0.</p>
+</body></html>

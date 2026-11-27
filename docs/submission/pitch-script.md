@@ -1,6 +1,6 @@
 # Kịch bản thuyết trình chung kết và bộ câu hỏi giám khảo
 
-> Dùng với [`slides/innate-slides.pdf`](slides/innate-slides.pdf) (10 trang). Slide **không được sửa sau khi nộp**: chỉnh lời nói, không chỉnh slide. Thời lượng thuyết trình `[TODO: xác nhận với BTC]`; kịch bản dưới đây ~5 phút (~30 giây/slide, slide 5–7 lâu hơn).
+> Dùng với `submission/Slide/Innate-slides.pdf` (10 trang). Slide **không được sửa sau khi nộp**: chỉnh lời nói, không chỉnh slide. Thời lượng thuyết trình `[TODO: xác nhận với BTC]`; kịch bản dưới đây ~5 phút (~30 giây/slide, slide 5–7 lâu hơn).
 
 ## Lời thuyết trình theo slide
 

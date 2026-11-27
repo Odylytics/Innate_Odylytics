@@ -1,0 +1,4 @@
+.venv/
+_tf/
+runs/**/*.pt
+__pycache__/

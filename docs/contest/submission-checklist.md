@@ -44,7 +44,7 @@ Nộp sản phẩm có từ trước · người ngoài đội tham gia · chia 
 
 | Thành phần | Trạng thái |
 |---|---|
-| Slide ≤ 10 trang | **Bản nháp đã có**: [`../submission/slides/innate-slides.pdf`](../submission/slides/innate-slides.pdf) (nguồn HTML cùng thư mục). Còn `[TÊN ĐỘI]` cần điền; **không sửa được sau khi nộp** |
+| Slide ≤ 10 trang | **Bản nháp đã có**: `tools/build_submission.sh` (nguồn: `tools/build_pptx.js`, ra `submission/Slide/` gồm PPTX + PDF). Còn `[TÊN ĐỘI]` cần điền; **không sửa được sau khi nộp** |
 | Video ≤ 3 phút | Kịch bản có ([`video-script.md`](../submission/video-script.md)); **chưa quay** (cần URL demo) |
 | PDF hướng dẫn 1 trang | Bản nháp ([`product-guide-1page.md`](../submission/product-guide-1page.md)); thiếu URL và tài khoản demo |
 | README nộp bài | Khung ([`README.submission.md`](../submission/README.submission.md)); còn `TODO` |

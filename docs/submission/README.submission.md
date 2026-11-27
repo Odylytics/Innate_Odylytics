@@ -1,121 +1,117 @@
-# Innate — Lớp chấm điểm rủi ro hành vi chạm cho ví điện tử
+<p><img src="web/public/brand/lockup.svg" alt="innate" height="44"></p>
 
-> **KHUNG README NỘP BÀI — chưa hoàn chỉnh (mục giấy phép và tài sản có sẵn đã kiểm 25/11).** Mục có `TODO` cần đội điền/quyết trước 03/12. Khi nộp, đổi tên file này thành `README.md` ở gốc gói `.zip` và xoá dòng này. Danh sách kiểm: [`../contest/submission-checklist.md`](../contest/submission-checklist.md).
+# Innate: human verification for digital wallets
 
-**Đội:** `TODO: tên đội` · **Thành viên:** `TODO` · **Chủ đề:** An ninh mạng + Chống lừa đảo · **MoMo Tech Contest 2026**
+*Your behavior is your signature.* Powered by **Odylytics** · MoMo Tech Contest 2026 · Topics: Cybersecurity + Anti-fraud
 
-## 1. Sản phẩm là gì
+Innate runs silently when a payment is confirmed. It scores how the person touches and types and answers two questions before the money moves: is this a **human or a bot** (Accessibility malware, `adb`, scripts), and if human, is it **the owner**? The result is `allow`, `step_up` or `hold`, each with a plain-language reason. Innate recommends and never locks an account. It complements PIN, OTP and face checks and does not replace them.
 
-Innate (bẩm sinh) là **lớp kiểm chứng con người** chạy ngầm ở bước xác nhận giao dịch, bổ sung cho PIN/OTP/khuôn mặt (không thay thế). Nó chấm điểm rủi ro của giao dịch dựa trên **cách người dùng chạm và gõ** khi nhập PIN và các ô giao dịch, để trả lời hai câu hỏi: thao tác do **người hay máy** làm (mã độc Trợ năng, `adb`, script), và nếu là người thì có **khớp thói quen chủ tài khoản** không. Kết quả: `allow` / `step_up` (xác thực thêm) / `hold` (giữ lệnh), kèm lý do tiếng Việt. Khi chưa chắc, **Innate Challenge** yêu cầu gõ lại một câu tiếng Việt ngẫu nhiên (máy chủ cấp, ký token) để có thêm tín hiệu: nhịp gõ và kiểu gõ dấu Telex/VNI. Phần kiểu gõ tiếng Việt mới là giả thuyết, chưa đo trên người thật (`../plan/innate-challenge-vi.md`). Hệ thống chỉ đề xuất, không tự khoá tài khoản. Giải thích đầy đủ: [`../plan/how-it-works.md`](../plan/how-it-works.md); định vị: [`../plan/positioning.md`](../plan/positioning.md).
-
-**Giới hạn (nói thẳng):** điểm "chủ" là một tín hiệu rủi ro, **không phải cổng xác thực**. Số đo hiện có (dữ liệu người thật công khai): EER ~16%; ở FRR 5% còn 38–57% kẻ gian biết PIN lọt (57% khoảng cách cơ bản, 38% mô hình học); đổi tư thế gần như mất tín hiệu. Bot ngây thơ bị bắt 100%; bot giống người thì yếu (xem mục 6).
-
-## 2. Dùng thử trực tuyến
+## 1. Try it
 
 | | |
 |---|---|
-| Trang demo (web) | `TODO: URL deploy của thư mục web/` (đội web chốt) |
-| API | https://nhip-api-taupe.vercel.app (`/health` 200 ngày 25/11/2026) |
-| Swagger | https://nhip-api-taupe.vercel.app/docs (bấm Authorize, nhập key SDK) |
-| Tài khoản / API key demo | `TODO`: key SDK của bản deploy (đã nằm trong bản build web, xem `web/README.md`); web demo không cần đăng nhập |
-| PIN demo | `159357` (web demo, 6 số, theo `web/README.md`) |
+| Demo website | **https://innate.odylytics.com/** (no login). Wallet at `/#/demo`, guided story at `/#/demo?story=1`, data collection at `/#/collect` |
+| Scoring API | https://nhip-api-taupe.vercel.app · Swagger at `/docs` · status at `/health` |
+| Demo credentials | None needed. Demo PIN `159357` (6 digits). The SDK key is built into the web app |
 
-**Chế độ của bản online:** có mô hình học (người/máy và nhận chủ); `/health` báo `models: {human: true, owner: true}` (kiểm 26/11 sau khi sửa). Mô hình huấn luyện bằng LightGBM và chạy bằng bộ đọc Python thuần `backend/app/scoring/lgbm_text.py`, nên không cần thư viện hệ thống nào trên máy chủ. Kiểm lại bất cứ lúc nào: `python backend/scripts/check_online.py <URL API>` (thoát mã 1 nếu mô hình không nạp). Tắt mô hình bằng `NHIP_HUMAN_MODEL=off`, `NHIP_OWNER_MODEL=off`; khi tắt, hệ thống chạy luật thuần và yếu hơn rõ rệt (xem mục 6, E29).
+Demo flow: enroll your rhythm 3 times, send a transfer as the owner (allowed), hand the phone to someone who knows the PIN (step-up), then run the malware simulator (held). The product stays online until 11 Dec 2026. Check it any time with `python backend/scripts/check_online.py <API URL>`.
 
-Kịch bản 4 bước: (1) đăng ký nhịp 3–5 lần; (2) chuyển tiền bằng chính chủ; (3) người thứ hai biết PIN thử → bị yêu cầu xác thực thêm; (4) bảng điều khiển bot → bị giữ lệnh. Sản phẩm phải online đến hết 11/12/2026: `TODO: xác nhận URL web cuối và theo dõi Vercel đến hết ngày đó`.
+## 2. How it works
 
-## 3. Cách chạy local
+Features (timing, coordinates, event type, character count) feed three checks, fused into one decision. No LLM sits on the decision path.
+
+- **Human or bot:** rules plus a LightGBM model trained on real people and simulated bots, and a replay check against the account's recent sessions.
+- **The owner:** normalized distance to the enrollment template with population shrinkage, then a LightGBM model on the deviations.
+- **Fusion:** weighted risk score, thresholds A and B, Vietnamese or English reasons.
+- **Innate Challenge:** when unsure, the app asks for a short random phrase (server-issued, signed, single-use token) for extra timing signal.
+
+Design notes: [`docs/plan/how-it-works.md`](docs/plan/how-it-works.md), positioning: [`docs/plan/positioning.md`](docs/plan/positioning.md).
+
+## 3. Run locally
 
 ```bash
-cd backend
-uv sync                     # hoặc: pip install fastapi uvicorn sqlalchemy "psycopg[binary]" (mô hình học chạy bằng Python thuần, không cần lightgbm)
-uv run uvicorn app.main:app --reload --port 8000     # /docs = Swagger, key mặc định demo-key
-uv run pytest -q            # 53 bài
-cd ../attacker && uv sync && uv run pytest -q         # 8 bài
-cd .. && node --test sdk/innate-compose.test.js        # 4 bài (SDK nhập liệu điện thoại)
-cd web && npm install && npm test && npm run dev       # trang web demo (Vite)
+cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000   # Swagger at /docs, default key demo-key
+uv run pytest -q                                                            # backend tests
+cd ../attacker && uv sync && uv run pytest -q                               # bot simulator tests
+cd .. && node --test sdk/innate-compose.test.js                             # phone input SDK tests
+cd web && npm install && npm test && npm run dev                            # website and demo wallet (Vite)
 ```
 
-Biến môi trường: `DATABASE_URL`, `NHIP_API_KEYS` (SDK), `NHIP_OPS_KEYS` (dashboard), `NHIP_ML_KEYS` (xuất dữ liệu cho ML; ops/ml đóng khi chưa đặt), `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A/B`, `NHIP_HUMAN_MODEL=off` / `NHIP_OWNER_MODEL=off` (tắt mô hình học người/máy, nhận chủ), `NHIP_POP_PRIOR=off` (tắt prior dân số), `NHIP_REPLAY_THRESHOLD`. Tên `NHIP_*` là định danh kỹ thuật cũ, giữ để không làm hỏng bản đã deploy.
+Environment: `DATABASE_URL`, `NHIP_API_KEYS` (SDK), `NHIP_OPS_KEYS` (dashboard), `NHIP_ML_KEYS` (ML export), `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A/B`, `NHIP_HUMAN_MODEL=off`, `NHIP_OWNER_MODEL=off`, `NHIP_POP_PRIOR=off`, `NHIP_REPLAY_THRESHOLD`. The `NHIP_*` prefix is a legacy identifier kept so the live deployment keeps working.
 
-## 4. Công nghệ
+## 4. Stack
 
-Python 3.11+, FastAPI, SQLAlchemy (SQLite khi chạy local, Postgres khi deploy), mô hình người/máy và nhận chủ huấn luyện bằng LightGBM, chạy bằng Python thuần (`lgbm_text.py`), web demo React 18 + TypeScript + Vite trong `web/` (có SDK thu sự kiện chạm), SDK nhập liệu cho điện thoại `sdk/innate-compose.js`. Hạ tầng: Vercel (API và web, hai project) + Neon Postgres (theo `CLAUDE.md`; `TODO: xác nhận`).
+Python 3.11+, FastAPI, SQLAlchemy (SQLite locally, Postgres in production), LightGBM models evaluated by a pure-Python reader (`backend/app/scoring/lgbm_text.py`, so the server needs no native libraries), React 18 + TypeScript + Vite website in `web/`, a JavaScript SDK, and a phone input SDK (`sdk/innate-compose.js`). Hosting: Vercel (API and web) and Neon Postgres.
 
-Các lớp AI (không có LLM trên đường ra quyết định): đặc trưng thời gian/toạ độ → (A) người hay máy: luật + LightGBM + kiểm tra phát lại → (B) có phải chủ: so với mẫu chuẩn bằng khoảng cách chuẩn hoá (co rút phương sai về dân số cho đặc trưng thời gian) rồi **LightGBM học trọng số** trên độ lệch → (C) hợp nhất có trọng số + giải thích bằng mẫu câu.
+## 5. Assets, open-source libraries, AI tools and data
 
-## 5. Tài sản có sẵn, thư viện mã nguồn mở, công cụ AI, dữ liệu — KHAI ĐẦY ĐỦ (giấu = bị loại)
-
-### Thư viện mã nguồn mở
-| Thư viện | Dùng cho |
+### Open-source libraries
+| Library | Used for |
 |---|---|
-| FastAPI, Uvicorn, SQLAlchemy, psycopg | Backend API và lưu trữ |
-| LightGBM (chỉ để huấn luyện trong `research/` và kiểm tương đương trong test), NumPy (chỉ `research/`) | Mô hình người/máy và nhận chủ được huấn luyện bằng LightGBM; backend đọc file mô hình văn bản và dự đoán bằng Python thuần (`backend/app/scoring/lgbm_text.py`) |
-| scikit-learn, pandas | Chỉ trong `research/` (thí nghiệm, không chạy trong sản phẩm) |
-| `backend/app/scoring/lgbm_text.py` (mã của đội, viết mới) | Đọc định dạng văn bản của mô hình LightGBM (MIT); kiểm bằng test so với lightgbm |
-| React, React DOM, Vite, TypeScript (Apache-2.0), Vitest, Lenis (MIT), Tailwind CSS và `@tailwindcss/vite` (MIT, chỉ trang landing), qrcode-generator (MIT, mã QR trên trang thu dữ liệu); DiceBear (MIT) để dựng sẵn ảnh đại diện | Trang web demo trong `web/`. Ảnh đại diện "Notionists" của Zoish theo **CC0 1.0** (kiểm 25/11 trên trang DiceBear) |
-| psycopg (**LGPL-3.0**) | Kết nối Postgres, dùng nguyên bản như thư viện phụ thuộc, không sao chép vào mã |
-| pytest, httpx | Kiểm thử |
+| FastAPI, Uvicorn, SQLAlchemy, psycopg (LGPL-3.0, used unmodified) | Backend API and storage |
+| LightGBM, NumPy, scikit-learn, pandas | Training and experiments in `research/` only; the backend reads the model file with `lgbm_text.py` (our code) |
+| React, React DOM, Vite, TypeScript, Vitest, Lenis, Tailwind CSS, qrcode-generator, DiceBear | Website and demo wallet in `web/`. Avatars are Notionists by Zoish, CC0 1.0 |
+| pytest, httpx | Tests |
 
-### Dữ liệu và giấy phép
-| Nguồn | Dùng cho | Giấy phép / điều kiện | Ghi chú |
-|---|---|---|---|
-| **StrokePIN** (Yao & Wang, IEEE TDSC 2026; DOI 10.21227/thft-4721; chủ sở hữu: Đại học Nam Khai) | Đánh giá bài "chủ"; huấn luyện mô hình người/máy; sinh `population_prior.json` | **CC BY-NC-SA 4.0**: phi thương mại, ghi nguồn, **chia sẻ phái sinh cùng giấy phép** | **Mô hình trong `backend/app/models/` và `population_prior.json` là sản phẩm phái sinh: phát hành theo CC BY-NC-SA 4.0.** Đội chốt (25/11): **toàn bộ gói theo CC BY-NC-SA 4.0** (`LICENSE`); thư viện bên thứ ba giữ giấy phép riêng (`THIRD_PARTY_NOTICES.md`). Dùng thương mại cần chủ sở hữu StrokePIN cho phép bằng văn bản |
-| CMU DSL-StrongPassword (Killourhy & Maxion 2009) | Thí nghiệm few-shot (`research/`) | Kiểm 25/11: trang gốc không nêu giấy phép, yêu cầu trích dẫn bài DSN-2009 | Không có trong sản phẩm |
-| Touchalytics (Frank et al. 2013) | Chỉ trong `research/` (E19: kiểm luật vuốt và nhận chủ bằng vuốt); ngưỡng vận tốc vuốt 0,3 chọn khi quan sát dữ liệu này. Không có dữ liệu hay mô hình phái sinh trong sản phẩm | Kiểm 25/11: trang gốc và `readme_data.txt` **không nêu giấy phép**; dữ liệu đưa tải công khai kèm bài báo | Trích dẫn Frank et al., IEEE TIFS 8(1), 2013 |
-| Aalto typing37k (Palin et al. 2019) | Chỉ trong `research/` (E11, E12, E13, E21, E22: nhịp gõ người thật). Không có dữ liệu hay mô hình phái sinh trong sản phẩm | Kiểm 25/11: trang và bài báo nói "openly available" nhưng **không nêu giấy phép dữ liệu** (chỉ phần mềm thu dữ liệu là MIT) | Dữ liệu chứa nội dung gõ: **không đưa vào gói**; `research/data/` bị loại; chỉ công bố bảng tổng hợp. Trích dẫn MobileHCI 2019 |
-| Dữ liệu tự thu của đội | `TODO` | Phiếu đồng ý của người tham gia; chỉ lưu thời gian, toạ độ, loại sự kiện, **không lưu nội dung** | `TODO: số người, số phiên, ngày thu` |
-
-Bot trong `attacker/` là **dữ liệu tự sinh** (4 chiến thuật), không phải mã độc thật.
-
-### Tài sản có sẵn khác (đã khai ở `web/README.md`)
-| Tài sản | Nguồn | Ghi chú |
+### Data
+| Source | Used for | License / terms |
 |---|---|---|
-| Hệ thiết kế và khung giao diện web | **Movago**, trang demo web trước đây của một thành viên (team Odylytics), dùng lại: `styles.css`, `ui.tsx`, `smooth.ts`, `sound.ts`, `Intro.tsx`, `StoryBar.tsx`... | Nội dung Innate, ví, SDK, client API, các trang và hình vẽ là mới |
-| Logo, biểu tượng ứng dụng, wordmark (`web/public/brand/`) | `TODO: xác nhận nguồn` (README web ghi lấy từ Figma brand kit của đội) | Không dùng logo hay tên MoMo |
-| Tham chiếu bố cục | Mẫu Movora (Framer Marketplace) qua `DESIGN.md` của Movago | Chỉ lưới, khoảng cách, hình khối; không dùng ảnh, logo, chữ của Movora |
-| Phông chữ | Sora, Manrope, JetBrains Mono (SIL OFL, Google Fonts) | Sora không có glyph tiếng Việt: tiêu đề tiếng Việt dùng Manrope |
+| **StrokePIN** (Yao & Wang, IEEE TDSC 2026, DOI 10.21227/thft-4721) | Owner evaluation, human/bot training, `population_prior.json` | **CC BY-NC-SA 4.0**. The models in `backend/app/models/` and the prior are derivatives, so the whole package is released under CC BY-NC-SA 4.0 (`LICENSE`). Commercial use needs the data owner's permission |
+| CMU DSL-StrongPassword (Killourhy & Maxion 2009) | Few-shot experiments in `research/` | No license stated; cite DSN-2009. Nothing derived ships |
+| Touchalytics (Frank et al. 2013) | Swipe-rule checks in `research/` | No license stated. Nothing derived ships |
+| Aalto typing37k (Palin et al. 2019) | Typing experiments and the TypeFormer fine-tune in `research/` | No data license stated. Nothing derived ships |
+| Team-collected data | Consented volunteers via `/#/collect` | Consent form; timing, coordinates and event types only. Counts: `TODO: people, sessions, dates` |
 
-Danh sách đầy đủ kèm cách kiểm: `THIRD_PARTY_NOTICES.md`.
+Bots in `attacker/` are generated by our simulator (4 tactics), not real malware.
 
-### Công cụ AI đã dùng
-| Công cụ | Dùng cho |
+### Other assets
+| Asset | Source | Notes |
+|---|---|---|
+| Website design system and frame | **Movago**, an earlier demo site by a team member (Odylytics), reused: `styles.css`, `ui.tsx`, `smooth.ts`, `sound.ts`, `Intro.tsx`, `StoryBar.tsx` | Innate content, wallet, SDK, API client, pages and illustrations are new |
+| Innate logo, symbol, wordmark (`web/public/brand/`) | Innate Brand Identity Kit v1.0, drawn by the team | No third-party brand or logo is used |
+| Odylytics logo | Odylytics Brand System, owned by the team | Used on slides and documents as "Powered by Odylytics" |
+| Layout reference | Movora template (Framer Marketplace) via Movago `DESIGN.md` | Grid, spacing and shapes only; no images, logos or text |
+| Fonts | Sora, Manrope, JetBrains Mono (SIL OFL, Google Fonts) | |
+
+Full list with how each was checked: `THIRD_PARTY_NOTICES.md`.
+
+### AI tools
+| Tool | Used for |
 |---|---|
-| Claude Code (Anthropic; mô hình Claude Sonnet 5.5) | Hỗ trợ viết mã, thí nghiệm, tài liệu và rà soát paper. Mọi số liệu thí nghiệm do mã trong `research/` sinh ra và có thể chạy lại |
-| `TODO: công cụ AI khác (nếu có) / mô hình mã nguồn mở khác` | |
+| Claude Code (Anthropic, Claude Sonnet 5.5) | Writing code, experiments, documents and paper review. Every reported number comes from code in `research/` that can be re-run |
+| **TypeFormer** (Stragapede et al., MIT; pretrained on Aalto) with PyTorch | Research only, in `research/finetune/`: fine-tuned on StrokePIN and compared with LightGBM. **Not in the API.** Third-party code stays in `research/external/` and is not packaged |
 
-### Bài báo tham khảo (không kèm trong gói; danh mục ở `docs/research/paper-report.md`)
-Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2021 (BeCAPTCHA), Fratantonio 2017, Lovisotto 2020, Wang 2026 (ActReal), v.v.
+### Papers
+Not included in the package; DOIs are in `docs/research/paper-report.md`: Zheng 2014, Buschek 2015, Killourhy & Maxion 2009, Georgiev 2022 (FETA), Acien 2021, Fratantonio 2017, Lovisotto 2020, Wang 2026 (ActReal), Stragapede 2023 (TypeFormer).
 
-## 6. Kết quả đo (dữ liệu người thật công khai; CHƯA phải dữ liệu của đội)
+## 6. Results (public real-human data, not team-collected)
 
-| Việc | Kết quả | Ghi chú |
-|---|---|---|
-| Xác minh chủ (StrokePIN, 97 người, kẻ gian biết PIN, 3 lần đăng ký, chia theo người, **không dùng kích thước chạm**) | Khoảng cách cơ bản: EER 0,161, kẻ gian lọt 0,573 ở FRR 5%. **Học máy: EER 0,158, kẻ gian lọt 0,375** (−0,198, CI không chứa 0). Đổi tư thế (ngồi→đi): EER 0,309, kẻ gian lọt 0,708 | Khoảng tin cậy ghép cặp, bootstrap theo người. Bản có kích thước chạm cho số đẹp hơn nhưng là nhiễu **thiết bị** (kẻ gian trong dữ liệu dùng máy khác), nên không dùng |
-| Người/máy (người thật, bot sinh) | Bot ngây thơ (CT1, CT2): 100%; CT3 (phát lại): 12–26%; CT4 (lấy mẫu dân số): 20–73% | Bot **do bộ sinh tạo**, chưa có bot thật |
-| Kiểm tra phát lại (người thật, ngưỡng 0,07) | Bắt 100% phát lại có nhiễu tới ±10%; 29% ở ±15%; 0% từ ±20% | FPR người thật ~0,1% (8 phiên cũ), ngoại suy ~0,7% (50 phiên). Hiệu chỉnh lại trên dữ liệu của đội |
-| **Innate Challenge** (2.260 người gõ câu, chỉ thời gian) | Kẻ gian lọt ở FRR 5%: 81% (6 phím) → 49% (30 phím); bắt bot gõ đều AUC 0,92 → 0,996 | Chép câu mẫu tiếng Anh; chưa đo gộp PIN + câu, chưa đo ma sát |
-| Luật vuốt (Touchalytics, 41 người, 20.896 nét) | Luật "vận tốc đều" (CV < 0,3): 0 nét người thật bị gắn cờ, bắt 100% bot vuốt đều/nhiễu thời gian ±6 ms. Luật cũ "thẳng > 0.999" gắn cờ nhầm 13,4% phiên người thật (đã thay). Nhận chủ bằng vuốt: AUC 0,48–0,60 (đã bỏ khỏi nhận chủ) | Bot là bộ sinh của đội; bot thật có thể giả vận tốc |
-| Innate Challenge tiếng Việt | **Chưa đo trên người Việt.** Có số mô phỏng và đếm lý thuyết (3–6,6 bit biến thể gõ Telex/VNI) | `../plan/innate-challenge-vi.md`; cần thu dữ liệu và thử Gboard/iOS thật |
-| Chuẩn hoá nhịp theo cặp phím (Aalto, 1.000 người) | Gần như không đổi (EER 0,249 → 0,238 ở 30 phím); không đưa vào sản phẩm | Kết quả âm tính, ghi để minh bạch |
-| **Toàn hệ thống** (E24; 10 người chưa thấy bởi cả hai mô hình học; kẻ biết PIN dùng máy khác) | Chủ 80% allow / 19% step_up / 1% hold; kẻ biết PIN 28% / 70% / 2%; bot ngây thơ và phát lại ≤ ±10% 100% hold | Số liệu mô hình học đo ở môi trường nghiên cứu |
-| **Bot thích nghi** (E27) | Phát lại nhiễu ±15–30%: 48–72% được cho qua; bot biết mẫu chuẩn: 75–82% qua | Giới hạn nói trước |
-| PIN 4 số so với 6 số (E28) | PIN 4 số: mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%); xấp xỉ bằng cách cắt PIN 6 số | Vì vậy web demo dùng PIN 6 số `159357` |
-| **Toàn hệ thống trên 97 người** (E29, cross-validation theo người, mô hình học huấn luyện lại mỗi phần) | Có mô hình học: kẻ biết PIN được allow 22% [20, 24], chủ ngồi 76%, chủ đi 49%, bot biết mẫu chuẩn 72–87%. **Chỉ luật (khi tắt mô hình học): kẻ biết PIN được allow 89%**, chủ ngồi 95%; bot ngây thơ và phát lại ≤ ±10% vẫn 100% hold | Bản online hiện có mô hình học bật (kiểm `/health`), nhưng số 22% đo trong `research/`, chưa đo trên bản online; xem `research/results/e29_*.md` |
-| Số liệu trên dữ liệu của đội | `TODO` | |
+| Test | Result |
+|---|---|
+| Owner check, StrokePIN, 97 people, PIN-knowing impostor, 3 enrollments, split by person | Baseline distance: EER 0.161, impostor passes 57.3% at 5% owner rejection. **Learned model: EER 0.158, 37.5%.** After a posture change (sit → walk): EER 0.309, 70.8% |
+| Human vs bot (real humans, simulated bots) | Naive bots 100%; replay 12–26% for the classifier alone; population-sampling bots 20–73% |
+| Replay check (threshold 0.07) | Catches 100% of replays with noise up to ±10%, 29% at ±15%, 0% from ±20%. Human false-positive rate about 0.1% at 8 past sessions |
+| Innate Challenge (2,260 people typing sentences, timing only) | Impostor passes at 5% rejection: 81% (6 keys) → 49% (30 keys). Vietnamese phrases not yet measured on Vietnamese typists |
+| Swipe rule (Touchalytics, 41 people) | "Uniform speed" rule flags 0 human strokes and catches 100% of uniform simulated swipes; swipe-based owner matching is near chance (AUC 0.48–0.60) and was dropped |
+| Digraph normalization (Aalto, 1,000 people) | No meaningful gain (EER 0.249 → 0.238), not shipped |
+| **Full system, 97 people, 5-fold by person (E29)** | With learned models: PIN-knowing impostor allowed 22% [20, 24], owner allowed 76% sitting and 49% walking, template-aware bot 72–87%. Rules only: impostor allowed 89% |
+| Adaptive bots (E27) | Replay with ±15–30% noise passes 48–72%; template-aware bots 75–82% |
+| **Fine-tuned TypeFormer** (Aalto → StrokePIN; 60 train, 7 validation, 30 unseen test people; 3 enrollments) | Before: EER 0.292, impostor passes 70.6%. **After: EER 0.203, 41.8%.** Sit → walk: EER 0.311, 66.1%. Single run and split, no confidence interval, not directly comparable with the 97-person rows, not in the API |
+| Team-collected data | `TODO` |
 
-Chi tiết, giả thuyết, giới hạn và cách chạy lại: [`../research/ai-research.md`](../research/ai-research.md), thư mục `research/`.
+Details and rerun instructions: [`docs/research/ai-research.md`](docs/research/ai-research.md) and `research/`.
 
-## 7. Cấu trúc gói nộp
+## 7. Package layout
 
 ```
-backend/    API, SDK, mô hình, test           attacker/   bộ giả lập bot (4 chiến thuật, adb)
-research/   mã thí nghiệm + kết quả            docs/       kế hoạch, giải thích, nghiên cứu
+backend/   API, models, tests            attacker/   bot simulator (4 tactics, adb)
+web/       website + demo wallet         sdk/        phone input SDK
+research/  experiments and results       docs/       plans, explanations, research
+tools/     builds the submission files
 ```
-**Hồ sơ nộp (không nằm trong zip mã nguồn nếu BTC tách riêng):** `docs/submission/` gồm slide PDF, đề xuất, kịch bản video/thuyết trình, bản nháp hướng dẫn 1 trang.
 
-**Không đưa vào gói:** `papers/` (PDF có bản quyền), `research/data/` và `research/external/` (dữ liệu và mã bên thứ ba), `.env*`, `backend/.env.deploy-key`, `*.db`, `.venv`, `__pycache__`.
+Excluded from the zip: `papers/` (copyrighted PDFs), `research/data/` and `research/external/` (third-party data and code), `.env*`, `*.db`, `.venv`, `__pycache__`.
 
-## 8. Quyền riêng tư và pháp lý
+## 8. Privacy and legal
 
-Chỉ lưu thời gian, toạ độ, loại sự kiện và số ký tự; **không lưu nội dung PIN, số tiền, nội dung chuyển khoản**. Dữ liệu chạm/gõ coi là dữ liệu nhạy cảm (Luật Bảo vệ dữ liệu cá nhân 2025 và NĐ 356/2025, hiệu lực 01/01/2026): người tham gia thu dữ liệu đã đồng ý bằng phiếu (mẫu phiếu: `docs/plan/thu-du-lieu-doi.md` (mục "Phiếu đồng ý"), đính kèm vào zip). Không dùng logo hay tên thương hiệu của bên thứ ba; giao diện demo là minh hoạ.
+Only timing, coordinates, event types and character counts are stored, never the PIN, amount or message text. Touch and typing data is treated as sensitive under Vietnam's Personal Data Protection Law 2025 and Decree 356/2025 (effective 1 Jan 2026); volunteers consented through the form in `docs/plan/thu-du-lieu-doi.md`. No third-party logo or brand name appears in the product; the demo UI is illustrative.
