@@ -276,7 +276,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
     T(s, t, { x: 0.75, y, w: 1.15, h: 0.35, fontFace: H, fontSize: 15, bold: true, color: c === AMBER ? '8A5F00' : c === CORAL ? 'B04436' : MUTED })
     T(s, d, { x: 1.95, y, w: 4.45, h: 0.65, fontSize: 15 })
   })
-  T(s, 'So Innate steps up instead of blocking, and is one layer among several.', { x: 0.75, y: 5.95, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
+  T(s, 'So Innate steps up, never blocks: one layer of several.', { x: 0.75, y: 5.95, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.85, y: 1.8, w: 5.73, h: 4.75, rectRadius: 0.12, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   cap(s, 'Next', 7.2, 2.0, 4)
   const N = [['Real data', 'Consented volunteers and real bots,\nthen retrain and recalibrate.'], ['Fine-tuned Transformer', 'TypeFormer on StrokePIN: EER 0.29 to 0.20\non 30 unseen people. Planned for the API.'], ['Native SDK', 'Sees text set directly and device motion\n(a phone lying still while taps arrive).']]
