@@ -121,3 +121,8 @@ html[data-page='collect'], html[data-page='collect'] body { overscroll-behavior:
 .cl-scores { font-size: .9rem; }
 .cl-reasons { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .cl-reasons li { padding: 4px 10px; border-radius: 999px; background: #e6eef4; font-size: .8rem; }
+/* posture label (research) */
+.cl-seg3 { grid-template-columns: repeat(3, 1fr); }
+.cl-posture { padding: 10px 14px 0; max-width: 368px; margin: 0 auto; width: 100%; }
+.cl-posture .cl-hint { margin: 0 0 6px; text-align: center; }
+.cl-posture .cl-tabs { margin: 0; }

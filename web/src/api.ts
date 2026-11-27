@@ -16,7 +16,8 @@ export interface FieldEvent { t: number; kind: 'key' | 'paste' | 'delete' | 'set
 export interface TextField { name: 'recipient' | 'amount' | 'challenge'; events: FieldEvent[]; token?: string; expected_len?: number }
 export interface Challenge { token: string; phrase: string; expected_len: number; ttl_s: number }
 // Collection label (backend CollectionMeta): who really held the phone, which sitting, genuine owner or someone who saw the PIN.
-export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; note?: string; full_name?: string; email?: string }
+export type Posture = 'sit' | 'stand' | 'walk'
+export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; posture?: Posture; note?: string; full_name?: string; email?: string }
 export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta }
 
 export type Action = 'allow' | 'step_up' | 'hold'

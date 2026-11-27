@@ -116,7 +116,7 @@ def test_template_drift_is_capped():
 def test_collection_meta_and_export(client):
     rng = random.Random(11)
     body = human_session("acc_p01", OWNER, rng)
-    body["meta"] = {"participant_id": "p01", "sitting": 1, "role": "genuine"}
+    body["meta"] = {"participant_id": "p01", "sitting": 1, "role": "genuine", "posture": "walk"}
     sid = _post_session(client, body)
     imp = human_session("acc_p01", IMPOSTOR, rng)
     imp["meta"] = {"participant_id": "p02", "sitting": 1, "role": "impostor", "note": "xem chủ bấm 1 lần"}
@@ -125,11 +125,14 @@ def test_collection_meta_and_export(client):
 
     bad = dict(body, meta={"participant_id": "p01", "sitting": 0, "role": "genuine"})
     assert client.post("/v1/sessions", json=bad, headers=H).status_code == 422
+    lying = dict(body, meta={"participant_id": "p01", "sitting": 1, "role": "genuine", "posture": "lying"})
+    assert client.post("/v1/sessions", json=lying, headers=H).status_code == 422
 
     rows = client.get("/v1/export", headers=H).json()
     mine = [r for r in rows if r["user_id"] == "acc_p01"]
     assert [r["meta"]["role"] for r in mine] == ["genuine", "impostor"]
     assert mine[0]["session_id"] == sid and "pin_hold_0" in mine[0]["features"]
+    assert mine[0]["meta"]["posture"] == "walk" and mine[1]["meta"].get("posture") is None
     assert [r["meta"]["participant_id"] for r in client.get("/v1/export?participant_id=p02", headers=H).json()] == ["p02"]
 
 

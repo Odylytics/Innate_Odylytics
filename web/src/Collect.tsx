@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
-import { ApiError, api, explanationText, reasonText, type AccountStatus, type CollectionMeta, type Score, type SessionIn, type UserStatus } from './api'
+import { ApiError, api, explanationText, reasonText, type AccountStatus, type CollectionMeta, type Posture, type Score, type SessionIn, type UserStatus } from './api'
 import { MAX_ENROLL, MIN_JUDGE_ENROLL, impostorStopped } from './enrollCurve'
 import { Recorder } from './capture'
 import { LangContext } from './i18n'
@@ -11,7 +11,8 @@ import './collect.css'
 // Data-collection app (#/collect), the phone entry of the project: sign up (one account per email, password hashed on the server)
 // or sign in; then the rhythm set-up, a 10-digit pad (+ delete) where the volunteer creates a 6-digit PIN and types it 5 to 10 times,
 // each entry sent and enrolled at once, with the Accuracy check bar under the keypad (enrollCurve.ts); then transfers confirmed
-// with the PIN and scored live against that rhythm. Set-up sessions carry name + email in `meta`; transfer sessions carry none.
+// with the PIN and scored live against that rhythm. Every session carries a self-reported posture (sit/stand/walk, E33); set-up sessions
+// carry name + email; transfer sessions carry who typed (owner = genuine, someone else = impostor with a random participant id).
 // The PIN digits are stored on purpose (pin_taps[].key, for per-key research); the form warns not to reuse a real one.
 // Phone only: on a desktop it shows a "open on your phone" notice (add ?dev=1 to test in devtools).
 const PIN_LEN = 6
@@ -207,6 +208,24 @@ function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
   )
 }
 
+const POSTURES: { id: Posture; en: string; vi: string }[] = [
+  { id: 'sit', en: 'Sitting', vi: 'Ngồi' }, { id: 'stand', en: 'Standing', vi: 'Đứng' }, { id: 'walk', en: 'Walking', vi: 'Vừa đi' },
+]
+// E33: enrolled only sitting, owners walking get an extra check 2x as often; mixing postures at set-up evens it out
+const suggestedPosture = (k: number): Posture => (k < 3 ? 'sit' : 'walk')
+
+/** Self-reported posture for each entry (research label, sent in meta.posture). */
+function PostureChips({ value, onChange }: { value: Posture; onChange: (p: Posture) => void }) {
+  const tx = useTx()
+  return (
+    <div className="cl-tabs cl-seg3" role="radiogroup" aria-label={tx('How are you holding the phone?', 'Bạn đang nhập khi')}>
+      {POSTURES.map((p) => (
+        <button key={p.id} role="radio" aria-checked={value === p.id} className={value === p.id ? 'on' : ''} onClick={() => onChange(p.id)}>{tx(p.en, p.vi)}</button>
+      ))}
+    </div>
+  )
+}
+
 /** Rhythm set-up: the PIN typed 5 to 10 times, each entry sent and enrolled at once; the accuracy bar sits under the keypad. */
 function EnrollRounds({ account, onStatus, strip }: {
   account: AccountStatus; onStatus: (st: UserStatus) => void; strip: (right: string) => JSX.Element
@@ -217,14 +236,17 @@ function EnrollRounds({ account, onStatus, strip }: {
   const rec = useRef(new Recorder())
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const [posture, setPosture] = useState<Posture>(suggestedPosture(k))
   useEffect(() => { rec.current.screen('pin') }, [])
+  const suggested = suggestedPosture(k)
+  useEffect(() => { setPosture(suggested) }, [suggested]) // follow the hint only when it changes (entry 4), keep the person's own pick otherwise
 
   async function onEntry(digits: string) {
     if (pin.current && digits !== pin.current) {
       setMsg(tx('Does not match the PIN you made. Try again.', 'Không khớp mã đã tạo. Nhập lại.'))
       rec.current = new Recorder(); rec.current.screen('pin'); return
     }
-    const meta: CollectionMeta = { participant_id: idOf(account.email), sitting: 1, role: 'genuine', email: account.email, ...(account.full_name ? { full_name: account.full_name } : {}) }
+    const meta: CollectionMeta = { participant_id: idOf(account.email), sitting: 1, role: 'genuine', posture, email: account.email, ...(account.full_name ? { full_name: account.full_name } : {}) }
     const s: SessionIn = { ...rec.current.payload(account.user_id), meta }
     setBusy(true); setMsg(null)
     try {
@@ -248,6 +270,10 @@ function EnrollRounds({ account, onStatus, strip }: {
   return (
     <div className="cl cl-app">
       {strip(`${k}/${MAX_ENROLL}`)}
+      <div className="cl-posture">
+        <p className="cl-hint">{tx('Entries 1–3 sitting, from entry 4 type while walking.', 'Lần 1–3 ngồi, từ lần 4 vừa đi vừa nhập.')}</p>
+        <PostureChips value={posture} onChange={setPosture} />
+      </div>
       <PinPad recRef={rec} busy={busy} msg={msg} onEntry={(d) => void onEntry(d)}
         title={k === 0 && !pin.current ? tx('Create a 6-digit PIN', 'Tạo mã PIN 6 số') : tx('Enter your PIN again', 'Nhập lại mã PIN')}
         sub={k === 0 && !pin.current ? tx('A new PIN, not one you really use.', 'Mã mới, không trùng PIN/mật khẩu thật.')
@@ -281,6 +307,8 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
   const [score, setScore] = useState<Score | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const [who, setWho] = useState<'owner' | 'other'>('owner')
+  const [posture, setPosture] = useState<Posture>('sit')
   const rec = useRef(new Recorder())
   const money = (v: number) => v.toLocaleString('vi-VN') + ' ₫'
   const r = RECIPIENTS.find((x) => x.id === to)!
@@ -288,7 +316,11 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
   async function onEntry() {
     setBusy(true); setMsg(null)
     try {
-      const { session_id } = await api.createSession(rec.current.payload(account.user_id))
+      // research labels: who really typed (the owner, or someone else trying with the password and PIN) and in what posture
+      const meta: CollectionMeta = who === 'owner'
+        ? { participant_id: idOf(account.email), sitting: 2, role: 'genuine', posture, email: account.email }
+        : { participant_id: `x${Math.random().toString(36).slice(2, 10)}`, sitting: 2, role: 'impostor', posture }
+      const { session_id } = await api.createSession({ ...rec.current.payload(account.user_id), meta })
       setScore(await api.score(session_id, { recipient_is_new: r.isNew, amount }))
       setStep('result')
     } catch (e) {
@@ -333,6 +365,15 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
           <i>{x.name[1][0]}</i><span><b>{x.name[lang === 'en' ? 0 : 1]}</b><small>{x.sub[lang === 'en' ? 0 : 1]}</small></span>
         </label>
       ))}
+      <h3>{tx('Who is typing?', 'Ai đang nhập?')}</h3>
+      <div className="cl-tabs" role="radiogroup">
+        {(['owner', 'other'] as const).map((w) => (
+          <button key={w} role="radio" aria-checked={who === w} className={who === w ? 'on' : ''} onClick={() => setWho(w)}>
+            {w === 'owner' ? tx('Account owner', 'Chủ tài khoản') : tx('Someone else trying', 'Người khác thử')}</button>
+        ))}
+      </div>
+      <h3>{tx('Typing while', 'Đang nhập khi')}</h3>
+      <PostureChips value={posture} onChange={setPosture} />
       <h3>{tx('Amount', 'Số tiền')}</h3>
       <div className="cl-amounts">
         {AMOUNTS.map((v) => (

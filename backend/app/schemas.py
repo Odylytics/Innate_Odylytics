@@ -92,6 +92,7 @@ class CollectionMeta(BaseModel):
     # impostor: biết PIN, cố bấm giống chủ tài khoản; bot: phiên do bộ giả lập hacker sinh ra
     role: Literal["genuine", "impostor", "bot"]
     tactic: int | None = Field(default=None, ge=1, le=4)  # chiến thuật bot 1–4 (chỉ khi role = bot)
+    posture: Literal["sit", "stand", "walk"] | None = None  # tư thế người nhập tự khai (E33: đổi tư thế làm báo nhầm tăng gấp đôi)
     note: str | None = Field(default=None, max_length=200)
     # trang thu (#/collect) ghi họ tên + email người tham gia thẳng vào phiên (có đồng ý); /v1/export trả cả hai
     full_name: str | None = Field(default=None, min_length=1, max_length=100)
