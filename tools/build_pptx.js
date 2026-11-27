@@ -31,17 +31,19 @@ for (const [name, dark] of [['LIGHT', false], ['DARK', true]]) {
       ...footer(dark),
       { placeholder: { options: { name: 'title', type: 'title', x: 0.75, y: 0.78, w: 11.8, h: 1.0, fontFace: H, fontSize: 28, bold: true, color: dark ? 'FFFFFF' : INK, valign: 'top', align: 'left', margin: 0, fit: 'shrink' }, text: '' } },
     ],
-    slideNumber: { x: 11.6, y: 6.78, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: dark ? MUTED_D : MUTED, align: 'right' },
+    slideNumber: { x: 11.6, y: 6.81, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: dark ? MUTED_D : MUTED, align: 'right' },
   })
 }
 pres.defineSlideMaster({ title: 'COVER', background: { path: A + 'bg-dark-gesture.png' }, objects: [] })
-pres.defineSlideMaster({ title: 'DARKBG', background: { path: A + 'bg-dark-gesture.png' }, objects: [...footer(true), { placeholder: { options: { name: 'title', type: 'title', x: 0.75, y: 0.78, w: 11.8, h: 1.0, fontFace: H, fontSize: 28, bold: true, color: 'FFFFFF', valign: 'top', align: 'left', margin: 0, fit: 'shrink' }, text: '' } }], slideNumber: { x: 11.6, y: 6.78, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: MUTED_D, align: 'right' } })
+pres.defineSlideMaster({ title: 'DARKBG', background: { path: A + 'bg-dark-gesture.png' }, objects: [...footer(true), { placeholder: { options: { name: 'title', type: 'title', x: 0.75, y: 0.78, w: 11.8, h: 1.0, fontFace: H, fontSize: 28, bold: true, color: 'FFFFFF', valign: 'top', align: 'left', margin: 0, fit: 'shrink' }, text: '' } }], slideNumber: { x: 11.6, y: 6.81, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: MUTED_D, align: 'right' } })
 
-const T = (s, text, o) => s.addText(text, Object.assign({ isTextBox: true, fontFace: B, fontSize: 14, color: INK, margin: 0, valign: 'top' }, o))
+const fixq = (t) => typeof t === 'string' ? t.replace(/'/g, '\u2019') : Array.isArray(t) ? t.map((r) => (typeof r.text === 'string' ? Object.assign({}, r, { text: r.text.replace(/'/g, '\u2019') }) : r)) : t
+const T = (s, text, o) => s.addText(fixq(text), Object.assign({ isTextBox: true, fontFace: B, fontSize: 14, color: INK, margin: 0, valign: 'top' }, o))
 const arrow = (s, x, y, color = JADE) => s.addShape(pres.shapes.RIGHT_ARROW, { x, y, w: 0.3, h: 0.2, fill: { color }, line: { color, width: 0 } })
 const link = (s, x1, x2, y, color = JADE, pad = 0.14) => s.addShape(pres.shapes.LINE, { x: x1 + pad, y, w: x2 - x1 - 2 * pad, h: 0, line: { color, width: 1.5, endArrowType: 'triangle' } })
 const hair = (s, x, y, w, color = STONE) => s.addShape(pres.shapes.LINE, { x, y, w, h: 0, line: { color, width: 0.75 } })
 const vhair = (s, x, y, h, color = STONE) => s.addShape(pres.shapes.LINE, { x, y, w: 0, h, line: { color, width: 0.75 } })
+const dl = (s, x, y, h, color, d, text, o) => { dot(s, x, y + h / 2 - d / 2, color, d); T(s, text, Object.assign({ x: x + d + 0.13, y, h, valign: 'middle' }, o)) } // dot centred on its label line
 const dot = (s, x, y, color, d = 0.14) => s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color }, line: { color, width: 0 } })
 const head = (s, i, label, dark) => {
   T(s, [{ text: String(i).padStart(2, '0') + '   ', options: { bold: true, color: dark ? MINT : JADE } }, { text: label.toUpperCase(), options: { bold: true, color: dark ? MINT : TEAL } }], { x: 0.75, y: 0.42, w: 6, h: 0.26, fontFace: H, fontSize: 11, charSpacing: 2 })
@@ -68,25 +70,25 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 // ---- 2 Problem
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 1, 'Problem')
-  s.addText("Fraud now arrives with the right PIN, on the owner's phone", { placeholder: 'title' })
+  s.addText("Fraud now arrives with the right PIN, on the owner’s phone", { placeholder: 'title' })
   const lane = (y, tag, name, note, steps) => {
     T(s, tag, { x: 0.75, y, w: 0.5, h: 0.55, fontFace: H, fontSize: 30, bold: true, color: JADE })
-    T(s, [{ text: name + '\n', options: { bold: true, fontFace: H, fontSize: 14 } }, { text: note, options: { fontSize: 11, color: MUTED } }], { x: 1.3, y: y + 0.05, w: 1.7, h: 1.1 })
+    T(s, [{ text: name + '\n', options: { bold: true, fontFace: H, fontSize: 14 } }, { text: note, options: { fontSize: 11, color: MUTED } }], { x: 1.3, y: y + 0.05, w: 1.75, h: 1.1 })
     steps.forEach((t, i) => {
       const x = 3.2 + i * 2.05
       s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 1.75, h: 1.2, rectRadius: 0.1, fill: { color: 'FFFFFF' }, line: { color: STONE, width: 0.75 } })
       T(s, String(i + 1), { x: x + 0.15, y: y + 0.1, w: 0.3, h: 0.25, fontFace: H, fontSize: 11, bold: true, color: TEAL })
-      T(s, t, { x: x + 0.15, y: y + 0.38, w: 1.5, h: 0.75, fontSize: 12.5 })
-      link(s, x + 1.75, x + 2.05, y + 0.6, JADE, 0.04)
+      T(s, t, { x: x + 0.15, y: y + 0.4, w: 1.55, h: 0.7, fontSize: 12.5 })
+      if (i < 2) link(s, x + 1.75, x + 2.05, y + 0.6, JADE, 0.04)
     })
   }
-  lane(1.95, 'A', 'Remote-control malware', 'Families such as RemControl, ToxicPanda 2.0', ['A fake APK gets Accessibility access', 'It reads the screen and the OTP', 'It then taps the transfer itself'])
-  lane(3.55, 'B', 'Someone who knows the PIN', 'A relative, a colleague, a thief', ['Sees or guesses the PIN', 'Holds the unlocked phone', 'Confirms the transfer'])
+  lane(1.95, 'A', 'Remote-control malware', 'Abuses Accessibility,\ne.g. ToxicPanda 2.0', ['A fake APK gets\nscreen control', 'It reads the screen\nand the OTP', 'It then taps the\ntransfer itself'])
+  lane(3.55, 'B', 'Someone who knows the PIN', 'A relative,\na colleague, a thief', ['Sees or guesses\nthe PIN', 'Holds the\nunlocked phone', 'Confirms the\ntransfer'])
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 9.55, y: 1.95, w: 3.03, h: 2.8, rectRadius: 0.12, fill: { color: INK }, line: { color: INK, width: 0 } })
   T(s, "WHAT TODAY'S CHECKS SEE", { x: 9.8, y: 2.1, w: 2.6, h: 0.25, fontSize: 10, bold: true, charSpacing: 2, color: MINT })
-  ;['Device is trusted', 'PIN is correct', 'OTP was entered', 'Session is valid'].forEach((t, i) => { dot(s, 9.8, 2.5 + i * 0.4 + 0.07, JADE, 0.12); T(s, t, { x: 10.05, y: 2.5 + i * 0.4, w: 2.4, h: 0.3, fontSize: 13, color: 'FFFFFF' }) })
+  ;['Device is trusted', 'PIN is correct', 'OTP was entered', 'Session is valid'].forEach((t, i) => dl(s, 9.8, 2.5 + i * 0.4, 0.3, JADE, 0.12, t, { w: 2.4, fontSize: 13, color: 'FFFFFF' }))
   hair(s, 9.8, 4.15, 2.55, '2C4547')
-  dot(s, 9.8, 4.3 + 0.05, CORAL, 0.14); T(s, 'Money leaves', { x: 10.05, y: 4.27, w: 2.4, h: 0.3, fontFace: H, fontSize: 14, bold: true, color: 'FFFFFF' })
+  dl(s, 9.8, 4.27, 0.3, CORAL, 0.14, 'Money leaves', { w: 2.4, fontFace: H, fontSize: 14, bold: true, color: 'FFFFFF' })
   link(s, 8.95, 9.55, 2.55, JADE, 0.06); link(s, 8.95, 9.55, 4.15, JADE, 0.06)
   s.addShape(pres.shapes.RECTANGLE, { x: 0.75, y: 5.4, w: 11.83, h: 0.8, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   T(s, 'Every check passes. None of them asks who is touching the screen.', { x: 0.75, y: 5.4, w: 11.83, h: 0.8, fontFace: H, fontSize: 19, bold: true, color: INK, valign: 'middle', align: 'center' })
@@ -101,7 +103,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   const hold = { A: [48.0, 57.0, 59.0, 57.0, 53.0, 49.0], B: [83.0, 88.0, 81.0, 74.0, 51.0, 69.0] }, gap = { A: [202.0, 209.0, 174.0, 166.0, 208.0], B: [232.0, 273.0, 205.0, 253.0, 194.0] }
   const common = { barDir: 'col', chartColors: [TEAL, JADE], showLegend: false, showTitle: false, showValue: false, catAxisLabelFontFace: B, catAxisLabelFontSize: 11, catAxisLabelColor: INK, catAxisLineShow: false, valAxisLabelFontFace: B, valAxisLabelFontSize: 10, valAxisLabelColor: MUTED, valAxisLineShow: false, valGridLine: { color: STONE, size: 0.5 }, catGridLine: { style: 'none' }, barGapWidthPct: 40, valAxisMinVal: 0 }
   T(s, 'Same PIN 147258, two people, real recordings', { x: 0.75, y: 1.9, w: 7.0, h: 0.3, fontFace: H, fontSize: 14, bold: true })
-  ;[[TEAL, 'Person A', 0.75], [JADE, 'Person B', 2.0]].forEach(([c, t, x]) => { dot(s, x, 2.3 + 0.04, c, 0.13); T(s, t, { x: x + 0.2, y: 2.28, w: 1.0, h: 0.25, fontSize: 11, color: MUTED }) })
+  ;[[TEAL, 'Person A', 0.75], [JADE, 'Person B', 2.0]].forEach(([c, t, x]) => dl(s, x, 2.28, 0.25, c, 0.13, t, { w: 1.0, fontSize: 11, color: MUTED }))
   T(s, 'Time the finger stays on the key (ms)', { x: 0.75, y: 2.65, w: 3.4, h: 0.25, fontSize: 11, bold: true, color: TEAL })
   s.addChart(pres.charts.BAR, [{ name: 'Person A', labels: ['1', '4', '7', '2', '5', '8'], values: hold.A }, { name: 'Person B', labels: ['1', '4', '7', '2', '5', '8'], values: hold.B }], Object.assign({}, common, { x: 0.65, y: 2.9, w: 3.65, h: 2.5, valAxisMaxVal: 100, valAxisMajorUnit: 25 }))
   T(s, 'Time between taps (ms)', { x: 4.5, y: 2.65, w: 3.4, h: 0.25, fontSize: 11, bold: true, color: TEAL })
@@ -116,7 +118,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   })
   T(s, 'Unsure? A short typed phrase adds signal.', { x: 8.7, y: 5.2, w: 3.9, h: 0.3, fontSize: 11.5, italic: true, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.75, y: 5.75, w: 11.83, h: 0.62, rectRadius: 0.08, fill: { color: MIST }, line: { color: MIST, width: 0 } })
-  T(s, [{ text: 'One risk score, not four gates in a row. ', options: { bold: true } }, { text: 'Four gates at 95% each would block nearly 1 in 5 genuine owners (1 - 0.95^4).' }], { x: 0.75, y: 5.75, w: 11.83, h: 0.62, fontSize: 13, align: 'center', valign: 'middle' })
+  T(s, [{ text: 'One risk score, not four gates in a row. ', options: { bold: true } }, { text: 'Four gates at 95% each would block nearly 1 in 5 genuine owners (1 minus 0.95 to the power of 4).' }], { x: 0.75, y: 5.75, w: 11.83, h: 0.62, fontSize: 13, align: 'center', valign: 'middle' })
   src(s, 'Chart: two StrokePIN participants (Yao & Wang, IEEE TDSC 2026), 5 sitting entries each, pair at the 75th percentile of separation; different phones, illustrative. Zheng et al., ICNP 2014. Channels: Innate backend features.')
   s.addNotes('Same PIN, two people: the pattern of hold times and gaps is different and stable. Innate learns the owner pattern and checks it silently.')
 }
@@ -156,21 +158,22 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 4, 'What changes for the wallet')
   s.addText('Stolen credentials stop being enough, and the owner still sees nothing', { placeholder: 'title' })
-  const X = [0.75, 4.0, 7.9], W = [3.0, 3.6, 4.68]
-  ;[['Case', 0], ['Today: PIN + OTP + device checks', 1], ['With Innate underneath', 2]].forEach(([t, i]) => cap(s, t, X[i], 1.95, W[i]))
+  const X = [0.75, 4.15, 7.95], W = [3.25, 3.5, 4.63]
+  ;[['Case', 0], ['Today: PIN, OTP, device', 1], ['With Innate underneath', 2]].forEach(([t, i]) => cap(s, t, X[i], 1.95, W[i]))
   hair(s, 0.75, 2.3, 11.83, INK)
   const rows = [
-    ['Remote-control malware', 'taps the transfer by itself', 'Passes. The app, PIN and device are all the victim\'s.', CORAL, 'hold', 'Machine rhythm, exact key centers. Transfer paused, user alerted.'],
-    ['Someone who knows the PIN', 'a relative, a thief', 'Passes. The PIN is correct.', AMBER, 'step_up', 'Rhythm does not match the owner. Face or OTP before money moves.'],
-    ['The real owner', 'every normal transfer', 'Passes, no friction.', JADE, 'allow', 'Matches the habit. Nothing changes. If unsure: the usual step-up, never a block.'],
+    ['Remote-control malware', 'taps the transfer by itself', 'Passes. The app, PIN and device\nare all the victim\'s.', CORAL, 'hold', 'Machine rhythm, exact key centers.\nTransfer paused, user alerted.'],
+    ['Someone who knows the PIN', 'a relative, a thief', 'Passes. The PIN is correct.', AMBER, 'step_up', 'Rhythm does not match the owner.\nFace or OTP before money moves.'],
+    ['The real owner', 'every normal transfer', 'Passes, no friction.', JADE, 'allow', 'Matches the habit. Nothing changes.\nIf unsure: the usual step-up, never a block.'],
   ]
   rows.forEach(([c, cs, today, col, act, what], i) => {
     const y = 2.5 + i * 1.05
     if (i) hair(s, 0.75, y - 0.12, 11.83)
-    T(s, [{ text: c + '\n', options: { bold: true, fontFace: H, fontSize: 15 } }, { text: cs, options: { fontSize: 12, color: MUTED } }], { x: X[0], y, w: W[0], h: 0.85 })
-    T(s, today, { x: X[1], y, w: W[1], h: 0.85, fontSize: 13, color: MUTED })
-    dot(s, X[2], y + 0.07, col, 0.14)
-    T(s, [{ text: act + '\n', options: { bold: true, fontFace: H, fontSize: 15 } }, { text: what, options: { fontSize: 12.5 } }], { x: X[2] + 0.28, y, w: W[2] - 0.28, h: 0.95 })
+    T(s, c, { x: X[0], y, w: W[0], h: 0.3, fontFace: H, fontSize: 14, bold: true, valign: 'middle' })
+    T(s, cs, { x: X[0], y: y + 0.32, w: W[0], h: 0.3, fontSize: 12, color: MUTED })
+    T(s, today, { x: X[1], y: y + 0.03, w: W[1], h: 0.6, fontSize: 13, color: MUTED })
+    dl(s, X[2], y, 0.3, col, 0.14, act, { w: W[2] - 0.27, fontFace: H, fontSize: 14, bold: true })
+    T(s, what, { x: X[2] + 0.27, y: y + 0.32, w: W[2] - 0.27, h: 0.6, fontSize: 12.5 })
   })
   cap(s, 'How it plugs in', 0.75, 5.75, 3)
   const st = [['1', 'SDK on the PIN pad and transfer form'], ['2', 'One API call at the confirm step'], ['3', 'Map actions to your existing flows']]
@@ -188,7 +191,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 // ---- 6 Product (dark)
 {
   const s = pres.addSlide({ masterName: 'DARK' }); head(s, 5, 'Product', true)
-  s.addText('Working today: SDK, scoring API, demo wallet and ops dashboard', { placeholder: 'title' })
+  s.addText('Live today: SDK, API, demo wallet and ops dashboard', { placeholder: 'title' })
   const lx = 0.75, ly = 2.0, lw = 6.7, ih = (lw - 0.24) * 1103 / 2000
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: lx, y: ly, w: lw, h: ih + 0.24, rectRadius: 0.12, fill: { color: '0A1112' }, line: { color: '2C4547', width: 0.75 } })
   s.addImage({ path: A + 'innate-home.png', x: lx + 0.12, y: ly + 0.12, w: lw - 0.24, h: ih, altText: 'Innate website on a laptop' })
@@ -200,18 +203,18 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   const L = [['Guided story, 90 seconds', 'Owner allowed, malware held, PIN thief stepped up.'], ['Demo wallet', 'Enroll with PIN 159357, then play thief or malware.'], ['Scoring API and ops dashboard', 'Swagger for developers, labeled reasons for analysts.']]
   L.forEach(([h, d], i) => {
     const y = 3.9 + i * 0.85
-    dot(s, 8.2, y + 0.07, MINT, 0.12)
-    T(s, [{ text: h + '\n', options: { bold: true, color: 'FFFFFF', fontSize: 14 } }, { text: d, options: { color: MUTED_D, fontSize: 12 } }], { x: 8.45, y, w: 4.1, h: 0.75 })
+    dl(s, 8.2, y, 0.3, MINT, 0.12, h, { w: 4.1, fontSize: 14, bold: true, color: 'FFFFFF' })
+    T(s, d, { x: 8.45, y: y + 0.32, w: 4.1, h: 0.3, fontSize: 12, color: MUTED_D })
   })
   T(s, '55 automated tests  ·  4-tactic bot simulator + adb  ·  every figure reruns from research/', { x: 0.75, y: 6.3, w: 11, h: 0.3, fontSize: 11, color: MUTED_D })
-  src(s, 'Live product at innate.odylytics.com; tests: backend 43, bot simulator 8, phone input SDK 4; experiments E1 to E31 in research/EXPERIMENTS.md.', true)
+  src(s, 'Live product at innate.odylytics.com; tests: backend 43, bot simulator 8, phone input SDK 4; experiments E1 to E32 in research/EXPERIMENTS.md.', true)
   s.addNotes('Everything shown is live at the URL. Scan the QR to try it.')
 }
 
 // ---- 7 AI and research basis
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 6, 'AI and research basis')
-  s.addText('Three checks, one explainable decision, each grounded in published work', { placeholder: 'title' })
+  s.addText('Three checks, one explainable decision', { placeholder: 'title' })
   const cols = [['1', 'Human or bot?', 'Even rhythm, exact key centers,\ntext set directly, no touch.', 'Rules + LightGBM trained on\nreal people and simulated bots.', 'Touch-only bot detection reaches\nabout 60%, with motion 80 to 90%\n(BeCAPTCHA, EAAI 2021).'], ['2', 'The owner?', 'PIN hold times, gaps and tap offsets\nagainst 3 to 5 enrollment sessions.', 'Normalized distance, population\nshrinkage, LightGBM on deviations.', 'Scaled Manhattan: EER 9.6%, best\nof 14 detectors (Killourhy &\nMaxion, DSN 2009).'], ['3', 'A replay?', "A session nearly identical to\nthe account's own recent ones.", 'Distance to the 50 latest\nsessions of the account.', 'Template poisoning succeeds over\n70% with under 10 injections\n(Lovisotto, EuroS&P 2020).']]
   const CW = 11.83 / 3
   cols.forEach(([n, h, d, m, r], i) => {
@@ -241,9 +244,9 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addText('On 97 real people, the right outcome wins in every group', { placeholder: 'title' })
   const D = [
     ['Genuine owner\nsitting, n = 1,164', [76, 23, 1], '76%', 'passes silently', 'Walking instead of sitting: 49% allowed'],
-    ['PIN-knowing impostor\nn = 2,328', [22, 77, 1], '78%', 'stopped or asked', 'Rules only, no learned model: 89% allowed'],
+    ['PIN-knowing impostor\nn = 2,328', [22, 77, 1], '78%', 'held or asked', 'Rules only: 89% allowed'],
     ['Naive bots: even, noisy,\nreplay within 5%', [0, 0, 100], '100%', 'held', 'Replay within 10% also 100% held'],
-    ['Bot sampling the\nhuman population', [3, 65, 32], '97%', 'stopped or asked', 'The hardest naive bot'],
+    ['Bot sampling the\nhuman population', [3, 65, 32], '97%', 'held or asked', 'The hardest naive bot'],
   ]
   const W = 11.83 / 4
   D.forEach(([t, v, big, sub, note], i) => {
@@ -255,7 +258,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
     T(s, `allow ${v[0]}  ·  step_up ${v[1]}  ·  hold ${v[2]}`, { x, y: 4.9, w: W, h: 0.25, fontSize: 11, bold: true, align: 'center' })
     T(s, note, { x: x + 0.1, y: 5.2, w: W - 0.2, h: 0.4, fontSize: 11, color: MUTED, align: 'center' })
   })
-  ;[[JADE, 'allow'], [AMBER, 'step_up'], [CORAL, 'hold']].forEach(([c, t], i) => { const x = 5.35 + i * 1.2; dot(s, x, 5.93 + 0.05, c, 0.12); T(s, t, { x: x + 0.2, y: 5.93, w: 0.9, h: 0.25, fontSize: 11, color: MUTED }) })
+  ;[[JADE, 'allow', 5.29, 0.5], [AMBER, 'step_up', 6.32, 0.68], [CORAL, 'hold', 7.52, 0.45]].forEach(([c, t, x, w]) => dl(s, x, 5.9, 0.28, c, 0.12, t, { w, fontSize: 11, color: MUTED }))
   T(s, 'Share of sessions, %. Owner sessions that are asked for more get the wallet\'s usual face or OTP, never a block.', { x: 0.75, y: 6.25, w: 11.83, h: 0.3, fontSize: 12, color: MUTED, align: 'center' })
   src(s, 'Team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026, DOI 10.21227/thft-4721), 97 people, 5-fold CV by person, models retrained per fold; bots from the team simulator. Protocol after Georgiev et al., FETA, 2022.')
   s.addNotes('Doughnuts show the decision mix per group. Impostor: 22% pass with learned models, 89% with rules alone. Owner friction is a step-up, not a block.')
@@ -276,7 +279,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   T(s, 'So Innate steps up instead of blocking, and is one layer among several.', { x: 0.75, y: 5.95, w: 5.6, h: 0.4, fontSize: 12, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.85, y: 1.8, w: 5.73, h: 4.75, rectRadius: 0.12, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   cap(s, 'Next', 7.2, 2.0, 4)
-  const N = [['Real data', 'Consented volunteers and real bots, then retrain.'], ['Fine-tuned Transformer', 'TypeFormer on StrokePIN: EER 0.29 to 0.20 on 30 unseen\npeople. Planned for the API.'], ['Native SDK', 'Sees text set directly and device motion (a phone lying still while taps arrive).']]
+  const N = [['Real data', 'Consented volunteers and real bots,\nthen retrain and recalibrate.'], ['Fine-tuned Transformer', 'TypeFormer on StrokePIN: EER 0.29 to 0.20 on 30 unseen\npeople. Planned for the API.'], ['Native SDK', 'Sees text set directly and device motion\n(a phone lying still while taps arrive).']]
   N.forEach(([h, d], i) => {
     const y = 2.4 + i * 0.78
     T(s, [{ text: h + '\n', options: { bold: true, fontSize: 13 } }, { text: d, options: { fontSize: 11.5, color: '2F4A4C' } }], { x: 7.2, y, w: 5.1, h: 0.75 })
