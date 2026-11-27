@@ -1,11 +1,11 @@
-"""E11: bài người/máy trên Ô VĂN BẢN TỰ DO (ghi chú chuyển khoản) với NGƯỜI THẬT (Aalto) và bot sinh.
+"""E11: human/bot task on a FREE-TEXT FIELD (transfer note) with REAL HUMANS (Aalto) and generated bots.
 
-Người = nhịp gõ thật của 2.263 người (Aalto typing37k; chỉ thời gian, loại sự kiện, lớp ký tự; KHÔNG nội dung), chia theo người.
-Bot = 4 chiến thuật trong attacker/nhip_attacker/fields.py, CHỈ ô `note` (Aalto không có ô số tiền/người nhận):
-  1 đặt thẳng văn bản (ACTION_SET_TEXT)   2 gõ đều qua công cụ tự động   3 phát lại nhịp một người thật (±5%)   4 lấy mẫu từ dân số
-Đặc trưng: (a) các `fld_*` hiện có trong backend/bot_features.py; (b) "mở rộng" = (a) + vài thống kê nhịp tính ngay trong thí nghiệm,
-để biết bộ đặc trưng của backend thiếu gì. Đánh giá: ngưỡng FRR 5% trên người ở tập validation; tất cả chiến thuật / bỏ một chiến thuật.
-Hạn chế: bot vẫn là giả; một ô duy nhất; người gõ câu mẫu tiếng Anh trên điện thoại, không phải nội dung chuyển khoản tiếng Việt.
+Humans = real typing rhythm of 2,263 people (Aalto typing37k; only timing, event type, character class; NO content), split by person.
+Bots = 4 tactics in attacker/nhip_attacker/fields.py, ONLY the `note` field (Aalto has no amount/recipient fields):
+  1 set text directly (ACTION_SET_TEXT)   2 even typing via an automation tool   3 replay the rhythm of a real person (±5%)   4 sample from the population
+Features: (a) the existing `fld_*` in backend/bot_features.py; (b) "extended" = (a) + a few rhythm statistics computed inside the experiment,
+to learn what the backend feature set is missing. Evaluation: FRR 5% threshold on humans in the validation set; all tactics / drop one tactic.
+Limitations: the bots are still synthetic; a single field; people typed English sample sentences on a phone, not Vietnamese transfer-note content.
 """
 
 import json
@@ -94,10 +94,10 @@ def metrics(sc, thr, hum, bots):
 def evaluate(seed):
     H, B = build(seed)
     res = {}
-    for ext, tag in ((False, "backend (fld_*)"), (True, "mở rộng")):
+    for ext, tag in ((False, "backend (fld_*)"), (True, "extended")):
         F = {("H", k): vec(H[k], ext) for k in ("train", "val", "test")}
         F.update({(t, k): vec(B[t][k], ext) for t in TACTICS for k in ("train", "val", "test")})
-        for scen, held in [("tất cả", None)] + [(f"bỏ CT{t}", t) for t in TACTICS]:
+        for scen, held in [("all", None)] + [(f"drop T{t}", t) for t in TACTICS]:
             tr = [t for t in TACTICS if t != held]
             m = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05, num_leaves=7, min_child_samples=20, subsample=0.8,
                                    subsample_freq=1, colsample_bytree=0.8, random_state=seed, verbose=-1)
@@ -108,12 +108,12 @@ def evaluate(seed):
             for name, sc in ((f"LightGBM, {tag}", lambda X, m=m: m.predict_proba(X)[:, 1]),
                              (f"IsolationForest, {tag}", lambda X, iso=iso: iso.score_samples(np.nan_to_num(X, nan=-1)))):
                 res[(name, scen)] = metrics(sc, np.quantile(sc(F[("H", "val")]), FRR), F[("H", "test")], test_b)
-    # luật hiện tại của backend trên chính các phiên này (ô số tiền mới bị coi là máy; ô ghi chú chỉ trừ nhẹ)
+    # current backend rules on these very sessions (a new amount field is treated as a bot; the note field only gets a mild deduction)
     rs = lambda S: np.array([human.score(features.extract(s))[0] for s in S])  # noqa: E731
     row = {"FRR": float((rs(H["test"]) < 0.5).mean())}
     for t in TACTICS:
         row[t] = (float((rs(B[t]["test"]) < 0.5).mean()), float("nan"))
-    res[("Luật hiện tại của backend (cờ khi điểm < 0,5)", "không huấn luyện")] = row
+    res[("Current backend rules (flag when score < 0.5)", "no training")] = row
     return res
 
 
@@ -125,20 +125,20 @@ def cell(r, t):
     return f"{np.mean([x[t][0] for x in r]):.2f}" + ("" if np.isnan(np.mean([x[t][1] for x in r])) else f" ({np.mean([x[t][1] for x in r]):.2f})")
 
 
-L = ["# E11 — bài người/máy trên ô văn bản tự do (người thật Aalto + bot sinh)", "",
-     f"{len(SEEDS)} cách chia người. Người: {len(H_ALL)} câu gõ thật của {len(PEOPLE)} người, chia theo người (kho kẻ tấn công 200 / train 1200 / val 300 / test còn lại). "
-     f"Ngưỡng FRR {FRR:.0%} trên người ở tập validation. Mỗi ô: **tỷ lệ bot bị bắt** (AUC). Chỉ ô `note`. Bot vẫn là giả.", "",
-     "## Huấn luyện thấy cả 4 chiến thuật", "", "| Mô hình | FRR thật | CT1 đặt thẳng văn bản | CT2 gõ đều | CT3 phát lại | CT4 lấy mẫu dân số |", "|---|---|---|---|---|---|"]
+L = ["# E11 — human/bot task on a free-text field (real Aalto humans + generated bots)", "",
+     f"{len(SEEDS)} different splits of people. Humans: {len(H_ALL)} real typed sentences from {len(PEOPLE)} people, split by person (attacker pool 200 / train 1200 / val 300 / test the rest). "
+     f"FRR {FRR:.0%} threshold on humans in the validation set. Each cell: **share of bots caught** (AUC). Only the `note` field. The bots are still synthetic.", "",
+     "## Training saw all 4 tactics", "", "| Model | Actual FRR | T1 set text directly | T2 even typing | T3 replay | T4 population sampling |", "|---|---|---|---|---|---|"]
 for k in keys:
-    if k[1] not in ("tất cả", "không huấn luyện"):
+    if k[1] not in ("all", "no training"):
         continue
     r = [x[k] for x in all_res]
     L.append(f"| {k[0]} | {np.mean([x['FRR'] for x in r]):.3f} | " + " | ".join(cell(r, t) for t in TACTICS) + " |")
-L += ["", "## Bỏ đúng một chiến thuật khỏi huấn luyện (bot lạ)", "", "| Mô hình | FRR thật | Bỏ CT1 | Bỏ CT2 | Bỏ CT3 | Bỏ CT4 |", "|---|---|---|---|---|---|"]
-for name in dict.fromkeys(k[0] for k in keys if k[1].startswith("bỏ")):
+L += ["", "## Drop exactly one tactic from training (unseen bots)", "", "| Model | Actual FRR | Drop T1 | Drop T2 | Drop T3 | Drop T4 |", "|---|---|---|---|---|---|"]
+for name in dict.fromkeys(k[0] for k in keys if k[1].startswith("drop")):
     cells, frr = [], []
     for t in TACTICS:
-        r = [x[(name, f"bỏ CT{t}")] for x in all_res]
+        r = [x[(name, f"drop T{t}")] for x in all_res]
         cells.append(cell(r, t))
         frr += [x["FRR"] for x in r]
     L.append(f"| {name} | {np.mean(frr):.3f} | " + " | ".join(cells) + " |")

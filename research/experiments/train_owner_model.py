@@ -1,7 +1,7 @@
-"""Huấn luyện mô hình xác minh chủ (LightGBM trên |z|) cho backend, từ StrokePIN (người thật), KHÔNG dùng kích thước chạm.
+"""Train the owner verification model (LightGBM on |z|) for the backend, from StrokePIN (real people), WITHOUT touch size.
 
-Chia theo người: 70 huấn luyện / còn lại validation (chọn ngưỡng FRR 5% trên lượt chủ cùng tư thế). Prior dân số chỉ từ người huấn luyện.
-Mô hình TẠM THỜI: dữ liệu công khai, PIN 6 số do người nghiên cứu giao, một đợt thu; thay bằng dữ liệu của đội.
+Split by person: 70 training / the rest validation (FRR 5% threshold chosen on owner sessions in the same posture). The population prior comes only from the training people.
+TEMPORARY model: public data, 6-digit PINs assigned by the researchers, a single collection round; replace with the team's data.
 Ra: backend/app/models/owner_lgbm.txt + owner_lgbm.json.
 """
 
@@ -20,7 +20,7 @@ from app.scoring import features, owner  # noqa: E402
 import strokepin_loader  # noqa: E402
 
 K, N_DRAW, N_IMP, SEED, FRR = 3, 5, 15, 21, 0.05
-EXCL = {"tap_w_mean", "tap_h_mean"}  # mang thông tin thiết bị
+EXCL = {"tap_w_mean", "tap_h_mean"}  # carries device information
 S = strokepin_loader.load()
 for e in S:
     e["f"] = features.extract(e["session"])
@@ -66,7 +66,7 @@ m = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05, num_leaves=7, min_c
                        subsample_freq=1, colsample_bytree=0.8, random_state=SEED, verbose=-1).fit(Xtr, ytr)
 p = m.predict_proba(Xva)[:, 1]
 sit_gen = p[(yva == 0) & (pva == "sit")]
-thr = float(np.quantile(sit_gen, 1 - FRR))  # p_kẻ_gian cao hơn ngưỡng này => nghi; 5% lượt chủ cùng tư thế bị nghi
+thr = float(np.quantile(sit_gen, 1 - FRR))  # p_impostor above this threshold => suspicious; 5% of same-posture owner sessions are flagged
 rep = {"threshold": thr}
 for post in ("sit", "walk"):
     mk = pva == post
@@ -76,7 +76,7 @@ out = ROOT / "backend/app/models"
 out.mkdir(exist_ok=True)
 m.booster_.save_model(str(out / "owner_lgbm.txt"))
 meta = {"features": keys, "threshold": thr, "target_frr": FRR, "seed": SEED,
-        "trained_on": "StrokePIN (người thật, CC BY-NC-SA 4.0), PIN 6 số, KHÔNG dùng kích thước chạm; chia theo người",
-        "status": "TẠM THỜI: dữ liệu công khai, chưa phải dữ liệu của đội; thiết bị khác nhau giữa người", "heldout_report": rep}
+        "trained_on": "StrokePIN (real people, CC BY-NC-SA 4.0), 6-digit PIN, WITHOUT touch size; split by person",
+        "status": "TEMPORARY: public data, not the team's data; devices differ between people", "heldout_report": rep}
 (out / "owner_lgbm.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-print(json.dumps(rep, indent=2), "| số đặc trưng:", len(keys))
+print(json.dumps(rep, indent=2), "| number of features:", len(keys))

@@ -1,9 +1,9 @@
-"""E19: kiểm đặc trưng VUỐT của backend trên người thật (Touchalytics, 41 người, điện thoại Android, data.zip).
+"""E19: checks the backend SWIPE features on real people (Touchalytics, 41 people, Android phones, data.zip).
 
-(a) Luật bot "vuốt thẳng tuyệt đối" (human.py: swipe_straight_max > 0.999): tỉ lệ người thật bị gắn cờ nhầm, và bot `_straight_swipe` của attacker có bị bắt không.
-(b) Xác minh chủ bằng vuốt (owner.py nguyên bản): đăng ký bằng phiên ngày 1 (doc 1-5), thử ở doc 6-7 (7-14 ngày sau); kẻ gian = người khác CÙNG điện thoại.
-Phiên giả lập = 3 nét liên tiếp cùng tài liệu. Chỉ vuốt có dịch chuyển (định nghĩa của bộ dữ liệu). Không có bot thật: bot là bộ sinh của đội. Pixel khác nhau theo điện thoại nên so trong cùng điện thoại.
-Dùng: python research/experiments/e19_touchalytics.py
+(a) The "perfectly straight swipe" bot rule (human.py: swipe_straight_max > 0.999): the share of real people wrongly flagged, and whether the attacker's `_straight_swipe` bot is caught.
+(b) Owner verification by swiping (original owner.py): enroll with day-1 sessions (doc 1-5), test on doc 6-7 (7-14 days later); impostor = another person on the SAME phone.
+Simulated session = 3 consecutive strokes of the same document. Only swipes with displacement (the dataset's definition). No real bots: the bot is the team's generator. Pixels differ by phone, so comparisons are within the same phone.
+Usage: python research/experiments/e19_touchalytics.py
 """
 import csv
 import random
@@ -34,17 +34,17 @@ for r in csv.reader(open(ROOT / "research/data/touchalytics/data/data.csv")):
             if len(p) >= 3 and (p[0]["x"], p[0]["y"]) != (p[-1]["x"], p[-1]["y"]):
                 t0 = p[0]["t"]
                 strokes[(ph, u, d)].append([{"t": q["t"] - t0, "x": q["x"], "y": q["y"]} for q in p])
-print(f"nét vuốt: {sum(map(len, strokes.values()))}, người: {len({k[:2] for k in strokes})}")
+print(f"swipe strokes: {sum(map(len, strokes.values()))}, people: {len({k[:2] for k in strokes})}")
 
-# (a) luật thẳng tuyệt đối
+# (a) absolute straightness rule
 st = [features._swipe_stats(p) for v in strokes.values() for p in v]
 straight = np.array([s[2] for s in st])
-print(f"\n(a) độ thẳng nét người thật: trung vị {np.median(straight):.3f}, p99 {np.percentile(straight, 99):.4f}, tỉ lệ > 0.999: {np.mean(straight > 0.999):.4%}")
+print(f"\n(a) straightness of real-person strokes: median {np.median(straight):.3f}, p99 {np.percentile(straight, 99):.4f}, share > 0.999: {np.mean(straight > 0.999):.4%}")
 sess = [max(features._swipe_stats(p)[2] for p in v[i : i + 3]) for v in strokes.values() for i in range(0, len(v) - 2, 3)]
-print(f"    phiên 3 nét có max-thẳng > 0.999 (luật gắn cờ): {np.mean(np.array(sess) > 0.999):.4%} của {len(sess)} phiên")
+print(f"    3-stroke sessions with max-straightness > 0.999 (flagged by the rule): {np.mean(np.array(sess) > 0.999):.4%} of {len(sess)} sessions")
 bot = [features._swipe_stats(tactics._straight_swipe(rng, j)["points"])[2] for j in (False, True) for _ in range(200)]
-print(f"    bot vuốt thẳng của attacker: thẳng min {min(bot):.4f} -> bị luật bắt {np.mean(np.array(bot) > 0.999):.0%}")
-# bot khôn hơn: thêm nhiễu ngang 2 px, vẫn thẳng ~0.999+? đo độ thẳng khi nhiễu ngang tăng
+print(f"    attacker straight-swipe bot: min straightness {min(bot):.4f} -> caught by the rule {np.mean(np.array(bot) > 0.999):.0%}")
+# smarter bot: add 2 px lateral noise, still ~0.999+ straight? measure straightness as lateral noise grows
 for noise in (0, 1, 2, 5, 10):
     s = []
     for _ in range(200):
@@ -52,15 +52,15 @@ for noise in (0, 1, 2, 5, 10):
         for q in pts:
             q["x"] += rng.gauss(0, noise)
         s.append(features._swipe_stats(pts)[2])
-    print(f"    bot + nhiễu ngang σ={noise:>2}px: bị luật bắt {np.mean(np.array(s) > 0.999):.0%}, thẳng trung vị {np.median(s):.4f}")
+    print(f"    bot + lateral noise σ={noise:>2}px: caught by the rule {np.mean(np.array(s) > 0.999):.0%}, median straightness {np.median(s):.4f}")
 
-# (a2) lỗi của luật theo số điểm của nét: nét ít điểm thì "thẳng" gần như tự nhiên
+# (a2) rule errors by number of points in the stroke: strokes with few points are "straight" almost naturally
 lens = np.array([len(p) for v in strokes.values() for p in v])
 for lo, hi in ((3, 5), (6, 9), (10, 19), (20, 10**6)):
     m = (lens >= lo) & (lens <= hi)
-    print(f"    nét {lo}-{hi if hi < 10**6 else '+'} điểm: {m.sum():>6} nét, tỉ lệ thẳng > 0.999 = {np.mean(straight[m] > 0.999):.2%}")
+    print(f"    strokes {lo}-{hi if hi < 10**6 else '+'} points: {m.sum():>6} strokes, share straight > 0.999 = {np.mean(straight[m] > 0.999):.2%}")
 
-# (b) xác minh chủ bằng vuốt
+# (b) owner verification by swiping
 def chunks(p, v):
     return [{f"swipe_{n}_mean": fmean(features._swipe_stats(q)[j] for q in v[i : i + 3]) for j, n in enumerate(["dur", "len", "straight", "v_mean", "v_peak"])}
             for i in range(0, len(v) - 2, 3)]
@@ -85,23 +85,23 @@ def run(enr_docs, tst_docs, keys=None):
 
 def report(name, res):
     if not res:
-        print(f"    {name}: không đủ người")
+        print(f"    {name}: not enough people")
         return
     gen = np.concatenate([g for g, _ in res]); imp = np.concatenate([i for _, i in res])
     far = np.mean(imp >= np.percentile(gen, 5))  # FRR 5%
     auc = np.mean([np.mean([(a > b) + 0.5 * (a == b) for a in g for b in i]) for g, i in res])
-    print(f"    {name}: {len(res)} người, FAR@FRR5% = {far:.3f}, AUC = {auc:.3f}")
+    print(f"    {name}: {len(res)} people, FAR@FRR5% = {far:.3f}, AUC = {auc:.3f}")
 
 
-print("\n(b) xác minh chủ bằng vuốt (đặc trưng backend: dur, len, straight, v_mean, v_peak)")
-report("đăng ký doc1-5, thử doc6-7 (7-14 ngày sau, khác loại tác vụ)", run(range(1, 6), (6, 7)))
-report("cùng tác vụ đọc: đăng ký doc1-3, thử doc6", run((1, 2, 3), (6,)))
-report("cùng tác vụ ảnh: đăng ký doc4-5, thử doc7", run((4, 5), (7,)))
-report("cùng ngày, cùng tác vụ: đăng ký doc1-2, thử doc3", run((1, 2), (3,)))
-report("chỉ v_peak + v_mean", run(range(1, 6), (6, 7), {"swipe_v_peak_mean", "swipe_v_mean_mean"}))
+print("\n(b) owner verification by swiping (backend features: dur, len, straight, v_mean, v_peak)")
+report("enroll doc1-5, test doc6-7 (7-14 days later, different task type)", run(range(1, 6), (6, 7)))
+report("same reading task: enroll doc1-3, test doc6", run((1, 2, 3), (6,)))
+report("same image task: enroll doc4-5, test doc7", run((4, 5), (7,)))
+report("same day, same task: enroll doc1-2, test doc3", run((1, 2), (3,)))
+report("v_peak + v_mean only", run(range(1, 6), (6, 7), {"swipe_v_peak_mean", "swipe_v_mean_mean"}))
 
 
-# (c) sửa luật: thẳng tuyệt đối VÀ vận tốc đều. Đo trên người thật và trên bot (có/không nhiễu thời gian)
+# (c) fix the rule: absolutely straight AND uniform velocity. Measured on real people and on bots (with/without timing noise)
 def vcv(p):
     sp = [np.hypot(b["x"] - a["x"], b["y"] - a["y"]) / (b["t"] - a["t"]) for a, b in zip(p, p[1:]) if b["t"] > a["t"]]
     return float(np.std(sp) / np.mean(sp)) if len(sp) >= 2 and np.mean(sp) > 0 else 1.0
@@ -109,13 +109,13 @@ def vcv(p):
 
 allp = [p for v in strokes.values() for p in v]
 cv = np.array([vcv(p) for p in allp])
-print("\n(c) luật mới: thẳng > 0.999 VÀ độ biến thiên vận tốc < ngưỡng (người thật có nét thẳng nhưng vận tốc không đều)")
+print("\n(c) new rule: straight > 0.999 AND velocity variation < threshold (real people have straight strokes but non-uniform velocity)")
 bots = {j: [tactics._straight_swipe(rng, j)["points"] for _ in range(300)] for j in (False, True)}
 for thr in (0.05, 0.1, 0.2, 0.3):
     hum = np.mean((straight > 0.999) & (cv < thr))
     b = {j: np.mean([features._swipe_stats(p)[2] > 0.999 and vcv(p) < thr for p in bots[j]]) for j in bots}
-    print(f"    cv<{thr}: người thật bị gắn cờ {hum:.2%} nét | bot đều {b[False]:.0%}, bot nhiễu thời gian ±6ms {b[True]:.0%}")
+    print(f"    cv<{thr}: real people flagged {hum:.2%} of strokes | uniform bot {b[False]:.0%}, bot with ±6ms timing noise {b[True]:.0%}")
 
 m6 = lens >= 6
-print("    chỉ riêng độ đều vận tốc (nét >= 6 điểm), tỉ lệ người thật: " + ", ".join(f"cv<{t}: {np.mean(cv[m6] < t):.2%}" for t in (0.1, 0.2, 0.3)))
-print("    nét >= 3 điểm: " + ", ".join(f"cv<{t}: {np.mean(cv < t):.3%}" for t in (0.1, 0.2, 0.3)) + f" (n={len(cv)}); bot nhiễu thời gian lệch cv trung vị {np.median([vcv(p) for p in bots[True]]):.2f}")
+print("    velocity uniformity alone (strokes >= 6 points), share of real people: " + ", ".join(f"cv<{t}: {np.mean(cv[m6] < t):.2%}" for t in (0.1, 0.2, 0.3)))
+print("    strokes >= 3 points: " + ", ".join(f"cv<{t}: {np.mean(cv < t):.3%}" for t in (0.1, 0.2, 0.3)) + f" (n={len(cv)}); bot with timing noise has median cv {np.median([vcv(p) for p in bots[True]]):.2f}")

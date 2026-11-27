@@ -1,7 +1,7 @@
-"""Dùng chung cho fine-tune TypeFormer trên StrokePIN: nạp mô hình (vá CUDA cứng), dựng đặc trưng, đánh giá kiểu E9.
+"""Shared code for fine-tuning TypeFormer on StrokePIN: load the model (patch the hard-coded CUDA), build features, E9-style evaluation.
 
-Đặc trưng mỗi phím đúng như TypeFormer/Aalto: [hold, press-press, release-release, release(prev)-press, mã phím/255]
-(thời gian đổi ra giây), đệm 0 tới 50 phím. PIN 6 số = 6 hàng thật + 44 hàng đệm.
+Per-key features exactly as in TypeFormer/Aalto: [hold, press-press, release-release, release(prev)-press, key code/255]
+(times converted to seconds), padded with 0 to 50 keys. A 6-digit PIN = 6 real rows + 44 padding rows.
 """
 
 import random
@@ -20,13 +20,13 @@ sys.path[:0] = [str(HERE.parent / "experiments")]
 SEQ, DIM = 50, 5
 
 
-class Cfg:  # = utils/train_config.py của TypeFormer
+class Cfg:  # = TypeFormer's utils/train_config.py
     sequence_length, dimensionality, output_dim = SEQ, DIM, 64
     K, hlayers, hlayers_rec, hlayers_pos, hheads, vlayers, vheads = 20, 9, 2, 1, 10, 1, 5
 
 
 def build_model(device, pretrained=True):
-    """TypeFormer (HARTrans) float32. Mã gốc gắn cứng .to('cuda'): vá trên bản sao ở finetune/_tf (external/ không đụng)."""
+    """TypeFormer (HARTrans) float32. The original code hard-codes .to('cuda'): patched on a copy in finetune/_tf (external/ is untouched)."""
     import torch
 
     patched = HERE / "_tf"
@@ -90,7 +90,7 @@ def embed(model, X, device, bs=256):
 
 
 def eer_far(gen, imp, frr=0.05):
-    """Khoảng cách thấp = giống chủ. Trả (EER, FAR@FRR=frr)."""
+    """Low distance = similar to the owner. Returns (EER, FAR@FRR=frr)."""
     gen, imp = np.asarray(gen), np.asarray(imp)
     ths = np.sort(np.unique(np.concatenate([gen, imp])))
     frrs = np.array([(gen > t).mean() for t in ths]); fars = np.array([(imp <= t).mean() for t in ths])
@@ -100,8 +100,8 @@ def eer_far(gen, imp, frr=0.05):
 
 
 def evaluate(model, S, users, device, ks=(3,), n_draw=5, n_imp=20, seed=0):
-    """Kiểu E9: mỗi (người, PIN) đăng ký k lượt NGỒI; chủ kiểm thử cùng tư thế (ngồi) hoặc đổi tư thế (đi);
-    kẻ gian BIẾT PIN = người khác nhập cùng PIN, cùng tư thế. Điểm = khoảng cách Euclid trung bình tới embedding đăng ký."""
+    """E9 style: each (person, PIN) enrolls k SITTING sessions; the owner is tested in the same posture (sitting) or a changed posture (walking);
+    the PIN-knowing impostor = another person entering the same PIN, same posture. Score = mean Euclidean distance to the enrollment embeddings."""
     rng = random.Random(seed)
     uset = set(users)
     E = embed(model, [e["x"] for e in S], device)

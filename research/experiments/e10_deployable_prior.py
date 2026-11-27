@@ -1,12 +1,12 @@
-"""E10: co rút về dân số DÙNG ĐƯỢC KHI TRIỂN KHAI (StrokePIN, người thật).
+"""E10: DEPLOYABLE shrinkage toward the population (StrokePIN, real humans).
 
-E9 dùng prior riêng theo (PIN, tư thế): chạy thật thì không biết trước PIN của người dùng. Ở đây so:
-  backend           : owner.py hiện tại (sd có sàn)
-  E2 theo PIN       : prior phương sai trong-người của CÙNG PIN và tư thế (cận trên, không triển khai được)
-  E2 chung          : prior trung bình trên MỌI PIN và cả hai tư thế của những người KHÁC (triển khai được)
-  E2 chung + sàn    : như trên nhưng sd không thấp hơn sàn của owner.py
-nu = trọng số của prior (số "mẫu ảo"). Chỉ dùng thời gian và lệch tâm (không kích thước chạm: đơn vị phụ thuộc thiết bị,
-và web có thể chỉ trả 1). Đăng ký k=3 lượt ngồi; kiểm thử cùng tư thế và đổi sang đi; kẻ gian biết PIN.
+E9 uses a prior specific to (PIN, posture): in real operation the user's PIN is not known in advance. Here we compare:
+  backend           : current owner.py (sd with floor)
+  E2 per PIN        : within-person variance prior of the SAME PIN and posture (upper bound, not deployable)
+  E2 pooled         : prior averaged over ALL PINs and both postures of OTHER people (deployable)
+  E2 pooled + floor : as above but sd is not below the owner.py floor
+nu = weight of the prior (number of "virtual samples"). Only timing and center offset are used (no touch size: its unit depends on the device,
+and the web may only return 1). Enrollment on k=3 sitting sessions; test on same posture and on changed posture (walking); PIN-knowing impostor.
 """
 
 import random
@@ -23,8 +23,8 @@ import strokepin_loader  # noqa: E402
 
 K, SEED, N_DRAW, N_IMP, BOOT = 3, 0, 5, 20, 100
 SETS = {
-    "thời gian": lambda k: k.startswith(("pin_hold_", "pin_flight_")) or k == "pin_total",
-    "thời gian + lệch tâm": lambda k: k.startswith(("pin_hold_", "pin_flight_", "pin_dx_", "pin_dy_")) or k == "pin_total",
+    "timing": lambda k: k.startswith(("pin_hold_", "pin_flight_")) or k == "pin_total",
+    "timing + center offset": lambda k: k.startswith(("pin_hold_", "pin_flight_", "pin_dx_", "pin_dy_")) or k == "pin_total",
 }
 rng = random.Random(SEED)
 S = strokepin_loader.load()
@@ -41,7 +41,7 @@ by_pin_post = defaultdict(lambda: defaultdict(list))
 for (u, p, po), es in grp.items():
     by_pin_post[(p, po)][u] += es
 
-# phương sai trong-người theo (người, PIN, tư thế); prior chung = trung bình trên người KHÁC
+# within-person variance by (person, PIN, posture); pooled prior = average over OTHER people
 wv = {n: {g: np.var(np.array([e["v"][n] for e in es]), axis=0, ddof=1) for g, es in grp.items() if len(es) >= 2} for n in SETS}
 tot = {n: sum(wv[n].values()) for n in SETS}
 cnt = {n: len(wv[n]) for n in SETS}
@@ -75,14 +75,14 @@ def detectors(n, X, pv_pin, pv_pool):
         return lambda x: (np.abs(x - mu) / sd).mean(-1)
     sd_backend = np.maximum(X.std(0, ddof=1), floor)
     is_off = np.array([a.startswith(("pin_dx_", "pin_dy_")) for a in keys])
-    return {"backend (sd có sàn)": lambda x: (np.abs(x - mu) / sd_backend).mean(-1),
-            "E2 theo PIN, nu=5 (cận trên)": eb(pv_pin, 5, False),
-            "E2 chung, nu=5": eb(pv_pool, 5, False),
-            "E2 chung, nu=10": eb(pv_pool, 10, False),
-            "E2 chung + sàn, nu=5": eb(pv_pool, 5, True),
-            "E2 chung + sàn, nu=10": eb(pv_pool, 10, True),
-            # lai: co rút CHỈ cho thời gian, giữ sd có sàn cho lệch tâm (độ dao động lệch tâm khác nhau quá nhiều giữa người/thiết bị)
-            **{f"LAI nu={nu}: E2 chung cho thời gian + sd có sàn cho lệch tâm": (lambda x, sd=np.where(is_off, sd_backend, np.sqrt(((k - 1) * s2 + nu * pv_pool) / (k - 1 + nu))): (np.abs(x - mu) / sd).mean(-1)) for nu in (3, 5, 10)}}
+    return {"backend (sd with floor)": lambda x: (np.abs(x - mu) / sd_backend).mean(-1),
+            "E2 per PIN, nu=5 (upper bound)": eb(pv_pin, 5, False),
+            "E2 pooled, nu=5": eb(pv_pool, 5, False),
+            "E2 pooled, nu=10": eb(pv_pool, 10, False),
+            "E2 pooled + floor, nu=5": eb(pv_pool, 5, True),
+            "E2 pooled + floor, nu=10": eb(pv_pool, 10, True),
+            # hybrid: shrink ONLY timing, keep sd with floor for center offset (center-offset variability differs too much between people/devices)
+            **{f"HYBRID nu={nu}: E2 pooled for timing + sd with floor for center offset": (lambda x, sd=np.where(is_off, sd_backend, np.sqrt(((k - 1) * s2 + nu * pv_pool) / (k - 1 + nu))): (np.abs(x - mu) / sd).mean(-1)) for nu in (3, 5, 10)}}
 
 
 scores = defaultdict(lambda: defaultdict(lambda: ([], [])))
@@ -91,10 +91,10 @@ for (u, p, po), es in grp.items():
         continue
     for _ in range(N_DRAW):
         enr = rng.sample(es, K)
-        for tpost, gen_es in (("cùng tư thế (ngồi)", [e for e in es if e not in enr]), ("đổi tư thế (đi)", grp.get((u, p, "walk"), []))):
+        for tpost, gen_es in (("same posture (sitting)", [e for e in es if e not in enr]), ("changed posture (walking)", grp.get((u, p, "walk"), []))):
             if not gen_es:
                 continue
-            pool = [e for v, ves in by_pin_post[(p, "sit" if tpost.startswith("cùng") else "walk")].items() if v != u for e in ves]
+            pool = [e for v, ves in by_pin_post[(p, "sit" if tpost.startswith("same") else "walk")].items() if v != u for e in ves]
             imp = rng.sample(pool, min(N_IMP, len(pool)))
             for n in SETS:
                 X = np.array([e["v"][n] for e in enr])
@@ -117,13 +117,13 @@ def pooled(pu, us):
     return np.concatenate([pu[u][0] for u in us]), np.concatenate([pu[u][1] for u in us])
 
 
-lines = ["# E10 — co rút về dân số dùng được khi triển khai (StrokePIN, người thật)", "",
-         f"Đăng ký k={K} lượt ngồi; kẻ gian biết PIN; điểm gộp mọi cặp (người, PIN); CI 95% bootstrap theo người ({BOOT} lần). "
-         "Cột dEER, dFAR là **chênh lệch ghép cặp so với backend hiện tại** (âm = tốt hơn). Không dùng kích thước chạm.", ""]
-for tpost in ("cùng tư thế (ngồi)", "đổi tư thế (đi)"):
+lines = ["# E10 — deployable shrinkage toward the population (StrokePIN, real humans)", "",
+         f"Enrollment on k={K} sitting sessions; PIN-knowing impostor; scores pooled over all (person, PIN) pairs; 95% CI by bootstrap over people ({BOOT} resamples). "
+         "The dEER and dFAR columns are the **paired difference versus the current backend** (negative = better). Touch size is not used.", ""]
+for tpost in ("same posture (sitting)", "changed posture (walking)"):
     for n in SETS:
-        lines += [f"## {tpost}, bộ đặc trưng: {n}", "", "| Bộ phát hiện | EER | FAR @ FRR 5% | dEER so với backend | dFAR so với backend |", "|---|---|---|---|---|"]
-        base = scores[(tpost, n, "backend (sd có sàn)")]
+        lines += [f"## {tpost}, feature set: {n}", "", "| Detector | EER | FAR @ FRR 5% | dEER vs backend | dFAR vs backend |", "|---|---|---|---|---|"]
+        base = scores[(tpost, n, "backend (sd with floor)")]
         us = sorted(base)
         resamples = [rng.choices(us, k=len(us)) for _ in range(BOOT)]
         mb = [metrics(*pooled(base, r)) for r in resamples]

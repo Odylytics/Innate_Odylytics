@@ -1,42 +1,42 @@
-# Xác minh người với người (1:1) và thanh "Accuracy check" lúc đăng ký (27/11/2026)
+# Person-to-person verification (1:1) and the "Accuracy check" bar at enrollment (27/11/2026)
 
-## 1. Đã có ai làm "phân biệt người với người" bằng sinh trắc hành vi chưa?
+## 1. Has anyone done "telling one person from another" with behavioral biometrics?
 
-**Có, rất nhiều.** Xác minh 1:1 (phiên này có phải của chủ tài khoản, hay của người khác dù biết PIN) là bài toán gốc của sinh trắc nhịp gõ/chạm. Các công trình đã có trong `papers/` (tóm tắt chi tiết: `notes/owner_verification.md`, `paper-report.md`):
+**Yes, a lot.** 1:1 verification (is this session from the account owner, or from someone else even if they know the PIN) is the original problem of keystroke/touch-rhythm biometrics. Works already in `papers/` (detailed summaries: `notes/owner_verification.md`, `paper-report.md`):
 
-| Công trình | Làm gì | Số liệu |
+| Work | What it does | Figures |
 |---|---|---|
-| Zheng et al. 2014, *You Are How You Touch* | Nhịp + vị trí chạm khi gõ PIN trên điện thoại, >80 người | EER 3,65–7% (85 mẫu huấn luyện/người, PIN chung) |
-| Buschek et al. 2015 (CHI) | Thêm lệch tâm chạm vào nhịp | EER giảm 26–37% so với chỉ nhịp; khác buổi thì EER gấp đôi |
-| Killourhy & Maxion 2009 | So 14 bộ dò, cùng mật khẩu, 51 người | Scaled Manhattan tốt nhất, EER 9,6% (dùng trong `owner.py`) |
-| Acien et al. 2021, TypeNet | Mạng học chung, xác minh người chưa thấy | EER di động 10,7% (1 mẫu) → 6,3% (10 mẫu) |
-| Stragapede et al. 2022/2023 (Transformer, KVC) | Benchmark 5 lượt đăng ký | EER 6,99% (1) → 3,84% (5) → 3,15% (10) |
-| Khan et al. 2018 | Kẻ gian tập bắt chước có AR hướng dẫn | Vượt được 87% sau ~4 phút luyện |
+| Zheng et al. 2014, *You Are How You Touch* | Rhythm + touch position when typing a PIN on a phone, >80 people | EER 3.65–7% (85 training samples/person, shared PIN) |
+| Buschek et al. 2015 (CHI) | Adds touch off-center offset to rhythm | EER down 26–37% versus rhythm only; across different sessions EER doubles |
+| Killourhy & Maxion 2009 | Compares 14 detectors, same password, 51 people | Scaled Manhattan is best, EER 9.6% (used in `owner.py`) |
+| Acien et al. 2021, TypeNet | A jointly trained network, verifying people not seen | Mobile EER 10.7% (1 sample) → 6.3% (10 samples) |
+| Stragapede et al. 2022/2023 (Transformer, KVC) | Benchmark with 5 enrollment rounds | EER 6.99% (1) → 3.84% (5) → 3.15% (10) |
+| Khan et al. 2018 | Impostors practicing imitation with AR guidance | Passed 87% of the time after ~4 minutes of practice |
 
-Kết luận: phân biệt người với người **không phải ý tưởng mới**. Điểm khác của Innate là đặt nó vào bước xác nhận chuyển tiền của ví, gộp với tín hiệu người/máy và ngữ cảnh, và đo trung thực trên PIN điện thoại thật (E9, E30).
+Conclusion: telling people apart is **not a new idea**. What differs in Innate is placing it at the wallet's transfer confirmation step, combining it with the human/machine signal and context, and measuring honestly on real phone PINs (E9, E30).
 
-**Thanh tiến độ/chất lượng mẫu khi đăng ký** hiếm thấy hơn trong tài liệu học thuật. Một lượt tìm (27/11) chỉ thấy bằng sáng chế hiển thị số mẫu còn thiếu dạng "nhiệt kế" ([US 7809170](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7809170)), thước đo chất lượng mẫu tương quan với lỗi (Morales et al. 2015, [repositorio.uam.es](https://repositorio.uam.es/bitstream/handle/10486/665359/towards_morales_LNCS_2015_ps.pdf?sequence=1)), và một chỉ số chất lượng mẫu dự báo FAR ([PLoS ONE 2022](https://doaj.org/article/0df83e8ac87840bfa9022a584586514c)). Chưa đọc toàn văn; **chưa thấy** công trình làm thanh này cho nhịp PIN.
+An **enrollment progress/sample quality bar** is rarer in the academic literature. A search (27/11) found only a patent that shows the number of missing samples as a "thermometer" ([US 7809170](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7809170)), a sample-quality measure correlated with error (Morales et al. 2015, [repositorio.uam.es](https://repositorio.uam.es/bitstream/handle/10486/665359/towards_morales_LNCS_2015_ps.pdf?sequence=1)), and a sample-quality index that predicts FAR ([PLoS ONE 2022](https://doaj.org/article/0df83e8ac87840bfa9022a584586514c)). We have not read the full texts; we **did not find** a work that builds this bar for PIN rhythm.
 
-## 2. Thanh "Accuracy check" trong demo đo gì
+## 2. What the "Accuracy check" bar in the demo measures
 
-Hai con số, cả hai đều có nguồn:
+Two numbers, both with sources:
 
-1. **Thanh chính = % kẻ biết PIN bị chặn** = 1 − FAR@FRR5% theo số lượt đăng ký k (`web/src/enrollCurve.ts`).
-   - k = 2, 3, 4: **đo thật** trên StrokePIN, ngồi, khoảng cách của backend (E30): 14%, 50%, 57%.
-   - k ≥ 5: **ngoại suy** bằng luật luỹ thừa qua k = 3 và 4 (StrokePIN có tối đa 5 lần ngồi nên không còn lượt thử). Giao diện ghi rõ "ngoại suy, chưa đo". k = 5 → ~62%, k = 10 → ~74%.
-2. **Độ ổn định nhịp của chính người đăng ký** (`owner.consistency`): mỗi lượt chấm với mẫu dựng từ các lượt còn lại (leave-one-out), lấy trung bình. Cao = gõ đều tay. Đây **không** phải độ chính xác nhận người.
+1. **Main bar = % of PIN-knowing impostors blocked** = 1 − FAR@FRR5% by number of enrollment rounds k (`web/src/enrollCurve.ts`).
+   - k = 2, 3, 4: **really measured** on StrokePIN, sitting, backend distance (E30): 14%, 50%, 57%.
+   - k ≥ 5: **extrapolated** with a power law through k = 3 and 4 (StrokePIN has at most 5 sitting rounds, so no rounds are left to test). The interface states clearly "extrapolated, not measured". k = 5 → ~62%, k = 10 → ~74%.
+2. **Rhythm stability of the enrolling person** (`owner.consistency`): each round is scored against a template built from the remaining rounds (leave-one-out), then averaged. High = steady typing. This is **not** the accuracy of recognizing the person.
 
-Không đưa số ngoại suy lên slide như số đo. Cách nói an toàn: "càng nhập nhiều lần càng chặn được nhiều kẻ biết PIN; 3→4 lượt đo thật, trên 4 là ước lượng".
+Do not put the extrapolated numbers on slides as measurements. A safe way to say it: "the more times you enter, the more PIN-knowing impostors are blocked; going from 3 to 4 rounds is measured, beyond 4 is an estimate".
 
-## 3. Luồng demo cho ban giám khảo
+## 3. Demo flow for the judges
 
-1. `#/demo` → nhập tên → tài khoản `judge_<tên không dấu>` (cùng tên = cùng tài khoản, không phân biệt hoa thường/dấu).
-2. Gõ PIN `159357` từ 5 đến 10 lần; thanh tăng sau mỗi lần. Bấm **Xong** (mở sau 5 lần) hoặc tự khoá ở lần 10.
-3. Mở ví, chuyển tiền: Innate chấm điểm ở bước xác nhận.
-4. Giám khảo khác đăng nhập **bằng tên người kia** và chuyển tiền: kỳ vọng `step_up`/`hold`. Hoặc bấm "Kẻ trộm biết PIN".
+1. `#/demo` → enter a name → account `judge_<name without diacritics>` (same name = same account, not case- or diacritic-sensitive).
+2. Type PIN `159357` 5 to 10 times; the bar rises after each one. Press **Xong** (Done; unlocks after 5 rounds) or it locks automatically at round 10.
+3. Open the wallet, transfer money: Innate scores at the confirmation step.
+4. Another judge logs in **with the other person's name** and transfers money: expected `step_up`/`hold`. Or press "Kẻ trộm biết PIN" (the thief who knows the PIN).
 
-## 4. Thay đổi backend và giới hạn
+## 4. Backend changes and limits
 
-- `POST /v1/users/{id}/enroll` nhận `keep_open` (mặc định false: hành vi cũ, khoá ở lượt 3). Với `keep_open=true`, mỗi lượt dựng lại mẫu chuẩn; khoá khi gọi `POST /v1/users/{id}/enroll/finish` hoặc đủ 10 lượt. Mẫu chuẩn cũ không có cờ `open` vẫn coi là đã khoá.
-- **Giới hạn bảo mật:** trong lúc đăng ký còn mở, ai có SDK key và biết user_id đều thêm được lượt (tối đa 10). Đăng nhập bằng tên **không có mật khẩu**: chỉ dùng cho demo.
-- Đăng ký 5–10 lượt trong **một lần ngồi** vẫn yếu khi đổi tư thế (E9: ngồi → đi gần như mất tín hiệu).
+- `POST /v1/users/{id}/enroll` accepts `keep_open` (default false: the old behavior, locks at round 3). With `keep_open=true`, each round rebuilds the template; it locks when `POST /v1/users/{id}/enroll/finish` is called or at 10 rounds. An old template without the `open` flag is still treated as locked.
+- **Security limit:** while enrollment is still open, anyone with the SDK key who knows the user_id can add rounds (up to 10). Login by name has **no password**: demo use only.
+- Enrolling 5–10 rounds in **one sitting** is still weak when posture changes (E9: sitting → walking nearly loses the signal).

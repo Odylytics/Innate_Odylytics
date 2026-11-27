@@ -28,8 +28,8 @@
   "threshold": 0.8555336887344904,
   "target_frr": 0.05,
   "seed": 21,
-  "trained_on": "StrokePIN (người thật, CC BY-NC-SA 4.0), PIN 6 số, KHÔNG dùng kích thước chạm; chia theo người",
-  "status": "TẠM THỜI: dữ liệu công khai, chưa phải dữ liệu của đội; thiết bị khác nhau giữa người",
+  "trained_on": "StrokePIN (real people, CC BY-NC-SA 4.0), 6-digit PIN, WITHOUT touch size; split by person",
+  "status": "TEMPORARY: public data, not the team's data; devices differ between people",
   "heldout_report": {
     "threshold": 0.8555336887344904,
     "FRR_sit": 0.05009560229445507,

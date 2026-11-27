@@ -15,7 +15,7 @@
   },
   "n_taps": 6,
   "nu": 5,
-  "source": "StrokePIN (Yao & Wang 2026, CC BY-NC-SA 4.0), 97 người, PIN 6 số, ngồi+đi; thống kê tổng hợp trên mọi PIN",
+  "source": "StrokePIN (Yao & Wang 2026, CC BY-NC-SA 4.0), 97 people, 6-digit PINs, sitting+walking; aggregate statistics over all PINs",
   "n_groups": 3659,
-  "note": "pin_total chỉ dùng khi PIN có đúng 6 phím"
+  "note": "pin_total is only used when the PIN has exactly 6 keys"
 }

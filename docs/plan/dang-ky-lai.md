@@ -1,18 +1,18 @@
-# Đăng ký lại có kiểm soát (sau 409 ở `/enroll`)
+# Controlled re-enrollment (after a 409 from `/enroll`)
 
-> Thiết kế 26/11/2026, **chưa cài đặt**. Giải quyết khoảng trống ghi ở `CLAUDE.md`: `/enroll` trả 409 khi đã có mẫu chuẩn (chống chèn nhịp kẻ gian), nhưng E9 cho thấy đổi tư thế (ngồi → đi) làm mất tín hiệu, nên cần thêm lượt đăng ký hợp lệ.
+> Design of 26/11/2026, **not implemented**. It addresses the gap noted in `CLAUDE.md`: `/enroll` returns 409 when a template already exists (to stop an impostor from inserting their rhythm), but E9 shows that a posture change (sitting → walking) loses the signal, so a valid extra enrollment round is needed.
 
-## Nguyên tắc
-- Chỉ **chủ đã xác thực bằng kênh ngoài Innate** (OTP/sinh trắc của app ví) mới được mở cửa sổ đăng ký lại. Innate không tự xác thực.
-- Không bao giờ đăng ký lại chỉ vì điểm thấp: điểm thấp là dấu hiệu kẻ gian hoặc chủ đổi tư thế, Innate không phân biệt được (E9).
-- Mẫu cũ giữ nguyên cho đến khi mẫu mới đủ lượt; lượt mới **thêm** (đa tư thế), không thay.
+## Principles
+- Only an **owner authenticated through a channel outside Innate** (the wallet app's OTP/biometrics) may open a re-enrollment window. Innate does not authenticate on its own.
+- Never re-enroll just because the score is low: a low score means either an impostor or an owner who changed posture, and Innate cannot tell the two apart (E9).
+- The old template stays in place until the new template has enough rounds; new rounds are **added** (multiple postures), they do not replace.
 
-## Luồng
-1. App ví xác thực chủ bằng kênh mạnh, rồi gọi `POST /v1/users/{id}/enroll/window` (key SDK + token một lần do backend ví ký, hết hạn 10 phút). Backend đặt `user.enroll_until`.
-2. Trong cửa sổ, `/enroll` nhận thêm lượt (thay vì 409), gắn nhãn tư thế do app khai (ngồi/đi/nằm), tối đa 5 lượt mỗi cửa sổ, 1 cửa sổ/ngày.
-3. Đủ lượt: dựng lại mẫu từ **tất cả** lượt đăng ký (cũ + mới); xoá cờ `frozen` (xem E7: mẫu đóng băng chỉ mở lại bằng đường này); `mu0` đặt lại.
-4. Ghi nhật ký (ai mở, lúc nào, bao nhiêu lượt) để dashboard hiện.
+## Flow
+1. The wallet app authenticates the owner through a strong channel, then calls `POST /v1/users/{id}/enroll/window` (SDK key + a one-time token signed by the wallet backend, expires in 10 minutes). The backend sets `user.enroll_until`.
+2. Inside the window, `/enroll` accepts additional rounds (instead of 409), tagged with a posture declared by the app (sitting/walking/lying), at most 5 rounds per window, 1 window per day.
+3. When there are enough rounds: rebuild the template from **all** enrollment rounds (old + new); clear the `frozen` flag (see E7: a frozen template can only be reopened through this path); `mu0` is reset.
+4. Write a log (who opened it, when, how many rounds) for the dashboard to show.
 
-## Rủi ro còn lại
-- Kẻ chiếm được phiên đã xác thực vẫn tiêm được nhịp của mình: giới hạn bằng 5 lượt/cửa sổ, 1 cửa sổ/ngày và cảnh báo khi mẫu mới lệch > 1 sd so với mẫu cũ.
-- Không có dữ liệu thật về mức đổi tư thế của cùng người qua nhiều ngày; ngưỡng 1 sd là giả định.
+## Remaining risks
+- An attacker who takes over an authenticated session can still inject their own rhythm: limited by 5 rounds per window, 1 window per day, and an alert when the new template deviates by more than 1 sd from the old one.
+- There is no real data on how much the same person's posture shifts across several days; the 1 sd threshold is an assumption.

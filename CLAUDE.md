@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Innate — behavioral risk scoring (touch/PIN dynamics) for e-wallets. Entry for MoMo Tech Contest 2026.
-Docs are in Vietnamese; keep user-facing text (reasons, explanations) in Vietnamese.
+All docs, code comments and developer-facing text are in English (translated 27/11/2026; file names such as `bao-cao-tong-hop.md` were kept so links do not break). Keep the Vietnamese copy that wallet users see (decision reasons and explanations, `vi:` strings on the website, challenge phrases, Telex/VNI test data) in Vietnamese: it is product content, not documentation.
 
 ## Where things are
 Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXPERIMENTS.md` (E1-E32: script, result file, one-line conclusion). Licence decision (25/11): whole repo CC BY-NC-SA 4.0 (`LICENSE`) because models derive from StrokePIN; third-party list in `THIRD_PARTY_NOTICES.md` (Aalto/Touchalytics/CMU state NO data licence: research only, nothing derived shipped; psycopg is LGPL-3.0; avatars CC0).
@@ -16,7 +16,7 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 - Hand-in pack = `submission/{Product,Slide,Document}`, rebuilt by `tools/build_submission.sh` (macOS + Microsoft PowerPoint: the PDF is exported from the PPTX by `tools/lib/export_pdf.applescript`; Chrome headless renders the 1-page guide; `npm --prefix tools i pptxgenjs` once; fonts Sora + Manrope in `tools/fonts/`, install them before editing the PPTX). Source of truth: `tools/build_pptx.js` (deck), `tools/product-guide.html` (guide), `docs/submission/README.submission.md` (README, English). The zip is git-ignored.
 - Deck rules agreed with the user: English; numbered sections 01-09 with progress dots; italic grey "Sources:" line in every footer (not on the closing slide); no MoMo name/logo (say "the wallet"); thin line arrows centred in gaps, never block arrows; symmetric blocks centred with equal line counts; no accent stripes/underlines; doughnut/bar charts are native and editable; every figure must trace to `research/` (E29 for decision mix). Order is a generic pitch order (problem, solution, how it works, what changes, product, AI + research, evidence, roadmap, impact), NOT a verified YC/Sequoia flow.
 - E32 (`research/finetune/`): TypeFormer fine-tuned on StrokePIN, EER 0.292 to 0.203 and FAR@FRR5% 0.706 to 0.418 on 30 unseen people; one run, no CI, research only. Putting it in the API needs a numpy/ONNX path (Vercel has no torch).
-- Still open: `TODO` data counts in the README, video not recorded, real consented data and `adb` bots, `docs/submission/pitch-script.md` still Vietnamese and not synced to the new slides, teammate branch `docs/fix-flow-docs` (unmerged doc fixes from 25/11) not reviewed.
+- Still open: video not recorded, real consented data and `adb` bots, `docs/submission/pitch-script.md` not synced to the new slides, teammate branch `docs/fix-flow-docs` (unmerged doc fixes from 25/11) not reviewed.
 
 ## Scope (24/11/2026)
 - Focus is the AI core (`backend/app/scoring/`, `attacker/`). This repo holds the API (`backend/`), the AI research, the bot simulator and the website `web/` (landing page + web demo wallet + guided story + ops dashboard, one Vite app; see `web/README.md`); a mobile demo app is to come. The standalone `Innate_website` repo is superseded by `web/` (26/11/2026). Do NOT work on the `nhip-api` deploy unless asked. Code stays in the repo.

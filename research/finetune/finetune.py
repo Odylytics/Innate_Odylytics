@@ -1,6 +1,6 @@
-"""Fine-tune TypeFormer (pretrained Aalto) lên StrokePIN, triplet loss, tách theo NGƯỜI (60 train / 7 val / 30 test).
-Anchor/positive: cùng người, cùng PIN (cả hai tư thế: học bất biến tư thế). Negative: người khác nhập CÙNG PIN (đúng kịch bản kẻ biết PIN).
-Chọn checkpoint theo EER trên 7 người val (k=3), báo cáo cuối trên 30 người test."""
+"""Fine-tune TypeFormer (pretrained on Aalto) on StrokePIN, triplet loss, split by PERSON (60 train / 7 val / 30 test).
+Anchor/positive: same person, same PIN (both postures: learn posture invariance). Negative: another person entering the SAME PIN (exactly the PIN-knowing impostor scenario).
+Pick the checkpoint by EER on the 7 val people (k=3), final report on the 30 test people."""
 import argparse, json, random, time, warnings
 from collections import defaultdict
 warnings.filterwarnings("ignore")

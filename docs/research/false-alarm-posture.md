@@ -1,48 +1,48 @@
-# Báo động nhầm (chủ thật bị chặn/hỏi thêm), nguy hiểm của nó, và tư thế ngồi/đi (27/11/2026)
+# False alarms (a real owner blocked/asked for more), their danger, and sitting/walking posture (27/11/2026)
 
-"Báo động nhầm" ở đây = **chủ tài khoản thật không được `allow`** (bị `step_up` hoặc `hold`). Ngược lại "lọt" = kẻ biết PIN được `allow`.
-Số liệu: E33 (`research/experiments/e33_posture_false_alarm.py`, bảng đầy đủ `research/results/e33_posture_false_alarm.md`), chạy đúng chuỗi `/score` của backend trên StrokePIN (PIN 6 số thật, mỗi người 5 lượt ngồi + 5 lượt đi). Tập kiểm thử cố định cho mọi cách đăng ký.
+"False alarm" here = **the real account owner does not get `allow`** (gets `step_up` or `hold`). Conversely "got through" = a PIN-knowing impostor gets `allow`.
+Figures: E33 (`research/experiments/e33_posture_false_alarm.py`, full table in `research/results/e33_posture_false_alarm.md`), run through the exact `/score` chain of the backend on StrokePIN (real 6-digit PIN, each person with 5 sitting rounds + 5 walking rounds). The test set is fixed across all enrollment methods.
 
-## 1. Kết quả chính (đủ mô hình học, 10 người chưa từng thấy, người nhận quen; CI 95% theo người)
+## 1. Main result (full learned model, 10 people never seen, known recipient; 95% CI by person)
 
-| Cách đăng ký | Chủ **ngồi**: báo nhầm | Chủ **đi**: báo nhầm | Chủ bị **giữ lệnh** | Kẻ biết PIN lọt (ngồi / đi) |
+| Enrollment | Owner **sitting**: false alarm | Owner **walking**: false alarm | Owner **held** | PIN-knowing impostor gets through (sitting / walking) |
 |---|---|---|---|---|
-| 3 lượt ngồi (giống người dùng ngồi đăng ký trong app) | 17% [11, 23] | **41% [31, 50]** | 0–1% | 24% / 31% |
-| 3 lượt đi | 36% [28, 44] | 16% [11, 21] | 0–1% | 30% / 37% |
-| 2 ngồi + 2 đi | 20% [13, 27] | **18% [12, 24]** | 0–1% | 34% / 39% |
-| 3 ngồi + 3 đi | 18% [12, 25] | 19% [12, 25] | 0–1% | 33% / 40% |
+| 3 sitting rounds (like a user who enrolls sitting down in the app) | 17% [11, 23] | **41% [31, 50]** | 0–1% | 24% / 31% |
+| 3 walking rounds | 36% [28, 44] | 16% [11, 21] | 0–1% | 30% / 37% |
+| 2 sitting + 2 walking | 20% [13, 27] | **18% [12, 24]** | 0–1% | 34% / 39% |
+| 3 sitting + 3 walking | 18% [12, 25] | 19% [12, 25] | 0–1% | 33% / 40% |
 
-Đọc bảng:
-1. **Đổi tư thế làm báo nhầm tăng hơn gấp đôi.** Đăng ký khi ngồi rồi chuyển tiền khi đang đi: 41% lần chủ thật bị hỏi thêm (ngồi: 17%). Ngược lại cũng vậy (đăng ký khi đi, dùng khi ngồi: 36%).
-2. **Đăng ký trộn tư thế gần như san bằng hai bên** (~18–20% cả ngồi lẫn đi): báo nhầm khi đi giảm từ 41% xuống 18%.
-3. **Cái giá:** mẫu "rộng" hơn nên kẻ biết PIN lọt nhiều hơn khoảng 10 điểm (ngồi 24% → 34%, CI không chồng nhau). Đây là đánh đổi thật, không phải miễn phí.
-4. **Chủ gần như không bao giờ bị giữ lệnh** (0–1%; phần lớn ca hiếm đó là do luật "giống bot" khi đi). Nguy cơ chính là **phiền**, không phải mất tiền hay khoá tài khoản.
-5. **Người nhận mới:** gần như mọi giao dịch của chủ đều bị hỏi thêm (84–98%) và kẻ gian hầu như không lọt (0–1%). Trọng số "người nhận mới" đang lấn át nhịp; demo nên chọn người nhận quen để thấy khác biệt.
+Reading the table:
+1. **A posture change more than doubles false alarms.** Enrolling while sitting and then transferring while walking: 41% of the time the real owner is asked for more (sitting: 17%). The reverse also holds (enroll walking, use sitting: 36%).
+2. **Mixed-posture enrollment nearly evens out both sides** (~18–20% both sitting and walking): false alarms while walking drop from 41% to 18%.
+3. **The price:** the template is "wider", so PIN-knowing impostors get through about 10 points more (sitting 24% → 34%, CIs do not overlap). This is a real trade-off, not free.
+4. **The owner is almost never held** (0–1%; most of those rare cases come from the "bot-like" rule while walking). The main risk is **annoyance**, not lost money or a locked account.
+5. **New recipient:** almost every owner transaction is asked for more (84–98%) and the impostor almost never gets through (0–1%). The "new recipient" weight is overwhelming the rhythm; the demo should pick a known recipient to show the difference.
 
-Bảng phụ (tắt mô hình học, 96 người, chỉ luật + khoảng cách): báo nhầm thấp (ngồi 4%, đi 11%; trộn tư thế: 3% / 5%) nhưng **kẻ biết PIN lọt 85–94%**. Nghĩa là công thức khoảng cách một mình gần như không chặn ai; mô hình học (dù TẠM THỜI) đang gánh phần nhận chủ.
+Secondary table (learned model off, 96 people, rules + distance only): low false alarms (sitting 4%, walking 11%; mixed posture: 3% / 5%) but **PIN-knowing impostors get through 85–94%**. That means the distance formula alone blocks almost no one; the learned model (even though TEMPORARY) is carrying the owner-recognition part.
 
-## 2. Vì sao báo nhầm nguy hiểm
+## 2. Why false alarms are dangerous
 
-| Nguy cơ | Cơ chế | Mức độ ở Innate hiện tại |
+| Risk | Mechanism | Level in current Innate |
 |---|---|---|
-| **Phiền, bỏ giao dịch** | Chủ thật bị hỏi thêm ~1/5 lần khi ngồi, ~2/5 lần khi đi | Cao nếu người dùng hay chuyển tiền khi di chuyển. Paper RBA (Wiefling 2020) cho thấy người dùng chấp nhận step-up vì nó *hiếm*; Freeman 2016 chọn ngưỡng theo ngân sách báo nhầm nhỏ |
-| **"Mệt cảnh báo"** | Hỏi thêm quá thường thì người dùng coi đó là thủ tục, gõ cho xong; kẻ gian ngồi cạnh cũng quen | Làm giảm giá trị của chính bước step-up |
-| **Giữ nhầm tiền của chủ** | `hold` do luật "giống bot" hoặc rủi ro > 0,55 | 0–1% với người nhận quen; cao hơn với người nhận mới (E24: 3–4%). Tiền gấp (viện phí, học phí) bị trễ |
-| **Vòng lặp không học được** | Mẫu chỉ cập nhật sau `allow` tự tin (chống đầu độc). Lần chuyển khi đi thường bị hỏi thêm → không bao giờ dạy mẫu về tư thế đi | Người hay đi lại bị phạt mãi; báo nhầm không tự giảm theo thời gian |
-| **Không công bằng** | Người lớn tuổi, run tay, khuyết tật vận động, người dùng một tay khi đi xe buýt: nhịp dao động lớn hơn → báo nhầm nhiều hơn một cách hệ thống | Chưa đo theo nhóm người; Eberz 2017 khuyên báo phân bố lỗi theo từng người (Gini), không chỉ trung bình |
-| **Hạ ngưỡng để bớt phiền thì kẻ gian lọt** | Bảng E25: nới A, B thì chủ ít bị hỏi nhưng kẻ biết PIN lọt nhiều hơn | Phải chọn điểm vận hành có chủ đích, theo dịch vụ (Wiefling 2021) |
-| **Thanh Accuracy check lạc quan** | Đường cong E30 đo khi *ngồi*, cùng tư thế | Ngoài đời (đi, đứng) độ chặn kẻ gian thật và tỷ lệ báo nhầm đều khác số trên thanh |
+| **Annoyance, abandoned transactions** | The real owner is asked for more ~1 in 5 times when sitting, ~2 in 5 times when walking | High if users often transfer money on the move. The RBA paper (Wiefling 2020) shows users accept step-up because it is *rare*; Freeman 2016 chooses the threshold from a small false-alarm budget |
+| **"Alert fatigue"** | If asked for more too often, users treat it as a formality and type just to get through; an impostor sitting next to them gets used to it too | Lowers the value of the step-up step itself |
+| **Wrongly holding the owner's money** | `hold` from the "bot-like" rule or risk > 0.55 | 0–1% with a known recipient; higher with a new recipient (E24: 3–4%). Urgent money (hospital fees, tuition) is delayed |
+| **A loop that cannot learn** | The template updates only after a confident `allow` (anti-poisoning). Transfers made while walking are often asked for more → the template never learns the walking posture | People who often travel are penalized for good; false alarms do not drop by themselves over time |
+| **Unfairness** | Older people, hand tremor, motor disabilities, one-handed users on a bus: larger rhythm variation → systematically more false alarms | Not yet measured by group; Eberz 2017 advises reporting the error distribution per person (Gini), not just the mean |
+| **Lowering the threshold to reduce annoyance lets impostors through** | E25 table: relaxing A, B means the owner is asked less but PIN-knowing impostors get through more | The operating point must be chosen deliberately, per service (Wiefling 2021) |
+| **The Accuracy check bar is optimistic** | The E30 curve is measured while *sitting*, same posture | In real life (walking, standing) the real impostor-blocking rate and the false alarm rate both differ from the numbers on the bar |
 
-## 3. Có cần đưa ngồi và đi vào không? Có.
+## 3. Do sitting and walking need to be included? Yes.
 
-1. **Đăng ký nên có cả hai tư thế.** Đề xuất cho app: trong 5–10 lần nhập, nhắc "lần 1–3: ngồi; lần 4–5: vừa đi vừa nhập" (≈ "2–3 ngồi + 2 đi" ở bảng trên). Giảm báo nhầm khi đi ~41% → ~18%, đổi lại kẻ biết PIN lọt thêm ~10 điểm.
-2. **Cho mẫu học tư thế mới một cách có kiểm soát:** sau khi chủ vượt qua `step_up` (gõ câu đúng), cho phép thêm phiên đó vào mẫu ("supervised update", như Windows Hello đòi PIN trước khi cập nhật; Lovisotto 2020). Cần bước step-up thật trong app trước (hiện chỉ báo).
-3. **Thu dữ liệu đội có nhãn tư thế và nhãn người cầm máy** để đo lại trên người Việt, PIN tự đặt, cùng điện thoại (kẻ gian cầm đúng máy nạn nhân chưa được mô phỏng: số "lọt" thật có thể cao hơn).
-4. **Báo cáo theo từng người** (ai bị báo nhầm nhiều), không chỉ trung bình.
+1. **Enrollment should include both postures.** Proposal for the app: within 5–10 entries, prompt "entries 1–3: sitting; entries 4–5: type while walking" (≈ "2–3 sitting + 2 walking" in the table above). This cuts false alarms while walking from ~41% to ~18%, in exchange for ~10 more points of PIN-knowing impostors getting through.
+2. **Let the template learn a new posture in a controlled way:** after the owner passes `step_up` (types the right sentence), allow that session to be added to the template ("supervised update", like Windows Hello asking for the PIN before updating; Lovisotto 2020). This needs a real step-up step in the app first (currently it only flags).
+3. **Collect team data with posture labels and holder labels** to re-measure on Vietnamese people, self-chosen PINs, the same phone (an impostor holding the victim's actual phone has not been simulated: the real "got through" number may be higher).
+4. **Report per person** (who gets many false alarms), not just the mean.
 
-## 4. Giới hạn của E33
+## 4. Limits of E33
 
-- Chỉ 10 người cho bảng đủ mô hình (CI rộng); bảng 96 người tắt mô hình học.
-- StrokePIN: PIN do người nghiên cứu giao (20 PIN chung), ngồi và đi trong cùng đợt thu (không có khoảng cách nhiều ngày), kẻ gian dùng máy khác.
-- Không có cảm biến chuyển động trong pipeline; không biết phiên đang ở tư thế nào lúc chạy thật.
-- Mô hình học là bản tạm, huấn luyện trên StrokePIN (người khác) + bot tự sinh.
+- Only 10 people for the full-model table (wide CI); the 96-person table has the learned model off.
+- StrokePIN: PINs assigned by the researchers (20 shared PINs), sitting and walking collected in the same batch (no multi-day gap), the impostor uses a different phone.
+- No motion sensor in the pipeline; it does not know which posture a session is in at run time.
+- The learned model is a temporary version, trained on StrokePIN (other people) + self-generated bots.

@@ -1,10 +1,10 @@
-"""Nạp StrokePIN (Yao & Wang, 2026; CC BY-NC-SA 4.0) thành phiên đúng định dạng SessionIn của backend.
+"""Load StrokePIN (Yao & Wang, 2026; CC BY-NC-SA 4.0) as sessions in the backend's SessionIn format.
 
-Dữ liệu: 97 người, mỗi người 200 lần nhập, 20 PIN 6 số CHUNG cho mọi người, 2 tư thế (ngồi/đi). Bàn phím số
-chuẩn, toạ độ px. Tâm phím KHÔNG có sẵn: ước lượng theo từng người và từng chữ số = trung vị toạ độ chạm
-của người đó cho chữ số đó; kích thước phím = khoảng cách trung vị giữa các cột/hàng liền kề (cũng theo người).
+Data: 97 people, 200 entries each, 20 6-digit PINs SHARED by everyone, 2 postures (sitting/walking). Standard
+numeric keypad, coordinates in px. Key centers are NOT provided: estimated per person and per digit = the median touch coordinates
+of that person for that digit; key size = the median distance between adjacent columns/rows (also per person).
 
-Phiên trả về: {"user", "pin", "posture", "sample", "session": SessionIn-dict (không có swipe/screens)}
+Returned session: {"user", "pin", "posture", "sample", "session": SessionIn-dict (no swipe/screens)}
 """
 
 from pathlib import Path
@@ -29,7 +29,7 @@ def _entries(path: Path) -> list[dict]:
                 cur["t_up"] = r.Time
                 taps.append(cur)
                 cur = None
-        if len(taps) == len(pin) == 6:  # bỏ lượt thiếu sự kiện Up và PIN `10140` (5 số, 11 lượt; có thể mất số 0 đầu)
+        if len(taps) == len(pin) == 6:  # drop sessions missing Up events and PIN `10140` (5 digits, 11 sessions; a leading 0 may have been lost)
             out.append({"pin": pin, "posture": e.Posture.iloc[0], "sample": sid, "taps": taps})
     return out
 
@@ -39,7 +39,7 @@ def load(max_users: int | None = None) -> list[dict]:
     for f in sorted(DATA.glob("user*_touch.csv"), key=lambda p: int(p.stem[4:].split("_")[0]))[:max_users]:
         user = f.stem.split("_")[0]
         ents = _entries(f)
-        # tâm phím theo từng chữ số của người này
+        # key centers per digit for this person
         pts: dict[str, list[tuple[float, float]]] = {}
         for e in ents:
             for ch, t in zip(e["pin"], e["taps"]):
@@ -67,6 +67,6 @@ if __name__ == "__main__":
     s = load()
     users = {x["user"] for x in s}
     pins = {x["pin"] for x in s}
-    print(f"{len(s)} lượt nhập hợp lệ, {len(users)} người, {len(pins)} PIN, tư thế: {pd.Series([x['posture'] for x in s]).value_counts().to_dict()}")
+    print(f"{len(s)} valid entries, {len(users)} people, {len(pins)} PINs, posture: {pd.Series([x['posture'] for x in s]).value_counts().to_dict()}")
     t = s[0]["session"]["pin_taps"]
-    print("ví dụ:", s[0]["user"], s[0]["pin"], [round(x["t_up"] - x["t_down"]) for x in t], "ms giữ;", "key_w/h:", round(t[0]["key_w"]), round(t[0]["key_h"]))
+    print("example:", s[0]["user"], s[0]["pin"], [round(x["t_up"] - x["t_down"]) for x in t], "ms hold;", "key_w/h:", round(t[0]["key_w"]), round(t[0]["key_h"]))

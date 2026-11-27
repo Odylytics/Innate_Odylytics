@@ -1,7 +1,7 @@
-"""E3: hiệu chỉnh ánh xạ khoảng cách -> điểm chủ của owner.py trên PIN thật (StrokePIN).
+"""E3: calibrate the distance -> owner score mapping of owner.py on real PINs (StrokePIN).
 
-Dùng đúng owner.build_template/score. Đăng ký 3 lượt ngồi; chủ = lượt ngồi còn lại; kẻ gian biết PIN = người khác, cùng PIN, cùng tư thế.
-Chia người làm hai nửa: fit Platt (a,b) trên nửa A, kiểm trên nửa B (không rò người). So ánh xạ hiện tại (d=2 -> 0,5).
+Uses owner.build_template/score as is. Enroll 3 sitting sessions; owner = the remaining sitting sessions; PIN-knowing impostor = another person, same PIN, same posture.
+Split people into two halves: fit Platt (a,b) on half A, test on half B (no person leakage). Compare with the current mapping (d=2 -> 0.5).
 """
 import math, random, sys
 from collections import defaultdict
@@ -42,26 +42,26 @@ for (u, p), es in grp.items():
     for e in rng.sample(imps, min(20, len(imps))):
         rows.append((half[u], 0, d(e)))
 R = np.array(rows)
-def fit(x, y):  # Platt bằng gradient, không phụ thuộc sklearn
+def fit(x, y):  # Platt by gradient descent, no sklearn dependency
     a, b = -1.0, 2.0
     for _ in range(4000):
         p = 1 / (1 + np.exp(-(a * x + b)))
-        w = np.where(y == 1, 0.5 / y.mean(), 0.5 / (1 - y.mean()))  # cân bằng lớp: chủ và kẻ gian nặng ngang nhau
+        w = np.where(y == 1, 0.5 / y.mean(), 0.5 / (1 - y.mean()))  # class balance: owner and impostor weigh the same
         a -= 0.05 * (w * (p - y) * x).mean(); b -= 0.05 * (w * (p - y)).mean()
     return a, b
 A, B = R[R[:, 0] == 0], R[R[:, 0] == 1]
 a, b = fit(A[:, 2], A[:, 1])
 sig = lambda x, a, b: 1 / (1 + np.exp(-(a * x + b)))
 old = lambda x: 1 / (1 + np.exp(np.minimum(2 * (x - 2), 700)))
-out = [f"# E3 — hiệu chỉnh điểm chủ (StrokePIN, PIN 6 số, đăng ký 3 lượt ngồi)", "",
-       f"Fit Platt trên nửa A ({len(A)} phiên): score = sigmoid({a:.3f}·d + {b:.3f}). Kiểm trên nửa B ({len(B)} phiên, người khác hẳn).", "",
-       "| Ánh xạ | Chủ có score ≥ 0,5 | Kẻ gian biết PIN có score ≥ 0,5 |", "|---|---|---|"]
-for name, f in (("hiện tại (d=2→0,5)", old), (f"Platt đã fit (cân bằng lớp)", lambda x: sig(x, a, b))):
+out = [f"# E3 — owner score calibration (StrokePIN, 6-digit PIN, enrollment on 3 sitting sessions)", "",
+       f"Platt fit on half A ({len(A)} sessions): score = sigmoid({a:.3f}·d + {b:.3f}). Tested on half B ({len(B)} sessions, entirely different people).", "",
+       "| Mapping | Owner with score ≥ 0.5 | PIN-knowing impostor with score ≥ 0.5 |", "|---|---|---|"]
+for name, f in (("current (d=2→0.5)", old), (f"Fitted Platt (class-balanced)", lambda x: sig(x, a, b))):
     s = f(B[:, 2]); g, i = s[B[:, 1] == 1], s[B[:, 1] == 0]
     out.append(f"| {name} | {(g >= .5).mean():.2f} | {(i >= .5).mean():.2f} |")
 g = B[B[:, 1] == 1, 2]; i = B[B[:, 1] == 0, 2]
 t = np.quantile(g, 0.95)
-out += ["", f"Ngưỡng d cho FRR 5% (nửa B): d={t:.2f}; FAR tại đó = {(i <= t).mean():.2f}. Trung vị d: chủ {np.median(g):.2f}, kẻ gian {np.median(i):.2f}.",
-        "", "Kết luận: xem số trên. Platt chỉ dời ngưỡng, không tạo thêm độ tách; FAR@FRR5% vẫn quyết bởi đặc trưng (E9/E12b)."]
+out += ["", f"d threshold for FRR 5% (half B): d={t:.2f}; FAR there = {(i <= t).mean():.2f}. Median d: owner {np.median(g):.2f}, impostor {np.median(i):.2f}.",
+        "", "Conclusion: see the numbers above. Platt only shifts the threshold and adds no separation; FAR@FRR5% is still decided by the features (E9/E12b)."]
 Path(ROOT / "research/results/e3_calibrate_owner.md").write_text("\n".join(out) + "\n", encoding="utf-8")
 print("\n".join(out))

@@ -1,7 +1,7 @@
-"""Tấn công thật: dùng adb bấm PIN vào ví demo đang mở trên điện thoại (cắm USB, bật USB debugging).
+"""Real attack: use adb to tap the PIN into the demo wallet open on a phone (USB attached, USB debugging on).
 
-`adb shell input tap` tạo chạm ở tầng hệ thống, giống cách mã độc Trợ năng bấm hộ: toạ độ chính xác,
-kích thước chạm cố định. Mỗi lệnh adb mất ~50–300 ms nên thời gian giữa hai phím không chính xác tuyệt đối.
+`adb shell input tap` creates a touch at system level, like Accessibility malware tapping on the user's behalf: exact coordinates,
+fixed touch size. Each adb command takes ~50–300 ms, so the time between two keys is not perfectly exact.
 """
 
 import json
@@ -12,7 +12,7 @@ import time
 
 
 def load_layout(path: str) -> dict[str, tuple[int, int]]:
-    """layout.json: {"1": [x, y], "5": [x, y], ...} — toạ độ PIXEL THIẾT BỊ (xem README để lấy)."""
+    """layout.json: {"1": [x, y], "5": [x, y], ...} — DEVICE PIXEL coordinates (see the README for how to get them)."""
     with open(path, encoding="utf-8") as f:
         raw = json.load(f)
     return {str(k): (int(v[0]), int(v[1])) for k, v in raw.items()}
@@ -25,14 +25,14 @@ def _adb(args: list[str], serial: str | None) -> None:
 
 def attack(pin: str, layout: dict[str, tuple[int, int]], tactic: int, serial: str | None = None,
            swipe: tuple[int, int, int, int] | None = None, dry_run: bool = False) -> list[list[str]]:
-    """Bấm PIN (và vuốt nếu có). tactic 1: nhịp đều; tactic 2: nhịp ngẫu nhiên. Trả về các lệnh đã chạy."""
+    """Tap the PIN (and swipe if given). tactic 1: even rhythm; tactic 2: random rhythm. Returns the commands that were run."""
     if tactic not in (1, 2):
-        raise ValueError("adb chỉ hỗ trợ chiến thuật 1 và 2 (đúng tâm nút)")
+        raise ValueError("adb only supports tactics 1 and 2 (exact key centers)")
     missing = [k for k in pin if k not in layout]
     if missing:
-        raise ValueError(f"layout thiếu phím: {missing}")
+        raise ValueError(f"layout is missing keys: {missing}")
     if not dry_run and shutil.which("adb") is None:
-        raise RuntimeError("Không tìm thấy adb. Cài Android platform-tools và thêm vào PATH")
+        raise RuntimeError("adb not found. Install Android platform-tools and add it to PATH")
 
     rng = random.Random()
     done = []

@@ -1,74 +1,74 @@
-# Kịch bản thuyết trình chung kết và bộ câu hỏi giám khảo
+# Final pitch script and judge Q&A
 
-> Dùng với `submission/Slide/Innate-slides.pdf` (10 trang). Slide **không được sửa sau khi nộp**: chỉnh lời nói, không chỉnh slide. Thời lượng thuyết trình `[TODO: xác nhận với BTC]`; kịch bản dưới đây ~5 phút (~30 giây/slide, slide 5–7 lâu hơn).
+> Use with `submission/Slide/Innate-slides.pdf` (10 pages). The slides **cannot be edited after submission**: adjust the spoken words, not the slides. Pitch length `[TODO: confirm with the organizers]`; the script below is ~5 minutes (~30 seconds per slide, slides 5–7 take longer).
 
-## Lời thuyết trình theo slide
+## Spoken lines by slide
 
-| # | Slide | Ý chính cần nói | Thời gian |
+| # | Slide | Key points to say | Time |
 |---|---|---|---|
-| 1 | Tiêu đề | "Innate: lớp kiểm chứng con người cho ví điện tử. Một câu: PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó." | 0:20 |
-| 2 | Vấn đề | Hai kịch bản: mã độc Trợ năng tự bấm, và người biết PIN. "Mọi lớp bảo mật đều nói đúng chủ. Câu hỏi còn thiếu: ai hoặc cái gì đang chạm vào màn hình?" | 0:35 |
-| 3 | Khoảng trống | Chồng bảo mật 5 lớp, Innate ở lớp 3. "Bổ sung, không thay thế; chạy ngầm; điểm thấp thì hỏi thêm, không chặn cứng." | 0:30 |
-| 4 | Giải pháp | Đăng ký 3–5 lần → ba phép so khớp (người/máy, chủ, phát lại) → allow/step_up/hold + lý do. "Giống Face ID ở quy trình, nhưng là tín hiệu rủi ro." | 0:40 |
-| 5 | Innate Challenge | Khi chưa chắc, gõ một câu tiếng Việt ngẫu nhiên. Đọc số: 81% → 49% (đo trên câu tiếng Anh). **Nhấn:** "cải thiện rõ nhưng chưa phải cổng chặn; kiểu gõ dấu tiếng Việt là giả thuyết, chưa đo". | 0:45 |
-| 6 | AI | Bảng thành phần. "Học máy cổ điển có kiểm chứng; với ~100 người, thống kê và cây quyết định thắng. Không có LLM trên đường quyết định." | 0:45 |
-| 7 | Bằng chứng | "Đo trên người thật, chia theo người. Bot ngây thơ bị bắt hết; nhận chủ tốt hơn nhưng vẫn là tín hiệu." Nêu rõ: bot do bộ sinh tạo, chưa phải dữ liệu của đội. | 0:50 |
-| 8 | Sản phẩm | API + SDK + demo + dashboard. Mời giám khảo tự thử (link ở PDF hướng dẫn). Kịch bản 4 bước. | 0:30 |
-| 9 | Hạn chế | **Nói trước khi bị hỏi:** bot giống người, nhận chủ yếu, đổi tư thế, web SDK, chưa có bot thật. "Đó là lý do thiết kế `step_up`." | 0:40 |
-| 10 | Tác động | Người dùng, đối tác, vận hành; lộ trình; câu chốt "PIN is what you know. Innate is how you are." | 0:30 |
+| 1 | Title | "Innate: a human verification layer for e-wallets. In one sentence: a PIN can be stolen, but innate touch habits are very hard to steal." | 0:20 |
+| 2 | Problem | Two scenarios: Accessibility malware that taps by itself, and someone who knows the PIN. "Every security layer says right owner. The missing question: who or what is touching the screen?" | 0:35 |
+| 3 | Gap | A 5-layer security stack, Innate at layer 3. "Complementary, not a replacement; runs silently; a low score asks for more, it does not hard-block." | 0:30 |
+| 4 | Solution | Enroll 3–5 times → three matches (human/machine, owner, replay) → allow/step_up/hold + reasons. "Like Face ID in workflow, but it is a risk signal." | 0:40 |
+| 5 | Innate Challenge | When unsure, type a random Vietnamese phrase. Read the figure: 81% → 49% (measured on English phrases). **Stress:** "a clear improvement but not a gate; the Vietnamese tone-mark typing style is a hypothesis, not yet measured." | 0:45 |
+| 6 | AI | Component table. "Classical machine learning, verified; with ~100 people, statistics and decision trees win. No LLM on the decision path." | 0:45 |
+| 7 | Evidence | "Measured on real people, split by person. Naive bots are all caught; owner recognition is better but still a signal." State clearly: the bots come from the generator, not the team's own data. | 0:50 |
+| 8 | Product | API + SDK + demo + dashboard. Invite the judges to try it themselves (link in the guide PDF). 4-step script. | 0:30 |
+| 9 | Limits | **Say it before being asked:** human-like bots, weak owner recognition, posture change, web SDK, no real bots yet. "That is why `step_up` is in the design." | 0:40 |
+| 10 | Impact | Users, partners, operations; roadmap; closing line "PIN is what you know. Innate is how you are." | 0:30 |
 
-## Câu hỏi giám khảo có thể hỏi và câu trả lời trung thực
+## Likely judge questions and honest answers
 
-**1. Dữ liệu lấy từ đâu, bao nhiêu người, có đồng ý không?**
-Số liệu hiện có từ hai bộ công khai: StrokePIN (97 người, PIN 6 số trên điện thoại, CC BY-NC-SA 4.0) và Aalto (2.260 người gõ câu). `[TODO: dữ liệu của đội: số người, số phiên, phiếu đồng ý]`. Chúng tôi chỉ lưu thời gian, toạ độ, loại sự kiện, không lưu nội dung.
+**1. Where does the data come from, how many people, was there consent?**
+The current figures come from two public datasets: StrokePIN (97 people, 6-digit PIN on a phone, CC BY-NC-SA 4.0) and Aalto (2,260 people typing phrases). `[TODO: team data: number of people, number of sessions, consent forms]`. We store only timing, coordinates and event type, not content.
 
-**2. EER/FAR bao nhiêu, đánh giá thế nào?**
-Nhận chủ với 3 lần đăng ký, kẻ gian biết PIN: kẻ gian lọt 38% ở điểm 5% chủ bị nhầm (không dùng kích thước chạm, đo trên người chưa thấy). Chia theo người, tách thời điểm, báo khoảng tin cậy và so ghép cặp. Đây là tín hiệu rủi ro, không phải cổng.
+**2. What are the EER/FAR, and how is it evaluated?**
+Owner recognition with 3 enrollment entries, PIN-knowing impostor: 38% of impostors get through at the point where 5% of owners are mistaken (contact size not used, measured on unseen people). Split by person, time-split, with confidence intervals and paired comparison. This is a risk signal, not a gate.
 
-**3. Sao không dùng học sâu?**
-Dữ liệu nhỏ. Co rút thống kê về dân số một mình giảm kẻ gian lọt 17 điểm; mô hình sâu như TypeNet cần >100.000 người. Chúng tôi chọn thứ chạy được, kiểm chứng được và giải thích được.
+**3. Why not deep learning?**
+The data is small. Statistical shrinkage toward the population alone cut impostors getting through by 17 points; deep models such as TypeNet need >100,000 people. We chose what runs, can be verified and can be explained.
 
-**4. Bot phát lại thao tác thật thì sao?**
-Có kiểm tra phát lại riêng: bắt 100% khi nhiễu thêm vào ≤ 10%, nhưng chỉ 29% ở ±15% và 0% từ ±20%. Đo cả hệ thống (E24, E27): phát lại nhiễu ±15–30% được cho qua 48–72%. Có thể nâng ngưỡng phát lại (0,085 bắt 86% ở ±15%) nhưng chặn nhầm chủ tăng; sẽ chốt khi có lịch sử dài của đội. Kẻ tấn công thích nghi thêm nhiễu đủ lớn sẽ qua mặt; khi đó phiên trông như người khác và chỉ còn điểm "chủ" (yếu) cản lại. Đây là cuộc đua, chúng tôi nói thẳng.
+**4. What if a bot replays a real person's interaction?**
+There is a dedicated replay check: it catches 100% when the added noise is ≤ 10%, but only 29% at ±15% and 0% from ±20%. Measured on the whole system (E24, E27): replay with ±15–30% noise is let through 48–72%. The replay threshold can be raised (0.085 catches 86% at ±15%) but false blocks on the owner increase; we will settle it when the team has long histories. An adaptive attacker who adds enough noise will get through; then the session looks like a different person and only the (weak) "owner" score holds it back. This is a race, and we say so plainly.
 
-**5. Bot lấy mẫu từ phân bố người thật thì sao?**
-Bắt 20–73% tuỳ có thấy loại bot đó khi huấn luyện hay chưa. Bot **biết mẫu chuẩn** của nạn nhân thì qua 75–82% (E27). Chưa có bot thật để đo; đó là việc đang làm.
+**5. What about a bot that samples from the real-human distribution?**
+Catches 20–73% depending on whether that bot type was seen in training. A bot that **knows the victim's template** gets through 75–82% (E27). We have no real bots to measure yet; that work is in progress.
 
-**6. Mã độc ngày nay có hành xử như vậy không? (tính thực tế)**
-Mã độc Trợ năng điều khiển từ xa đã được báo cáo nhiều. Việc nhịp chạm của chúng đều hay lộ hay không **chưa có nghiên cứu công bố đo trực tiếp**; đó là giả thuyết của chúng tôi, kiểm chứng bằng bộ giả lập và `adb`. Chúng tôi không khẳng định đã bắt được mã độc thật.
+**6. Does today's malware behave that way? (realism)**
+Remote-control Accessibility malware has been widely reported. Whether its tap rhythm is even or not has **no published study measuring it directly**; that is our hypothesis, to be verified with the simulator and `adb`. We do not claim to have caught real malware.
 
-**7. Vì sao không để LLM quyết định?**
-Độ trễ, tính nhất quán, khả năng kiểm toán. LLM (nếu có) chỉ tóm tắt vụ việc cho đội vận hành, không nằm trên đường ra quyết định.
+**7. Why not let an LLM decide?**
+Latency, consistency, auditability. An LLM (if any) only summarizes the case for the operations team and never sits on the decision path.
 
-**8. Khác gì hệ thống nội bộ của ví, hay giải pháp thương mại (BioCatch…)?**
-Chúng tôi không biết chi tiết hệ thống nội bộ của ai. Điểm khác chúng tôi nhắm tới: lý do giải thích được, `step_up` thay vì chặn cứng, tách bạch người/máy và chủ, và dạng API mở cho mọi ví. Hướng đã có tiền lệ trong ngành (behavioral biometrics, risk-based authentication); chúng tôi không tuyên bố là phát minh ra hướng này.
+**8. How is this different from the wallet's internal system, or commercial solutions (BioCatch...)?**
+We do not know the details of anyone's internal system. The differences we aim for: explainable reasons, `step_up` instead of hard blocking, separating human/machine from owner, and an open API format for any wallet. The direction has precedent in the industry (behavioral biometrics, risk-based authentication); we do not claim to have invented it.
 
-**9. Độ trễ và chi phí mỗi lần chấm?**
-Đo local (E26, không tính mạng): `/score` p50 3,7 ms, p99 14 ms; mô hình là cây quyết định nhỏ (~180 KB). Chưa đo trên Vercel/Neon: `[TODO: đo lại trên bản nộp]`. Không có lời gọi LLM trên đường chấm điểm.
+**9. Latency and cost per scoring call?**
+Measured locally (E26, network excluded): `/score` p50 3.7 ms, p99 14 ms; the model is a small decision tree (~180 KB). Not yet measured on Vercel/Neon: `[TODO: re-measure on the submitted build]`. There is no LLM call on the scoring path.
 
-**10. Đổi điện thoại, đổi tư thế thì sao?**
-Đổi tư thế gần như mất tín hiệu (đo: EER 0,31, kẻ gian lọt 71%). Vì vậy: đăng ký nhiều tư thế, và điểm thấp chỉ dẫn tới `step_up`. Đổi điện thoại cần đăng ký lại có kiểm soát (chưa thiết kế xong).
+**10. What if the user changes phone or posture?**
+A posture change nearly loses the signal (measured: EER 0.31, 71% of impostors get through). Hence: enroll in several postures, and a low score only leads to `step_up`. A phone change needs a controlled re-enrollment (design not finished).
 
-**11. Xử lý dữ liệu nhạy cảm theo luật mới thế nào?**
-Coi nhịp chạm/gõ là dữ liệu nhạy cảm (Luật BVDLCN 2025, NĐ 356/2025): chỉ thu khi đồng ý, không lưu nội dung PIN/số tiền/ghi chú, ghi rõ trong README. Mẫu nằm trên máy chủ nên phải bảo vệ như dữ liệu sinh trắc.
+**11. How is sensitive data handled under the new law?**
+We treat touch/typing rhythm as sensitive data (Luật BVDLCN 2025, NĐ 356/2025 (the personal data protection law and its implementing decree)): collected only with consent, no PIN/amount/note content stored, stated in the README. Templates sit on the server, so they must be protected like biometric data.
 
-**12. Innate Challenge có phiền người dùng không?**
-Chỉ hiện khi hệ thống không chắc, ~10 giây, luôn có đường thay thế (OTP/khuôn mặt). **Chưa đo ma sát thực tế** và dữ liệu đo là chép câu tiếng Anh, không phải gõ câu tiếng Việt ngẫu nhiên lúc căng thẳng.
+**12. Does the Innate Challenge annoy users?**
+It appears only when the system is unsure, takes ~10 seconds, and there is always an alternative path (OTP/face). **We have not measured real friction**, and the measured data is copying English phrases, not typing a random Vietnamese phrase under stress.
 
-**13. Sản phẩm đã chạy trên điện thoại thật chưa?**
-Ví demo và SDK web chạy trên trình duyệt điện thoại; SDK native chưa có. `[TODO: cập nhật theo thực tế lúc nộp]`.
+**13. Does the product run on a real phone yet?**
+The demo wallet and web SDK run in a phone browser; a native SDK does not exist yet. `[TODO: update to reality at submission time]`.
 
-**14. Sao lại gõ tiếng Việt? Có công trình nào chưa?**
-Chúng tôi tìm và **không thấy công trình công bố nào** dùng kiểu gõ Telex/VNI làm sinh trắc học (không có nghĩa là chưa ai làm). Ý tưởng: phím biến đổi dấu thanh và vị trí gõ dấu là thói quen cá nhân, không phụ thuộc câu cụ thể, và bot phải giả lập cả bộ gõ. Hiện mới có thiết kế, mô phỏng và mã trích đặc trưng; **chưa đo trên người Việt thật**.
+**14. Why Vietnamese typing? Is there prior work?**
+We searched and **did not find any published work** using Telex/VNI typing style as a biometric (that does not mean nobody has done it). The idea: the keys that transform tone marks and where tone marks are typed are personal habits that do not depend on the specific phrase, and a bot would have to imitate the input method too. So far there is only the design, a simulation and feature extraction code; **not yet measured on real Vietnamese people**.
 
-**15. Sao không dùng cảm biến chuyển động (con quay, gia tốc)?**
-Thử trên StrokePIN (E23): chuyển động cho EER 0,04 nhưng đó là nhiễu thiết bị (mỗi người một máy) và mất hết khi đổi tư thế; dữ liệu chỉ 5 Hz nên không kiểm được cú giật khi chạm. Chúng tôi coi đó là ứng viên chống bot ("có tay cầm"), chưa tuyên bố.
+**15. Why not use motion sensors (gyroscope, accelerometer)?**
+Tried on StrokePIN (E23): motion gives EER 0.04, but that is device noise (one phone per person) and disappears entirely when posture changes; the data is only 5 Hz, so the jolt at touch cannot be checked. We treat it as a candidate for anti-bot ("is being held"), not a claim.
 
-**16. Bản online chạy mô hình học chưa?**
-Rồi: `/health` báo cả hai mô hình đã nạp, mô hình chạy bằng Python thuần nên không phụ thuộc thư viện hệ thống. Mô hình có dự phòng luật nếu lỗi. Trên người thật (E29, 97 người), có mô hình học thì kẻ biết PIN được cho qua 22%, tắt mô hình thì 89%. Số này đo trong `research/`, chưa đo trên bản online; các phiên trong demo là mô phỏng. `[TODO: chạy backend/scripts/check_online.py lúc nộp và trước 11/12]`
+**16. Does the online version run the learned models yet?**
+Yes: `/health` reports both models loaded, and the models run in pure Python so they do not depend on system libraries. The models fall back to rules on error. On real people (E29, 97 people), with learned models the PIN-knowing impostor is let through 22%, with models off 89%. This was measured in `research/`, not on the online version; the sessions in the demo are simulated. `[TODO: run backend/scripts/check_online.py at submission and before 11/12]`
 
-**17. Vì sao demo dùng PIN 6 số?**
-Mô hình chủ học trên PIN 6 số (StrokePIN), và với PIN 4 số kẻ biết PIN lọt nhiều hơn rõ rệt (E28: 68% so với 28% được `allow`), nên demo dùng PIN 6 số `159357`. Mô hình học đang bật trên bản online; nếu nó tắt (lỗi hay công tắc), hệ thống tự rơi về luật và yếu hơn, và chúng tôi nói thẳng điều này.
+**17. Why does the demo use a 6-digit PIN?**
+The owner model learned on 6-digit PINs (StrokePIN), and with a 4-digit PIN the PIN-knowing impostor gets through clearly more often (E28: 68% vs 28% `allow`), so the demo uses the 6-digit PIN `159357`. The learned models are on in the online version; if they are off (error or switch), the system falls back to rules and is weaker, and we say so plainly.
 
-## Nguyên tắc khi trả lời
-Nêu giới hạn **trước** khi bị hỏi; dùng "tín hiệu rủi ro", "rất khó", không dùng "không thể", "bắt mọi mã độc"; số liệu nào chưa phải dữ liệu của đội thì nói rõ.
+## Principles when answering
+State the limits **before** being asked; use "risk signal" and "very hard", not "impossible" or "catches all malware"; say clearly which figures are not the team's own data.

@@ -1,7 +1,7 @@
-"""E26: độ trễ của API chấm điểm khi chạy LOCAL (TestClient, SQLite, một tiến trình). KHÔNG gồm mạng, khởi động nguội Vercel hay độ trễ Neon.
+"""E26: latency of the scoring API when run LOCALLY (TestClient, SQLite, single process). Does NOT include network, Vercel cold start or Neon latency.
 
-Đo p50/p95/p99 của POST /v1/sessions và POST /v1/sessions/{id}/score cho một tài khoản đã đăng ký (có mô hình học bật).
-Chạy: python research/experiments/e26_latency.py   (cần fastapi, httpx, lightgbm, numpy)
+Measures p50/p95/p99 of POST /v1/sessions and POST /v1/sessions/{id}/score for an enrolled account (learned models enabled).
+Run: python research/experiments/e26_latency.py   (needs fastapi, httpx, lightgbm, numpy)
 """
 import os
 import random
@@ -37,9 +37,9 @@ with TestClient(app) as c:
         assert r.status_code == 200, r.text
         t_post.append((t1 - t0) * 1e3); t_score.append((t2 - t1) * 1e3)
 q = lambda v, p: float(np.percentile(v, p))  # noqa: E731
-L = ["# E26 — độ trễ API local", "", f"300 lượt (gửi phiên rồi chấm điểm), tài khoản đã đăng ký, lịch sử tăng dần; mô hình người/máy: {human_model.loaded()}, mô hình chủ: {owner_model.loaded()}. "
-     "TestClient, SQLite, một tiến trình, máy phát triển; KHÔNG gồm mạng, khởi động nguội Vercel, Neon.", "",
-     "| Lệnh | p50 | p95 | p99 | max |", "|---|---|---|---|---|"]
+L = ["# E26 — local API latency", "", f"300 runs (submit a session, then score it), enrolled account, growing history; human/machine model: {human_model.loaded()}, owner model: {owner_model.loaded()}. "
+     "TestClient, SQLite, single process, development machine; does NOT include network, Vercel cold start, Neon.", "",
+     "| Call | p50 | p95 | p99 | max |", "|---|---|---|---|---|"]
 for name, v in (("POST /v1/sessions", t_post), ("POST /v1/sessions/{id}/score", t_score)):
     L.append(f"| {name} | {q(v, 50):.1f} ms | {q(v, 95):.1f} ms | {q(v, 99):.1f} ms | {max(v):.1f} ms |")
 (ROOT / "research/results/e26_latency.md").write_text("\n".join(L) + "\n", encoding="utf-8")

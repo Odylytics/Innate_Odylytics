@@ -1,22 +1,22 @@
-# E3 — hiệu chỉnh điểm chủ (StrokePIN, PIN 6 số, đăng ký 3 lượt ngồi)
+# E3 — owner score calibration (StrokePIN, 6-digit PIN, enrollment on 3 sitting sessions)
 
-Fit Platt trên nửa A (18634 phiên): score = sigmoid(-1.216·d + 1.390). Kiểm trên nửa B (18788 phiên, người khác hẳn).
+Platt fit on half A (18634 sessions): score = sigmoid(-1.216·d + 1.390). Tested on half B (18788 sessions, entirely different people).
 
-| Ánh xạ | Chủ có score ≥ 0,5 | Kẻ gian biết PIN có score ≥ 0,5 |
+| Mapping | Owner with score ≥ 0.5 | PIN-knowing impostor with score ≥ 0.5 |
 |---|---|---|
-| hiện tại (d=2→0,5) | 0.96 | 0.84 |
-| Platt đã fit (cân bằng lớp) | 0.90 | 0.27 |
+| current (d=2→0.5) | 0.96 | 0.84 |
+| Fitted Platt (class-balanced) | 0.90 | 0.27 |
 
-Ngưỡng d cho FRR 5% (nửa B): d=1.37; FAR tại đó = 0.50. Trung vị d: chủ 0.73, kẻ gian 1.37.
+d threshold for FRR 5% (half B): d=1.37; FAR there = 0.50. Median d: owner 0.73, impostor 1.37.
 
-Kết luận: xem số trên. Platt chỉ dời ngưỡng, không tạo thêm độ tách; FAR@FRR5% vẫn quyết bởi đặc trưng (E9/E12b).
+Conclusion: see the numbers above. Platt only shifts the threshold and adds no separation; FAR@FRR5% is still decided by the features (E9/E12b).
 
-## Đã nối vào backend chưa? Thử (26/11): có công tắc, KHÔNG bật mặc định
+## Is it wired into the backend? Tried (26/11): there is a switch, NOT on by default
 
-`owner.py` có `NHIP_OWNER_MAP=platt` (mặc định `legacy`). Chạy lại E24 với Platt (`e24_platt_map.md`):
-- Các cột **có mô hình học không đổi**: với PIN 6 số, điểm chủ lấy từ `owner_model` (LightGBM), Platt chỉ đổi đường khoảng cách dự phòng (PIN 4 số, tắt mô hình, thiếu đặc trưng).
-- Đường dự phòng, người nhận quen: kẻ biết PIN qua 90% -> 79%, chủ ngồi 96% -> 94%. Có lợi nhẹ.
-- Đường dự phòng, **người nhận mới**: chủ ngồi allow 92% -> 2%, kẻ biết PIN 62% -> 0%. Điểm chủ tối đa của Platt chỉ ~0,63 nên rủi ro hợp nhất của chủ luôn >= 0,13, cộng 0,15 người nhận mới vượt A=0,25: mọi người đều `step_up`.
-- `UPDATE_MIN_OWNER = 0.8` cũng không bao giờ đạt dưới Platt, nên mẫu chuẩn ngừng cập nhật (test `test_full_flow` hỏng khi bật).
+`owner.py` has `NHIP_OWNER_MAP=platt` (default `legacy`). E24 rerun with Platt (`e24_platt_map.md`):
+- The columns **with the learned model are unchanged**: for 6-digit PINs the owner score comes from `owner_model` (LightGBM), and Platt only changes the fallback distance path (4-digit PIN, model off, missing features).
+- Fallback path, known recipient: PIN-knowing impostor passes 90% -> 79%, sitting owner 96% -> 94%. A slight benefit.
+- Fallback path, **new recipient**: sitting owner allow 92% -> 2%, PIN-knowing impostor 62% -> 0%. The maximum owner score under Platt is only ~0.63, so the owner's fused risk is always >= 0.13, and adding 0.15 for a new recipient exceeds A=0.25: everyone gets `step_up`.
+- `UPDATE_MIN_OWNER = 0.8` is also never reached under Platt, so the template stops updating (the `test_full_flow` test fails when it is on).
 
-Muốn bật Platt cần dời A/B và `UPDATE_MIN_OWNER` cùng lúc rồi đo lại E24/E25. Việc đó chỉ đáng làm khi dùng đường dự phòng thật, và nên làm trên dữ liệu của đội thay vì StrokePIN.
+To turn Platt on, A/B and `UPDATE_MIN_OWNER` must be moved at the same time and E24/E25 re-measured. That is only worth doing if the fallback path is really used, and it should be done on the team's data instead of StrokePIN.

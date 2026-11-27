@@ -1,16 +1,16 @@
-"""E14: nhận ra chủ khi gõ CHUỖI SỐ MỚI (mô phỏng gõ số tài khoản), người thật StrokePIN.
+"""E14: recognizing the owner when typing a NEW DIGIT STRING (simulated account-number entry), real StrokePIN people.
 
-Câu hỏi: số tài khoản đổi theo từng giao dịch, nên không so được theo vị trí chữ số như mẫu PIN (pin_hold_0..5).
-Với đặc trưng KHÔNG phụ thuộc nội dung, còn nhận ra chủ được bao nhiêu khi chuỗi số chưa từng thấy lúc đăng ký?
+Question: the account number changes with every transaction, so it cannot be matched by digit position like the PIN template (pin_hold_0..5).
+With features that do NOT depend on content, how much of the owner can still be recognized when the digit string was never seen at enrollment?
 
-StrokePIN: 97 người, 20 PIN 6 số dùng chung, ngồi/đi. Mỗi người: đăng ký bằng 3 lượt x 3 PIN (9 "giao dịch") khi ngồi.
-Kiểm thử (kẻ gian = người khác gõ CÙNG chuỗi số, cùng tư thế):
-  A. cùng chuỗi số đã đăng ký (lượt chưa dùng)      B. chuỗi số mới
-  C. chuỗi số mới, 12 số (gộp 2 lượt của 2 PIN mới) D. chuỗi số mới, khi đi
-Đặc trưng: thời gian giữ/khoảng cách (gộp, và theo khoảng cách hình học giữa hai phím), lệch tâm theo cột/hàng phím.
-BỎ kích thước chạm (mang thông tin thiết bị, như E12b). Bộ phát hiện: khoảng cách mean|z| (như backend) và LightGBM học
-trên |z| từ người huấn luyện (chia theo NGƯỜI, 3 cách chia). CI 95% bootstrap theo người, trung bình giữa các lần chia.
-Giới hạn: 6-12 số ngắn hơn hoặc bằng số tài khoản; bàn phím StrokePIN có thể khác app; mỗi người một máy.
+StrokePIN: 97 people, 20 shared 6-digit PINs, sitting/walking. Each person: enroll with 3 sessions x 3 PINs (9 "transactions") while sitting.
+Test (impostor = another person typing the SAME digit string, same posture):
+  A. same digit string as enrolled (unused session)      B. new digit string
+  C. new digit string, 12 digits (2 sessions of 2 new PINs pooled) D. new digit string, while walking
+Features: hold time/flight time (pooled, and by the geometric distance between two keys), offset from the key center by key column/row.
+Touch size REMOVED (it carries device information, as in E12b). Detectors: mean|z| distance (as in the backend) and learned LightGBM
+on |z| from training people (split by PERSON, 3 splits). 95% bootstrap CI by person, averaged across splits.
+Limitations: 6-12 digits are shorter than or equal to an account number; the StrokePIN keyboard may differ from the app; one device per person.
 """
 
 import random
@@ -33,7 +33,7 @@ FEATS = (["hold_mean", "hold_std", "hold_med", "flight_mean", "flight_std", "fli
 
 
 def feats(entries: list[dict]) -> np.ndarray:
-    """Đặc trưng không phụ thuộc nội dung trên một hoặc nhiều lượt gõ (gộp). Thiếu = NaN."""
+    """Content-independent features over one or more typing sessions (pooled). Missing = NaN."""
     hold, fl, fl_cls, dx, dy = [], [], defaultdict(list), [], []
     by_c, by_r = defaultdict(list), defaultdict(list)
     for e in entries:
@@ -56,14 +56,14 @@ def feats(entries: list[dict]) -> np.ndarray:
 S = strokepin_loader.load()
 for e in S:
     e["v"] = feats([e])
-grp = defaultdict(list)  # (user, pin, posture) -> lượt
+grp = defaultdict(list)  # (user, pin, posture) -> sessions
 for e in S:
     grp[(e["user"], e["pin"], e["posture"])].append(e)
 USERS = sorted({e["user"] for e in S})
 
 
 def floor_from(train_users) -> np.ndarray:
-    """Sàn độ lệch chuẩn = nửa trung vị độ lệch chuẩn trong-người (chỉ từ người huấn luyện, không rò rỉ)."""
+    """Std floor = half the median within-person std (from training people only, no leakage)."""
     sds = []
     for u in train_users:
         X = np.array([e["v"] for (uu, _p, po), es in grp.items() if uu == u and po == "sit" for e in es])
@@ -72,7 +72,7 @@ def floor_from(train_users) -> np.ndarray:
 
 
 def rows(users, floor, seed):
-    """-> {điều kiện: (Z, nhãn 0=chủ/1=kẻ gian, người)}; Z = |z| so với mẫu của chủ."""
+    """-> {condition: (Z, label 0=owner/1=impostor, person)}; Z = |z| relative to the owner's template."""
     rng = random.Random(seed)
     out = defaultdict(lambda: ([], [], []))
 
@@ -104,7 +104,7 @@ def rows(users, floor, seed):
                 add(cond, e["v"], 0, u, mu, sd)
                 for imp in rng.sample(others(e["pin"], po), min(N_IMP, len(others(e["pin"], po)))):
                     add(cond, imp["v"], 1, u, mu, sd)
-        # C: 12 số = 2 lượt của 2 PIN mới khác nhau; kẻ gian = MỘT người khác gõ đúng 2 PIN đó
+        # C: 12 digits = 2 sessions of 2 different new PINs; impostor = ONE other person typing exactly those 2 PINs
         for _ in range(N_GEN):
             p1, p2 = rng.sample(new_pins, 2)
             add("C", feats([rng.choice(grp[(u, p1, "sit")]), rng.choice(grp[(u, p2, "sit")])]), 0, u, mu, sd)
@@ -115,7 +115,7 @@ def rows(users, floor, seed):
 
 
 def metrics(s, y):
-    """(EER, FAR @ FRR 5%); điểm cao = giống kẻ gian."""
+    """(EER, FAR @ FRR 5%); high score = looks like an impostor."""
     gen, imp = s[y == 0], s[y == 1]
     ths = np.unique(np.quantile(s, np.linspace(0, 1, 400)))
     frr = np.array([(gen > t).mean() for t in ths]); far = np.array([(imp <= t).mean() for t in ths])
@@ -142,21 +142,21 @@ for sp in SPLITS:
                             subsample_freq=1, colsample_bytree=0.8, random_state=sp, verbose=-1).fit(Ztr, ytr)
     for c, (Z, y, w) in sorted(Rte.items()):
         n_test[c] = (int((y == 0).sum()), int((y == 1).sum()), len(np.unique(w)))
-        for name, s in (("khoảng cách mean|z|", np.nanmean(Z, axis=1)), ("LightGBM học", gb.predict_proba(Z)[:, 1])):
+        for name, s in (("mean|z| distance", np.nanmean(Z, axis=1)), ("learned LightGBM", gb.predict_proba(Z)[:, 1])):
             res[(c, name)].append((metrics(s, y), *boot_ci(s, y, w)))
 
-LABEL = {"A": "cùng chuỗi số đã đăng ký", "B": "**chuỗi số mới** (6 số)", "C": "**chuỗi số mới, 12 số** (gộp 2 lượt)",
-         "D": "chuỗi số mới, khi **đi**"}
-L = ["# E14 — nhận ra chủ khi gõ chuỗi số mới (mô phỏng số tài khoản; StrokePIN, người thật)", "",
-     f"Đăng ký {N_PIN_ENR} PIN x {K_PER_PIN} lượt khi ngồi. Kẻ gian = người khác gõ **cùng chuỗi số**, cùng tư thế. "
-     f"{len(FEATS)} đặc trưng không phụ thuộc nội dung, **không** dùng kích thước chạm. Chia theo người (58 huấn luyện / "
-     f"{len(USERS) - 58} kiểm thử), {len(SPLITS)} cách chia; CI 95% bootstrap theo người, trung bình giữa các lần chia. Thấp hơn là tốt hơn.", "",
-     "| Kiểm thử | Bộ phát hiện | EER | FAR @ FRR 5% | Phiên chủ / kẻ gian / người (lần chia cuối) |", "|---|---|---|---|---|"]
+LABEL = {"A": "same digit string as enrolled", "B": "**new digit string** (6 digits)", "C": "**new digit string, 12 digits** (2 sessions pooled)",
+         "D": "new digit string, while **walking**"}
+L = ["# E14 — recognizing the owner when typing a new digit string (simulated account numbers; StrokePIN, real people)", "",
+     f"Enrollment {N_PIN_ENR} PINs x {K_PER_PIN} sessions while sitting. Impostor = another person typing the **same digit string**, same posture. "
+     f"{len(FEATS)} content-independent features, **no** touch size. Split by person (58 training / "
+     f"{len(USERS) - 58} test), {len(SPLITS)} splits; 95% bootstrap CI by person, averaged across splits. Lower is better.", "",
+     "| Test | Detector | EER | FAR @ FRR 5% | Owner sessions / impostor / people (last split) |", "|---|---|---|---|---|"]
 for (c, name), v in sorted(res.items()):
     est, lo, hi = (np.mean([x[i] for x in v], axis=0) for i in range(3))
     g, i_, n = n_test[c]
     L.append(f"| {LABEL[c]} | {name} | {est[0]:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {est[1]:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] | {g} / {i_} / {n} |")
-L += ["", "Đối chiếu E12b (cùng PIN, đặc trưng theo vị trí chữ số, không kích thước chạm): khoảng cách EER 0.161 / FAR 0.573; "
-      "LightGBM EER 0.158 / FAR 0.375. Khác giao thức (E12b đăng ký 3 lượt của MỘT PIN), nên chỉ so hướng, không so từng số."]
+L += ["", "Comparison with E12b (same PIN, per-digit-position features, no touch size): distance EER 0.161 / FAR 0.573; "
+      "LightGBM EER 0.158 / FAR 0.375. Different protocol (E12b enrolls 3 sessions of ONE PIN), so only the direction is comparable, not individual numbers."]
 (ROOT / "research/results/e14_unseen_digits.md").write_text("\n".join(L) + "\n", encoding="utf-8")
 print("\n".join(L))

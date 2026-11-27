@@ -1,11 +1,11 @@
-"""E4b: bài "người hay máy" với NGƯỜI THẬT (StrokePIN) và bot do bộ sinh tạo, đánh giá bỏ-một-chiến-thuật.
+"""E4b: the "human or bot" task with REAL HUMANS (StrokePIN) and generator-made bots, leave-one-tactic-out evaluation.
 
-Khác E4 (người giả): người là phiên PIN thật. Bot vẫn là 4 chiến thuật của nhóm (attacker/tactics.py) nhưng dựng
-trên PIN thật và phân bố của người thật (chiến thuật 3 phát lại một phiên người thật, 4 lấy mẫu từ dân số thật).
-Chia theo NGƯỜI (không người nào xuất hiện ở hai tập): train / val / test / kho của kẻ tấn công.
-Chỉ so phần PIN: StrokePIN không có vuốt/màn hình, nên bot cũng bị bỏ vuốt/màn hình (nếu không, bot khác người ở chỗ không liên quan).
-FRR thật trên người ở tập test có thể lệch 5% vì người test dùng thiết bị khác người validation: đó là kết quả, không phải lỗi.
-Hạn chế: bot vẫn là giả. Chưa có bot thật (adb, dispatchGesture).
+Unlike E4 (synthetic humans): the humans are real PIN sessions. The bots are still the team's 4 tactics (attacker/tactics.py) but built
+on real PINs and the real human distribution (tactic 3 replays a real human session, tactic 4 samples from the real population).
+Split by PERSON (no person appears in two sets): train / val / test / attacker pool.
+Only the PIN part is compared: StrokePIN has no swipes/screens, so the bots also have swipes/screens removed (otherwise bots would differ from humans in an irrelevant way).
+The actual FRR on humans in the test set can deviate from 5% because test people use different devices than validation people: that is a result, not a bug.
+Limitation: the bots are still synthetic. No real bots yet (adb, dispatchGesture).
 """
 
 import random
@@ -78,20 +78,20 @@ def metrics(sc, thr, hum, bots):
 
 def evaluate(d, seed):
     res = {}
-    for names, tag in ((ALL, ""), (NO_CONTACT, " (không kích thước chạm)")):
+    for names, tag in ((ALL, ""), (NO_CONTACT, " (no touch size)")):
         F = {("H", k): vec(d["H"][k], names) for k in ("train", "val", "test")}
         F.update({(t, k): vec(d["B"][t][k], names) for t in TACTICS for k in ("train", "val", "test")})
-        for scen, held in [("tất cả chiến thuật", None)] + [(f"bỏ chiến thuật {t}", t) for t in TACTICS]:
+        for scen, held in [("all tactics", None)] + [(f"drop tactic {t}", t) for t in TACTICS]:
             tr = [t for t in TACTICS if t != held]
             m = fit_lgb(F[("H", "train")], np.vstack([F[(t, "train")] for t in tr]), seed)
             iso = IsolationForest(n_estimators=200, random_state=seed).fit(F[("H", "train")])
             sl, si = (lambda X, m=m: m.predict_proba(X)[:, 1]), (lambda X, iso=iso: iso.score_samples(X))
             test_b = {t: F[(t, "test")] for t in (TACTICS if held is None else [held])}
-            for name, sc in (("LightGBM" + tag, sl), ("IsolationForest (chỉ người)" + tag, si)):
+            for name, sc in (("LightGBM" + tag, sl), ("IsolationForest (humans only)" + tag, si)):
                 res[(name, scen)] = metrics(sc, np.quantile(sc(F[("H", "val")]), FRR), F[("H", "test")], test_b)
             tl, ti = (np.quantile(f(F[("H", "val")]), 0.0267) for f in (sl, si))
             ens = lambda X: np.where((sl(X) < tl) | (si(X) < ti), 0.0, 1.0)  # noqa: E731
-            res[("Bộ kết hợp" + tag, scen)] = metrics(ens, 0.5, F[("H", "test")], test_b)
+            res[("Combined" + tag, scen)] = metrics(ens, 0.5, F[("H", "test")], test_b)
     sv = rule_score(d["H"]["val"])
     thr = np.quantile(sv, FRR)
     sh = rule_score(d["H"]["test"])
@@ -100,7 +100,7 @@ def evaluate(d, seed):
     for t in TACTICS:
         sb = rule_score(d["B"][t]["test"])
         row[t] = (float(flag(sb).mean()), float(roc_auc_score(np.r_[np.ones(len(sh)), np.zeros(len(sb))], np.r_[sh, sb])))
-    res[("Luật baseline (human.py)", "không huấn luyện")] = row
+    res[("Baseline rules (human.py)", "no training")] = row
     return res
 
 
@@ -112,22 +112,22 @@ def cell(r, t):
     return f"{np.mean([x[t][0] for x in r]):.2f}" + ("" if np.isnan(np.mean([x[t][1] for x in r])) else f" ({np.mean([x[t][1] for x in r]):.2f})")
 
 
-lines = ["# E4b — người/máy với NGƯỜI THẬT (StrokePIN) và bot do bộ sinh tạo", "",
-         f"{len(SEEDS)} cách chia người khác nhau (train 40 / val 12 / test 30 / kho kẻ tấn công 15 người, không trùng người). "
-         f"Ngưỡng chọn để FRR = {FRR:.0%} trên người ở tập validation. Mỗi ô: **tỷ lệ bot bị bắt** (AUC). "
-         "Chỉ so phần PIN. Bot vẫn là giả.", "",
-         "## Huấn luyện thấy cả 4 chiến thuật", "", "| Mô hình | FRR thật (người test) | CT1 | CT2 | CT3 | CT4 |", "|---|---|---|---|---|---|"]
+lines = ["# E4b — human/bot with REAL HUMANS (StrokePIN) and generator-made bots", "",
+         f"{len(SEEDS)} different splits of people (train 40 / val 12 / test 30 / attacker pool 15 people, no person in two sets). "
+         f"The threshold is chosen so that FRR = {FRR:.0%} on humans in the validation set. Each cell: **share of bots caught** (AUC). "
+         "Only the PIN part is compared. The bots are still synthetic.", "",
+         "## Training saw all 4 tactics", "", "| Model | Actual FRR (test humans) | T1 | T2 | T3 | T4 |", "|---|---|---|---|---|---|"]
 for k in keys:
-    if k[1] not in ("tất cả chiến thuật", "không huấn luyện"):
+    if k[1] not in ("all tactics", "no training"):
         continue
     r = [x[k] for x in all_res]
     lines.append(f"| {k[0]} | {np.mean([x['FRR'] for x in r]):.3f} | " + " | ".join(cell(r, t) for t in TACTICS) + " |")
-lines += ["", "## Bỏ đúng một chiến thuật khỏi huấn luyện, kiểm thử trên chiến thuật đó (bot lạ)", "",
-          "| Mô hình | FRR thật | Bỏ CT1 | Bỏ CT2 | Bỏ CT3 | Bỏ CT4 |", "|---|---|---|---|---|---|"]
-for name in dict.fromkeys(k[0] for k in keys if k[1].startswith("bỏ")):
+lines += ["", "## Drop exactly one tactic from training, test on that tactic (unseen bots)", "",
+          "| Model | Actual FRR | Drop T1 | Drop T2 | Drop T3 | Drop T4 |", "|---|---|---|---|---|---|"]
+for name in dict.fromkeys(k[0] for k in keys if k[1].startswith("drop")):
     cells, frr = [], []
     for t in TACTICS:
-        r = [x[(name, f"bỏ chiến thuật {t}")] for x in all_res]
+        r = [x[(name, f"drop tactic {t}")] for x in all_res]
         cells.append(cell(r, t))
         frr += [x["FRR"] for x in r]
     lines.append(f"| {name} | {np.mean(frr):.3f} | " + " | ".join(cells) + " |")

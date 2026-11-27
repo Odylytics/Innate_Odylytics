@@ -1,7 +1,7 @@
-"""E10b: kiểm tra CHÍNH owner.build_template/owner.score của backend (có co rút) trên StrokePIN, prior bỏ-một-người.
+"""E10b: test the backend's OWN owner.build_template/owner.score (with shrinkage) on StrokePIN, leave-one-person-out prior.
 
-So `owner._PRIOR` = prior bỏ-một-người (bật) với `{}` (tắt, hành vi cũ), CÙNG các lượt đăng ký và kiểm thử.
-Dùng mọi đặc trưng nhận dạng như backend thật (thời gian + lệch tâm + kích thước chạm). k=3, kẻ gian biết PIN.
+Compares `owner._PRIOR` = leave-one-person-out prior (on) with `{}` (off, old behavior), with the SAME enrollment and test sessions.
+Uses all identity features as in the real backend (timing + center offset + touch size). k=3, PIN-knowing impostor.
 """
 
 import random
@@ -39,18 +39,18 @@ def dist(f, tpl):
     return float(np.mean([abs(v) for v in owner.score(f, tpl)[1].values()]))
 
 
-res = defaultdict(lambda: defaultdict(lambda: ([], [])))  # (tư thế, chế độ)[user] = (gen, imp)
+res = defaultdict(lambda: defaultdict(lambda: ([], [])))  # (posture, mode)[user] = (gen, imp)
 for (u, p, po), es in grp.items():
     if po != "sit" or len(es) < K:
         continue
     for _ in range(N_DRAW):
         enr = rng.sample(es, K)
-        for tpost, gen in (("cùng tư thế (ngồi)", [e for e in es if e not in enr]), ("đổi tư thế (đi)", grp.get((u, p, "walk"), []))):
+        for tpost, gen in (("same posture (sitting)", [e for e in es if e not in enr]), ("changed posture (walking)", grp.get((u, p, "walk"), []))):
             if not gen:
                 continue
-            pool = [e for v, ves in bpp[(p, "sit" if tpost.startswith("cùng") else "walk")].items() if v != u for e in ves]
+            pool = [e for v, ves in bpp[(p, "sit" if tpost.startswith("same") else "walk")].items() if v != u for e in ves]
             imp = rng.sample(pool, min(N_IMP, len(pool)))
-            for mode, prior in (("tắt (hành vi cũ)", {}), ("bật (co rút thời gian)", ON(u))):
+            for mode, prior in (("off (old behavior)", {}), ("on (timing shrinkage)", ON(u))):
                 owner._PRIOR = prior
                 tpl = owner.build_template([e["f"] for e in enr])
                 g, i = res[(tpost, mode)][u]
@@ -71,19 +71,19 @@ def pooled(pu, us):
     return np.concatenate([pu[u][0] for u in us]), np.concatenate([pu[u][1] for u in us])
 
 
-lines = ["# E10b — chính `owner.py` của backend trên StrokePIN (prior bỏ-một-người)", "",
-         f"k={K} lượt đăng ký ngồi, kẻ gian biết PIN, mọi đặc trưng nhận dạng như backend thật. CI 95% bootstrap theo người ({BOOT} lần). "
-         "Hàng cuối mỗi bảng là chênh lệch ghép cặp (bật trừ tắt; âm = tốt hơn).", ""]
-for tpost in ("cùng tư thế (ngồi)", "đổi tư thế (đi)"):
-    off, on = res[(tpost, "tắt (hành vi cũ)")], res[(tpost, "bật (co rút thời gian)")]
+lines = ["# E10b — the backend's own `owner.py` on StrokePIN (leave-one-person-out prior)", "",
+         f"k={K} sitting enrollment sessions, PIN-knowing impostor, all identity features as in the real backend. 95% CI by bootstrap over people ({BOOT} resamples). "
+         "The last row of each table is the paired difference (on minus off; negative = better).", ""]
+for tpost in ("same posture (sitting)", "changed posture (walking)"):
+    off, on = res[(tpost, "off (old behavior)")], res[(tpost, "on (timing shrinkage)")]
     us = sorted(off)
     rs = [rng.choices(us, k=len(us)) for _ in range(BOOT)]
     mo, mn = [metrics(*pooled(off, r)) for r in rs], [metrics(*pooled(on, r)) for r in rs]
     d = np.array([b - a for a, b in zip(mo, mn)])
     e_off, e_on = metrics(*pooled(off, us)), metrics(*pooled(on, us))
     lo, hi = np.quantile(d, 0.025, axis=0), np.quantile(d, 0.975, axis=0)
-    lines += [f"## {tpost}", "", "| Co rút | EER | FAR @ FRR 5% |", "|---|---|---|",
-              f"| tắt (hành vi cũ) | {e_off[0]:.3f} | {e_off[1]:.3f} |", f"| bật (co rút thời gian) | {e_on[0]:.3f} | {e_on[1]:.3f} |",
-              f"| **chênh lệch ghép cặp** | {e_on[0]-e_off[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {e_on[1]-e_off[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |", ""]
+    lines += [f"## {tpost}", "", "| Shrinkage | EER | FAR @ FRR 5% |", "|---|---|---|",
+              f"| off (old behavior) | {e_off[0]:.3f} | {e_off[1]:.3f} |", f"| on (timing shrinkage) | {e_on[0]:.3f} | {e_on[1]:.3f} |",
+              f"| **paired difference** | {e_on[0]-e_off[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {e_on[1]-e_off[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |", ""]
 (ROOT / "research/results/e10b_backend_path.md").write_text("\n".join(lines), encoding="utf-8")
 print("\n".join(lines))

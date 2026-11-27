@@ -1,8 +1,8 @@
-# E30 — số lượt đăng ký và phân bố lỗi theo nạn nhân (StrokePIN, ngồi, khoảng cách của backend)
+# E30 — number of enrollment sessions and error distribution by victim (StrokePIN, sitting, backend distance)
 
-k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử (tối đa 5 lượt ngồi mỗi người–PIN). CI 95% bootstrap theo người. FAR@FRR5% dùng ngưỡng chung; cột Gini và 'nạn nhân FAR>90%' là theo từng nạn nhân (người chủ tài khoản).
+k=1 has no standard deviation; k=5 leaves no test session (at most 5 sitting sessions per person-PIN). 95% CI by bootstrap over people. FAR@FRR5% uses a common threshold; the Gini and 'victims with FAR>90%' columns are per victim (the account owner).
 
-| k | EER | FAR@FRR5% | Gini FAR theo nạn nhân | nạn nhân FAR > 90% | trung vị FAR nạn nhân |
+| k | EER | FAR@FRR5% | Gini of FAR by victim | victims with FAR > 90% | median victim FAR |
 |---|---|---|---|---|---|
 | 2 | 0.167 [0.156, 0.178] | 0.857 [0.661, 0.923] | 0.02 | 7/97 | 0.86 |
 | 3 | 0.146 [0.138, 0.155] | 0.503 [0.421, 0.627] | 0.10 | 0/97 | 0.52 |

@@ -3,7 +3,7 @@ import random
 import tempfile
 
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(tempfile.mkdtemp(), "test.db")
-# test-key có mọi quyền cho các test luồng; sdk-key/ops-key/ml-key mỗi key một quyền cho test phân quyền
+# test-key has all permissions for the flow tests; sdk-key/ops-key/ml-key have one permission each for the permission tests
 os.environ["NHIP_API_KEYS"] = "test-key,sdk-key"
 os.environ["NHIP_OPS_KEYS"] = "test-key,ops-key"
 os.environ["NHIP_ML_KEYS"] = "test-key,ml-key"
@@ -54,7 +54,7 @@ def test_full_flow(client):
     rng = random.Random(7)
     user = "owner1"
 
-    # Chưa đăng ký -> owner_match None
+    # Not enrolled -> owner_match None
     first = _score(client, _post_session(client, human_session(user, OWNER, rng)))
     assert first["owner_match"] is None and "not_enrolled" in first["reasons"]
 
@@ -65,26 +65,26 @@ def test_full_flow(client):
     assert {k: r.json()[k] for k in ("user_id", "enrolled_sessions", "template_ready", "enroll_open")} == {
         "user_id": user, "enrolled_sessions": 3, "template_ready": True, "enroll_open": False}
 
-    # Chủ thật, người nhận cũ -> cho qua (trên phần lớn các lần thử)
+    # Real owner, known recipient -> allowed through (on most attempts)
     owner_results = [_score(client, _post_session(client, human_session(user, OWNER, rng)), amount=100_000)
                      for _ in range(5)]
     assert sum(r["action"] == "allow" for r in owner_results) >= 4, owner_results
     assert all(r["human_score"] > 0.7 for r in owner_results)
 
-    # Người khác biết PIN -> yêu cầu xác thực thêm, có lý do cụ thể
+    # Someone else who knows the PIN -> require extra verification, with a specific reason
     imp = _score(client, _post_session(client, human_session(user, IMPOSTOR, rng)), amount=100_000)
     assert imp["action"] in ("step_up", "hold"), imp
     assert imp["owner_match"] < 0.5
     assert any(r.startswith(("pin_rhythm_", "tap_offset_")) for r in imp["reasons"])
     assert "không khớp thói quen" in imp["explanation_vi"]
 
-    # Bot -> giữ lệnh, báo không phải người
+    # Bot -> hold the order, report not human
     bot = _score(client, _post_session(client, bot_session(user)), recipient_is_new=True, amount=5_000_000)
     assert bot["action"] == "hold" and bot["human_score"] < 0.3, bot
     assert "tap_exact_center" in bot["reasons"] and "new_recipient" in bot["reasons"]
-    assert "amount_unusual" in bot["reasons"]  # 50x trung vị lịch sử
+    assert "amount_unusual" in bot["reasons"]  # 50x the historical median
 
-    # Mẫu chuẩn được cập nhật sau các phiên chủ thật được cho qua
+    # The template is updated after real-owner sessions are allowed through
     assert client.get(f"/v1/users/{user}", headers=H).json()["template_updates"] >= 1
 
     # Dashboard
@@ -106,7 +106,7 @@ def test_template_drift_is_capped():
 
     feats = [features.extract(human_session("u", OWNER, rng)) for _ in range(3)]
     tpl = owner.build_template(feats)
-    far = {k: v + 1000 for k, v in feats[0].items()}  # kẻ gian "dạy dần" bằng phiên lệch xa
+    far = {k: v + 1000 for k, v in feats[0].items()}  # an attacker "teaches gradually" with far-off sessions
     for _ in range(200):
         tpl = owner.update(tpl, far)
     for k in tpl["mu"]:
@@ -121,7 +121,7 @@ def test_collection_meta_and_export(client):
     imp = human_session("acc_p01", IMPOSTOR, rng)
     imp["meta"] = {"participant_id": "p02", "sitting": 1, "role": "impostor", "note": "xem chủ bấm 1 lần"}
     _post_session(client, imp)
-    _post_session(client, human_session("acc_p01", OWNER, rng))  # không meta -> không xuất
+    _post_session(client, human_session("acc_p01", OWNER, rng))  # no meta -> not exported
 
     bad = dict(body, meta={"participant_id": "p01", "sitting": 0, "role": "genuine"})
     assert client.post("/v1/sessions", json=bad, headers=H).status_code == 422
@@ -143,7 +143,7 @@ def test_collect_page_name_email_and_pin(client):
     row = client.get("/v1/export?participant_id=e1a2b3", headers=H).json()[0]
     assert row["meta"]["email"] == "a@example.com" and row["meta"]["full_name"] == "Nguyễn Văn A"
     assert "pin_hold_0" in row["features"]
-    # trang thu cố ý lưu chữ số PIN người tham gia tự đặt (pin_taps[].key) để nghiên cứu
+    # the collection page intentionally stores the PIN digits the participant chose (pin_taps[].key) for research
     assert "".join(t["key"] for t in row["raw"]["pin_taps"]) == "".join(t["key"] for t in body["pin_taps"])
 
 
@@ -168,7 +168,7 @@ def test_root_redirects_to_docs(client):
 
 
 def _replayed(src: dict, user: str, rng: random.Random, noise: float = 0.05) -> dict:
-    """Phát lại một phiên thật: thời gian ±noise, toạ độ ±2 px (như chiến thuật 3)."""
+    """Replay a real session: time ±noise, coordinates ±2 px (like tactic 3)."""
     import copy
     s = copy.deepcopy(src)
     s["user_id"] = user
@@ -193,11 +193,11 @@ def test_replayed_session_is_held_but_new_human_session_is_not(client):
         sid = _post_session(client, s)
         assert client.post(f"/v1/users/{user}/enroll", json={"session_id": sid}, headers=H).status_code == 200
 
-    # phiên người thật mới (không phải bản sao) không bị coi là phát lại
+    # a new real-person session (not a copy) is not treated as a replay
     fresh = _score(client, _post_session(client, sessions[3]))
     assert "replayed_session" not in fresh["reasons"]
 
-    # phát lại một phiên đã đăng ký, thêm nhiễu nhỏ -> giữ lệnh
+    # replay an enrolled session, adding small noise -> hold the order
     r = _score(client, _post_session(client, _replayed(sessions[0], user, rng)))
     assert r["action"] == "hold" and "replayed_session" in r["reasons"]
 
@@ -219,13 +219,13 @@ def test_text_set_without_keys_is_flagged_but_typing_and_paste_are_not(client):
     r = _score(client, _post_session(client, typed))
     assert "text_set_without_keys" not in r["reasons"] and r["action"] != "hold"
 
-    pasted = human_session(user, OWNER, rng)  # người nhận dán từ danh bạ: bình thường
+    pasted = human_session(user, OWNER, rng)  # recipient pasted from the contacts: normal
     pasted["fields"] = [{"name": "recipient", "events": [{"t": 900, "kind": "paste", "n": 10}]},
                         _typed("amount", rng, 6, "digit", 1500)]
     r = _score(client, _post_session(client, pasted))
     assert "text_set_without_keys" not in r["reasons"]
 
-    bot = human_session(user, OWNER, rng)  # số tiền đặt thẳng, không có phím (kiểu ACTION_SET_TEXT)
+    bot = human_session(user, OWNER, rng)  # amount set directly, no keys (ACTION_SET_TEXT style)
     bot["fields"] = [{"name": "amount", "events": [{"t": 800, "kind": "set_text", "n": 6}]}]
     r = _score(client, _post_session(client, bot))
     assert "text_set_without_keys" in r["reasons"] and r["action"] == "hold"
@@ -244,7 +244,7 @@ def test_field_typing_rhythm_enters_identity_features_only_with_enough_keys():
     from app.scoring import bot_features, features
     rng = random.Random(23)
     s = human_session("u", OWNER, rng)
-    s["fields"] = [_typed("note", rng, 12, "letter"), _typed("amount", rng, 2, "digit")]  # ô số tiền quá ngắn
+    s["fields"] = [_typed("note", rng, 12, "letter"), _typed("amount", rng, 2, "digit")]  # amount field too short
     f = features.extract(s)
     assert "fld_note_gap_mean" in f and "fld_amount_gap_mean" not in f
     b = bot_features.extract(s)
@@ -254,34 +254,34 @@ def test_field_typing_rhythm_enters_identity_features_only_with_enough_keys():
 
 
 def test_human_model_is_loaded_and_separates_bot_from_human():
-    pytest.importorskip("lightgbm")  # mô hình là tuỳ chọn (nhóm `ml`)
+    pytest.importorskip("lightgbm")  # the model is optional (`ml` group)
     from app.scoring import human_model
     assert human_model.loaded()
     rng = random.Random(31)
     humans = [human_model.predict(human_session("m", OWNER, rng)) for _ in range(50)]
-    assert sum(p < 0.5 for p in humans) <= 2  # người giả không bị coi là máy
+    assert sum(p < 0.5 for p in humans) <= 2  # fake humans are not judged to be machines
     assert human_model.predict(bot_session("m")) < 0.5
 
 
 def test_human_model_is_optional(monkeypatch):
     from app.scoring import human_model
-    monkeypatch.setattr(human_model, "_state", {"m": None})  # như thiếu lightgbm hoặc thiếu file mô hình
+    monkeypatch.setattr(human_model, "_state", {"m": None})  # as if lightgbm or the model file were missing
     assert human_model.predict(bot_session("m")) is None and not human_model.loaded()
 
 
 def test_keys_are_scoped_by_role(client):
     sdk, ops, ml = ({"X-API-Key": k} for k in ("sdk-key", "ops-key", "ml-key"))
     sid = _post_session(client, human_session("scope_u", OWNER, random.Random(21)))
-    # key SDK (nằm trong app web) không mở được dashboard, gắn nhãn hay export
+    # the SDK key (which sits in the web app) cannot open the dashboard, label, or export
     assert client.get("/v1/export", headers=sdk).status_code == 403
     assert client.get("/v1/sessions", headers=sdk).status_code == 403
     assert client.post(f"/v1/sessions/{sid}/label", json={"label": "legit"}, headers=sdk).status_code == 403
-    # key ops chỉ dùng dashboard, key ml chỉ export
+    # the ops key is dashboard only, the ml key is export only
     assert client.get("/v1/sessions", headers=ops).status_code == 200
     assert client.get("/v1/export", headers=ops).status_code == 403
     assert client.get("/v1/export", headers=ml).status_code == 200
     assert client.post("/v1/sessions", json=human_session("x", OWNER, random.Random(1)), headers=ml).status_code == 403
-    # key lạ vẫn là 401; header ngoài ASCII không làm sập server
+    # an unknown key is still 401; a non-ASCII header does not crash the server
     assert client.get("/v1/export", headers={"X-API-Key": "sai"}).status_code == 401
     assert client.get("/v1/export", headers={"X-API-Key": "khóa".encode()}).status_code == 401
 
@@ -297,7 +297,7 @@ def test_enrollment_locked_once_template_ready(client):
     rng = random.Random(31)
     assert _enroll(client, "lock_u", [human_session("lock_u", OWNER, rng) for _ in range(3)])["template_ready"]
     tpl_before = client.get("/v1/users/lock_u", headers=H).json()
-    # kẻ gian chèn nhịp của mình vào tài khoản đã đăng ký -> bị chặn, mẫu chuẩn giữ nguyên
+    # an attacker injects their own rhythm into an enrolled account -> blocked, the template stays unchanged
     sid = _post_session(client, human_session("lock_u", IMPOSTOR, rng))
     r = client.post("/v1/users/lock_u/enroll", json={"session_id": sid}, headers=H)
     assert r.status_code == 409
@@ -306,7 +306,7 @@ def test_enrollment_locked_once_template_ready(client):
 
 def test_enrolled_user_without_pin_evidence_is_not_allowed(client):
     rng = random.Random(41)
-    no_swipe = [dict(human_session("pin_u", OWNER, rng), swipes=[]) for _ in range(3)]  # mẫu chuẩn không có đặc trưng vuốt
+    no_swipe = [dict(human_session("pin_u", OWNER, rng), swipes=[]) for _ in range(3)]  # the template has no swipe features
     _enroll(client, "pin_u", no_swipe)
     swipe_only = {"user_id": "pin_u", "pin_taps": [],
                   "swipes": [{"points": [{"t": 0, "x": 200, "y": 600}, {"t": 40, "x": 230, "y": 540},
@@ -314,7 +314,7 @@ def test_enrolled_user_without_pin_evidence_is_not_allowed(client):
     r = _score(client, _post_session(client, swipe_only))
     assert r["owner_match"] == 0 and r["action"] != "allow", r
     assert "missing_pin_evidence" in r["reasons"]
-    # PIN ngắn hơn PIN đã đăng ký cũng không được coi là khớp
+    # a PIN shorter than the enrolled PIN also must not count as a match
     short = human_session("pin_u", OWNER, rng)
     short["pin_taps"] = short["pin_taps"][:1]
     assert _score(client, _post_session(client, short))["action"] != "allow"
@@ -326,7 +326,7 @@ def test_sdk_key_has_no_public_default_outside_local(tmp_path):
 
     code = "import app.main as m; print(m.SCOPE_KEYS['sdk'])"
     env = {k: v for k, v in os.environ.items() if not k.startswith("NHIP_")}
-    # DB thật mà quên NHIP_API_KEYS -> không có key nào hợp lệ (đóng), không rơi về demo-key
+    # real DB with NHIP_API_KEYS forgotten -> no key is valid (closed), no fallback to demo-key
     pg = dict(env, DATABASE_URL="postgresql://u:p@localhost:1/db")
     assert subprocess.run([sys.executable, "-c", code], env=pg, capture_output=True, text=True,
                           check=True).stdout.strip() == "[]"
@@ -355,10 +355,10 @@ def test_export_is_paged_and_byte_bounded(client, monkeypatch):
         _post_session(client, body)
     everything, _ = _export_all(client, participant_id="page_p")
     assert len(everything) == 5
-    # trang nhỏ: đi theo X-Next-Offset vẫn lấy đủ, không trùng
+    # small pages: following X-Next-Offset still gets everything, no duplicates
     paged, pages = _export_all(client, participant_id="page_p", limit=2)
     assert [r["session_id"] for r in paged] == [r["session_id"] for r in everything] and pages > 1
-    # ngân sách byte nhỏ: mỗi trang dừng sớm nhưng vẫn lấy đủ qua nhiều trang
+    # small byte budget: each page stops early but everything is still fetched over several pages
     monkeypatch.setattr(m, "EXPORT_BYTE_BUDGET", 1)
     budgeted, pages = _export_all(client, participant_id="page_p")
     assert len(budgeted) == 5 and pages >= 5
@@ -385,17 +385,17 @@ def test_challenge_field_set_text_or_pasted_is_machine_but_typing_is_not(client)
     r = _score(client, _post_session(client, typed))
     assert "text_set_without_keys" not in r["reasons"] and "challenge_pasted" not in r["reasons"]
 
-    direct = human_session(user, OWNER, rng)  # đặt thẳng cả câu thử thách (kiểu ACTION_SET_TEXT)
+    direct = human_session(user, OWNER, rng)  # the whole challenge phrase set directly (ACTION_SET_TEXT style)
     direct["fields"] = [{"name": "challenge", "expected_len": 16, "events": [{"t": 900, "kind": "set_text", "n": 16}]}]
     r = _score(client, _post_session(client, direct))
     assert "text_set_without_keys" in r["reasons"] and r["action"] == "hold"
 
-    pasted = human_session(user, OWNER, rng)  # dán nguyên câu
+    pasted = human_session(user, OWNER, rng)  # whole phrase pasted
     pasted["fields"] = [{"name": "challenge", "expected_len": 16, "events": [{"t": 900, "kind": "paste", "n": 16}]}]
     r = _score(client, _post_session(client, pasted))
     assert "challenge_pasted" in r["reasons"]
 
-    autocorrected = human_session(user, OWNER, rng)  # bàn phím tự sửa một từ: KHÔNG phải dán cả câu
+    autocorrected = human_session(user, OWNER, rng)  # the keyboard autocorrects one word: NOT a whole-phrase paste
     autocorrected["fields"] = [dict(_typed("challenge", rng, 14, "letter"), expected_len=16)]
     autocorrected["fields"][0]["events"].append({"t": 9000, "kind": "paste", "n": 3})
     assert "challenge_pasted" not in _score(client, _post_session(client, autocorrected))["reasons"]
@@ -408,8 +408,8 @@ def test_owner_model_scores_small_deviations_high_and_falls_back_when_not_applic
     keys = owner_model._load()[1]["features"]
     close = owner_model.predict({k: 0.2 for k in keys})
     far = owner_model.predict({k: 4.0 for k in keys})
-    assert 0 <= far < 0.5 < close <= 1  # độ lệch nhỏ => khớp chủ cao; lớn => thấp
-    assert owner_model.predict({k: 0.2 for k in keys[:-1]}) is None  # thiếu một đặc trưng (vd. PIN không đủ 6 phím) => dùng điểm cũ
+    assert 0 <= far < 0.5 < close <= 1  # small deviation => high owner match; large => low
+    assert owner_model.predict({k: 0.2 for k in keys[:-1]}) is None  # one feature missing (e.g. PIN shorter than 6 keys) => use the old score
 
 
 def test_owner_model_is_optional(monkeypatch):
@@ -432,9 +432,9 @@ def test_participant_registration_stores_email_and_name(client):
     with SessionLocal() as db:
         p = db.get(Participant, "u_test1")
         assert (p.email, p.full_name) == ("nguyen.an@example.com", "Nguyễn Văn An")
-    # gửi lại cùng id thì cập nhật, không lỗi
+    # resubmitting the same id updates it, no error
     assert client.post("/v1/participants", json={**body, "full_name": "Nguyễn Văn Bình"}, headers=H).status_code == 200
-    # không kiểm export ở đây: từ 25/11 trang thu ghi email + họ tên vào meta phiên nên /v1/export có chúng (docs/plan/thu-du-lieu-doi.md)
+    # export is not checked here: since 25/11 the collection page writes email + full name into the session meta, so /v1/export contains them (docs/plan/thu-du-lieu-doi.md)
 
 
 @pytest.mark.parametrize("bad", [{"email": "khong-phai-email"}, {"full_name": "An 2"}, {"full_name": "A"}, {"participant_id": "a b"}])
@@ -453,7 +453,7 @@ def _challenge_session(client, user, token, phrase):
 def test_challenge_token_is_single_use(client):
     c = client.get("/v1/challenge", headers=H).json()
     first = _score(client, _challenge_session(client, "tok_u", c["token"], c["phrase"]))
-    again = _score(client, _challenge_session(client, "tok_u", c["token"], c["phrase"]))  # client tự xưng token_status=ok: bị ghi đè
+    again = _score(client, _challenge_session(client, "tok_u", c["token"], c["phrase"]))  # the client claims token_status=ok: overwritten
     assert "challenge_token_replayed" not in first["reasons"]
     assert "challenge_token_replayed" in again["reasons"] and again["action"] != "allow"
     forged = _score(client, _challenge_session(client, "tok_u", "abc.def", c["phrase"]))
@@ -478,11 +478,11 @@ def test_template_freezes_when_drift_is_directional():
     for _ in range(50):
         tpl = owner.update(tpl, far)
     assert tpl["frozen"] and owner.drift(tpl) > owner.FREEZE_DRIFT
-    assert owner.update(tpl, feats[1]) is tpl  # đóng băng: không nhận thêm phiên nào
+    assert owner.update(tpl, feats[1]) is tpl  # frozen: accepts no further sessions
 
 
 def test_learned_models_load_by_default(client):
-    """Bản nộp phải có mô hình học chạy ngay khi cài đặt mặc định (không cần lightgbm/libgomp): /health báo true và file mô hình có mặt."""
+    """The submission build must have the learned models running right on a default install (no lightgbm/libgomp needed): /health reports true and the model files are present."""
     from pathlib import Path
     from app.scoring import human_model, owner_model
     models = Path(__file__).parents[1] / "app" / "models"
@@ -520,7 +520,7 @@ def test_open_enrollment_auto_closes_at_max(client):
 
 def test_finish_needs_template(client):
     rng = random.Random(43)
-    _post_session(client, human_session("fin_u", OWNER, rng))  # tạo user, chưa đăng ký
+    _post_session(client, human_session("fin_u", OWNER, rng))  # create the user, not enrolled yet
     assert client.post("/v1/users/fin_u/enroll/finish", headers=H).status_code == 400
     assert client.post("/v1/users/nobody_u/enroll/finish", headers=H).status_code == 404
 
@@ -541,13 +541,13 @@ def test_account_signup_login_and_unique_email(client):
     assert r.status_code == 200, r.text
     a = r.json()
     assert a["email"] == "ha@example.com" and a["full_name"] == "Nguyễn Hà" and a["enrolled_sessions"] == 0
-    # cùng email (khác hoa thường) -> 409
+    # same email (different case) -> 409
     assert client.post("/v1/accounts/signup", json={**body, "email": "HA@example.com"}, headers=H).status_code == 409
     ok = client.post("/v1/accounts/login", json={"email": "ha@EXAMPLE.com", "password": "matkhau1"}, headers=H)
     assert ok.status_code == 200 and ok.json()["user_id"] == a["user_id"]
     assert client.post("/v1/accounts/login", json={"email": "ha@example.com", "password": "sai-roi"}, headers=H).status_code == 401
     assert client.post("/v1/accounts/login", json={"email": "ai@example.com", "password": "matkhau1"}, headers=H).status_code == 401
-    # tài khoản dùng được ngay cho luồng đăng ký nhịp
+    # the account is usable right away for the rhythm enrollment flow
     rng = random.Random(51)
     st = _enroll(client, a["user_id"], [human_session(a["user_id"], OWNER, rng) for _ in range(3)])
     assert st["template_ready"]

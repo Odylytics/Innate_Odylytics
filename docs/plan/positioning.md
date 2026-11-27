@@ -1,75 +1,75 @@
-# Innate là gì trong bức tranh an ninh mạng
+# What Innate is in the cybersecurity picture
 
-> Chốt ngày 24/11/2026. Đây là tài liệu **định vị** (Innate nằm ở đâu, làm gì, không làm gì). Giải thích cơ chế: [`how-it-works.md`](how-it-works.md). Câu chuyện pitch: [`pitch-story.md`](pitch-story.md).
+> Finalized 24/11/2026. This is the **positioning** document (where Innate sits, what it does and does not do). Mechanism explained in: [`how-it-works.md`](how-it-works.md). Pitch story: [`pitch-story.md`](pitch-story.md).
 
-## Một câu
+## In one sentence
 
-> **Innate là lớp kiểm chứng con người (human verification layer) chạy ngầm ở bước xác nhận giao dịch: AI so khớp thao tác hiện tại với thói quen đã đăng ký và với hình mẫu của người thật, để trả lời "đây là người hay máy, và có phải chủ không", trước khi tiền rời đi.**
+> **Innate is a human verification layer that runs silently at the transaction confirmation step: AI matches the current interaction against the enrolled habit and against the pattern of real people, to answer "is this a human or a machine, and is it the owner", before the money leaves.**
 
-Nó là một lớp **bảo mật hành vi thụ động** (passive behavioral security), không thay thế bất kỳ lớp nào có sẵn, mà bổ sung lớp mà các lớp kia không có: **bằng chứng rằng người đang thao tác là con người, và là đúng chủ**.
+It is a **passive behavioral security** layer. It does not replace any existing layer; it adds what the others lack: **evidence that the one operating the device is a human, and the right owner**.
 
-## Vì sao cần lớp này
+## Why this layer is needed
 
-Mọi lớp xác thực truyền thống kiểm tra thứ **có thể bị lấy đi**: PIN (nhìn lén), OTP (đọc được), thiết bị (chiếm được). Mã độc Trợ năng (kỹ thuật được MITRE ATT&CK for Mobile xếp vào **Input Injection, T1516**) khiến mọi thứ trông đúng: đúng app, đúng PIN, đúng thiết bị, đúng phiên đang mở. Câu hỏi còn lại mà không lớp nào trả lời: **ai hoặc cái gì đang chạm vào màn hình?**
+Every traditional authentication layer checks something that **can be taken away**: the PIN (shoulder surfing), the OTP (can be read), the device (can be seized). Accessibility malware (a technique MITRE ATT&CK for Mobile files under **Input Injection, T1516**) makes everything look right: the right app, the right PIN, the right device, the right open session. The question no layer answers: **who or what is touching the screen?**
 
-## Innate nằm ở đâu trong chồng bảo mật
+## Where Innate sits in the security stack
 
 ```
-┌─ 1. Toàn vẹn thiết bị/ứng dụng  (attestation, chống root/hook, quét mã độc)   "máy này có sạch không?"
-├─ 2. Xác thực                     (PIN, OTP, khuôn mặt, vân tay)                 "người này biết/có/là gì?"
-├─ 3. ★ INNATE: kiểm chứng con người (hành vi chạm/gõ, chạy ngầm)               "thao tác này do NGƯỜI hay MÁY?
-│        AI so khớp với thói quen đã đăng ký + hình mẫu người thật                   Có phải CHỦ không?"
-├─ 4. Rủi ro giao dịch             (số tiền, người nhận, lịch sử, mạng lưới)       "giao dịch này có bất thường không?"
-└─ 5. Vận hành & phản hồi          (dashboard, xác thực thêm, giữ lệnh, điều tra)
+┌─ 1. Device/app integrity         (attestation, anti-root/hook, malware scanning)   "is this device clean?"
+├─ 2. Authentication               (PIN, OTP, face, fingerprint)                      "what does this person know/have/are?"
+├─ 3. ★ INNATE: human verification (touch/typing behavior, runs silently)             "is this interaction by a HUMAN or a MACHINE?
+│        AI matches against enrolled habit + real-human pattern                        Is it the OWNER?"
+├─ 4. Transaction risk             (amount, recipient, history, network)               "is this transaction unusual?"
+└─ 5. Operations & response        (dashboard, extra authentication, hold, investigation)
 ```
 
-- **Bổ sung, không thay thế.** Lớp 1 (attestation) trả lời "máy có bị can thiệp không"; Innate trả lời "người trên máy có phải người thật và đúng chủ không". Mã độc đủ tinh vi có thể qua lớp 1; thao tác của nó vẫn để lại dấu vết hành vi. Ngược lại, kẻ đứng cạnh biết PIN thì qua mọi lớp thiết bị, nhưng không có thói quen của chủ.
-- **Phía API:** đối tác (ví, ngân hàng) nhúng SDK thu tín hiệu và gọi một API chấm điểm. Đầu ra là điểm và hành động đề xuất, không phải quyết định cuối: đối tác giữ quyền quyết định.
+- **Complements, does not replace.** Layer 1 (attestation) answers "has the device been tampered with"; Innate answers "is the one on the device a real person and the right owner". Sufficiently sophisticated malware may pass layer 1; its interactions still leave behavioral traces. Conversely, someone standing next to the owner who knows the PIN passes every device layer but lacks the owner's habits.
+- **API side:** the partner (wallet, bank) embeds the SDK that collects signals and calls a scoring API. The output is a score and a suggested action, not the final decision: the partner keeps the decision.
 
-## Tên gọi trong ngành (để giám khảo định vị nhanh)
+## Names in the industry (so judges can place it quickly)
 
-Innate thuộc nhóm mà tài liệu chuyên ngành gọi là **behavioral biometrics / continuous authentication / risk-based authentication (RBA)**, kết hợp **human-vs-bot detection** (phát hiện tự động hoá). Nói theo ngôn ngữ sản phẩm: *kiểm chứng con người ở bước xác nhận*. Lưu ý: "HUMAN Security" là tên một công ty; **đừng dùng cụm đó làm tên hay khẩu hiệu**, chỉ dùng "kiểm chứng con người" / "human verification".
+Innate belongs to the group that industry literature calls **behavioral biometrics / continuous authentication / risk-based authentication (RBA)**, combined with **human-vs-bot detection** (automation detection). In product language: *human verification at the confirmation step*. Note: "HUMAN Security" is the name of a company; **do not use that phrase as a name or slogan**, only "human verification".
 
-## AI bên dưới làm gì: so khớp (matching)
+## What the AI underneath does: matching
 
-Hai phép so khớp, đều là **xác minh 1:1** (so với một mẫu cụ thể), không phải nhận diện 1:N:
+Two matchings, both **1:1 verification** (against one specific template), not 1:N identification:
 
-| Phép so khớp | So cái gì với cái gì | Cần đăng ký? | Kết quả |
+| Matching | What is compared to what | Enrollment needed? | Result |
 |---|---|---|---|
-| **Người hay máy** | Thao tác hiện tại ↔ hình mẫu "người thật" học từ dữ liệu nhiều người (và bot) | Không | Điểm "là người" |
-| **Có phải chủ** | Thao tác hiện tại ↔ **mẫu thói quen của chính chủ** (3–5 lần đăng ký) | Có | Điểm khớp chủ |
-| **Phát lại** | Thao tác hiện tại ↔ **các phiên cũ của chính tài khoản** (trùng bất thường) | Không | Cờ "phát lại" |
+| **Human or machine** | Current interaction ↔ "real human" pattern learned from many people (and bots) | No | "Is human" score |
+| **Is it the owner** | Current interaction ↔ **the owner's own habit template** (3–5 enrollment rounds) | Yes | Owner-match score |
+| **Replay** | Current interaction ↔ **the account's own earlier sessions** (unusual duplication) | No | "Replay" flag |
 
-Hợp nhất: điểm người/máy + điểm khớp chủ + ngữ cảnh (người nhận mới, số tiền bất thường) → `allow` / `step_up` / `hold` + lý do tiếng Việt. Chi tiết kỹ thuật và số đo: [`../research/ai-research.md`](../research/ai-research.md).
+Fusion: human/machine score + owner-match score + context (new recipient, unusual amount) → `allow` / `step_up` / `hold` + a reason in Vietnamese. Technical detail and measurements: [`../research/ai-research.md`](../research/ai-research.md).
 
-## Hai kịch bản bị chặn
+## Two scenarios blocked
 
-| | A. Mã độc điều khiển từ xa | B. Người cầm máy biết PIN |
+| | A. Remotely controlled malware | B. Person holding the device who knows the PIN |
 |---|---|---|
-| Vì sao lọt các lớp khác | PIN/OTP/thiết bị đều đúng | Như trên |
-| Innate thấy gì | Thao tác **không phải ngón tay người**: nhịp quá đều, đúng tâm nút, văn bản đặt thẳng không qua phím, phát lại | Thao tác của người nhưng **không khớp thói quen chủ** |
-| Mức tin cậy hiện có | Bot ngây thơ: bắt 100%. Bot giống người: yếu (xem giới hạn) | Yếu hơn: EER 16–20% |
+| Why it slips past other layers | PIN/OTP/device are all correct | Same |
+| What Innate sees | An interaction that is **not a human finger**: rhythm too even, dead-center on buttons, text set directly without keys, replay | A human interaction that **does not match the owner's habit** |
+| Current confidence | Naive bot: caught 100%. Human-like bot: weak (see limits) | Weaker: EER 16–20% |
 
-## Innate KHÔNG làm gì
+## What Innate does NOT do
 
-- **Không phát hiện mã độc** (không quét app, không đọc nhật ký hệ thống); chỉ thấy **hệ quả** của nó lên cách chạm.
-- **Không thay PIN, OTP, khuôn mặt**: điểm thấp thì **hỏi thêm**, không chặn cứng, không tự khoá tài khoản.
-- **Không đọc nội dung**: chỉ thời gian, toạ độ, loại sự kiện, số ký tự; không lưu PIN, số tiền, nội dung chuyển khoản.
-- **Không phát hiện lừa đảo bằng nội dung** (tin nhắn, cuộc gọi); đó là việc của lớp khác.
+- **It does not detect malware** (no app scanning, no reading system logs); it only sees malware's **effect** on how touches look.
+- **It does not replace PIN, OTP, face**: a low score means **ask for more**, never a hard block, and it never locks an account by itself.
+- **It does not read content**: only timing, coordinates, event type, character count; it does not store the PIN, the amount, or the transfer note.
+- **It does not detect scams by content** (messages, calls); that is another layer's job.
 
-## Giới hạn phải nói thẳng (dữ liệu người thật công khai; chưa phải dữ liệu của đội)
+## Limits that must be stated plainly (public real-human data; not the team's data yet)
 
-- Điểm "chủ": **EER ~16%; ở FRR 5% còn 38–57% kẻ gian biết PIN lọt** (E9, E10b, E12b: 57% khoảng cách cơ bản, 38% mô hình học); đổi tư thế gần như mất tín hiệu. Đây là **tín hiệu rủi ro, không phải cổng xác thực**.
-- Bot giống người (chiến thuật phát lại, lấy mẫu dân số) bị bắt yếu; kẻ tấn công thích nghi cấp hệ thống có thể qua mặt cả chạm lẫn cảm biến (Wang 2026, ActReal: 71–77%).
-- **Đo toàn hệ thống (E24, E27, 10 người chưa từng thấy bởi mô hình học):** chủ qua 80%, bot ngây thơ và phát lại nhiễu ≤ ±10% bị giữ lệnh 100%; nhưng phát lại nhiễu ±15–30% và bot biết mẫu chuẩn của nạn nhân được cho qua 48–82%. PIN 4 số (web demo) làm mô hình chủ học không chạy (E28).
-- Web SDK không thấy được văn bản đặt thẳng không qua phím; cần SDK native.
-- Chưa có bot thật (`adb`, `dispatchGesture`) và chưa có dữ liệu của đội trong bất kỳ số đo nào.
+- "Owner" score: **EER ~16%; at FRR 5%, 38–57% of PIN-knowing impostors still get through** (E9, E10b, E12b: 57% basic distance, 38% learned model); a posture change nearly loses the signal. This is a **risk signal, not an authentication gate**.
+- Human-like bots (replay tactics, population sampling) are caught weakly; a system-level adaptive attacker can fool both touch and sensors (Wang 2026, ActReal: 71–77%).
+- **Whole-system measurement (E24, E27, 10 people never seen by the learned model):** owners pass 80%, naive bots and replay with noise ≤ ±10% are held 100%; but replay with ±15–30% noise and bots that know the victim's template are let through 48–82% of the time. A 4-digit PIN (web demo) stops the learned owner model from running (E28).
+- The web SDK cannot see text set directly without keys; a native SDK is needed.
+- No real bot (`adb`, `dispatchGesture`) yet and no team data in any measurement.
 
-## Cách nói với giám khảo
+## How to put it to the judges
 
-| Nói | Không nói |
+| Say | Do not say |
 |---|---|
-| "Một **lớp kiểm chứng con người** chạy ngầm, bổ sung cho PIN/OTP/khuôn mặt" | "Thay thế xác thực", "chống được mọi mã độc" |
-| "AI **so khớp** thao tác với thói quen chủ và với hình mẫu người thật" | "AI nhận ra bạn là ai" (nhận diện 1:N) |
-| "Bắt chắc bot ngây thơ; phần nhận chủ là tín hiệu rủi ro, điểm thấp thì hỏi thêm" | "Chính xác như vân tay" |
-| Nêu số đo thật và giới hạn trước khi bị hỏi | Hứa EER vài phần trăm như trong paper |
+| "A **human verification layer** running silently, complementing PIN/OTP/face" | "Replaces authentication", "stops all malware" |
+| "AI **matches** the interaction against the owner's habit and against the real-human pattern" | "AI recognizes who you are" (1:N identification) |
+| "Reliably catches naive bots; the owner part is a risk signal, a low score means ask for more" | "As accurate as a fingerprint" |
+| State real measurements and limits before being asked | Promise an EER of a few percent as in papers |

@@ -1,10 +1,10 @@
-"""E5b: hiệu chỉnh kiểm tra phát lại trên NGƯỜI THẬT (StrokePIN), dùng chính replay.distance của backend.
+"""E5b: calibrate the replay check on REAL HUMANS (StrokePIN), using the backend's own replay.distance.
 
-Lịch sử của tài khoản = các lượt nhập CÙNG PIN của CÙNG người (cả ngồi lẫn đi, ~10 lượt; người dùng thật nhập một PIN).
- - Người thật: mỗi lượt đối chiếu với các lượt còn lại cùng nhóm -> khoảng cách gần nhất. Ngưỡng nào thì bị coi nhầm là phát lại?
- - Phát lại: lấy một lượt trong lịch sử, thêm nhiễu thời gian ±n và toạ độ ±max(0.02, 0.4n) bề rộng phím (như E5, đổi sang đơn vị
-   bề rộng phím để không phụ thuộc thiết bị), đối chiếu với toàn bộ lịch sử (có cả bản gốc). Bắt được bao nhiêu?
-Lịch sử chỉ ~9 lượt nên KHÔNG đo được hiệu ứng "nhiều phiên cũ làm tăng FPR" của E5 (mất ở PIN 4 số, lịch sử 200): xem giới hạn.
+Account history = the entries of the SAME PIN by the SAME person (both sitting and walking, ~10 entries; a real user enters one PIN).
+ - Real human: each entry is compared with the remaining entries of the same group -> nearest distance. At which threshold is it mistaken for a replay?
+ - Replay: take one entry from the history, add timing noise ±n and coordinate noise ±max(0.02, 0.4n) key widths (as in E5, converted to units of
+   key width so it does not depend on the device), compare with the whole history (including the original). How many are caught?
+The history is only ~9 entries, so the "more old sessions raise FPR" effect of E5 (seen at 4-digit PIN, history 200) can NOT be measured: see the limits.
 """
 
 import copy
@@ -49,7 +49,7 @@ def nearest(f, hist):
     return min(ds) if ds else np.inf
 
 
-# 1) người thật mới vs lịch sử, theo kích thước lịch sử
+# 1) new real human vs history, by history size
 gen = {h: [] for h in (3, 5, 8)}
 for (u, p), es in grp.items():
     for i, e in enumerate(es):
@@ -62,7 +62,7 @@ allg = np.concatenate([np.array(v) for v in gen.values()])
 thr1 = float(np.quantile(allg, 0.01))
 thr5 = float(np.quantile(allg, 0.05))
 
-# 2) phát lại vs toàn bộ lịch sử (có bản gốc)
+# 2) replay vs the whole history (including the original)
 rep = {n: [] for n in NOISES}
 for (u, p), es in grp.items():
     hist = [features.extract(x["session"]) for x in es]
@@ -70,29 +70,29 @@ for (u, p), es in grp.items():
     for n in NOISES:
         rep[n].append(nearest(features.extract(replay_of(src["session"], n)), hist))
 
-lines = ["# E5b — hiệu chỉnh kiểm tra phát lại trên người thật (StrokePIN)", "",
-         f"{len(grp)} cặp (người, PIN), mỗi cặp 4–10 lượt cùng PIN (cả ngồi và đi). Ngưỡng hiện tại trong backend: **{CUR_THR}** "
-         "(chọn trên dữ liệu giả ở E5). Khoảng cách = `replay.distance` của backend.", "",
-         "## Người thật mới có bị coi là phát lại không? (khoảng cách gần nhất tới lịch sử của chính họ)", "",
-         "| Số phiên cũ đem so | Số lượt thử | Trung vị khoảng cách | FPR tại ngưỡng hiện tại | FPR tại 0.5x ngưỡng |", "|---|---|---|---|---|"]
+lines = ["# E5b — calibrating the replay check on real humans (StrokePIN)", "",
+         f"{len(grp)} (person, PIN) pairs, each with 4–10 entries of the same PIN (both sitting and walking). Current threshold in the backend: **{CUR_THR}** "
+         "(chosen on synthetic data in E5). Distance = the backend's `replay.distance`.", "",
+         "## Are new real humans mistaken for replays? (nearest distance to their own history)", "",
+         "| Old sessions compared | Trials | Median distance | FPR at current threshold | FPR at 0.5x threshold |", "|---|---|---|---|---|"]
 for h, v in gen.items():
     a = np.array(v)
     lines.append(f"| {h} | {len(a)} | {np.median(a):.3f} | {(a < CUR_THR).mean():.4f} | {(a < CUR_THR / 2).mean():.4f} |")
 q = {x: float(np.quantile(allg, x)) for x in (0.001, 0.005, 0.01, 0.05)}
 slope = float((np.array(gen[8]) < CUR_THR).mean() - (np.array(gen[3]) < CUR_THR).mean()) / 5
 fpr50 = float((np.array(gen[3]) < CUR_THR).mean()) + slope * (50 - 3)
-lines += ["", f"Phân vị khoảng cách người thật: 0,1% = {q[0.001]:.3f}; 0,5% = {q[0.005]:.3f}; 1% = {q[0.01]:.3f}; 5% = {q[0.05]:.3f}. "
-          f"Khoảng cách trung vị của phiên phát lại theo nhiễu: " + ", ".join(f"±{int(n*1000)/10}% -> {np.median(rep[n]):.3f}" for n in NOISES) + ".", "",
-          f"**Ngoại suy tuyến tính** FPR theo số phiên cũ (chỉ có dữ liệu tới 8): ~{slope*100:.3f} điểm phần trăm mỗi phiên cũ thêm, nên với 50 phiên khoảng **{fpr50:.1%}** "
-          "(không đo được: đây là suy đoán, lịch sử trong dữ liệu chỉ ~9 lượt).", "",
-          f"Khoảng cách người thật: phân vị 1% = **{thr1:.3f}**, 5% = {thr5:.3f}, trung vị = {np.median(allg):.3f}.", "",
-          "## Bắt được bao nhiêu phiên phát lại (kẻ tấn công thích nghi: nhiễu thời gian ±n, toạ độ ±max(0.02, 0.4n) bề rộng phím)", "",
-          "| Nhiễu ±n | " + " | ".join(f"{int(n*1000)/10}%" for n in NOISES) + " |", "|---|" + "---|" * len(NOISES),
-          f"| Ngưỡng hiện tại ({CUR_THR}) | " + " | ".join(f"{(np.array(rep[n]) < CUR_THR).mean():.2f}" for n in NOISES) + " |",
-          f"| Ngưỡng FPR 1% ({thr1:.3f}) | " + " | ".join(f"{(np.array(rep[n]) < thr1).mean():.2f}" for n in NOISES) + " |",
-          f"| Ngưỡng FPR 5% ({thr5:.3f}) | " + " | ".join(f"{(np.array(rep[n]) < thr5).mean():.2f}" for n in NOISES) + " |", ""]
-lines += ["## Đánh đổi theo ngưỡng (FPR đo ở 3/5/8 phiên cũ; ngoại suy tuyến tính tới 50; tỷ lệ bắt theo nhiễu)", "",
-          "| Ngưỡng | FPR @3 | FPR @8 | FPR @50 (ngoại suy) | " + " | ".join(f"bắt ±{int(n*1000)/10}%" for n in NOISES) + " |",
+lines += ["", f"Real-human distance percentiles: 0.1% = {q[0.001]:.3f}; 0.5% = {q[0.005]:.3f}; 1% = {q[0.01]:.3f}; 5% = {q[0.05]:.3f}. "
+          f"Median distance of replayed sessions by noise: " + ", ".join(f"±{int(n*1000)/10}% -> {np.median(rep[n]):.3f}" for n in NOISES) + ".", "",
+          f"**Linear extrapolation** of FPR by number of old sessions (data only goes up to 8): ~{slope*100:.3f} percentage points per additional old session, so with 50 sessions about **{fpr50:.1%}** "
+          "(not measured: this is a guess, the history in the data is only ~9 entries).", "",
+          f"Real-human distance: 1st percentile = **{thr1:.3f}**, 5th percentile = {thr5:.3f}, median = {np.median(allg):.3f}.", "",
+          "## How many replayed sessions are caught (adaptive attacker: timing noise ±n, coordinates ±max(0.02, 0.4n) key widths)", "",
+          "| Noise ±n | " + " | ".join(f"{int(n*1000)/10}%" for n in NOISES) + " |", "|---|" + "---|" * len(NOISES),
+          f"| Current threshold ({CUR_THR}) | " + " | ".join(f"{(np.array(rep[n]) < CUR_THR).mean():.2f}" for n in NOISES) + " |",
+          f"| FPR 1% threshold ({thr1:.3f}) | " + " | ".join(f"{(np.array(rep[n]) < thr1).mean():.2f}" for n in NOISES) + " |",
+          f"| FPR 5% threshold ({thr5:.3f}) | " + " | ".join(f"{(np.array(rep[n]) < thr5).mean():.2f}" for n in NOISES) + " |", ""]
+lines += ["## Trade-off by threshold (FPR measured at 3/5/8 old sessions; linear extrapolation to 50; catch rate by noise)", "",
+          "| Threshold | FPR @3 | FPR @8 | FPR @50 (extrapolated) | " + " | ".join(f"catch ±{int(n*1000)/10}%" for n in NOISES) + " |",
           "|---|---|---|---|" + "---|" * len(NOISES)]
 for th in (0.05, 0.06, 0.07, 0.085, 0.094):
     f3, f8 = float((np.array(gen[3]) < th).mean()), float((np.array(gen[8]) < th).mean())

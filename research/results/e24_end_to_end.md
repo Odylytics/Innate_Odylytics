@@ -1,50 +1,50 @@
-# E24 / E25 / E27 — quyết định toàn hệ thống trên StrokePIN (người thật) + bot
+# E24 / E25 / E27 — whole-system decisions on StrokePIN (real people) + bots
 
-10 người chưa từng thấy bởi cả hai mô hình học; đăng ký 3 lượt ngồi mỗi (người, PIN); lịch sử phát lại = các lượt trước. Ngưỡng hiện tại A=0.25, B=0.55. Kẻ biết PIN dùng MÁY KHÁC (lẫn nhiễu thiết bị). Bot là bộ sinh/script của đội, không phải bot thật.
+10 people never seen by either learned model; enrollment 3 sitting sessions per (person, PIN); replay history = the previous sessions. Current thresholds A=0.25, B=0.55. The PIN-knowing impostor uses a DIFFERENT DEVICE (confounded with device noise). Bots are the team's generator/scripts, not real bots.
 
-## E24 — người nhận quen, số tiền bình thường
+## E24 — known recipient, normal amount
 
-| Nhóm | n | allow | step_up | hold | (không mô hình học) allow |
+| Group | n | allow | step_up | hold | (no learned model) allow |
 |---|---|---|---|---|---|
-| chủ, cùng tư thế (ngồi) | 356 | 80% | 19% | 1% | 96% |
-| chủ, đổi tư thế (đi) | 709 | 63% | 37% | 0% | 91% |
-| kẻ biết PIN (người khác, máy khác) | 712 | 28% | 70% | 2% | 90% |
-| bot CT1 đều | 356 | 0% | 0% | 100% | 0% |
-| bot CT2 nhiễu thời gian | 356 | 0% | 0% | 100% | 0% |
-| bot CT3 phát lại ±5% | 356 | 0% | 0% | 100% | 0% |
-| bot CT4 lấy mẫu dân số | 356 | 7% | 67% | 26% | 80% |
-| phát lại ±10% | 356 | 0% | 0% | 100% | 0% |
-| phát lại ±15% | 356 | 58% | 13% | 30% | 71% |
-| phát lại ±20% | 356 | 72% | 26% | 1% | 99% |
-| phát lại ±30% | 356 | 48% | 48% | 4% | 99% |
-| bot biết mẫu chuẩn (scale 1.0) | 356 | 75% | 17% | 8% | 96% |
-| bot biết mẫu chuẩn (scale 0.5) | 356 | 82% | 6% | 12% | 94% |
+| owner, same posture (sitting) | 356 | 80% | 19% | 1% | 96% |
+| owner, changed posture (walking) | 709 | 63% | 37% | 0% | 91% |
+| PIN-knowing impostor (other person, other device) | 712 | 28% | 70% | 2% | 90% |
+| T1 uniform bot | 356 | 0% | 0% | 100% | 0% |
+| T2 timing-noise bot | 356 | 0% | 0% | 100% | 0% |
+| T3 replay ±5% bot | 356 | 0% | 0% | 100% | 0% |
+| T4 population-sampling bot | 356 | 7% | 67% | 26% | 80% |
+| replay ±10% | 356 | 0% | 0% | 100% | 0% |
+| replay ±15% | 356 | 58% | 13% | 30% | 71% |
+| replay ±20% | 356 | 72% | 26% | 1% | 99% |
+| replay ±30% | 356 | 48% | 48% | 4% | 99% |
+| template-aware bot (scale 1.0) | 356 | 75% | 17% | 8% | 96% |
+| template-aware bot (scale 0.5) | 356 | 82% | 6% | 12% | 94% |
 
-## E24 — người nhận MỚI
+## E24 — NEW recipient
 
-| Nhóm | n | allow | step_up | hold | (không mô hình học) allow |
+| Group | n | allow | step_up | hold | (no learned model) allow |
 |---|---|---|---|---|---|
-| chủ, cùng tư thế (ngồi) | 356 | 17% | 79% | 4% | 92% |
-| chủ, đổi tư thế (đi) | 709 | 2% | 95% | 3% | 77% |
-| kẻ biết PIN (người khác, máy khác) | 712 | 1% | 86% | 14% | 62% |
-| bot CT1 đều | 356 | 0% | 0% | 100% | 0% |
-| bot CT2 nhiễu thời gian | 356 | 0% | 0% | 100% | 0% |
-| bot CT3 phát lại ±5% | 356 | 0% | 0% | 100% | 0% |
-| bot CT4 lấy mẫu dân số | 356 | 0% | 46% | 54% | 50% |
-| phát lại ±10% | 356 | 0% | 0% | 100% | 0% |
-| phát lại ±15% | 356 | 8% | 61% | 31% | 70% |
-| phát lại ±20% | 356 | 6% | 90% | 4% | 98% |
-| phát lại ±30% | 356 | 1% | 88% | 11% | 99% |
-| bot biết mẫu chuẩn (scale 1.0) | 356 | 20% | 71% | 9% | 89% |
-| bot biết mẫu chuẩn (scale 0.5) | 356 | 43% | 46% | 12% | 86% |
+| owner, same posture (sitting) | 356 | 17% | 79% | 4% | 92% |
+| owner, changed posture (walking) | 709 | 2% | 95% | 3% | 77% |
+| PIN-knowing impostor (other person, other device) | 712 | 1% | 86% | 14% | 62% |
+| T1 uniform bot | 356 | 0% | 0% | 100% | 0% |
+| T2 timing-noise bot | 356 | 0% | 0% | 100% | 0% |
+| T3 replay ±5% bot | 356 | 0% | 0% | 100% | 0% |
+| T4 population-sampling bot | 356 | 0% | 46% | 54% | 50% |
+| replay ±10% | 356 | 0% | 0% | 100% | 0% |
+| replay ±15% | 356 | 8% | 61% | 31% | 70% |
+| replay ±20% | 356 | 6% | 90% | 4% | 98% |
+| replay ±30% | 356 | 1% | 88% | 11% | 99% |
+| template-aware bot (scale 1.0) | 356 | 20% | 71% | 9% | 89% |
+| template-aware bot (scale 0.5) | 356 | 43% | 46% | 12% | 86% |
 
-## E25 — quét ngưỡng A (allow < A) và B (hold > B), người nhận quen, có mô hình học
+## E25 — sweep of threshold A (allow < A) and B (hold > B), known recipient, with learned models
 
-Mục tiêu: chủ cùng tư thế hầu như luôn `allow` (hold ≤ 1%), kẻ biết PIN và bot bị chặn (không `allow`) càng nhiều càng tốt.
+Goal: the owner in the same posture almost always gets `allow` (hold ≤ 1%), and PIN-knowing impostors and bots are blocked (not `allow`) as often as possible.
 
-| A | B | chủ ngồi: allow / hold | chủ đi: allow | chủ ngồi, người nhận MỚI: allow | kẻ biết PIN: không allow | CT4: không allow | biết mẫu chuẩn 1.0: không allow | phát lại ±15%: không allow |
+| A | B | owner sitting: allow / hold | owner walking: allow | owner sitting, NEW recipient: allow | PIN-knowing impostor: not allow | T4: not allow | template-aware 1.0: not allow | replay ±15%: not allow |
 |---|---|---|---|---|---|---|---|---|
-| 0.25 | 0.55 | 80% / 1% | 63% | 17% | 72% | 93% | 25% | 42% | ← hiện tại
+| 0.25 | 0.55 | 80% / 1% | 63% | 17% | 72% | 93% | 25% | 42% | ← current
 | 0.10 | 0.55 | 17% / 1% | 2% | 0% | 99% | 100% | 80% | 92% |
 | 0.15 | 0.55 | 42% / 1% | 11% | 0% | 98% | 100% | 54% | 73% |
 | 0.20 | 0.55 | 65% / 1% | 34% | 0% | 90% | 98% | 36% | 58% |
@@ -55,11 +55,11 @@ Mục tiêu: chủ cùng tư thế hầu như luôn `allow` (hold ≤ 1%), kẻ 
 | 0.25 | 0.40 | 80% / 4% | 63% | 17% | 72% | 93% | 25% | 42% |
 | 0.25 | 0.70 | 80% / 1% | 63% | 17% | 72% | 93% | 25% | 42% |
 
-## E27b — quét ngưỡng phát lại (backend hiện dùng 0,07), có mô hình học, người nhận quen
+## E27b — sweep of the replay threshold (the backend currently uses 0.07), with learned models, known recipient
 
-Phiên bị coi là phát lại thì `hold`. Đánh đổi: ngưỡng cao bắt thêm bot phát lại có nhiễu nhưng chặn nhầm chủ.
+A session judged to be a replay gets `hold`. Trade-off: a higher threshold catches more noisy replay bots but wrongly blocks the owner.
 
-| Ngưỡng | chủ ngồi: hold | chủ đi: hold | phát lại ±10% | ±15% | ±20% | ±30% | bot biết mẫu chuẩn (1.0): hold |
+| Threshold | owner sitting: hold | owner walking: hold | replay ±10% | ±15% | ±20% | ±30% | template-aware bot (1.0): hold |
 |---|---|---|---|---|---|---|---|
 | 0.050 | 1% | 0% | 100% | 30% | 1% | 4% | 8% |
 | 0.070 | 1% | 0% | 100% | 30% | 1% | 4% | 8% |

@@ -11,7 +11,7 @@ FETA (Georgiev et al.) quantifies exactly the pitfalls the plan avoids: random (
 - FETA names six pitfalls: small sample size, phone model mixing, non-contiguous training data, attacker samples in training, swipe aggregation, and code/dataset availability. "All published studies overlook at least one of the pitfalls" (30 touch-dynamics papers reviewed). — [Georgiev et al., FETA, arXiv:2201.10606v2](https://arxiv.org/abs/2201.10606)
 - FETA dataset: 515 users over 31 days, 1,194,451 strokes. Mean EER effects: attacker data in training 2.55 percentage points (pp); non-contiguous training data 3.8 pp; phone-model mixing 3.2–5.8 pp; combined effect 8.9 pp. — [FETA abstract](https://arxiv.org/abs/2201.10606)
 - FETA Fig. 7 (ROC, SVM): "Realistic" evaluation gives 13.8% EER, while all pitfalls together ("Unrealistic") give 4.9%. Random vs contiguous training selection: 6.4% vs 8.6% EER. — [FETA PDF, Fig. 6–7](https://arxiv.org/pdf/2201.10606v2)
-- FETA: "an unrealistic training data selection can lead to an increase in performance of 3.8% EER when using a RANDOM approach compared to the DEDICATEDSESSIONS approach". The DEDICATEDSESSIONS approach trains on the first sessions and tests on later sessions, which is the plan's "đăng ký bằng phiên trước, kiểm thử bằng phiên sau". — [FETA PDF §6](https://arxiv.org/pdf/2201.10606v2)
+- FETA: "an unrealistic training data selection can lead to an increase in performance of 3.8% EER when using a RANDOM approach compared to the DEDICATEDSESSIONS approach". The DEDICATEDSESSIONS approach trains on the first sessions and tests on later sessions, which is the plan's "đăng ký bằng phiên trước, kiểm thử bằng phiên sau" (enroll on earlier sessions, test on later ones). — [FETA PDF §6](https://arxiv.org/pdf/2201.10606v2)
 - FETA: 80% of reviewed studies "use an unrealistic attacker modeling approach and include attacker data into the training set". A further 18% use randomized data selection. 17% report only aggregated (multi-swipe) results. — [FETA PDF §3](https://arxiv.org/pdf/2201.10606v2)
 - FETA Table 4: mixing phone models (COMBINED) "results in overestimation of performance even when subsampling to the number of users present in each specific phone model". A classifier can also identify the iPhone model from a single swipe, which shows that device artefacts leak into features. — [FETA PDF §7, Table 4](https://arxiv.org/pdf/2201.10606v2)
 - FETA notes that most Android devices approximate touch pressure from touch size. This supports the plan's choice to drop `pressure`. — [FETA PDF §4](https://arxiv.org/pdf/2201.10606v2)
@@ -24,7 +24,7 @@ FETA (Georgiev et al.) quantifies exactly the pitfalls the plan avoids: random (
 
 ### Inferences
 - The plan's §5.5 choices (temporal split, one phone, no random split) are each a named FETA pitfall avoided. The slide can cite FETA's 4.9% → 13.8% gap as the reason Innate's numbers may look "worse" than the literature but are honest.
-- Pairwise verifier (Model 2, Bản 2): train it on pairs from a disjoint set of people, never on the test people's impostor data. This keeps the open-set protocol used by FETA (EXCLUDEATK) and KVC.
+- Pairwise verifier (Model 2, Version 2 / "Bản 2"): train it on pairs from a disjoint set of people, never on the test people's impostor data. This keeps the open-set protocol used by FETA (EXCLUDEATK) and KVC.
 - Reporting per-user EER spread (or the Gini coefficient) would answer the Eberz critique cheaply.
 
 ### Gaps

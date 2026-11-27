@@ -1,74 +1,74 @@
-# Innate — câu chuyện pitch
+# Innate — pitch story
 
-> **PIN có thể bị đánh cắp. Thói quen chạm bẩm sinh thì rất khó.**
-> Cập nhật 24/11/2026. Dùng cho slide (≤ 10 trang), video (≤ 3 phút) và phần thuyết trình chung kết.
+> **A PIN can be stolen. Inborn touch habits are very hard to steal.**
+> Updated 24/11/2026. For the slides (≤ 10 pages), the video (≤ 3 minutes), and the final presentation.
 
-> Định vị sản phẩm (Innate là lớp gì, nằm ở đâu trong chồng bảo mật): [`positioning.md`](positioning.md).
+> Product positioning (what kind of layer Innate is, where it sits in the security stack): [`positioning.md`](positioning.md).
 
-## Ý chính
+## Main idea
 
-Mọi thứ xác thực truyền thống đều là thứ có thể **lấy đi**: PIN nhìn lén được, OTP đọc được, thiết bị chiếm được. Mã độc như RemControl và ToxicPanda 2.0 (2026) lạm dụng quyền Trợ năng để tự bấm chuyển tiền bằng chính app, PIN và thiết bị của nạn nhân. Còn **cách một người chạm**: giữ phím bao lâu, lệch tâm nút về phía nào, vuốt nhanh hay chậm, là thói quen vận động hình thành từ nhỏ, không có file nào để sao chép.
+Every traditional authentication factor is something that can be **taken away**: a PIN can be shoulder-surfed, an OTP can be read, a device can be seized. Malware such as RemControl and ToxicPanda 2.0 (2026) abuses the Accessibility permission to tap a transfer by itself, using the victim's own app, PIN, and device. But **how a person touches**: how long a key is held, which way the touch is off-center on the button, whether a swipe is fast or slow, is a motor habit formed from childhood, and there is no file to copy.
 
-Innate đo đúng điều đó, và chỉ trả lời hai câu hỏi tại bước xác nhận giao dịch:
+Innate measures exactly that, and answers only two questions at the transaction confirmation step:
 
-| Câu hỏi | Bắt được ai |
+| Question | Who it catches |
 |---|---|
-| Thao tác này do **người** hay **máy**? | Mã độc, script, `adb` (kịch bản A) |
-| Nếu là người, có phải **chủ** tài khoản không? | Người quen, kẻ trộm biết PIN (kịch bản B) |
+| Is this interaction by a **human** or a **machine**? | Malware, scripts, `adb` (scenario A) |
+| If human, is it the account **owner**? | Acquaintances, a thief who knows the PIN (scenario B) |
 
-Kết quả là `allow`, `step_up` (xác thực thêm) hoặc `hold` (giữ lệnh), kèm lý do tiếng Việt. Hệ thống đề xuất, không tự khoá tài khoản.
+The result is `allow`, `step_up` (extra authentication) or `hold` (hold the order), with a reason in Vietnamese. The system recommends; it does not lock accounts by itself.
 
-## Mạch kể (7 nhịp)
+## Story flow (7 beats)
 
-1. **Mở bằng một câu chuyện.** Nạn nhân cài APK giả, cấp quyền Trợ năng. Vài phút sau tiền đi ra bằng đúng PIN của họ. Mọi lớp bảo mật đều nói "đúng chủ".
-2. **Chỉ ra lỗ hổng.** Mọi thứ ta kiểm tra đều là thứ kẻ gian có thể lấy được.
-3. **Đổi góc nhìn.** Có một thứ họ không lấy được dễ dàng: cách bạn chạm.
-4. **Cho xem bằng chứng học thuật.** Nhập PIN bằng nhịp và vị trí chạm phân biệt được người với người (Zheng 2014: EER 3,65–7%; Buschek 2015: thêm vị trí chạm giảm lỗi 26–37%).
-5. **Demo sống (mục 6 của kế hoạch).** Giám khảo A đăng ký. Giám khảo B biết PIN nhưng bị yêu cầu xác thực thêm. Bảng điều khiển hacker bấm tự động và bị gắn "không phải người thật".
-6. **Minh bạch.** Màn hình hiện lý do: "nhịp PIN chậm hơn 40%, chạm lệch phải". Đây là điểm khác với hộp đen.
-7. **Nói thật về giới hạn, rồi chốt.** Innate là một tín hiệu trong nhiều lớp, đã đo bằng quy trình đánh giá chặt, mở bằng API cho bất kỳ ví nào.
+1. **Open with a story.** The victim installs a fake APK and grants the Accessibility permission. A few minutes later money leaves using their own PIN. Every security layer says "correct owner".
+2. **Point out the gap.** Everything we check is something an attacker can obtain.
+3. **Change the angle.** There is one thing they cannot obtain easily: how you touch.
+4. **Show the academic evidence.** Rhythm and touch position when entering a PIN can tell one person from another (Zheng 2014: EER 3.65–7%; Buschek 2015: adding touch position cuts errors by 26–37%).
+5. **Live demo (section 6 of the plan).** Judge A enrolls. Judge B knows the PIN but is asked for extra authentication. The hacker console taps automatically and is labeled "not a real person".
+6. **Transparency.** The screen shows the reason: "nhịp PIN chậm hơn 40%, chạm lệch phải" (PIN rhythm 40% slower, touch off to the right). This is what sets it apart from a black box.
+7. **Be honest about limits, then close.** Innate is one signal among many layers, measured with a strict evaluation protocol, open through an API to any wallet.
 
-## Câu khẩu hiệu
+## Slogan
 
 - EN: *PIN is what you know. Innate is how you are.*
-- VI: *Mật khẩu có thể bị lộ. Cách bạn chạm thì không dễ bị đánh cắp.*
+- VI: *Mật khẩu có thể bị lộ. Cách bạn chạm thì không dễ bị đánh cắp.* (A password can be exposed. How you touch is not easy to steal.)
 
-## Giữ cho câu chuyện đứng vững (quan trọng)
+## Keeping the story standing (important)
 
-Giám khảo là CTO và Head of AI. "Bẩm sinh" là cách kể hay, nhưng bằng chứng cho thấy thói quen chạm **khó** chứ không **không thể** đánh cắp. Nói quá sẽ bị bắt bẻ ngay.
+The judges are a CTO and a Head of AI. "Inborn" is a good way to tell it, but the evidence shows touch habits are **hard** to steal, not **impossible**. Overclaiming will be challenged at once.
 
-| Nói | Không nói |
+| Say | Do not say |
 |---|---|
-| "**Rất khó** đánh cắp", "không có file nào để sao chép" | "Không thể giả mạo", "chính xác tuyệt đối" |
-| "Một **tín hiệu** trong nhiều lớp, dùng để kích hoạt xác thực thêm" | "Thay thế OTP / PIN" |
-| "Bắt tốt bot ngây thơ; bot thích nghi là hướng nghiên cứu" | "Bắt mọi mã độc" |
+| "**Very hard** to steal", "there is no file to copy" | "Impossible to forge", "absolutely accurate" |
+| "One **signal** among many layers, used to trigger extra authentication" | "Replaces OTP / PIN" |
+| "Catches naive bots well; adaptive bots are a research direction" | "Catches all malware" |
 
-**Bằng chứng nên chuẩn bị sẵn khi bị hỏi:**
-- Tấn công bắt chước (người cố tình nhái) làm EER tăng lên 10–15% (BioTouchPass2, 2020). Tức là có thể nhái được một phần.
-- Luyện tập làm kẻ tấn công tốt lên: FAR từ 0,24 lên 0,63 sau khi luyện (Tey 2013, nguồn thứ cấp trong báo cáo paper, chưa tải được bản gốc).
-- Mã độc thích nghi cấp hệ thống qua mặt bộ phát hiện chạm + IMU 71–77% (ActReal 2026, preprint).
-- Chính tác giả Touchalytics kết luận chạm không đủ làm xác thực độc lập.
-- Số liệu của đội sẽ chênh với paper vì 3 lựa chọn đánh giá nghiêm hơn (tách theo thời gian, một máy, không dùng dữ liệu kẻ gian khi huấn luyện), theo FETA 2022. Nói điều này **trước** khi bị hỏi.
+**Evidence to have ready when asked:**
+- Imitation attacks (a person deliberately mimicking) raise EER to 10–15% (BioTouchPass2, 2020). So partial imitation is possible.
+- Practice makes attackers better: FAR from 0.24 to 0.63 after practice (Tey 2013, a secondary source in the paper report; the original could not be downloaded).
+- System-level adaptive malware fools touch + IMU detectors 71–77% of the time (ActReal 2026, preprint).
+- The Touchalytics authors themselves conclude that touch alone is not enough as standalone authentication.
+- The team's numbers will differ from papers because of 3 stricter evaluation choices (split by time, one device, no impostor data in training), following FETA 2022. Say this **before** being asked.
 
-**Cách biến điểm yếu thành điểm mạnh:** "Chúng tôi không hứa kẻ gian không bao giờ nhái được. Chúng tôi làm cho việc đó **đắt hơn nhiều**, và khi nghi ngờ thì hỏi thêm thay vì chặn cứng."
+**How to turn the weakness into a strength:** "We do not promise an impostor can never imitate it. We make that **much more expensive**, and when in doubt we ask for more instead of hard-blocking."
 
-## Gắn với tiêu chí chấm
+## Mapping to the judging criteria
 
-| Tiêu chí | Innate trả lời |
+| Criterion | Innate's answer |
 |---|---|
-| Sáng tạo | Đổi trục xác thực từ "thứ bạn có/biết" sang "cách bạn hành động"; tách bạch bot và chủ |
-| Chất lượng, hoàn thiện | Online, ví demo + API + Swagger; đo bằng quy trình FETA, báo FAR@FRR kèm khoảng tin cậy |
-| Tiềm năng tác động | API mở cho ví/ngân hàng, đối phó đúng mối đe doạ Trợ năng đang tăng |
+| Creativity | Moves the authentication axis from "what you have/know" to "how you act"; separates bot from owner |
+| Quality, completeness | Online, demo wallet + API + Swagger; measured with the FETA protocol, FAR@FRR reported with confidence intervals |
+| Impact potential | Open API for wallets/banks, addressing the growing Accessibility threat |
 
-## Gợi ý khung 10 slide
+## Suggested 10-slide outline
 
-1. Câu chuyện nạn nhân + khẩu hiệu
-2. Vấn đề: hai kịch bản A (mã độc) và B (biết PIN)
-3. Vì sao xác thực hiện tại hụt (mọi thứ đều có thể bị lấy)
-4. Ý tưởng: cách bạn chạm
-5. Innate làm gì: hai câu hỏi, ba hành động
-6. Kiến trúc và AI (người/máy, chủ, hợp nhất, giải thích)
-7. Demo (ảnh chụp + QR sản phẩm)
-8. Kết quả đo thật và cách đo
-9. Giới hạn trung thực và hướng mở rộng
-10. Tác động và lộ trình (API cho đối tác)
+1. Victim story + slogan
+2. The problem: two scenarios A (malware) and B (knows the PIN)
+3. Why current authentication falls short (everything can be taken)
+4. The idea: how you touch
+5. What Innate does: two questions, three actions
+6. Architecture and AI (human/machine, owner, fusion, explanation)
+7. Demo (screenshots + product QR)
+8. Real measurements and how they were taken
+9. Honest limits and ways to extend
+10. Impact and roadmap (API for partners)

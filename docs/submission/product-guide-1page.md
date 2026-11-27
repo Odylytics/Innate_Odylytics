@@ -1,24 +1,24 @@
-> **SUPERSEDED (27/11):** bản chính thức là `submission/Product/Innate-product-guide.pdf`, sinh từ `tools/product-guide.html` bằng `tools/build_submission.sh`. File này chỉ giữ làm bản nháp tiếng Việt.
+> **SUPERSEDED (27/11):** the official version is `submission/Product/Innate-product-guide.pdf`, generated from `tools/product-guide.html` by `tools/build_submission.sh`. This file is kept only as a draft.
 
-# Innate — Hướng dẫn dùng thử (≤ 1 trang A4, bản NHÁP)
+# Innate — Trial guide (≤ 1 A4 page, DRAFT)
 
-> **Chưa dùng được để nộp:** cần điền URL web demo và key (nếu cần). Khi xong, xuất PDF 1 trang A4 (thể lệ: chứa **link sản phẩm** và **tài khoản dùng thử**). Không đưa khoá bí mật vào file này: key SDK nằm sẵn trong bản build web, giám khảo không cần nhập.
+> **Not usable for submission yet:** the web demo URL and key (if needed) must be filled in. When done, export a 1-page A4 PDF (contest rules: it contains the **product link** and a **trial account**). Do not put secret keys in this file: the SDK key is already in the web build, and judges do not need to enter it.
 
-**Innate** — lớp kiểm chứng con người cho ví điện tử. *PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó.*
+**Innate** — a human verification layer for e-wallets. *A PIN can be stolen, innate touch habits are very hard to steal.*
 
 | | |
 |---|---|
-| **Trang demo** | `[TODO: URL web, mở được ngay, không cần đăng nhập]` (landing `#/`, ví demo `#/demo`, kịch bản `#/demo?story=1`) |
-| **API + Swagger** | https://nhip-api-taupe.vercel.app/docs (xem được ngay; thử gọi cần key SDK `[TODO]`) |
-| **PIN demo** | `159357` (6 số) |
+| **Demo page** | `[TODO: web URL, opens immediately, no login]` (landing `#/`, demo wallet `#/demo`, story `#/demo?story=1`) |
+| **API + Swagger** | https://nhip-api-taupe.vercel.app/docs (viewable immediately; trying calls needs the SDK key `[TODO]`) |
+| **Demo PIN** | `159357` (6 digits) |
 
-## 3 cách xem (khoảng 3 phút)
-1. **Xem kịch bản:** mở `#/demo?story=1`. Tám bước tự chạy: chủ ví đăng ký nhịp, chuyển tiền được qua (`allow`); người biết PIN bị yêu cầu xác thực thêm (`step_up`) kèm lý do; mã độc tự bấm bị giữ lệnh (`hold`).
-2. **Tự thử ví:** mở `#/demo`, nhập PIN `159357` ba lần để đăng ký nhịp, rồi chuyển tiền (chọn người nhận đã lưu hoặc nhập số tài khoản và chọn ngân hàng). Đưa máy cho người khác nhập cùng PIN để xem kết quả khác đi.
-3. **Mã độc giả lập:** trong bảng điều khiển kẻ tấn công, bấm "mã độc" (điền thẳng số tài khoản rồi bấm PIN) hoặc "người khác" để xem Innate chấm điểm ngay trên API thật.
+## 3 ways to see it (about 3 minutes)
+1. **Watch the story:** open `#/demo?story=1`. Eight steps run automatically: the wallet owner enrolls the rhythm, a transfer passes (`allow`); a PIN-knowing person is asked for extra verification (`step_up`) with reasons; malware that taps by itself is held (`hold`).
+2. **Try the wallet yourself:** open `#/demo`, enter PIN `159357` three times to enroll the rhythm, then transfer money (pick a saved recipient or enter an account number and choose a bank). Hand the phone to someone else to enter the same PIN and see a different result.
+3. **Simulated malware:** in the attacker control panel, click "mã độc" (malware; fills in the account number directly, then taps the PIN) or "người khác" (someone else) to see Innate score right away on the real API.
 
-## Đọc kết quả
-`allow` cho qua · `step_up` cần xác thực thêm (khuôn mặt, OTP) · `hold` giữ lệnh và báo người dùng, kèm lý do bằng tiếng Việt. Innate chỉ **đề xuất**, không tự khoá tài khoản.
+## Reading the result
+`allow` lets it through · `step_up` needs extra verification (face, OTP) · `hold` holds the order and notifies the user, with a reason in Vietnamese. Innate only **recommends**; it never locks an account.
 
-## Lưu ý
-Giao diện ví và các nhân vật là hư cấu, không phải ứng dụng của bất kỳ ví nào. Phiên của mã độc và nhân vật được sinh trong trình duyệt rồi gửi lên API chấm như phiên thật. Innate là **tín hiệu rủi ro**, không thay PIN/OTP/khuôn mặt. Chỉ lưu thời gian, toạ độ, loại sự kiện; không lưu PIN hay nội dung. Mã nguồn và số liệu: xem gói `.zip`. Giấy phép: CC BY-NC-SA 4.0.
+## Notes
+The wallet UI and the characters are fictional and are not any wallet's app. The malware and character sessions are generated in the browser and sent to the API to be scored like real sessions. Innate is a **risk signal**, not a replacement for PIN/OTP/face. Only timing, coordinates and event type are stored; no PIN or content. Source code and figures: see the `.zip` package. License: CC BY-NC-SA 4.0.

@@ -47,7 +47,7 @@ def test_tactic3_replays_source_closely():
         assert abs(a - b) <= 0.05 * a + 1e-6
     for (ax, ay), (bx, by) in zip(_offsets(src), _offsets(s)):
         assert abs(ax - bx) <= 2 and abs(ay - by) <= 2
-    assert src["user_id"] != "victim"  # không sửa phiên gốc
+    assert src["user_id"] != "victim"  # source session not modified
 
 
 def test_tactic4_samples_from_population():
@@ -91,17 +91,17 @@ def test_fields_per_tactic_have_the_expected_signature():
     rng = _r.Random(5)
     st = fields.for_tactic(1, rng, [])
     assert {f["name"] for f in st} == {"amount", "recipient", "note"}
-    assert all(e["kind"] == "set_text" for f in st for e in f["events"])  # không có phím nào
+    assert all(e["kind"] == "set_text" for f in st for e in f["events"])  # no keys at all
 
     ev = [e for f in fields.for_tactic(2, rng, []) for e in f["events"]]
-    assert ev and all(e["kind"] == "key" and e["t"] == int(e["t"]) for e in ev)  # chỉ phím, thời gian nguyên ms
+    assert ev and all(e["kind"] == "key" and e["t"] == int(e["t"]) for e in ev)  # keys only, integer ms timing
 
     human = {"fields": [{"name": "note", "events": [{"t": 100 * i, "kind": "key", "n": 1, "cls": "letter"} for i in range(20)]}]}
-    rp = fields.for_tactic(3, rng, [], human)[0]["events"]  # phát lại: cùng số sự kiện, thời gian tăng dần, tổng thời lượng lệch ≤ 5%
+    rp = fields.for_tactic(3, rng, [], human)[0]["events"]  # replay: same number of events, increasing time, total duration within 5%
     ts = [e["t"] for e in rp]
     assert len(rp) == 20 and ts == sorted(ts) and 0.95 * 1900 <= ts[-1] - ts[0] <= 1.05 * 1900
-    assert fields.for_tactic(3, rng, [], {}) == [] and fields.for_tactic(4, rng, []) == []  # không có kho thì rỗng
+    assert fields.for_tactic(3, rng, [], {}) == [] and fields.for_tactic(4, rng, []) == []  # empty when there is no pool
     assert fields.for_tactic(4, rng, [human])[0]["name"] == "note"
 
     s = t.generate(1, "u", "1593", t.synth_humans(5), rng, with_fields=True)
-    assert s["fields"] and "fields" not in t.generate(1, "u", "1593", t.synth_humans(5), rng)  # mặc định không đổi hành vi cũ
+    assert s["fields"] and "fields" not in t.generate(1, "u", "1593", t.synth_humans(5), rng)  # default leaves old behavior unchanged

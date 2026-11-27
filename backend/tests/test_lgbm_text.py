@@ -1,4 +1,4 @@
-"""Bộ đọc LightGBM thuần Python phải cho cùng xác suất với lightgbm trên mô hình thật của repo."""
+"""The pure-Python LightGBM reader must give the same probability as lightgbm on the repo's real model."""
 import math
 import random
 from pathlib import Path

@@ -1,4 +1,4 @@
-# Paper nền tảng cho Innate — Model 2 "Có phải chủ tài khoản?" (plan §5.0, §5.2)
+# Foundation papers for Innate — Model 2 "Có phải chủ tài khoản?" ("Is this the account owner?") (plan §5.0, §5.2)
 
 Local PDFs: `C:/TuanNghia/Project/Momo_Odylytics/papers/owner-verification/` (14 files, all checked for a `%PDF` header, all < 11 MB).
 All numbers below were read from the downloaded PDF text unless marked otherwise. DOIs marked "(from memory, verify)" were not checked against the publisher page.
@@ -50,7 +50,7 @@ Yes. On a soft PIN keypad, timing (hold time and inter-key latency) combined wit
 ## Q2. Are swipe/scroll features (velocity, acceleration, curvature) useful for continuous authentication?
 
 ### Takeaway
-They are useful, but much weaker per gesture than PIN features. Touchalytics needs about 11–12 strokes to reach 2–3% EER. HMOG reports 25.7–34.2% EER for tap/hold/swipe features alone. This supports the plan's wording "Người vs máy; bổ sung nhận diện" (supporting signal, not the primary owner signal).
+They are useful, but much weaker per gesture than PIN features. Touchalytics needs about 11–12 strokes to reach 2–3% EER. HMOG reports 25.7–34.2% EER for tap/hold/swipe features alone. This supports the plan's wording "Người vs máy; bổ sung nhận diện" (human vs machine; supplementary identification) (supporting signal, not the primary owner signal).
 
 ### Cited Findings
 - Touchalytics proposes 30 behavioural stroke features. Median EER is 0% intra-session, 2–3% inter-session, and below 4% one week after enrollment — [Frank 2012/2013](https://arxiv.org/abs/1207.6231)
@@ -67,7 +67,7 @@ They are useful, but much weaker per gesture than PIN features. Touchalytics nee
 ## Q3. Template scoring with per-feature normalized distance (scaled Manhattan, Mahalanobis)
 
 ### Takeaway
-This is strongly supported. In the standard keystroke benchmark, scaled Manhattan (mean template, each feature divided by its spread) was the best of 14 detectors (EER 9.6%). Zheng's PIN system uses the same idea: an L1 distance where each feature is divided by its standard deviation. This is exactly the plan's "Bản 1".
+This is strongly supported. In the standard keystroke benchmark, scaled Manhattan (mean template, each feature divided by its spread) was the best of 14 detectors (EER 9.6%). Zheng's PIN system uses the same idea: an L1 distance where each feature is divided by its standard deviation. This is exactly the plan's "Bản 1" (Version 1).
 
 ### Cited Findings
 - Killourhy & Maxion: 51 subjects typed the same password 400 times each, and 14 anomaly detectors were evaluated. EER ranking: Manhattan (scaled) 0.096; Nearest Neighbor (Mahalanobis) 0.100; Outlier Count (z-score) 0.102; SVM one-class 0.102; Mahalanobis 0.110; Manhattan (filtered) 0.136 — [Killourhy & Maxion 2009](https://www.cs.cmu.edu/~keystroke/KillourhyMaxion09.pdf)
@@ -76,7 +76,7 @@ This is strongly supported. In the standard keystroke benchmark, scaled Manhatta
 - Zheng: dissimilarity d(XQ, Xi) = Σ_j |XQ,j − Xi,j| / σ_j, and the decision uses the nearest enrollment sample. The authors note that dividing by σ_j gives more weight to stable features (z-score idea) — [Zheng 2014](https://www.eecis.udel.edu/~hnw/paper/tapping.pdf)
 
 ### Inferences
-- The explainability claim ("PIN chậm hơn 40%") falls naturally out of per-feature z-score terms in scaled Manhattan; each term is one feature's contribution.
+- The explainability claim ("PIN chậm hơn 40%", PIN 40% slower) falls naturally out of per-feature z-score terms in scaled Manhattan; each term is one feature's contribution.
 - With only 3–5 enrollments, σ_j estimates are very noisy. Use a floor on σ_j (or a population-level prior) to avoid division by near-zero. This is my inference; it is not tested in these papers.
 
 ### Gaps
@@ -85,7 +85,7 @@ This is strongly supported. In the standard keystroke benchmark, scaled Manhatta
 ## Q4. Few-shot / pairwise / Siamese verifiers for behavioural biometrics
 
 ### Takeaway
-This is supported. TypeNet trains one shared embedding with softmax, contrastive (Siamese) or triplet loss, and verifies new users never seen in training by distance to a few gallery samples. Triplet loss was best and contrastive second; it works one-shot (G=1) but improves strongly with G=5–10. This is the academic basis for "Bản 2".
+This is supported. TypeNet trains one shared embedding with softmax, contrastive (Siamese) or triplet loss, and verifies new users never seen in training by distance to a few gallery samples. Triplet loss was best and contrastive second; it works one-shot (G=1) but improves strongly with G=5–10. This is the academic basis for "Bản 2" (Version 2).
 
 ### Cited Findings
 - TypeNet (LSTM, trained on 100k+ subjects): EER 2.2% (physical keyboard) and 9.2% (touchscreen), on test users not seen in training — [Acien 2021](https://arxiv.org/abs/2101.05570)

@@ -5,7 +5,7 @@
 1. **Human or machine?** (accessibility-service malware, `adb`, scripts)
 2. **If human, the account owner?** (someone who watched the PIN)
 
-> *A PIN can be stolen. Touch habits are very hard to steal.* ("innate" = *bẩm sinh*) · Built for the **MoMo Tech Contest 2026** by **Team Odylytics** (Powered by Odylytics). Project documents are mostly in Vietnamese; this README is the English entry point.
+> *A PIN can be stolen. Touch habits are very hard to steal.* ("innate" = *bẩm sinh*) · Built for the **MoMo Tech Contest 2026** by **Team Odylytics** (Powered by Odylytics). All project documents are in English. The decision reasons and explanations that wallet users see, and the Vietnamese version of the website, stay in Vietnamese by design.
 
 **Live demo: https://innate.odylytics.com** (no login; guided story at `/#/demo?story=1`) · API docs: https://nhip-api-taupe.vercel.app/docs
 

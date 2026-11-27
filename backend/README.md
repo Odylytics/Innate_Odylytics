@@ -1,20 +1,20 @@
 # Innate — Backend API
 
-API chấm điểm rủi ro hành vi (Người 2). FastAPI + SQLAlchemy, SQLite khi chạy local, Postgres (Neon) khi deploy.
+Behavioral risk scoring API (Member 2). FastAPI + SQLAlchemy, SQLite when running locally, Postgres (Neon) when deployed.
 
-## Bản đang chạy
+## Running instance
 
 | | |
 |---|---|
 | URL | https://nhip-api-taupe.vercel.app |
-| Swagger | https://nhip-api-taupe.vercel.app/docs → **Authorize** → nhập API key |
-| API key | 3 key theo vai trò (SDK / ops / ML), lưu ở `backend/.env.deploy-key` trên máy Người 2 (không commit). Hỏi Người 2 khi cần |
-| Hạ tầng | Vercel project `nhip-api`, vùng Singapore (`sin1`); DB Neon `nhip-db` (gói free, Singapore), gắn qua Vercel Marketplace |
-| Độ trễ đo 23/11 | Xử lý phía server 16–21 ms/lần chấm; khứ hồi từ Việt Nam ~125–150 ms |
+| Swagger | https://nhip-api-taupe.vercel.app/docs → **Authorize** → enter an API key |
+| API key | 3 keys by role (SDK / ops / ML), stored in `backend/.env.deploy-key` on Member 2's machine (not committed). Ask Member 2 when needed |
+| Infrastructure | Vercel project `nhip-api`, Singapore region (`sin1`); Neon DB `nhip-db` (free tier, Singapore), attached via the Vercel Marketplace |
+| Latency measured 23/11 | Server-side processing 16–21 ms per scoring call; round trip from Vietnam ~125–150 ms |
 
-Deploy lại: `cd backend; vercel deploy --prod`. Xem trạng thái: `/vercel:status` trong Claude Code, hoặc `vercel ls nhip-api`.
+Redeploy: `cd backend; vercel deploy --prod`. Check status: `/vercel:status` in Claude Code, or `vercel ls nhip-api`.
 
-## Chạy
+## Run
 
 ```powershell
 cd backend
@@ -22,54 +22,54 @@ uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-- Swagger: http://localhost:8000/docs (`/` cũng chuyển về đây) → bấm **Authorize**, nhập `demo-key` (key SDK). Muốn thử dashboard/export ở local thì đặt thêm `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`.
-- Kiểm thử: `uv run pytest -q` (7 bài, ~2 giây). SQLite trong test bật kiểm tra khoá ngoại để giống Postgres.
+- Swagger: http://localhost:8000/docs (`/` also redirects here) → click **Authorize**, enter `demo-key` (the SDK key). To try the dashboard/export locally, also set `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`.
+- Tests: `uv run pytest -q` (7 tests, ~2 seconds). SQLite in tests has foreign-key checks turned on to match Postgres.
 
-### Biến môi trường
+### Environment variables
 
-| Biến | Mặc định | Ghi chú |
+| Variable | Default | Notes |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///./nhip.db` | Trên Vercel do Neon tự đặt; `postgres://` được tự đổi sang driver psycopg |
-| `NHIP_API_KEYS` | `demo-key` *(chỉ khi DB là SQLite local; nối DB thật mà không đặt thì đóng hết)* | Key **SDK** (nằm trong app web): gửi phiên, đăng ký nhịp, chấm điểm. Nhiều key cách nhau dấu phẩy |
-| `NHIP_OPS_KEYS` | *(trống = đóng)* | Key **dashboard**: xem danh sách phiên, gắn nhãn |
-| `NHIP_ML_KEYS` | *(trống = đóng)* | Key **Người 1**: `/v1/export` |
-| `NHIP_CORS_ORIGINS` | `*` | Bản deploy đang để `*`. **Đặt đúng domain ví demo + dashboard khi Người 3 deploy frontend** |
-| `NHIP_THRESHOLD_A` | `0.25` | rủi ro < A → `allow` |
-| `NHIP_THRESHOLD_B` | `0.55` | rủi ro > B → `hold`; giữa A và B → `step_up` |
+| `DATABASE_URL` | `sqlite:///./nhip.db` | Set automatically by Neon on Vercel; `postgres://` is automatically switched to the psycopg driver |
+| `NHIP_API_KEYS` | `demo-key` *(only when the DB is local SQLite; with a real DB and no value set, access is closed)* | **SDK** keys (embedded in the web app): submit sessions, rhythm enrollment, scoring. Multiple keys separated by commas |
+| `NHIP_OPS_KEYS` | *(empty = closed)* | **Dashboard** keys: view the session list, set labels |
+| `NHIP_ML_KEYS` | *(empty = closed)* | **Member 1** keys: `/v1/export` |
+| `NHIP_CORS_ORIGINS` | `*` | The deployed instance uses `*`. **Set the exact domains of the demo wallet + dashboard when Member 3 deploys the frontend** |
+| `NHIP_THRESHOLD_A` | `0.25` | risk < A → `allow` |
+| `NHIP_THRESHOLD_B` | `0.55` | risk > B → `hold`; between A and B → `step_up` |
 
-Mọi phản hồi có header `X-Process-Time-Ms` (độ trễ xử lý, dùng cho số liệu slide). Đo local: ~6 ms/lần chấm điểm.
+Every response has an `X-Process-Time-Ms` header (processing latency, used for slide figures). Measured locally: ~6 ms per scoring call.
 
-## Endpoint
+## Endpoints
 
-Tất cả `/v1/*` cần header `X-API-Key` đúng vai trò ở cột *Quyền*. Sai key → 401; key hợp lệ nhưng sai vai trò → 403. Key SDK nằm trong app web nên **không** mở được dashboard hay export.
+All `/v1/*` endpoints need an `X-API-Key` header with the role listed in the *Access* column. Wrong key → 401; valid key with the wrong role → 403. The SDK key is embedded in the web app, so it **cannot** open the dashboard or export.
 
-| Method | Đường dẫn | Quyền | Việc |
+| Method | Path | Access | Purpose |
 |---|---|---|---|
-| GET | `/health` | deploy | Kiểm tra sống |
-| POST | `/v1/sessions` | App | Gửi phiên thao tác → `{session_id, n_features}` |
-| POST | `/v1/users/{user_id}/enroll` | SDK | Body `{session_id}`. Đánh dấu lượt đăng ký; đủ 3 lượt thì có mẫu chuẩn và **khoá đăng ký** (thêm lượt → 409) |
-| GET | `/v1/users/{user_id}` | App | Số lượt đã đăng ký, mẫu chuẩn sẵn sàng chưa, số lần cập nhật |
-| POST | `/v1/sessions/{id}/score` | App | Body `{recipient_is_new, amount}` → điểm + hành động + lý do |
-| GET | `/v1/export?participant_id=&limit=500&offset=0` | ML | Xuất phiên có `meta` (dữ liệu thô + đặc trưng + nhãn thu dữ liệu), cũ nhất trước, **theo trang**: mỗi trang tối đa `limit` (≤ 2000) phiên và ~3 MB; còn dữ liệu thì header `X-Next-Offset` cho offset trang sau |
-| GET | `/v1/sessions?flagged=true&limit=50` | ops | Phiên `step_up`/`hold` mới nhất (bỏ `flagged` = tất cả phiên đã chấm) |
+| GET | `/health` | deploy | Liveness check |
+| POST | `/v1/sessions` | App | Submit an interaction session → `{session_id, n_features}` |
+| POST | `/v1/users/{user_id}/enroll` | SDK | Body `{session_id}`. Marks an enrollment entry; after 3 entries the template exists and **enrollment is locked** (extra entries → 409) |
+| GET | `/v1/users/{user_id}` | App | Number of enrolled entries, whether the template is ready, number of updates |
+| POST | `/v1/sessions/{id}/score` | App | Body `{recipient_is_new, amount}` → score + action + reasons |
+| GET | `/v1/export?participant_id=&limit=500&offset=0` | ML | Exports sessions that have `meta` (raw data + features + data-collection labels), oldest first, **paginated**: each page has at most `limit` (≤ 2000) sessions and ~3 MB; if more data remains, the `X-Next-Offset` header gives the offset of the next page |
+| GET | `/v1/sessions?flagged=true&limit=50` | ops | Latest `step_up`/`hold` sessions (omit `flagged` = all scored sessions) |
 | POST | `/v1/sessions/{id}/label` | ops | Body `{label: "fraud" \| "legit"}` |
 
-### Luồng của app (Người 3)
+### App flow (Member 3)
 
 ```
-Đăng ký nhịp (3–5 lần):  POST /v1/sessions  →  POST /v1/users/{uid}/enroll
-Chuyển tiền:             POST /v1/sessions  →  POST /v1/sessions/{sid}/score  →  hiện action + explanation_vi
+Rhythm enrollment (3–5 times):  POST /v1/sessions  →  POST /v1/users/{uid}/enroll
+Money transfer:                 POST /v1/sessions  →  POST /v1/sessions/{sid}/score  →  show action + explanation_vi
 ```
 
-### Phiên SDK gửi lên (hợp đồng dữ liệu)
+### Session the SDK sends (data contract)
 
-Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **không có nội dung PIN** ngoài nhãn phím để biết tâm phím. Ví dụ đầy đủ có sẵn trong Swagger.
+Only timing (ms, counted from entering the screen) and coordinates (px), **no PIN content** other than the key label, which is needed to know the key center. A full example is available in Swagger.
 
 ```json
 {
-  "user_id": "demo_user",            // chữ, số, _ . -  (≤ 64 ký tự)
+  "user_id": "demo_user",            // letters, digits, _ . -  (≤ 64 characters)
   "device_id": "demo_phone",
-  "pin_taps": [                       // ≤ 12; lấy từ Pointer Events trên bàn phím PIN tự vẽ
+  "pin_taps": [                       // ≤ 12; taken from Pointer Events on the custom-drawn PIN keypad
     {"key": "1", "t_down": 0, "t_up": 95, "x": 66, "y": 395, "w": 40, "h": 40,
      "key_cx": 60, "key_cy": 400, "key_w": 100, "key_h": 70}
   ],
@@ -78,13 +78,13 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 }
 ```
 
-- `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = tâm và kích thước phím (`getBoundingClientRect`).
-- Không gửi `pressure`. Không dựa vào `isTrusted`.
-- Giới hạn: ≤ 30 lần vuốt mỗi phiên, ≤ 200 điểm mỗi lần vuốt (~3 giây ở 60 Hz); dài hơn thì SDK cắt bớt.
-- **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine`, `impostor` (biết PIN, cố bấm giống chủ) hoặc `bot` (kèm `tactic` 1–4, do [bộ giả lập](../attacker/README.md) gửi). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
-- Server từ chối (422): `t_up < t_down`, số NaN/âm, `user_id` có ký tự lạ, quá nhiều sự kiện.
+- `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = key center and size (`getBoundingClientRect`).
+- Do not send `pressure`. Do not rely on `isTrusted`.
+- Limits: ≤ 30 swipes per session, ≤ 200 points per swipe (~3 seconds at 60 Hz); longer ones are truncated by the SDK.
+- **During data collection** add `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = which sitting it is (1 enrollment, 2+ testing); `role` = `genuine`, `impostor` (knows the PIN, tries to tap like the owner) or `bot` (with `tactic` 1–4, sent by the [simulator](../attacker/README.md)). Impersonation entries: `user_id` is the owner's account, `participant_id` is the person tapping.
+- The server rejects (422): `t_up < t_down`, NaN/negative numbers, `user_id` with unusual characters, too many events.
 
-**Ô nhập ngoài PIN (`fields`, tuỳ chọn):** số tiền, người nhận, ghi chú. Chỉ gửi **thời gian, loại sự kiện và số ký tự**, không gửi nội dung.
+**Input fields other than the PIN (`fields`, optional):** amount, recipient, note. Only **timing, event type and character count** are sent, not the content.
 
 ```json
 "fields": [
@@ -94,12 +94,12 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 ]
 ```
 
-- `name`: `amount | recipient | note | name`. `kind`: `key` (gõ ký tự), `paste` (dán), `delete`, `set_text` (văn bản đổi mà **không có sự kiện phím**, vd. Trợ năng `ACTION_SET_TEXT`; chỉ SDK native phát hiện được).
-- Web SDK cũ (`wallet.html`, đã bỏ) chỉ phát `key`, `paste`, `delete` từ sự kiện `input`; không phát `set_text`.
-- Luật baseline: `set_text` ở ô **số tiền** bị coi là máy (`text_set_without_keys`, giữ lệnh); ở ô khác chỉ trừ điểm nhẹ vì autofill/danh bạ cũng có thể đặt văn bản không qua phím. Ngưỡng **chưa kiểm chứng trên máy thật** (R9).
-- Nhịp gõ trong ô (≥ 4 phím) thành đặc trưng nhận dạng chủ `fld_<ô>_gap_mean/std`; muốn có trong mẫu chuẩn thì lượt đăng ký phải gõ cả các ô đó.
+- `name`: `amount | recipient | note | name`. `kind`: `key` (typed character), `paste`, `delete`, `set_text` (text changed **without key events**, e.g. Accessibility `ACTION_SET_TEXT`; only a native SDK can detect it).
+- The old web SDK (`wallet.html`, removed) only emitted `key`, `paste`, `delete` from the `input` event; it did not emit `set_text`.
+- Baseline rule: `set_text` in the **amount** field is treated as a machine (`text_set_without_keys`, order held); in other fields it only lowers the score slightly, because autofill/contacts can also set text without keys. Thresholds are **not yet verified on real devices** (R9).
+- Typing rhythm inside a field (≥ 4 keys) becomes the owner-recognition features `fld_<field>_gap_mean/std`; for them to be in the template, the enrollment entries must also type in those fields.
 
-### Phản hồi chấm điểm
+### Scoring response
 
 ```json
 {
@@ -114,42 +114,44 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 }
 ```
 
-`owner_match = null` khi người dùng chưa đăng ký đủ 3 lượt (lý do `not_enrolled`). Đã đăng ký mà phiên thiếu nhịp PIN (không bấm PIN, hoặc PIN ngắn hơn lúc đăng ký) → `owner_match = 0`, lý do `missing_pin_evidence`, không bao giờ `allow`.
+The `explanation_vi` string is product text shown to wallet users (in English: "The interaction looks like a real person but does not match the account owner's habits (PIN rhythm 40% slower, taps offset to the left). Transaction: new recipient. Face verification recommended before transferring.").
 
-## Lớp chấm điểm (`app/scoring/`) — Người 1 thay từng file, giữ chữ ký hàm
+`owner_match = null` when the user has not enrolled the 3 entries yet (reason `not_enrolled`). If enrolled but the session lacks PIN rhythm (no PIN tapped, or the PIN is shorter than at enrollment) → `owner_match = 0`, reason `missing_pin_evidence`, never `allow`.
 
-| File | Hàm | Bản baseline hiện tại |
+## Scoring layer (`app/scoring/`) — Member 1 replaces file by file, keeping function signatures
+
+| File | Function | Current baseline |
 |---|---|---|
-| `features.py` | `extract(raw) -> dict` | Giữ phím, khoảng cách phím, tổng thời gian, lệch tâm (dx, dy theo kích thước phím), kích thước chạm; vuốt: thời gian, độ dài, độ thẳng, vận tốc TB/đỉnh; thời gian tới chạm đầu |
-| `owner.py` | `build_template`, `score`, `update` | Scaled Manhattan (Killourhy & Maxion 2009) có sàn độ lệch chuẩn. Ánh xạ khoảng cách → [0,1] **chưa hiệu chỉnh** (d = 2 → 0,5) |
-| `human.py` | `score(features) -> (human_score, reasons)` | Luật: nhịp quá đều (CV < 0,08), chạm đúng tâm (< 0,06 bề rộng phím), vuốt thẳng tuyệt đối (tín hiệu yếu, tối đa trừ 0,5) |
-| `fusion.py` | `fuse`, `amount_anomaly` | `0,40·(1−người) + 0,35·(1−chủ) + 0,15·người_nhận_mới + 0,10·số_tiền_bất_thường`; `human < 0,3` → luôn `hold` |
-| `explain.py` | `explain(...)` | Nhóm đặc trưng lệch ≥ 1,5 sd → tối đa 3 lý do + câu tiếng Việt theo mẫu. Không dùng LLM |
+| `features.py` | `extract(raw) -> dict` | Key hold, key-to-key interval, total time, center offset (dx, dy relative to key size), contact size; swipes: duration, length, straightness, mean/peak velocity; time to first touch |
+| `owner.py` | `build_template`, `score`, `update` | Scaled Manhattan (Killourhy & Maxion 2009) with a standard-deviation floor. Distance → [0,1] mapping **not calibrated** (d = 2 → 0.5) |
+| `human.py` | `score(features) -> (human_score, reasons)` | Rules: rhythm too even (CV < 0.08), taps exactly at the center (< 0.06 of key width), perfectly straight swipe (weak signal, deduction at most 0.5) |
+| `fusion.py` | `fuse`, `amount_anomaly` | `0.40·(1−human) + 0.35·(1−owner) + 0.15·new_recipient + 0.10·amount_anomaly`; `human < 0.3` → always `hold` |
+| `explain.py` | `explain(...)` | Feature groups deviating ≥ 1.5 sd → at most 3 reasons + Vietnamese sentence from a template. No LLM |
 
-**Cập nhật mẫu chuẩn** (mục 5.2 kế hoạch): chỉ sau phiên đầu tiên được chấm là `allow`, không phải lượt đăng ký, `owner_match ≥ 0,8` và `human_score ≥ 0,8`. Trung bình trượt α = 0,1, và mẫu không được trôi quá 1 sd so với lúc đăng ký. Chưa làm: kiểm tra hướng trôi.
+**Template update** (section 5.2 of the plan): only after the first scored session is `allow`, is not an enrollment entry, `owner_match ≥ 0.8` and `human_score ≥ 0.8`. Moving average α = 0.1, and the template must not drift more than 1 sd from enrollment. Not done: drift direction check.
 
-## Kiểm thử đã chạy
+## Tests run
 
-`tests/test_api.py` (dữ liệu giả từ `tests/synth.py`):
+`tests/test_api.py` (fake data from `tests/synth.py`):
 
-- Không có/sai API key → 401 (kể cả header ngoài ASCII); key sai vai trò → 403; dữ liệu sai → 422; đăng ký phiên của người khác → 400; đăng ký thêm khi đã có mẫu chuẩn → 409.
-- Phiên chỉ có vuốt hoặc PIN thiếu phím cho tài khoản đã đăng ký → không `allow`, lý do `missing_pin_evidence`.
-- Luồng đầy đủ: chưa đăng ký → `not_enrolled`; đăng ký 3 lượt → có mẫu chuẩn; chủ thật → `allow`; người khác biết PIN → `step_up` với lý do nhịp/vị trí; bot chiến thuật 1 → `hold` với `tap_exact_center`; số tiền gấp 50 lần → `amount_unusual`; mẫu chuẩn được cập nhật; dashboard thấy phiên bị gắn cờ; gắn nhãn được.
-- Chặn trôi: 200 lần "dạy dần" bằng phiên lệch xa, mẫu chuẩn vẫn trong ±1 sd.
+- Missing/wrong API key → 401 (including non-ASCII headers); wrong-role key → 403; invalid data → 422; enrolling someone else's session → 400; enrolling more once a template exists → 409.
+- Session with only swipes, or a PIN with missing keys, for an enrolled account → not `allow`, reason `missing_pin_evidence`.
+- Full flow: not enrolled → `not_enrolled`; enroll 3 entries → template exists; real owner → `allow`; someone else who knows the PIN → `step_up` with rhythm/position reasons; tactic 1 bot → `hold` with `tap_exact_center`; amount 50 times larger → `amount_unusual`; template updated; dashboard sees the flagged session; labeling works.
+- Drift cap: 200 rounds of "gradual teaching" with far-off sessions, the template stays within ±1 sd.
 
-Chạy 200 seed với dữ liệu giả: chủ thật được cho qua 95%, người khác bị gắn cờ 100%, bot chiến thuật 1 bị giữ 100%. **Đây là dữ liệu tự sinh, không phải số liệu để lên slide** — số thật phải đo trên dữ liệu thu từ người theo mục 5.5.
+Running 200 seeds on fake data: the real owner is let through 95%, someone else is flagged 100%, tactic 1 bot is held 100%. **This is self-generated data, not figures for slides**; real numbers must be measured on data collected from people per section 5.5.
 
-## Giới hạn đã biết
+## Known limits
 
-- Ngưỡng và trọng số là giá trị khởi đầu, chưa fit trên dữ liệu thật.
-- Luật người/máy bắt được chiến thuật 1–2; chiến thuật 3 (phát lại phiên người thật) và 4 sẽ qua — cần mô hình của Người 1.
-- Key SDK nằm trong app web nên ai cũng xem được: người dùng app vẫn gửi được phiên và chấm điểm cho **bất kỳ** `user_id` nào, và có thể đăng ký nhịp trước cho tài khoản **chưa** đăng ký. Sản phẩm thật cần gắn `user_id` với phiên đăng nhập của ví (backend của đối tác gọi API bằng key bí mật).
-- Chưa có luồng đặt lại mẫu chuẩn (đăng ký lại) — hiện phải xoá `users.template` trong DB.
-- Mẫu chuẩn dùng chung mọi thiết bị của một người dùng (kế hoạch dùng một điện thoại demo).
-- Chưa có: bộ giả lập hacker, tóm tắt LLM cho dashboard, migration DB (bảng được tạo tự động lúc khởi động).
+- Thresholds and weights are starting values, not fitted on real data.
+- The human/bot rules catch tactics 1–2; tactic 3 (replaying a real person's session) and tactic 4 will get through, which needs Member 1's model.
+- The SDK key is in the web app, so anyone can see it: app users can still submit sessions and score for **any** `user_id`, and can enroll the rhythm in advance for an account that has **not** enrolled yet. A real product must tie `user_id` to the wallet's login session (the partner's backend calls the API with a secret key).
+- There is no flow to reset the template (re-enrollment); for now `users.template` must be deleted in the DB.
+- The template is shared across all devices of one user (the plan uses one demo phone).
+- Not yet available: hacker simulator, LLM summary for the dashboard, DB migrations (tables are created automatically at startup).
 
-## Việc tiếp theo của Người 2
+## Member 2's next tasks
 
-1. ~~Bộ giả lập hacker~~ — xong 23/11, xem [attacker/README.md](../attacker/README.md).
-2. ~~Deploy~~ — xong 23/11. Còn: đặt `NHIP_CORS_ORIGINS` khi có domain frontend.
-3. Tài khoản demo cho giám khảo.
+1. ~~Hacker simulator~~ — done 23/11, see [attacker/README.md](../attacker/README.md).
+2. ~~Deploy~~ — done 23/11. Remaining: set `NHIP_CORS_ORIGINS` once the frontend domain exists.
+3. Demo account for the judges.

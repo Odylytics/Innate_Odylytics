@@ -4,7 +4,7 @@ import os
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
-# SQLite khi chạy local; trên Vercel, Neon tự đặt DATABASE_URL (postgres://... hoặc postgresql://...)
+# SQLite when running locally; on Vercel, Neon sets DATABASE_URL itself (postgres://... or postgresql://...)
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./nhip.db")
 for _prefix in ("postgres://", "postgresql://"):
     if DATABASE_URL.startswith(_prefix):
@@ -13,14 +13,14 @@ for _prefix in ("postgres://", "postgresql://"):
 if DATABASE_URL.startswith("sqlite"):
     _connect_args = {"check_same_thread": False}
 else:
-    _connect_args = {"prepare_threshold": None}  # URL pooled của Neon chạy pgbouncer chế độ transaction, không giữ được prepared statement
+    _connect_args = {"prepare_threshold": None}  # Neon's pooled URL runs pgbouncer in transaction mode, which cannot keep prepared statements
 
 engine = create_engine(DATABASE_URL, connect_args=_connect_args, pool_pre_ping=True)
 
 if DATABASE_URL.startswith("sqlite"):
     @event.listens_for(engine, "connect")
     def _sqlite_fk(dbapi_conn, _):
-        # SQLite mặc định không kiểm tra khoá ngoại; bật để test bắt được lỗi giống Postgres
+        # SQLite does not check foreign keys by default; enable it so tests catch the same errors as Postgres
         dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
 SessionLocal = sessionmaker(engine, expire_on_commit=False)
@@ -43,7 +43,7 @@ class User(Base):
 
 
 class Participant(Base):
-    """Người tình nguyện thu dữ liệu. Tách khỏi `sessions` để export huấn luyện (gắn bằng participant_id) không mang email hay họ tên."""
+    """Data-collection volunteer. Kept apart from `sessions` so the training export (joined by participant_id) carries no email or full name."""
     __tablename__ = "participants"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)  # = meta.participant_id
     email: Mapped[str] = mapped_column(String(254), index=True)
@@ -52,9 +52,9 @@ class Participant(Base):
 
 
 class Account(Base):
-    """Tài khoản đăng nhập của app demo trên điện thoại: một email một tài khoản, mật khẩu lưu dạng băm scrypt."""
+    """Login account of the phone demo app: one account per email, password stored as a scrypt hash."""
     __tablename__ = "accounts"
-    email: Mapped[str] = mapped_column(String(254), primary_key=True)  # đã chuẩn hoá chữ thường
+    email: Mapped[str] = mapped_column(String(254), primary_key=True)  # already normalized to lowercase
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), unique=True)
     full_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(200))
@@ -78,7 +78,7 @@ class TouchSession(Base):
 
 
 class ChallengeNonce(Base):
-    """Token câu thử thách đã dùng (dùng một lần): dùng lại là dấu hiệu phát lại phiên ghi sẵn."""
+    """Challenge-phrase tokens already used (single use): reuse is a sign of a replayed recorded session."""
 
     __tablename__ = "challenge_nonces"
     nonce: Mapped[str] = mapped_column(String(32), primary_key=True)

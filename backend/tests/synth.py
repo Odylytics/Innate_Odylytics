@@ -1,4 +1,4 @@
-"""Sinh phiên giả để kiểm thử: người (theo "tính cách" bấm) và bot chiến thuật 1."""
+"""Generate fake sessions for testing: humans (by tapping "personality") and tactic-1 bot."""
 
 import random
 from dataclasses import dataclass
@@ -12,10 +12,10 @@ PIN = "1593"
 class Persona:
     hold: float  # ms
     flight: float  # ms
-    dx: float  # độ lệch tâm, theo bề rộng phím
+    dx: float  # off-center offset, in key widths
     dy: float
     swipe_v: float  # px/ms
-    curve: float  # độ cong vuốt (px)
+    curve: float  # swipe curvature (px)
 
 
 OWNER = Persona(hold=95, flight=180, dx=0.15, dy=-0.10, swipe_v=2.5, curve=25)
@@ -41,14 +41,14 @@ def human_session(user_id: str, p: Persona, rng: random.Random) -> dict:
     for _ in range(2):
         v = max(0.3, rng.gauss(p.swipe_v, p.swipe_v * 0.1))
         pts = [{"t": i * 20.0, "x": 200 + p.curve * (i / 5) ** 2 + rng.gauss(0, 1),
-                "y": 600 - v * 100 * (i / 5) ** 2 * (3 - 2 * i / 5)} for i in range(6)]  # tăng rồi giảm tốc như ngón tay (E19: người thật không vuốt đều)
+                "y": 600 - v * 100 * (i / 5) ** 2 * (3 - 2 * i / 5)} for i in range(6)]  # speeds up then slows down like a finger (E19: real people do not swipe uniformly)
         swipes.append({"points": pts})
     return {"user_id": user_id, "device_id": "demo_phone", "pin_taps": taps, "swipes": swipes,
             "screens": [{"name": "transfer", "t_enter": 0, "t_first_touch": rng.gauss(1200, 200) % 3000}]}
 
 
 def bot_session(user_id: str) -> dict:
-    """Chiến thuật 1: bấm cách đều, đúng tâm nút, vuốt thẳng."""
+    """Tactic 1: evenly spaced taps, exactly on the button center, straight swipe."""
     taps, t = [], 0.0
     for key in PIN:
         cx, cy = CENTERS[key]

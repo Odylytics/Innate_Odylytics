@@ -1,10 +1,10 @@
 <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Innate IME probe</title>
-<!-- Mở trên điện thoại thật (Gboard/iOS, Telex và VNI), gõ "trời đẹp quá", rồi bấm Sao chép log và gửi cho đội. Không gửi gì lên mạng. -->
+<!-- Open on a real phone (Gboard/iOS, Telex and VNI), type "trời đẹp quá", then tap Copy log and send it to the team. Nothing is sent over the network. -->
 <style>body{font:16px system-ui;margin:16px}textarea,input{width:100%;box-sizing:border-box;font-size:18px}pre{white-space:pre-wrap;font-size:12px}</style>
-<p>Bàn phím: <b id="ua"></b></p>
-<input id="t" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" lang="vi" placeholder="gõ: trời đẹp quá">
-<p><button id="copy">Sao chép log</button> <button id="clr">Xoá</button></p>
+<p>Keyboard: <b id="ua"></b></p>
+<input id="t" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" lang="vi" placeholder="type: trời đẹp quá">
+<p><button id="copy">Copy log</button> <button id="clr">Clear</button></p>
 <pre id="log"></pre>
 <script>
 const t=document.getElementById("t"),log=document.getElementById("log"),rows=[];let prev=0,t0=null;

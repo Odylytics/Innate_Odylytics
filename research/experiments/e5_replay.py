@@ -1,14 +1,14 @@
-"""E5: phát hiện phát lại (chiến thuật 3) — bắt bao nhiêu, và từ chối nhầm chủ thật bao nhiêu?
+"""E5: replay detection (tactic 3) — how many are caught, and how many real owners are wrongly rejected?
 
-Dữ liệu GIẢ (persona của attacker/tactics.py): chỉ kiểm chứng PHƯƠNG PHÁP và tìm ngưỡng sơ bộ,
-không phải số liệu cho slide. Cần lặp lại trên phiên người thật.
+SYNTHETIC data (personas from attacker/tactics.py): this only checks the METHOD and finds a rough threshold,
+it is not a number for slides. It must be repeated on real human sessions.
 
-Mỗi lượt thử: một tài khoản có 10 phiên cũ cùng một persona; 1 phiên thật mới (đo FPR);
-một phiên phát lại từ một phiên cũ với nhiễu n ở cả thời gian lẫn toạ độ (đo tỷ lệ bắt).
-Ba cách tính khoảng cách:
-  rel   : sai khác tương đối trên thời gian giữ/cách phím (bản đang dùng trong replay.py)
-  rel+  : rel + lệch tâm dx/dy (đổi sang thang tương đối)
-  z     : |a-b| / sd của chủ (sd từ 5 phiên đăng ký, có sàn như owner.py) trên mọi đặc trưng nhận dạng
+Each trial: one account with 10 old sessions of the same persona; 1 new real session (measures FPR);
+one session replayed from an old session with noise n in both timing and coordinates (measures the catch rate).
+Three ways to compute the distance:
+  rel   : relative difference on hold/flight times (the version used in replay.py)
+  rel+  : rel + center offset dx/dy (converted to a relative scale)
+  z     : |a-b| / owner sd (sd from the 5 enrollment sessions, with a floor as in owner.py) over all identity features
 """
 
 import copy
@@ -30,8 +30,8 @@ FPR_TARGET = 0.01
 
 
 def replay_of(src: dict, noise: float, rng: random.Random) -> dict:
-    """Như tactic3 nhưng tham số hoá. Kẻ tấn công thích nghi tăng nhiễu CẢ HAI: thời gian ±noise,
-    toạ độ ±max(2, 40*noise) px (5% -> 2 px như tactic3, 20% -> 8 px ~ độ lệch giữa hai phiên người thật)."""
+    """Like tactic3 but parameterized. An adaptive attacker raises noise in BOTH: timing ±noise,
+    coordinates ±max(2, 40*noise) px (5% -> 2 px as in tactic3, 20% -> 8 px ~ the deviation between two real human sessions)."""
     s = copy.deepcopy(src)
     jit = max(2.0, 40 * noise)
     taps, t = sorted(s["pin_taps"], key=lambda x: x["t_down"]), 0.0
@@ -58,7 +58,7 @@ def d_rel(a, b, tpl=None):
 def d_relplus(a, b, tpl=None):
     ks = [k for k in timing(a) if k in b]
     parts = [abs(a[k] - b[k]) / max((abs(a[k]) + abs(b[k])) / 2, 1e-6) for k in ks]
-    # lệch tâm (đơn vị bề rộng phím): người thật khác nhau ~0.07; đổi sang thang tương đối bằng cách chia 0.4
+    # center offset (in key-width units): real humans differ by ~0.07; converted to a relative scale by dividing by 0.4
     parts += [abs(a[k] - b[k]) / 0.4 for k in a if k.startswith(("pin_dx_", "pin_dy_")) and k in b]
     return fmean(parts)
 
@@ -68,15 +68,15 @@ def d_z(a, b, tpl):
     return fmean(abs(a[k] - b[k]) / tpl["sd"][k] for k in ks)
 
 
-DISTS = {"rel (hiện tại)": d_rel, "rel+ (thêm lệch tâm)": d_relplus, "z (theo sd của chủ)": d_z}
+DISTS = {"rel (current)": d_rel, "rel+ (adds center offset)": d_relplus, "z (by owner sd)": d_z}
 
 
 def run(pin_len: int):
     pin = "159357"[:pin_len] if pin_len <= 6 else "1593571593"[:pin_len]
     rng = random.Random(SEED)
     layout = tactics.DEFAULT_LAYOUT
-    gen_d = {n: [] for n in DISTS}                      # khoảng cách gần nhất của phiên thật mới tới lịch sử
-    rep_d = {n: {z: [] for z in NOISES} for n in DISTS}  # của phiên phát lại
+    gen_d = {n: [] for n in DISTS}                      # nearest distance from the new real session to the history
+    rep_d = {n: {z: [] for z in NOISES} for n in DISTS}  # of the replayed session
     for u in range(N_USERS):
         sess = tactics.synth_owner(f"u{u}", N_HIST + 1, pin, layout, seed=SEED * 100000 + u)
         feats = [features.extract(s) for s in sess]
@@ -92,32 +92,32 @@ def run(pin_len: int):
     out = []
     for n in DISTS:
         g = np.array(gen_d[n])
-        thr = float(np.quantile(g, FPR_TARGET))  # ngưỡng để chỉ ~1% phiên thật mới bị coi là phát lại
+        thr = float(np.quantile(g, FPR_TARGET))  # threshold so that only ~1% of new real sessions are treated as replays
         row = {z: float((np.array(rep_d[n][z]) < thr).mean()) for z in NOISES}
         out.append((n, thr, float((g < thr).mean()), row, float(np.median(g))))
     return out
 
 
-lines = ["# E5 — phát hiện phát lại (dữ liệu giả)", "",
-         f"{N_USERS} tài khoản giả, {N_HIST} phiên cũ mỗi tài khoản. Ngưỡng chọn để **chỉ ~{FPR_TARGET:.0%} phiên người thật mới bị coi là phát lại**; "
-         "bảng báo tỷ lệ bắt phiên phát lại theo mức nhiễu của kẻ tấn công (thời gian ±n, toạ độ ±max(2, 40n) px). Persona giả, chỉ kiểm chứng phương pháp.", ""]
+lines = ["# E5 — replay detection (synthetic data)", "",
+         f"{N_USERS} synthetic accounts, {N_HIST} old sessions per account. The threshold is chosen so that **only ~{FPR_TARGET:.0%} of new real-human sessions are treated as replays**; "
+         "the table reports the catch rate of replayed sessions by the attacker's noise level (time ±n, coordinates ±max(2, 40n) px). Synthetic personas, this only checks the method.", ""]
 for pin_len in (4, 6):
-    lines += [f"## PIN {pin_len} số", "", "| Khoảng cách | Ngưỡng | FPR | Trung vị khoảng cách người thật | " + " | ".join(f"nhiễu ±{int(z*1000)/10}%" for z in NOISES) + " |",
+    lines += [f"## {pin_len}-digit PIN", "", "| Distance | Threshold | FPR | Median distance of real humans | " + " | ".join(f"noise ±{int(z*1000)/10}%" for z in NOISES) + " |",
               "|---|---|---|---|" + "---|" * len(NOISES)]
     for n, thr, fpr, row, med in run(pin_len):
         lines.append(f"| {n} | {thr:.3f} | {fpr:.3f} | {med:.3f} | " + " | ".join(f"{row[z]:.2f}" for z in NOISES) + " |")
     lines.append("")
-# FPR của backend (rel+, ngưỡng mặc định) theo số phiên cũ được đem so
+# backend FPR (rel+, default threshold) by number of old sessions compared
 THR = 0.085
-lines += [f"## FPR của bản đang dùng trong backend (rel+, ngưỡng {THR}) theo số phiên cũ đem so", "",
-          "| PIN | 10 phiên cũ | 50 phiên cũ | 200 phiên cũ |", "|---|---|---|---|"]
+lines += [f"## FPR of the version used in the backend (rel+, threshold {THR}) by number of old sessions compared", "",
+          "| PIN | 10 old sessions | 50 old sessions | 200 old sessions |", "|---|---|---|---|"]
 for pin_len in (4, 6):
     pin, rows = "159357"[:pin_len], {10: [], 50: [], 200: []}
     for u in range(120):
         f = [features.extract(x) for x in tactics.synth_owner(f"v{u}", 201, pin, tactics.DEFAULT_LAYOUT, seed=5000 + u)]
         for h in rows:
             rows[h].append(min(d_relplus(f[200], x) for x in f[:h]))
-    lines.append(f"| {pin_len} số | " + " | ".join(f"{float((np.array(v) < THR).mean()):.3f}" for v in rows.values()) + " |")
+    lines.append(f"| {pin_len} digits | " + " | ".join(f"{float((np.array(v) < THR).mean()):.3f}" for v in rows.values()) + " |")
 lines.append("")
 out = ROOT / "research/results/e5_replay.md"
 out.parent.mkdir(parents=True, exist_ok=True)

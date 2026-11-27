@@ -1,11 +1,11 @@
-"""4 chiến thuật sinh phiên bot (dễ -> khó), theo mục 5.1 kế hoạch.
+"""4 tactics for generating bot sessions (easy -> hard), per section 5.1 of the plan.
 
-1. Bấm cách đều, đúng tâm nút
-2. Thêm nhiễu ngẫu nhiên vào thời gian (vẫn đúng tâm)
-3. Phát lại phiên người thật có thêm nhiễu
-4. Lấy mẫu thời gian và vị trí từ phân bố của người thật
+1. Evenly spaced taps, exactly on the key center
+2. Add random noise to the timing (still on the key center)
+3. Replay a real human session with added noise
+4. Sample timing and position from the real human distribution
 
-Phiên trả về đúng định dạng SessionIn của backend (không kèm meta).
+Returned sessions use the backend SessionIn format (without meta).
 """
 
 import copy
@@ -13,7 +13,7 @@ import random
 
 from . import fields
 
-# phím -> (tâm x, tâm y, rộng, cao), px. Khớp tests/synth.py của backend; app thật thì lấy từ phiên người (layout_from_sessions).
+# key -> (center x, center y, width, height), px. Matches the backend tests/synth.py; the real app takes it from human sessions (layout_from_sessions).
 DEFAULT_LAYOUT: dict[str, tuple[float, float, float, float]] = {
     str(d): (60 + 120 * ((d - 1) % 3), 400 + 80 * ((d - 1) // 3), 100, 70) for d in range(1, 10)
 } | {"0": (180, 640, 100, 70)}
@@ -42,7 +42,7 @@ def _taps(pin: str, layout, holds, flights, offsets, sizes) -> list[dict]:
 
 
 def _straight_swipe(rng: random.Random, jitter_t: bool) -> dict:
-    """Vuốt thẳng tuyệt đối, vận tốc đều — kiểu `input swipe` / dispatchGesture một đường."""
+    """Perfectly straight swipe at constant velocity, like `input swipe` / a single-path dispatchGesture."""
     step = 20.0
     pts, t = [], 0.0
     for i in range(6):
@@ -72,7 +72,7 @@ def tactic2(user_id: str, pin: str, layout=DEFAULT_LAYOUT, rng: random.Random | 
 
 
 def tactic3(user_id: str, source: dict, rng: random.Random | None = None) -> dict:
-    """Phát lại một phiên người thật (vd. mã độc đã ghi lại phiên của nạn nhân), thêm nhiễu nhỏ."""
+    """Replay a real human session (e.g. malware that recorded the victim's session), with small noise added."""
     rng = rng or random.Random()
     s = copy.deepcopy(source)
     s.pop("meta", None)
@@ -95,7 +95,7 @@ def tactic3(user_id: str, source: dict, rng: random.Random | None = None) -> dic
 
 
 def tactic4(user_id: str, pin: str, population: list[dict], layout=None, rng: random.Random | None = None) -> dict:
-    """Mỗi giá trị (giữ phím, khoảng cách, lệch tâm, kích thước chạm) lấy mẫu độc lập từ toàn bộ người thật."""
+    """Each value (key hold, gap, center offset, touch size) is sampled independently from all real humans."""
     rng = rng or random.Random()
     layout = layout or layout_from_sessions(population) or DEFAULT_LAYOUT
     holds, flights, offsets, sizes, swipes, waits = [], [], [], [], [], []
@@ -110,7 +110,7 @@ def tactic4(user_id: str, pin: str, population: list[dict], layout=None, rng: ra
         swipes += s.get("swipes", [])
         waits += [v["t_first_touch"] - v["t_enter"] for v in s.get("screens", []) if v.get("t_first_touch") is not None]
     if not holds or not flights:
-        raise ValueError("Chiến thuật 4 cần phiên người thật có nhập PIN")
+        raise ValueError("Tactic 4 needs real human sessions with PIN entry")
 
     n = len(pin)
     jit = lambda v, r: v * rng.uniform(1 - r, 1 + r)  # noqa: E731
@@ -143,20 +143,20 @@ def _persona_session(user_id: str, p: dict, pin: str, layout, rng: random.Random
 
 
 def synth_humans(n: int, pin: str = "1593", layout=DEFAULT_LAYOUT, seed: int = 0) -> list[dict]:
-    """Phiên người GIẢ, mỗi phiên một "tính cách" ngẫu nhiên — chỉ dùng khi chưa thu được dữ liệu thật."""
+    """SYNTHETIC human sessions, each with a random "personality" — use only when no real data has been collected yet."""
     rng = random.Random(seed)
     return [_persona_session(f"synth_{i}", _persona(rng), pin, layout, rng) for i in range(n)]
 
 
 def synth_owner(user_id: str, k: int, pin: str = "1593", layout=DEFAULT_LAYOUT, seed: int = 0) -> list[dict]:
-    """k phiên GIẢ của cùng một người (để tạo tài khoản mục tiêu đã đăng ký)."""
+    """k SYNTHETIC sessions of the same person (to create an enrolled target account)."""
     rng = random.Random(seed)
     p = _persona(rng)
     return [_persona_session(user_id, p, pin, layout, rng) for _ in range(k)]
 
 
 def generate(tactic: int, user_id: str, pin: str, humans: list[dict], rng: random.Random, with_fields: bool = False) -> dict:
-    """with_fields=True thêm ô nhập (số tiền, người nhận, ghi chú) theo chiến thuật: xem fields.py."""
+    """with_fields=True adds input fields (amount, recipient, note) per tactic: see fields.py."""
     layout = layout_from_sessions(humans) or DEFAULT_LAYOUT
     source = None
     if tactic == 1:
@@ -166,13 +166,13 @@ def generate(tactic: int, user_id: str, pin: str, humans: list[dict], rng: rando
     elif tactic == 3:
         same_pin = [h for h in humans if "".join(t["key"] for t in h.get("pin_taps", [])) == pin]
         if not same_pin:
-            raise ValueError("Chiến thuật 3 cần phiên người thật nhập đúng PIN này")
+            raise ValueError("Tactic 3 needs a real human session that entered this exact PIN")
         source = rng.choice(same_pin)
         s = tactic3(user_id, source, rng)
     elif tactic == 4:
         s = tactic4(user_id, pin, humans, layout, rng)
     else:
-        raise ValueError(f"Không có chiến thuật {tactic}")
+        raise ValueError(f"No such tactic {tactic}")
     if with_fields:
         s["fields"] = fields.for_tactic(tactic, rng, humans, source)
     return s

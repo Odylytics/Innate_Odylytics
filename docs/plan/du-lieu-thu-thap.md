@@ -1,62 +1,62 @@
-# Thu những dữ liệu gì từ người tham gia (trang `#/collect`)
+# What data to collect from participants (page `#/collect`)
 
-> 25/11/2026. Trả lời câu "nên thu những loại dữ liệu gì". Căn cứ: các thí nghiệm E9–E27 trong [`../research/ai-research.md`](../research/ai-research.md), giới hạn của trình duyệt, và Luật Bảo vệ dữ liệu cá nhân 2025 (thu tối thiểu, có đồng ý). Kế hoạch thu tổng thể: [`thu-du-lieu-doi.md`](thu-du-lieu-doi.md).
+> 25/11/2026. Answers the question "what kinds of data should we collect". Basis: experiments E9–E27 in [`../research/ai-research.md`](../research/ai-research.md), browser limitations, and the 2025 Personal Data Protection Law (collect the minimum, with consent). Overall collection plan: [`thu-du-lieu-doi.md`](thu-du-lieu-doi.md).
 
-## 1. Nguyên tắc chọn
+## 1. Selection principles
 
-1. **Chỉ thu thứ trả lời được một câu hỏi đã có thí nghiệm chờ sẵn.** Mỗi dòng dưới đây ghi nó phục vụ thí nghiệm nào.
-2. **Câu hỏi lớn nhất còn mở là "nhận ra chủ"**, không phải "người hay máy" (bot ngây thơ đã bắt ~100%). Nhận chủ yếu vì: tư thế đổi là mất tín hiệu (E9, E14, E23), nhiễu do khác máy (E12b, E23), và mẫu đăng ký ít (E22). Dữ liệu đội phải sửa đúng ba chỗ này: **cùng máy, ghi tư thế, nhiều buổi**.
-3. **Trình duyệt chỉ thấy được một phần.** Thứ chỉ app native thấy (`set_text`, chọn không có chạm, cảm biến ≥ 100 Hz) thì không hứa trên web.
-4. **Dữ liệu cá nhân thu càng ít càng tốt.** Họ tên + email + mã PIN thử đã được lưu cùng dữ liệu chạm (quyết định của đội, 25/11); không thêm định danh nào khác.
+1. **Collect only what answers a question that already has an experiment waiting.** Each row below states which experiment it serves.
+2. **The biggest open question is "recognizing the owner"**, not "human or machine" (naive bots are already caught ~100%). Owner recognition is weak because: a posture change loses the signal (E9, E14, E23), noise from different devices (E12b, E23), and few enrollment samples (E22). The team's data must fix exactly these three: **same device, record posture, multiple sittings**.
+3. **The browser sees only part of the picture.** What only a native app sees (`set_text`, selection without touch, sensors ≥ 100 Hz) is not promised on the web.
+4. **Collect as little personal data as possible.** Full name + email + the trial PIN are already stored with the touch data (team decision, 25/11); no other identifier is added.
 
-## 2. Đang thu (bản hiện tại)
+## 2. Currently collected (current version)
 
-Trang chỉ hỏi họ tên + email (kèm một ô đồng ý), rồi cho nhập PIN 5 lần trên bàn phím 10 số. Không hỏi tư thế hay lần ngồi (đội quyết định 25/11, để trang thật gọn); `sitting` luôn gửi 1. Thời điểm thu vẫn có trong `created_at`.
+The page asks only for full name + email (with a consent checkbox), then lets the person enter the PIN 5 times on a 10-digit keypad. It does not ask for posture or sitting (team decision 25/11, to keep the real page lean); `sitting` is always sent as 1. The collection time is still in `created_at`.
 
-| Dữ liệu | Trường | Dùng cho |
+| Data | Field | Used for |
 |---|---|---|
-| Họ tên, email | `meta.full_name`, `meta.email` | Liên hệ, xoá theo yêu cầu, gom phiên một người (`participant_id` băm từ email) |
-| Mã PIN thử tự đặt (6 số) | `pin_taps[].key` | Nghiên cứu theo phím và cặp phím (khoảng cách hình học giữa hai phím, E14/E21b); kiểm "gõ PIN mới" so với PIN quen |
-| Thời điểm nhấn/nhả từng phím | `pin_taps[].t_down`, `t_up` | Thời gian giữ phím, khoảng cách giữa hai phím: lõi của nhận chủ (E9, E12b) và người/máy (E4b) |
-| Vị trí chạm so với tâm phím | `x, y, key_cx, key_cy, key_w, key_h` | Độ lệch tâm (E12b); bot chạm đúng tâm |
-| Kích thước vùng chạm | `w, h` | Chỉ để kiểm nhiễu thiết bị (E12b bỏ khỏi mô hình chủ). Giữ vì rẻ, đừng dựa vào |
-| Màn hình và lúc chạm đầu tiên | `screens[]` | Thời gian do dự trước khi gõ |
-| Mã máy | `device_id` | Tách "nhận người" với "nhận máy" |
+| Full name, email | `meta.full_name`, `meta.email` | Contact, deletion on request, grouping one person's sessions (`participant_id` hashed from the email) |
+| Self-chosen trial PIN (6 digits) | `pin_taps[].key` | Research by key and key pair (geometric distance between two keys, E14/E21b); checking "typing a new PIN" versus a familiar PIN |
+| Press/release time of each key | `pin_taps[].t_down`, `t_up` | Key hold time, interval between two keys: the core of owner recognition (E9, E12b) and human/machine (E4b) |
+| Touch position relative to key center | `x, y, key_cx, key_cy, key_w, key_h` | Center offset (E12b); bots tap exactly at the center |
+| Contact area size | `w, h` | Only to check device noise (E12b dropped it from the owner model). Kept because it is cheap, do not rely on it |
+| Screen and time of first touch | `screens[]` | Hesitation time before typing |
+| Device id | `device_id` | Separates "recognizing the person" from "recognizing the device" |
 
-## 3. Nên thu thêm, theo giá trị
+## 3. Worth adding, by value
 
-| # | Dữ liệu | Trên web? | Vì sao (bằng chứng) | Chi phí |
+| # | Data | On the web? | Why (evidence) | Cost |
 |---|---|---|---|---|
-| 1 | **Buổi 2 cách ≥ 1 ngày** cùng người, cùng máy, cùng PIN | Có (email + `created_at`) | Không có buổi 2 thì mọi số nhận chủ chỉ là "cùng buổi", lạc quan. FETA bắt buộc chia theo thời gian | Nhắc người tham gia quay lại. **Cần ghi rõ trên trang: lần sau nhập lại đúng mã PIN cũ** |
-| 2 | **Kẻ gian biết PIN, trên chính máy của chủ** | Có (cần thêm lại vai "người biết PIN" và cho nhập mã của chủ) | E24: kẻ biết PIN vẫn `allow` 28%. Dữ liệu công khai (StrokePIN) cho kẻ gian dùng máy khác, lẫn nhiễu thiết bị; chỉ dữ liệu đội có "cùng máy" | Người thứ hai, 5 lần nhập |
-| 3 | **Nhiều tư thế trong một buổi** (ngồi + đứng hoặc đi) | Có | E9: đăng ký một tư thế là gãy khi đổi tư thế; cần biết đăng ký nhiều tư thế có cứu được không (lỗ hổng "đăng ký nhiều tư thế" trong CLAUDE.md) | Thêm 5 lần nhập mỗi tư thế |
-| 4 | **Câu thử thách tiếng Việt** (`GET /v1/challenge`, gõ lại câu) | Có thời gian gõ; kiểu gõ dấu Telex/VNI **chưa chắc** (cần thử `beforeinput`/composition trên Gboard và iOS) | E13/E22: 30 phím cho EER 0,25 so với 0,36 khi chỉ 6 phím; tiếng Việt thêm `vi_tone_late` (chưa đo trên người thật) | 5 câu mỗi buổi, ~2 phút. Chỉ lưu `t, kind, n, cls`, **không lưu nội dung câu** |
-| 5 | **Cảm biến chuyển động** (gia tốc, con quay, hướng máy) trong lúc gõ PIN | Có hạn chế: cần HTTPS, iOS Safari phải bấm cho phép, ~60 Hz | E23: chỉ chuyển động cho EER 0,04 cùng tư thế (nghi do nhận máy), đổi tư thế thì mất. Cần dữ liệu **cùng máy, hai người** mới biết là nhận người hay nhận máy; và có phân biệt "máy nằm trên bàn (bot)" với "tay cầm" không | Phải thêm trường `imu` vào API (chưa có) và xin quyền riêng. **Là dữ liệu nhạy cảm hơn**: hỏi riêng, cho từ chối mà vẫn tham gia được |
-| 6 | **Vuốt xác nhận** | Có (SDK đã có `swipes`) | E19: luật vận tốc đều bắt 100% bot vuốt đều, 0/20.896 nét người bị chặn nhầm, nhưng đo trên Touchalytics, chưa trên vuốt xác nhận của app | Thêm một bước vuốt sau mỗi lần PIN |
-| 7 | **Thông tin máy tối thiểu**: hãng/đời máy (tự khai hoặc `userAgent`), kích thước màn hình, `devicePixelRatio`, ngón/tay dùng (cái/trỏ, trái/phải) | Có | Giải thích phương sai giữa người; kiểm toạ độ có cần chuẩn hoá theo màn hình không | Rất thấp |
+| 1 | **Second sitting ≥ 1 day later**, same person, same device, same PIN | Yes (email + `created_at`) | Without a second sitting every owner-recognition figure is only "same sitting", which is optimistic. FETA requires a time-based split | Remind participants to come back. **The page must say clearly: next time, enter the same old PIN again** |
+| 2 | **PIN-knowing impostor, on the owner's own device** | Yes (need to re-add a "person who knows the PIN" role and let them enter the owner's PIN) | E24: the PIN-knowing impostor is still `allow`ed 28%. Public data (StrokePIN) has the impostor on a different device, mixed with device noise; only the team's data has "same device" | A second person, 5 entries |
+| 3 | **Several postures in one sitting** (sitting + standing or walking) | Yes | E9: enrolling in one posture breaks when posture changes; need to know whether enrolling in several postures rescues it (the "multi-posture enrollment" gap in CLAUDE.md) | 5 extra entries per posture |
+| 4 | **Vietnamese challenge phrase** (`GET /v1/challenge`, retype the phrase) | Typing timing yes; Telex/VNI tone-mark typing style **not certain** (need to try `beforeinput`/composition on Gboard and iOS) | E13/E22: 30 keys give EER 0.25 versus 0.36 with only 6 keys; Vietnamese adds `vi_tone_late` (not yet measured on real people) | 5 phrases per sitting, ~2 minutes. Only `t, kind, n, cls` are stored, **not the phrase content** |
+| 5 | **Motion sensors** (acceleration, gyroscope, device orientation) while entering the PIN | Limited: needs HTTPS, iOS Safari requires a tap to allow, ~60 Hz | E23: motion alone gives EER 0.04 same posture (suspected to be device recognition), and it disappears when posture changes. Need **same-device, two-person** data to know whether it recognizes the person or the device; and whether it distinguishes "device lying on a table (bot)" from "held in a hand" | Need to add an `imu` field to the API (not there yet) and ask for a separate permission. **More sensitive data**: ask separately, allow declining while still participating |
+| 6 | **Confirmation swipe** | Yes (the SDK already has `swipes`) | E19: the uniform-velocity rule catches 100% of evenly swiping bots, 0/20,896 human strokes wrongly blocked, but measured on Touchalytics, not yet on the app's confirmation swipe | Add one swipe step after each PIN entry |
+| 7 | **Minimal device info**: brand/model (self-reported or `userAgent`), screen size, `devicePixelRatio`, finger/hand used (thumb/index, left/right) | Yes | Explains variance between people; checks whether coordinates need normalizing by screen | Very low |
 
-## 4. Không nên thu
+## 4. Do not collect
 
-| Dữ liệu | Lý do |
+| Data | Reason |
 |---|---|
-| Lực nhấn (`pressure`) | Trình duyệt thường trả hằng số; quy tắc thiết kế: không dựa vào |
-| `isTrusted`, ảnh, giọng nói, vị trí GPS, danh bạ | Không phục vụ thí nghiệm nào; tăng rủi ro pháp lý |
-| Nội dung câu thử thách, số tài khoản thật | Không cần cho đặc trưng; máy chủ đã biết câu qua token |
-| Mật khẩu/PIN thật của người tham gia | Đã cảnh báo hai lần; nếu ai báo nhập nhầm PIN thật thì xoá ngay phiên của họ |
-| Tuổi, giới tính, nghề nghiệp | Cỡ mẫu 10–20 người không đủ để phân tích theo nhóm; chỉ thêm định danh |
+| Pressure (`pressure`) | Browsers usually return a constant; design rule: do not rely on it |
+| `isTrusted`, photos, voice, GPS location, contacts | Serve no experiment; raise legal risk |
+| Challenge phrase content, real account numbers | Not needed for features; the server already knows the phrase via the token |
+| Participants' real password/PIN | Warned twice; if anyone reports entering a real PIN by mistake, delete their sessions immediately |
+| Age, gender, occupation | A sample of 10–20 people is too small for group analysis; it only adds identifiers |
 
-## 5. Đề xuất thứ tự cho trang thu
+## 5. Suggested order for the collection page
 
-1. Trang hiện chỉ hỏi tên + email theo quyết định của đội; các mục ở phần 3 (buổi 2, tư thế, kẻ gian) **chưa làm**. Nếu muốn số nhận chủ đáng tin hơn, mục 3.1 (quay lại buổi 2, nhận ra qua email + `created_at`) là việc rẻ nhất.
-2. **Trước 30/11:** thêm lại vai kẻ gian biết PIN, nhập trên máy của chủ (mục 3.2); một lượt tư thế thứ hai (mục 3.3).
-3. **Nếu kịp:** câu thử thách (mục 3.4) sau khi thử bộ gõ trên điện thoại thật; vuốt xác nhận (mục 3.6).
-4. **Để sau nộp bài:** cảm biến chuyển động (mục 3.5): cần sửa API, quyền iOS, và phiếu đồng ý riêng.
+1. The page currently asks only for name + email per the team's decision; the items in section 3 (second sitting, posture, impostor) are **not done yet**. If we want a more trustworthy owner-recognition figure, item 3.1 (return for a second sitting, recognized via email + `created_at`) is the cheapest task.
+2. **Before 30/11:** re-add the PIN-knowing impostor role, entering on the owner's device (item 3.2); one extra posture round (item 3.3).
+3. **If there is time:** the challenge phrase (item 3.4) after trying the input method on a real phone; confirmation swipe (item 3.6).
+4. **Leave until after submission:** motion sensors (item 3.5): need an API change, iOS permission, and a separate consent form.
 
-Mỗi người tham gia, tối thiểu: 2 buổi × 5 lần PIN + 5 lần kẻ gian trên máy của họ. Với 10–20 người là đủ để **chạy được** `team_analysis.py` (T1–T5), nhưng khoảng tin cậy sẽ rộng; ghi rõ cỡ mẫu khi đưa số lên slide.
+Per participant, minimum: 2 sittings × 5 PIN entries + 5 impostor entries on their device. With 10–20 people this is enough to **run** `team_analysis.py` (T1–T5), but the confidence intervals will be wide; state the sample size when putting figures on slides.
 
-## 6. Lưu ý pháp lý và vận hành
+## 6. Legal and operational notes
 
-- Họ tên, email và mã PIN thử nằm cùng dữ liệu chạm trong mỗi phiên, nên file `/v1/export` là dữ liệu cá nhân: chỉ người giữ key ML được xuất, không đưa vào repo hay zip nộp.
-- Phiếu đồng ý phải liệt kê đúng những gì thu. Khi thêm mục nào ở phần 3 thì sửa phiếu trong `web/src/Collect.tsx` cùng lúc.
-- Nêu thời hạn xoá (đề xuất: sau chung kết 11/12/2026) và cách yêu cầu xoá (đặt `VITE_COLLECT_CONTACT`).
-- Nhờ người am hiểu pháp lý xem lại phiếu (Luật BVDLCN 2025), như đã ghi trong `thu-du-lieu-doi.md`.
+- Full name, email and the trial PIN sit with the touch data in each session, so the `/v1/export` file is personal data: only the holder of the ML key may export it, and it must not go into the repo or the submission zip.
+- The consent form must list exactly what is collected. When adding any item from section 3, edit the form in `web/src/Collect.tsx` at the same time.
+- State the deletion deadline (suggested: after the final on 11/12/2026) and how to request deletion (set `VITE_COLLECT_CONTACT`).
+- Ask someone with legal knowledge to review the form (Luật BVDLCN 2025, the Personal Data Protection Law), as noted in `thu-du-lieu-doi.md`.

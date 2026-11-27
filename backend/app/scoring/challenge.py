@@ -1,6 +1,6 @@
-"""Câu thử thách tiếng Việt: máy chủ chọn câu, ký token (HMAC) chứa chỉ số câu + hạn; app gửi lại token để máy chủ biết câu mà KHÔNG lưu nội dung gõ.
-Câu viết thường, không dấu câu, chỉ chữ cái và khoảng trắng: trên điện thoại không phải đổi lớp phím/Shift (đỡ nhiễu nhịp) và Telex/VNI đều gõ được.
-Câu chọn có nhiều âm tiết "dấu thanh không ở cuối" để có nhiều chỗ đặt dấu thanh (E18). Token dùng một lần: `main._consume_challenge_tokens` ghi nonce vào DB; dùng lại, hết hạn hoặc giả chữ ký thì cờ `challenge_token_replayed`."""
+"""Vietnamese challenge phrases: the server picks a phrase and signs a token (HMAC) holding the phrase index + expiry; the app sends the token back so the server knows the phrase WITHOUT storing the typed content.
+Phrases are lowercase, no punctuation, letters and spaces only: on a phone there is no keyboard-layer/Shift switch (less rhythm noise) and both Telex and VNI can type them.
+Phrases are chosen with many syllables whose tone mark is not at the end, to give many places to put the tone mark (E18). Tokens are single use: `main._consume_challenge_tokens` writes the nonce to the DB; reuse, expiry or a forged signature raises the flag `challenge_token_replayed`."""
 
 import base64
 import hashlib
@@ -10,7 +10,7 @@ import os
 import secrets
 import time
 
-PHRASES = [  # >= 4 âm tiết có chỗ chọn dấu thanh (E20: AUC mô phỏng 0.78 ở 4, 0.66 ở 1); kiểm bằng test
+PHRASES = [  # >= 4 syllables with a choice of tone-mark position (E20: simulated AUC 0.78 at 4, 0.66 at 1); checked by a test
     "tuần này trời nắng đẹp quá",
     "tháng này tiền điện nước hơi nhiều",
     "hẹn gặp lại bạn vào tuần sau",
@@ -39,7 +39,7 @@ def issue(now: float | None = None) -> dict:
 
 
 def parse(token: str | None) -> tuple[str, int, str] | None:
-    """(câu, hạn unix, nonce) nếu chữ ký đúng và có nonce, ngược lại None."""
+    """(phrase, unix expiry, nonce) if the signature is valid and has a nonce, otherwise None."""
     try:
         body, sig = token.split(".")
         if not hmac.compare_digest(sig, _sig(body)):
@@ -51,6 +51,6 @@ def parse(token: str | None) -> tuple[str, int, str] | None:
 
 
 def verify(token: str | None) -> str | None:
-    """Trả về câu nếu chữ ký đúng, ngược lại None. Không kiểm hạn và dùng lại ở đây (xem main._consume_challenge_tokens)."""
+    """Return the phrase if the signature is valid, otherwise None. Expiry and reuse are not checked here (see main._consume_challenge_tokens)."""
     p = parse(token)
     return p[0] if p else None

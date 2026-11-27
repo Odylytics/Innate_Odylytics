@@ -1,4 +1,4 @@
-"""Sinh các đoạn SVG thương hiệu (lockup chính, symbol, nét cử chỉ) từ web/public/brand/*.svg. Không vẽ lại logo."""
+"""Generates the brand SVG fragments (main lockup, symbol, gesture stroke) from web/public/brand/*.svg. Does not redraw the logo."""
 import re, sys
 from pathlib import Path
 B = Path(__file__).parents[2] / "web/public/brand"
@@ -20,7 +20,7 @@ def lockup(c, dot, h):
             f'<g transform="translate(54.56 0)"><path d="{letters}" stroke="{c}" stroke-width="6.49324" stroke-linecap="round" stroke-linejoin="round"/><path d="{idot}" fill="{dot}"/></g></svg>')
 
 def gesture(c, op):
-    """Siêu đồ hoạ: nét cử chỉ phóng lớn, cắt khỏi khung."""
+    """Supergraphic: the gesture stroke scaled up and cropped by the frame."""
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40.56 40.5" fill="none" overflow="visible">'
             f'<path d="{stroke_m}" stroke="{c}" stroke-opacity="{op}" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
 

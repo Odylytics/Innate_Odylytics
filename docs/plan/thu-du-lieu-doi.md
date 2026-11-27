@@ -1,46 +1,46 @@
-# Kế hoạch thu dữ liệu của đội (nhóm nhỏ, 25/11/2026)
+# Team data collection plan (small group, 25/11/2026)
 
-Mục tiêu: thay các số "tạm" (mô hình huấn luyện trên dữ liệu công khai và bot sinh) bằng số đo trên **đúng điều kiện của đội**: cùng máy, cùng tư thế, PIN và câu thử thách của cùng một người. Đây là việc đáng giá nhất còn lại (xem `ai-research.md`, E22).
+Goal: replace the "temporary" numbers (a model trained on public data and generated bots) with measurements under **the team's own conditions**: same device, same posture, the PIN and challenge sentences of the same person. This is the most valuable remaining task (see `ai-research.md`, E22).
 
-## Quy mô và lịch
-- **10–20 người tự nguyện** (bạn bè, người quen), mỗi người **2 buổi cách nhau ≥ 1 ngày** (buổi 1 đăng ký, buổi 2 kiểm thử theo thời gian đúng FETA). Thu xong trước 01/12 để kịp số liệu vào slide; **sau 03/12 không sửa được slide**.
-- Mỗi người dùng **điện thoại của chính họ** (bàn phím quen), ngồi cầm máy như bình thường. Ghi tư thế (`note`: ngồi/đi/nằm).
-- Trang thu `#/collect` (bản 25/11): chỉ hỏi họ tên + email và một ô đồng ý, rồi bàn phím 10 số: **tự tạo PIN 6 số** (được lưu, xem dưới), tổng cộng nhập 5 lần (các lần sau phải khớp lần đầu, lần sai không ghi); xong 5 lần mới gửi cả 5 phiên. Không hỏi tư thế, lần ngồi, vai. Kế hoạch ban đầu: 3 lần nhập PIN `1593` (đăng ký), 5 lần nhập PIN kiểm thử, 5 câu thử thách ngẫu nhiên (`GET /v1/challenge`), vài lượt người thứ hai (kẻ gian biết PIN) bấm thử tài khoản của người đó.
-- Bot: dùng `attacker/` (4 chiến thuật) và `adb` trên 1–2 máy thật để có tập bot độc lập với bộ sinh.
+## Scale and schedule
+- **10–20 volunteers** (friends, acquaintances), each doing **2 sessions at least 1 day apart** (session 1 enrolls, session 2 tests across time exactly as in FETA). Finish collecting before 01/12 so the numbers make it into the slides; **after 03/12 the slides cannot be changed**.
+- Each person uses **their own phone** (a keyboard they know), sitting and holding the phone as usual. Record the posture (`note`: sitting/walking/lying).
+- Collection page `#/collect` (version of 25/11): it asks only for full name + email and a consent box, then a 10-digit keypad: **create your own 6-digit PIN** (stored, see below), 5 entries in total (later entries must match the first; wrong entries are not recorded); only after all 5 are done are the 5 sessions sent. It does not ask for posture, sitting number, or role. Original plan: 3 entries of PIN `1593` (enrollment), 5 entries of the test PIN, 5 random challenge sentences (`GET /v1/challenge`), and a few rounds where a second person (a PIN-knowing impostor) taps on that person's account.
+- Bots: use `attacker/` (4 tactics) and `adb` on 1–2 real devices to get a bot set independent of the generator.
 
-## Dùng sẵn hạ tầng hiện có
-Backend đã có nhãn thu dữ liệu `meta` (`participant_id`, `sitting`, `role` genuine/impostor/bot, `tactic`, `note`) trong `POST /v1/sessions` và `GET /v1/export` (key ML). Huấn luyện lại: `research/experiments/train_human_model.py --export export.jsonl` (chưa thử trên dữ liệu thật). Web demo cần gắn `meta` khi thu: `TODO` đội web xác nhận cách bật chế độ thu.
+## Using the existing infrastructure
+The backend already has the data-collection labels `meta` (`participant_id`, `sitting`, `role` genuine/impostor/bot, `tactic`, `note`) in `POST /v1/sessions` and `GET /v1/export` (ML key). Retraining: `research/experiments/train_human_model.py --export export.jsonl` (not yet tried on real data). The web demo must attach `meta` when collecting: `TODO` the web team confirms how to turn on collection mode.
 
-## Dữ liệu được lưu
-Chỉ **thời gian, toạ độ, kích thước chạm, loại sự kiện, số ký tự, lớp ký tự**. **Không lưu** số điện thoại, nội dung chuyển khoản. **Ngoại lệ có chủ đích (25/11):** trang thu lưu **chữ số PIN** người tham gia tự đặt (`pin_taps[].key`, ghép lại ra mã PIN) để nghiên cứu theo phím/cặp phím; trang nhắc hai lần (phiếu đồng ý + ô xác nhận) rằng mã này không được trùng mật khẩu hay PIN thật nào. **Từ 25/11 trang thu ghi họ tên + email thẳng vào `meta` của mỗi phiên** (người tham gia đồng ý trên trang); `participant_id` là mã băm từ email. Vì vậy file `/v1/export` chứa dữ liệu cá nhân: không đưa vào repo hay zip nộp, chỉ người giữ key ML được xuất.
+## Data stored
+Only **timing, coordinates, touch size, event type, character count, character class**. **Not stored:** phone numbers, transfer notes. **Deliberate exception (25/11):** the collection page stores the **PIN digits** that participants choose themselves (`pin_taps[].key`, which together give the PIN) for per-key / key-pair research; the page reminds participants twice (consent form + confirmation box) that this code must not match any real password or PIN. **From 25/11 the collection page writes full name + email straight into the `meta` of each session** (participants consent on the page); `participant_id` is a hash of the email. Therefore the `/v1/export` file contains personal data: do not put it in the repo or the submission zip; only the holder of the ML key may export.
 
-## Phiếu đồng ý (mẫu, đội chỉnh và **nhờ người am hiểu pháp lý xem lại**)
+## Consent form (template; the team adapts it and **asks someone with legal expertise to review it**)
 
-> **PHIẾU ĐỒNG Ý THAM GIA THU THẬP DỮ LIỆU THAO TÁC**
-> Đội <TÊN ĐỘI> thu dữ liệu cách chạm và gõ để nghiên cứu cho sản phẩm tham dự MoMo Tech Contest 2026.
-> 1. **Dữ liệu thu:** thời điểm và vị trí các lần chạm, kích thước vùng chạm, thời điểm và loại phím gõ (không ghi nội dung PIN hay nội dung câu), kiểu thao tác. Không thu ảnh, giọng nói, danh bạ, vị trí, tin nhắn.
-> 2. **Mục đích:** huấn luyện và đánh giá mô hình phát hiện bot và nhận diện chủ tài khoản của đội; trình bày số liệu tổng hợp trong bài dự thi.
-> 3. **Lưu trữ và chia sẻ:** dữ liệu gắn mã ẩn danh, lưu trong nhóm nghiên cứu, **không** bán hay chia cho bên thứ ba; số liệu công bố chỉ ở dạng tổng hợp. Dữ liệu thô <có/không> nằm trong gói nộp (TODO: quyết định).
-> 4. **Thời hạn:** xoá dữ liệu thô sau <ngày> (đề xuất: sau chung kết 11/12/2026) nếu bạn yêu cầu hoặc khi hết mục đích.
-> 5. **Quyền của bạn:** có thể từ chối hoặc rút lui bất cứ lúc nào, yêu cầu xem hoặc xoá dữ liệu của mình, liên hệ <email đội>.
-> 6. Dữ liệu thao tác có thể là **dữ liệu nhạy cảm** theo Luật Bảo vệ dữ liệu cá nhân 2025 và các văn bản hướng dẫn; việc thu dựa trên sự đồng ý của bạn tại phiếu này.
+> **CONSENT FORM FOR PARTICIPATING IN INTERACTION DATA COLLECTION**
+> Team <TEAM NAME> collects touch and typing data for research for its entry in the MoMo Tech Contest 2026.
+> 1. **Data collected:** the time and position of touches, touch area size, the time and type of keys typed (the content of the PIN or of the sentence is not recorded), the kind of interaction. No images, voice, contacts, location, or messages are collected.
+> 2. **Purpose:** to train and evaluate the team's bot-detection and account-owner-recognition models; to present aggregated figures in the contest entry.
+> 3. **Storage and sharing:** data is tagged with an anonymous code and kept within the research group, **not** sold or shared with any third party; published figures are aggregated only. Raw data <is/is not> in the submission package (TODO: decide).
+> 4. **Retention:** raw data will be deleted after <date> (proposed: after the final on 11/12/2026) if you ask, or when the purpose ends.
+> 5. **Your rights:** you may decline or withdraw at any time, ask to see or delete your data, and contact <team email>.
+> 6. Interaction data may be **sensitive data** under the 2025 Law on Personal Data Protection and its guiding documents; collection is based on your consent on this form.
 >
-> Họ tên: ____ · Ngày: ____ · Chữ ký / xác nhận: ____ · Mã tham gia (đội điền): ____
+> Full name: ____ · Date: ____ · Signature / confirmation: ____ · Participation code (filled in by the team): ____
 
-## Chạy phân tích (một lệnh)
+## Running the analysis (one command)
 ```bash
-# 1) xuất dữ liệu (key ML), theo trang tới khi hết header X-Next-Offset
-curl -s -H "X-API-Key: $NHIP_ML_KEY" "https://nhip-api-taupe.vercel.app/v1/export?limit=500&offset=0" > page0.json   # lặp với offset từ X-Next-Offset, gộp thành export.jsonl
-# 2) T1–T5 một lệnh, ra research/results/team_analysis.md
+# 1) export the data (ML key), page by page until the X-Next-Offset header is gone
+curl -s -H "X-API-Key: $NHIP_ML_KEY" "https://nhip-api-taupe.vercel.app/v1/export?limit=500&offset=0" > page0.json   # repeat with the offset from X-Next-Offset, merge into export.jsonl
+# 2) T1–T5 in one command, writes research/results/team_analysis.md
 python research/experiments/team_analysis.py export.jsonl
-# 3) huấn luyện lại người/máy: BẮT BUỘC --out để không ghi đè mô hình đang chạy
+# 3) retrain human/machine: --out is REQUIRED so the running model is not overwritten
 python research/experiments/train_human_model.py --export export.jsonl --out /tmp/models --no-strokepin --no-generated
 ```
-Thử đường ống bằng dữ liệu GIẢ trước khi thu thật: `research/experiments/team_data_dryrun.py` (dựng backend local, gửi phiên có `meta`, xuất, chạy 2 bước trên; **số in ra là giả**, chỉ để bắt lỗi ống). Lần chạy thử 25/11 đã bắt được một lỗi backend (`owner.score` tràn số, xem commit) và hai lỗi script.
+Try the pipeline with FAKE data before the real collection: `research/experiments/team_data_dryrun.py` (starts a local backend, sends sessions with `meta`, exports, runs the two steps above; **the printed numbers are fake**, only to catch pipeline bugs). The dry run of 25/11 caught one backend bug (`owner.score` overflow, see the commit) and two script bugs.
 
-## Phân tích sau khi thu (đã có sẵn mã)
-- Nhận chủ theo thời gian (buổi 1 vs 2): `research/experiments/e9_strokepin_owner.py` làm mẫu, thay nguồn dữ liệu.
-- Người/máy trên bot thật: `train_human_model.py`, giữ bot `adb` làm tập kiểm độc lập.
-- Hiệu chỉnh ngưỡng phát lại (E5b), ngưỡng `fusion.py`, ánh xạ điểm `owner.py` (d=2 → 0,5 đang lỏng).
-- Câu tiếng Việt: kiểm `vi_tone_late` và `vi_ime_coverage` ổn định giữa 2 buổi không (xem `innate-challenge-vi.md`).
-- Báo cáo: FAR@FRR 5% kèm khoảng tin cậy bootstrap theo người; **ghi rõ cỡ mẫu nhỏ**, không so với số công bố trên hàng nghìn người.
+## Analysis after collection (code already exists)
+- Owner recognition across time (session 1 vs 2): `research/experiments/e9_strokepin_owner.py` as the template, swapping the data source.
+- Human/machine on real bots: `train_human_model.py`, keeping the `adb` bots as an independent test set.
+- Calibrate the replay threshold (E5b), the `fusion.py` thresholds, the `owner.py` score mapping (d=2 → 0.5 is currently loose).
+- Vietnamese sentences: check whether `vi_tone_late` and `vi_ime_coverage` are stable between the 2 sessions (see `innate-challenge-vi.md`).
+- Report: FAR@FRR 5% with bootstrap confidence intervals by person; **state the small sample size clearly**, do not compare with figures published on thousands of people.

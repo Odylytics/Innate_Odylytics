@@ -1,11 +1,11 @@
-"""E12 (việc A): mô hình xác minh chủ HỌC ĐƯỢC trên người thật (StrokePIN), so với khoảng cách trọng số bằng nhau của backend.
+"""E12 (task A): a LEARNED owner verification model on real humans (StrokePIN), compared with the backend's equal-weight distance.
 
-Backend hiện coi mọi đặc trưng ngang nhau: d = mean(|z|). Ở đây học trọng số/tương tác từ dữ liệu:
-  - LR: hồi quy logistic trên vector |z| (31 đặc trưng) -> trọng số học được, diễn giải được
-  - LightGBM: cây tăng cường trên |z|
-Quy trình: chia theo NGƯỜI (60% huấn luyện / 40% kiểm thử, 3 cách chia). Prior dân số chỉ tính từ người huấn luyện (không rò rỉ).
-Mẫu đăng ký k=3 lượt ngồi; hàng dữ liệu = (|z| của một lượt kiểm thử so với mẫu, nhãn chủ/kẻ gian biết PIN). Kiểm thử cùng tư thế và đổi tư thế.
-So ghép cặp với baseline trên CÙNG hàng kiểm thử, bootstrap theo người. Huấn luyện dùng cả hai tư thế.
+The backend currently treats all features equally: d = mean(|z|). Here weights/interactions are learned from data:
+  - LR: logistic regression on the |z| vector (31 features) -> learned, interpretable weights
+  - LightGBM: gradient-boosted trees on |z|
+Procedure: split by PERSON (60% training / 40% test, 3 splits). The population prior is computed only from training people (no leakage).
+Enrollment template from k=3 sitting sessions; a data row = (|z| of one test session against the template, label owner / PIN-knowing impostor). Test on same posture and changed posture.
+Paired comparison with the baseline on the SAME test rows, bootstrap by person. Training uses both postures.
 """
 
 import random
@@ -24,7 +24,7 @@ from app.scoring import features, owner  # noqa: E402
 import strokepin_loader  # noqa: E402
 
 K, N_DRAW, N_IMP, BOOT, SPLITS = 3, 4, 15, 60, (11, 12, 13)
-NO_CONTACT = "--no-contact" in sys.argv  # đối chứng: bỏ kích thước chạm (mang thông tin THIẾT BỊ, biến mất khi kẻ gian cầm đúng máy nạn nhân)
+NO_CONTACT = "--no-contact" in sys.argv  # control: drop touch size (it carries DEVICE information and vanishes when the impostor holds the victim's own phone)
 EXCL = {"tap_w_mean", "tap_h_mean"} if NO_CONTACT else set()
 S = strokepin_loader.load()
 for e in S:
@@ -39,7 +39,7 @@ WV = {g: np.var(np.array([[e["f"][k] for k in TK] for e in es]), axis=0, ddof=1)
 
 
 def make_rows(users, train_users, seed):
-    """Hàng (|z|, nhãn 0=chủ 1=kẻ gian, người, tư thế kiểm thử). Prior chỉ từ người huấn luyện."""
+    """Rows (|z|, label 0=owner 1=impostor, person, test posture). Prior only from training people."""
     rng = random.Random(seed)
     pv = np.mean([v for (u, _p, _po), v in WV.items() if u in train_users], axis=0)
     owner._PRIOR = {"within_var": dict(zip(TK, pv.tolist())), "n_taps": 6, "nu": 5}
@@ -94,8 +94,8 @@ for sp in SPLITS:
     lr = LogisticRegression(C=1.0, max_iter=500).fit(sc.transform(Xtr), ytr)
     gb = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05, num_leaves=7, min_child_samples=30, subsample=0.8,
                             subsample_freq=1, colsample_bytree=0.8, random_state=sp, verbose=-1).fit(Xtr, ytr)
-    sco = {"baseline (mean |z|, backend)": base, "LR học trọng số": lr.decision_function(sc.transform(Xte)),
-           "LightGBM học": gb.predict_proba(Xte)[:, 1]}
+    sco = {"baseline (mean |z|, backend)": base, "LR with learned weights": lr.decision_function(sc.transform(Xte)),
+           "learned LightGBM": gb.predict_proba(Xte)[:, 1]}
     if weights is None:
         weights = sorted(zip(keys, lr.coef_[0] / sc.scale_), key=lambda t: -abs(t[1]))[:8]
     for post in ("sit", "walk"):
@@ -105,19 +105,19 @@ for sp in SPLITS:
             lo, hi = boot(s, yte, wte, pte, post, base) if name != "baseline (mean |z|, backend)" else (np.zeros(2), np.zeros(2))
             out.setdefault((post, name), []).append((est, lo, hi))
 
-L = ["# E12 — mô hình xác minh chủ học được (StrokePIN, người thật)", "",
-     f"Chia theo NGƯỜI (58 người huấn luyện / {len(USERS) - 58} người kiểm thử), {len(SPLITS)} cách chia, trung bình. Đăng ký k={K} lượt ngồi, kẻ gian biết PIN. "
-     f"Đặc trưng = |z| của {len(keys)} đặc trưng backend" + (" (ĐÃ BỎ kích thước chạm: đối chứng thiết bị). " if NO_CONTACT else ". ")
-     + "Cột chênh lệch = so với baseline trên cùng hàng kiểm thử (âm = tốt hơn); CI bootstrap theo người, trung bình giữa các lần chia.", "",
-     "| Tư thế kiểm thử | Mô hình | EER | FAR @ FRR 5% | dEER vs baseline | dFAR vs baseline |", "|---|---|---|---|---|---|"]
+L = ["# E12 — learned owner verification model (StrokePIN, real people)", "",
+     f"Split by PERSON (58 training people / {len(USERS) - 58} test people), {len(SPLITS)} splits, averaged. Enrollment k={K} sitting sessions, PIN-knowing impostor. "
+     f"Features = |z| of {len(keys)} backend features" + (" (touch size REMOVED: device control). " if NO_CONTACT else ". ")
+     + "The delta columns are relative to the baseline on the same test rows (negative = better); bootstrap CI by person, averaged across splits.", "",
+     "| Test posture | Model | EER | FAR @ FRR 5% | dEER vs baseline | dFAR vs baseline |", "|---|---|---|---|---|---|"]
 for (post, name), v in out.items():
     est = np.mean([x[0] for x in v], axis=0); lo = np.mean([x[1] for x in v], axis=0); hi = np.mean([x[2] for x in v], axis=0)
     if name.startswith("baseline"):
-        L.append(f"| {'cùng (ngồi)' if post == 'sit' else 'đổi (đi)'} | {name} | {est[0]:.3f} | {est[1]:.3f} | — | — |")
+        L.append(f"| {'same (sitting)' if post == 'sit' else 'changed (walking)'} | {name} | {est[0]:.3f} | {est[1]:.3f} | — | — |")
     else:
         b = np.mean([o[0] for o in out[(post, 'baseline (mean |z|, backend)')]], axis=0)
-        L.append(f"| {'cùng (ngồi)' if post == 'sit' else 'đổi (đi)'} | {name} | {est[0]:.3f} | {est[1]:.3f} | {est[0]-b[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {est[1]-b[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |")
-L += ["", "Trọng số lớn nhất mà LR học được (lần chia đầu; dương = |z| lớn hơn làm tăng khả năng là kẻ gian; đơn vị chưa chuẩn hoá giữa đặc trưng):", ""]
+        L.append(f"| {'same (sitting)' if post == 'sit' else 'changed (walking)'} | {name} | {est[0]:.3f} | {est[1]:.3f} | {est[0]-b[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {est[1]-b[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |")
+L += ["", "Largest weights learned by LR (first split; positive = a larger |z| raises the likelihood of an impostor; units not normalized across features):", ""]
 L += [f"- `{k}`: {w:+.3f}" for k, w in weights]
 (ROOT / ("research/results/e12b_learned_owner_no_contact.md" if NO_CONTACT else "research/results/e12_learned_owner.md")).write_text("\n".join(L) + "\n", encoding="utf-8")
 print("\n".join(L))

@@ -21,7 +21,7 @@ Python (`backend/pyproject.toml`, `attacker/pyproject.toml`; licences from insta
 | FastAPI, SQLAlchemy, pydantic, pytest | MIT | |
 | Uvicorn, Starlette, httpx | BSD-3-Clause | |
 | **psycopg / psycopg-binary** | **LGPL-3.0-only** | Used unmodified as a dependency (Postgres driver); not copied into this repo. Keep it replaceable (do not vendor it) |
-| LightGBM | MIT | Huấn luyện mô hình (`research/`) và kiểm tương đương trong test (dev dependency). **Không chạy trong sản phẩm:** `backend/app/scoring/lgbm_text.py` (mã của đội) đọc file mô hình văn bản bằng Python thuần |
+| LightGBM | MIT | Model training (`research/`) and equivalence checks in tests (dev dependency). **Not run in the product:** `backend/app/scoring/lgbm_text.py` (the team's code) reads the text model file in pure Python |
 | NumPy, scikit-learn, pandas | BSD-3-Clause (NumPy bundles BSD/0BSD/MIT/Zlib/CC0 parts) | `research/` only (not a runtime dependency of the backend since 26/11) |
 
 Web (`web/package.json`; licences from the npm registry):

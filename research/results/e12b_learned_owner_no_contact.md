@@ -1,17 +1,17 @@
-# E12 — mô hình xác minh chủ học được (StrokePIN, người thật)
+# E12 — learned owner verification model (StrokePIN, real people)
 
-Chia theo NGƯỜI (58 người huấn luyện / 39 người kiểm thử), 3 cách chia, trung bình. Đăng ký k=3 lượt ngồi, kẻ gian biết PIN. Đặc trưng = |z| của 24 đặc trưng backend (ĐÃ BỎ kích thước chạm: đối chứng thiết bị). Cột chênh lệch = so với baseline trên cùng hàng kiểm thử (âm = tốt hơn); CI bootstrap theo người, trung bình giữa các lần chia.
+Split by PERSON (58 training people / 39 test people), 3 splits, averaged. Enrollment k=3 sitting sessions, PIN-knowing impostor. Features = |z| of 24 backend features (touch size REMOVED: device control). The delta columns are relative to the baseline on the same test rows (negative = better); bootstrap CI by person, averaged across splits.
 
-| Tư thế kiểm thử | Mô hình | EER | FAR @ FRR 5% | dEER vs baseline | dFAR vs baseline |
+| Test posture | Model | EER | FAR @ FRR 5% | dEER vs baseline | dFAR vs baseline |
 |---|---|---|---|---|---|
-| cùng (ngồi) | baseline (mean |z|, backend) | 0.161 | 0.573 | — | — |
-| cùng (ngồi) | LR học trọng số | 0.206 | 0.510 | +0.045 [+0.030, +0.058] | -0.063 [-0.229, +0.057] |
-| cùng (ngồi) | LightGBM học | 0.158 | 0.375 | -0.003 [-0.013, +0.007] | -0.198 [-0.363, -0.085] |
-| đổi (đi) | baseline (mean |z|, backend) | 0.363 | 0.944 | — | — |
-| đổi (đi) | LR học trọng số | 0.319 | 0.737 | -0.043 [-0.070, -0.022] | -0.206 [-0.254, -0.149] |
-| đổi (đi) | LightGBM học | 0.309 | 0.708 | -0.053 [-0.078, -0.033] | -0.236 [-0.294, -0.184] |
+| same (sitting) | baseline (mean |z|, backend) | 0.161 | 0.573 | — | — |
+| same (sitting) | LR with learned weights | 0.206 | 0.510 | +0.045 [+0.030, +0.058] | -0.063 [-0.229, +0.057] |
+| same (sitting) | learned LightGBM | 0.158 | 0.375 | -0.003 [-0.013, +0.007] | -0.198 [-0.363, -0.085] |
+| changed (walking) | baseline (mean |z|, backend) | 0.363 | 0.944 | — | — |
+| changed (walking) | LR with learned weights | 0.319 | 0.737 | -0.043 [-0.070, -0.022] | -0.206 [-0.254, -0.149] |
+| changed (walking) | learned LightGBM | 0.309 | 0.708 | -0.053 [-0.078, -0.033] | -0.236 [-0.294, -0.184] |
 
-Trọng số lớn nhất mà LR học được (lần chia đầu; dương = |z| lớn hơn làm tăng khả năng là kẻ gian; đơn vị chưa chuẩn hoá giữa đặc trưng):
+Largest weights learned by LR (first split; positive = a larger |z| raises the likelihood of an impostor; units not normalized across features):
 
 - `pin_hold_0`: +0.288
 - `pin_flight_2`: +0.281

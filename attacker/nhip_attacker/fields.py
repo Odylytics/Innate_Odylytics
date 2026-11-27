@@ -1,13 +1,13 @@
-"""Ô nhập ngoài PIN (số tiền, người nhận, ghi chú) cho bot, theo từng chiến thuật. Khớp `SessionIn.fields` của backend.
+"""Non-PIN input fields (amount, recipient, note) for bots, per tactic. Matches the backend `SessionIn.fields`.
 
-Chỉ thời gian (ms nguyên), loại sự kiện, số ký tự, lớp ký tự: KHÔNG có nội dung.
+Only timing (integer ms), event kind, character count, character class: NO content.
 
-1. Mã độc Trợ năng đặt thẳng văn bản (`ACTION_SET_TEXT`): một sự kiện `set_text`, không có phím.
-2. Gõ phím tự động (kiểu `adb input text` có độ trễ): khoảng cách giữa phím ngẫu nhiên đều, không xoá, không dán.
-3. Phát lại: chép chuỗi sự kiện của một phiên người thật, nhiễu ±5% khoảng cách.
-4. Lấy mẫu từ dân số người thật: khoảng cách lấy độc lập từ kho, tỷ lệ xoá/dán khớp kho.
+1. Accessibility malware sets the text directly (`ACTION_SET_TEXT`): one `set_text` event, no keys.
+2. Automated typing (like `adb input text` with a delay): evenly random gaps between keys, no delete, no paste.
+3. Replay: copy the event sequence of a real human session, ±5% noise on the gaps.
+4. Sampling from the real human population: gaps drawn independently from the pool, delete/paste rates matching the pool.
 
-`humans` là danh sách phiên có `fields` (người thật). Không có thì chiến thuật 3, 4 trả về rỗng (không có gì để chép).
+`humans` is the list of sessions that have `fields` (real people). If there are none, tactics 3 and 4 return empty (nothing to copy).
 """
 
 import copy
@@ -41,7 +41,7 @@ def even_typing(rng: random.Random) -> list[dict]:
 
 
 def replay(fields: list[dict], rng: random.Random) -> list[dict]:
-    """Chép chuỗi sự kiện của phiên người thật, nhiễu ±5% khoảng cách giữa các sự kiện."""
+    """Copy the event sequence of a real human session, ±5% noise on the gaps between events."""
     out = copy.deepcopy(fields)
     for fld in out:
         t, prev = 0.0, None
@@ -53,7 +53,7 @@ def replay(fields: list[dict], rng: random.Random) -> list[dict]:
 
 
 def sampled(humans: list[dict], rng: random.Random, names: tuple[str, ...] | None = None) -> list[dict]:
-    """Khoảng cách giữa sự kiện lấy độc lập từ kho người thật (cùng tên ô); tỷ lệ xoá/dán khớp kho."""
+    """Gaps between events drawn independently from the real-human pool (same field name); delete/paste rates match the pool."""
     out = []
     for name in names or [n for n, _c, _r in FIELD_PLAN]:
         pool = [f for h in humans for f in h.get("fields", []) if f["name"] == name]
@@ -95,4 +95,4 @@ def for_tactic(tactic: int, rng: random.Random, humans: list[dict], source: dict
         return replay(source["fields"], rng) if source and source.get("fields") else []
     if tactic == 4:
         return sampled(humans, rng)
-    raise ValueError(f"Không có chiến thuật {tactic}")
+    raise ValueError(f"No such tactic {tactic}")
