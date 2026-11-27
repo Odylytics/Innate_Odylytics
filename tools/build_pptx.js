@@ -273,19 +273,19 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   E.forEach(([t, c, d], i) => {
     const y = 2.3 + i * 0.9
     if (i) hair(s, 0.75, y - 0.12, 5.6)
-    T(s, t, { x: 0.75, y, w: 0.95, h: 0.3, fontFace: H, fontSize: 13, bold: true, color: c === AMBER ? '8A5F00' : c === CORAL ? 'B04436' : MUTED })
-    T(s, d, { x: 1.8, y, w: 4.55, h: 0.6, fontSize: 13 })
+    T(s, t, { x: 0.75, y, w: 1.15, h: 0.35, fontFace: H, fontSize: 15, bold: true, color: c === AMBER ? '8A5F00' : c === CORAL ? 'B04436' : MUTED })
+    T(s, d, { x: 1.95, y, w: 4.45, h: 0.65, fontSize: 15 })
   })
-  T(s, 'So Innate steps up instead of blocking, and is one layer among several.', { x: 0.75, y: 5.95, w: 5.6, h: 0.4, fontSize: 12, color: MUTED })
+  T(s, 'So Innate steps up instead of blocking, and is one layer among several.', { x: 0.75, y: 5.95, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.85, y: 1.8, w: 5.73, h: 4.75, rectRadius: 0.12, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   cap(s, 'Next', 7.2, 2.0, 4)
-  const N = [['Real data', 'Consented volunteers and real bots,\nthen retrain and recalibrate.'], ['Fine-tuned Transformer', 'TypeFormer on StrokePIN: EER 0.29 to 0.20 on 30 unseen\npeople. Planned for the API.'], ['Native SDK', 'Sees text set directly and device motion\n(a phone lying still while taps arrive).']]
+  const N = [['Real data', 'Consented volunteers and real bots,\nthen retrain and recalibrate.'], ['Fine-tuned Transformer', 'TypeFormer on StrokePIN: EER 0.29 to 0.20\non 30 unseen people. Planned for the API.'], ['Native SDK', 'Sees text set directly and device motion\n(a phone lying still while taps arrive).']]
   N.forEach(([h, d], i) => {
-    const y = 2.4 + i * 0.78
-    T(s, [{ text: h + '\n', options: { bold: true, fontSize: 13 } }, { text: d, options: { fontSize: 11.5, color: '2F4A4C' } }], { x: 7.2, y, w: 5.1, h: 0.75 })
+    const y = 2.4 + i * 0.86
+    T(s, [{ text: h + '\n', options: { bold: true, fontSize: 15 } }, { text: d, options: { fontSize: 13, color: '2F4A4C' } }], { x: 7.2, y, w: 5.2, h: 0.82 })
   })
-  T(s, [{ text: 'Innate Challenge: ', options: { bold: true, fontSize: 13 } }, { text: 'impostor pass rate by keys typed, %', options: { fontSize: 11.5, color: '2F4A4C' } }], { x: 7.2, y: 4.78, w: 5.1, h: 0.3 })
-  s.addChart(pres.charts.BAR, [{ name: 'Impostor pass rate', labels: ['6 keys (PIN)', '10 keys', '20 keys', '30 keys'], values: [81, 73, 59, 49] }], { x: 7.1, y: 5.0, w: 5.35, h: 1.5, barDir: 'bar', chartColors: [CORAL, CORAL, AMBER, JADE], showLegend: false, showTitle: false, showValue: true, dataLabelPosition: 'outEnd', dataLabelFontFace: B, dataLabelFontSize: 11, dataLabelColor: INK, catAxisLabelFontFace: B, catAxisLabelFontSize: 10, catAxisLabelColor: INK, catAxisLineShow: false, valAxisHidden: true, valAxisLineShow: false, valAxisMinVal: 0, valAxisMaxVal: 100, valGridLine: { style: 'none' }, catGridLine: { style: 'none' }, catAxisOrientation: 'maxMin', barGapWidthPct: 45 })
+  T(s, [{ text: 'Innate Challenge: ', options: { bold: true, fontSize: 15 } }, { text: 'impostor pass rate by keys typed, %', options: { fontSize: 13, color: '2F4A4C' } }], { x: 7.2, y: 5.0, w: 5.2, h: 0.3 })
+  s.addChart(pres.charts.BAR, [{ name: 'Impostor pass rate', labels: ['6 keys (PIN)', '10 keys', '20 keys', '30 keys'], values: [81, 73, 59, 49] }], { x: 7.1, y: 5.28, w: 5.35, h: 1.25, barDir: 'bar', chartColors: [CORAL, CORAL, AMBER, JADE], showLegend: false, showTitle: false, showValue: true, dataLabelPosition: 'outEnd', dataLabelFontFace: B, dataLabelFontSize: 12, dataLabelColor: INK, catAxisLabelFontFace: B, catAxisLabelFontSize: 11, catAxisLabelColor: INK, catAxisLineShow: false, valAxisHidden: true, valAxisLineShow: false, valAxisMinVal: 0, valAxisMaxVal: 100, valGridLine: { style: 'none' }, catGridLine: { style: 'none' }, catAxisOrientation: 'maxMin', barGapWidthPct: 45 })
   src(s, 'Innate Challenge: Aalto typing37k (Palin et al., MobileHCI 2019), 2,260 typists, timing only. TypeFormer: Stragapede et al., 2023. Adaptive attackers: Wang et al., ActReal, 2026 (preprint); Tey et al., NDSS 2013.')
   s.addNotes('Be direct about the weak spots; they explain why the design steps up instead of blocking.')
 }
