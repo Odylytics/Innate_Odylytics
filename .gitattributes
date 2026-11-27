@@ -1,0 +1,2 @@
+# Model files must stay LF: native lightgbm aborts on CRLF (Windows autocrlf)
+backend/app/models/* -text
