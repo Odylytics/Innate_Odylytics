@@ -38,7 +38,7 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 .stp .hd{display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .stp .hd i{font-style:normal;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font:600 10.5px/18px 'Sora';text-align:center;flex:none}
 .stp .hd b{font-family:'Sora',sans-serif;font-weight:600;font-size:11.5px}
-.stp .im{height:31mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
+.stp .im{height:26mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
 .stp .im img{width:100%;height:100%;object-fit:contain;display:block}
 .stp p{font-size:10.6px;line-height:1.38;margin-top:6px;color:var(--soft)}
 .res{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
@@ -47,13 +47,21 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 .res figcaption{font-size:10.4px;line-height:1.35;color:var(--soft);margin-top:5px}
 .res figcaption b{color:var(--ink)}
 .dotk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.idea{display:grid;grid-template-columns:1fr 62mm;gap:6mm;align-items:center;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:4mm 5mm}
+.idea p{font-size:11.2px;line-height:1.5}
+.idea .cap{font-size:9.5px;color:var(--soft);margin-top:2px;text-align:center}
+.idea svg{width:100%;height:auto;display:block}
+.lg{display:inline-block;width:7px;height:7px;border-radius:50%;margin:0 3px 0 6px}
 </style></head>
 <body>
 <div class="top"><div class="sg">@GESTURE@</div><div style="display:flex;align-items:center;gap:16px;position:relative">@LOCK_DARK_34@<span style="width:1px;height:26px;background:rgba(255,255,255,.25)"></span><span style="font-size:12px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:9px">Powered by <img src="@ASSETS@/odylytics-on-dark.png" style="height:22px" alt="Odylytics"></span></div>
 <h1>Your behavior is your signature.</h1>
 <div class="team">Human verification for wallet transfers · Product guide · Team Odylytics · MoMo Tech Contest 2026</div></div>
 <div class="main">
-<div class="lbl" style="margin-top:0">Open the product</div>
+<div class="lbl" style="margin-top:0">The idea in 20 seconds</div>
+<div class="idea"><p><b>Everyone taps a PIN, or types a phrase, in their own rhythm:</b> how long the finger stays down, the gap between taps, where it lands. Innate runs silently under the wallet's PIN and confirm screens, learns the owner's pattern, and checks it on every transfer. A bot, or someone who only knows the PIN, does not match, so Innate asks for more or holds the transfer. The model is LightGBM, trained on real people and simulated bots; a fine-tuned Transformer is under evaluation.</p>
+<div>@MECH@<div class="cap"><span class="lg" style="background:#0F4F4C;margin-left:0"></span>Person A<span class="lg" style="background:#11B88F"></span>Person B · same PIN, real recordings</div></div></div>
+<div class="lbl">Open the product</div>
 <div class="try"><div class="qr">@QR@</div>
 <table>
 <tr><td>Link</td><td><b class="u">@WEB_URL@</b> · any browser, no sign-up</td></tr>
@@ -71,11 +79,6 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 <figure><img src="@ASSETS@/shots/decision-allow.png" alt="Allow decision"><figcaption><span class="dotk" style="background:var(--jade)"></span><b>allow</b>: the owner's own rhythm. Nothing changes for the user.</figcaption></figure>
 <figure><img src="@ASSETS@/shots/decision-hold.png" alt="Hold decision with reasons"><figcaption><span class="dotk" style="background:#FF7A6B"></span><b>hold</b>: machine-regular timing, taps on exact key centers. <span class="dotk" style="background:#F5B941"></span><b>step_up</b> sits in between and asks for face or OTP.</figcaption></figure>
 </div>
-<div class="lbl">What the AI does</div>
-<ul>
-<li><b>Human or bot:</b> rules plus a LightGBM model trained on real people and simulated bots.</li>
-<li><b>The owner:</b> PIN rhythm against 3–5 enrollment sessions. A fine-tuned Transformer is under evaluation, not in the live API.</li>
-</ul>
 </div>
 <p class="note">The wallet UI and characters are fictional and not any wallet's app. The owner score is a risk signal, not a replacement for PIN, OTP or face. Only timing, coordinates and event types are stored, never the PIN or any content. License CC BY-NC-SA 4.0.</p>
 </body></html>

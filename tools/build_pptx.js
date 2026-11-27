@@ -23,7 +23,7 @@ pres.title = 'Innate: silent human verification for wallet transfers'
 pres.author = 'Odylytics'
 pres.company = 'Odylytics'
 
-const footer = (dark) => [{ image: { path: A + (dark ? 'lockup-dark.png' : 'lockup-ink.png'), x: 0.75, y: 6.82, w: 1.30, h: 0.2275 } }]
+const footer = (dark) => [{ image: { path: A + (dark ? 'lockup-dark.png' : 'lockup-ink.png'), x: 0.75, y: 6.8, w: 1.34, h: 1.34 / 5.0420 } }]
 for (const [name, dark] of [['LIGHT', false], ['DARK', true]]) {
   pres.defineSlideMaster({
     title: name, background: { color: dark ? INK : CLOUD },
@@ -34,7 +34,8 @@ for (const [name, dark] of [['LIGHT', false], ['DARK', true]]) {
     slideNumber: { x: 11.6, y: 6.78, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: dark ? MUTED_D : MUTED, align: 'right' },
   })
 }
-pres.defineSlideMaster({ title: 'COVER', background: { color: INK }, objects: [] })
+pres.defineSlideMaster({ title: 'COVER', background: { path: A + 'bg-dark-gesture.png' }, objects: [] })
+pres.defineSlideMaster({ title: 'DARKBG', background: { path: A + 'bg-dark-gesture.png' }, objects: [...footer(true), { placeholder: { options: { name: 'title', type: 'title', x: 0.75, y: 0.78, w: 11.8, h: 1.0, fontFace: H, fontSize: 28, bold: true, color: 'FFFFFF', valign: 'top', align: 'left', margin: 0, fit: 'shrink' }, text: '' } }], slideNumber: { x: 11.6, y: 6.78, w: 0.98, h: 0.3, fontFace: B, fontSize: 11, color: MUTED_D, align: 'right' } })
 
 const T = (s, text, o) => s.addText(text, Object.assign({ isTextBox: true, fontFace: B, fontSize: 14, color: INK, margin: 0, valign: 'top' }, o))
 const arrow = (s, x, y, color = JADE) => s.addShape(pres.shapes.RIGHT_ARROW, { x, y, w: 0.3, h: 0.2, fill: { color }, line: { color, width: 0 } })
@@ -52,15 +53,14 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 // ---- 1 Cover
 {
   const s = pres.addSlide({ masterName: 'COVER' })
-  s.addImage({ path: A + 'gesture-dark.png', x: 7.4, y: -0.9, w: 7.6, h: 7.6, altText: 'Innate gesture mark, cropped' })
-  s.addImage({ path: A + 'lockup-dark.png', x: 0.75, y: 0.6, w: 2.1, h: 2.1 * 43.73 / 228.17, altText: 'innate' })
+  s.addImage({ path: A + 'lockup-dark.png', x: 0.75, y: 0.6, w: 2.1, h: 2.1 / 5.0420, altText: 'innate' })
   s.addShape(pres.shapes.RECTANGLE, { x: 3.12, y: 0.62, w: 0.012, h: 0.4, fill: { color: '3A5557' }, line: { color: '3A5557', width: 0 } })
   T(s, 'Powered by', { x: 3.3, y: 0.62, w: 1.2, h: 0.4, fontSize: 13, color: MUTED_D, valign: 'middle' })
   s.addImage({ path: A + 'odylytics-on-dark.png', x: 4.45, y: 0.67, w: 1.4, h: 1.4 * 549 / 1813, altText: 'Odylytics' })
   cap(s, 'MoMo Tech Contest 2026  ·  Cybersecurity + Anti-fraud', 0.75, 2.2, 8, true)
-  T(s, 'Silent human verification for every transfer', { x: 0.75, y: 2.6, w: 9.0, h: 2.0, fontFace: H, fontSize: 44, bold: true, color: 'FFFFFF', lineSpacingMultiple: 0.98 })
-  T(s, 'Innate reads the rhythm behind every tap and quietly checks that the right person, not a bot or a PIN thief, is confirming the payment. The owner does nothing extra.', { x: 0.75, y: 4.45, w: 6.6, h: 1.1, fontSize: 16, color: MUTED_D, lineSpacingMultiple: 1.15 })
-  T(s, 'Your behavior is your signature', { x: 0.75, y: 5.75, w: 7, h: 0.4, fontFace: H, fontSize: 20, bold: true, color: MINT })
+  T(s, 'Silent human verification for every transfer', { x: 0.75, y: 2.6, w: 8.6, h: 2.0, fontFace: H, fontSize: 44, bold: true, color: 'FFFFFF', lineSpacingMultiple: 0.98 })
+  T(s, 'Everyone taps a PIN in their own rhythm: how long the finger stays down, the gap between taps, where it lands. Innate learns that pattern and checks it silently on every transfer. The owner does nothing extra.', { x: 0.75, y: 4.4, w: 6.9, h: 1.2, fontSize: 16, color: MUTED_D, lineSpacingMultiple: 1.15 })
+  T(s, 'Your behavior is your signature', { x: 0.75, y: 5.95, w: 7, h: 0.4, fontFace: H, fontSize: 20, bold: true, color: MINT })
   T(s, 'Team Odylytics', { x: 10.2, y: 6.95, w: 2.38, h: 0.3, fontSize: 11, color: MUTED_D, align: 'right' })
   s.addNotes('Open with the one-line promise: a layer that verifies the human at the moment of transfer, with no extra step for the owner.')
 }
@@ -98,26 +98,31 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 // ---- 3 Solution
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 2, 'Solution')
-  s.addText('Make how you tap the credential: nothing to remember, steal or phish', { placeholder: 'title' })
-  const rows = [['Silent', 'Runs inside the existing PIN and confirm screens. The owner adds zero steps.'], ['Hard to steal', 'A habit is not a secret. Seeing the PIN does not reveal the rhythm behind it.'], ['Explained', 'Every decision ships with a plain reason that the ops team can read and act on.']]
-  rows.forEach(([h, d], i) => {
-    const y = 2.05 + i * 1.45
-    if (i) hair(s, 0.75, y - 0.2, 5.5)
-    T(s, h, { x: 0.75, y, w: 5.5, h: 0.4, fontFace: H, fontSize: 22, bold: true })
-    T(s, d, { x: 0.75, y: y + 0.5, w: 5.4, h: 0.7, fontSize: 15, color: MUTED, lineSpacingMultiple: 1.1 })
+  s.addText('Everyone taps the same PIN differently. Innate learns yours', { placeholder: 'title' })
+  const hold = { A: [48.0, 57.0, 59.0, 57.0, 53.0, 49.0], B: [83.0, 88.0, 81.0, 74.0, 51.0, 69.0] }, gap = { A: [202.0, 209.0, 174.0, 166.0, 208.0], B: [232.0, 273.0, 205.0, 253.0, 194.0] }
+  const common = { barDir: 'col', chartColors: [TEAL, JADE], showLegend: false, showTitle: false, showValue: false, catAxisLabelFontFace: B, catAxisLabelFontSize: 11, catAxisLabelColor: INK, catAxisLineShow: false, valAxisLabelFontFace: B, valAxisLabelFontSize: 10, valAxisLabelColor: MUTED, valAxisLineShow: false, valGridLine: { color: STONE, size: 0.5 }, catGridLine: { style: 'none' }, barGapWidthPct: 40, valAxisMinVal: 0 }
+  T(s, 'Same PIN 147258, two people, real recordings', { x: 0.75, y: 1.9, w: 7.0, h: 0.3, fontFace: H, fontSize: 14, bold: true })
+  ;[[TEAL, 'Person A', 0.75], [JADE, 'Person B', 2.0]].forEach(([c, t, x]) => { dot(s, x, 2.3 + 0.04, c, 0.13); T(s, t, { x: x + 0.2, y: 2.28, w: 1.0, h: 0.25, fontSize: 11, color: MUTED }) })
+  T(s, 'Time the finger stays on the key (ms)', { x: 0.75, y: 2.65, w: 3.4, h: 0.25, fontSize: 11, bold: true, color: TEAL })
+  s.addChart(pres.charts.BAR, [{ name: 'Person A', labels: ['1', '4', '7', '2', '5', '8'], values: hold.A }, { name: 'Person B', labels: ['1', '4', '7', '2', '5', '8'], values: hold.B }], Object.assign({}, common, { x: 0.65, y: 2.9, w: 3.65, h: 2.5, valAxisMaxVal: 100, valAxisMajorUnit: 25 }))
+  T(s, 'Time between taps (ms)', { x: 4.5, y: 2.65, w: 3.4, h: 0.25, fontSize: 11, bold: true, color: TEAL })
+  s.addChart(pres.charts.BAR, [{ name: 'Person A', labels: ['1-4', '4-7', '7-2', '2-5', '5-8'], values: gap.A }, { name: 'Person B', labels: ['1-4', '4-7', '7-2', '2-5', '5-8'], values: gap.B }], Object.assign({}, common, { x: 4.4, y: 2.9, w: 3.5, h: 2.5, valAxisMaxVal: 300, valAxisMajorUnit: 100 }))
+  vhair(s, 8.3, 1.95, 3.4)
+  cap(s, 'What Innate reads', 8.7, 1.95, 3.9)
+  const R_ = [['How long', 'the finger stays down'], ['The gap', 'between one tap and the next'], ['Where it lands', 'relative to each key center'], ['Typing text', 'the same idea, as a short phrase when unsure']]
+  R_.forEach(([h, d_], i) => {
+    const y = 2.4 + i * 0.75
+    T(s, String(i + 1), { x: 8.7, y, w: 0.35, h: 0.4, fontFace: H, fontSize: 18, bold: true, color: JADE })
+    T(s, [{ text: h + '\n', options: { bold: true, fontSize: 14 } }, { text: d_, options: { fontSize: 12, color: MUTED } }], { x: 9.15, y, w: 3.4, h: 0.65 })
   })
-  cap(s, "Where it sits in the wallet's stack", 7.2, 2.0, 5.4)
-  const stack = [['1', 'Device and app integrity', 'is the phone clean?'], ['2', 'Authentication', 'PIN, OTP, face'], ['3', 'Innate', 'human or bot? the owner?'], ['4', 'Transaction risk engine', 'is the transfer unusual?'], ['5', 'Operations and response', 'review, step-up']]
-  stack.forEach(([n, a, b], i) => {
-    const y = 2.45 + i * 0.7, me = n === '3'
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.2, y, w: 5.38, h: 0.58, rectRadius: 0.08, fill: { color: me ? INK : 'FFFFFF' }, line: { color: me ? INK : STONE, width: 0.75 } })
-    T(s, n, { x: 7.4, y, w: 0.3, h: 0.58, fontFace: H, fontSize: 14, bold: true, color: me ? MINT : TEAL, valign: 'middle' })
-    T(s, a, { x: 7.8, y, w: 2.7, h: 0.58, fontSize: 14, bold: me, color: me ? 'FFFFFF' : INK, valign: 'middle' })
-    T(s, b, { x: 10.5, y, w: 1.95, h: 0.58, fontSize: 11, color: me ? MUTED_D : MUTED, valign: 'middle' })
+  hair(s, 0.75, 5.62, 11.83)
+  const P_ = [['Silent', 'runs inside the existing PIN screens'], ['Hard to steal', 'seeing the PIN does not reveal the rhythm'], ['Explained', 'every decision has a plain reason']]
+  P_.forEach(([h, d_], i) => {
+    const x = 0.75 + i * 3.98
+    T(s, [{ text: h + '\n', options: { bold: true, fontFace: H, fontSize: 14, color: INK } }, { text: d_, options: { fontSize: 11.5, color: MUTED } }], { x, y: 5.78, w: 3.85, h: 0.7, valign: 'top' })
   })
-  T(s, 'One added layer. It replaces nothing and blocks nothing on its own.', { x: 7.2, y: 6.05, w: 5.4, h: 0.3, fontSize: 13, color: MUTED })
-  src(s, 'Zheng et al., You Are How You Touch, ICNP 2014 (EER 3.65 to 7.37%); Buschek et al., CHI 2015; Wiefling et al., risk-based authentication in the wild, IFIP SEC 2019.')
-  s.addNotes('The credential is behavior. It sits between authentication and the transaction risk engine.')
+  src(s, 'Two StrokePIN participants (Yao & Wang, IEEE TDSC 2026), averages of 5 sitting entries each; pair taken at the 75th percentile of separation, not the most different. Different phones, so illustrative. Zheng et al., ICNP 2014.')
+  s.addNotes('Same PIN, two people: the pattern of hold times and gaps is different and stable. Innate learns the owner pattern and checks it silently.')
 }
 
 // ---- 4 How it works
@@ -285,8 +290,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 
 // ---- 10 Impact (dark)
 {
-  const s = pres.addSlide({ masterName: 'DARK' }); head(s, 9, 'Impact', true)
-  s.addImage({ path: A + 'gesture-dark.png', x: 10.5, y: 3.7, w: 5.2, h: 5.2, altText: 'Innate gesture mark, cropped' })
+  const s = pres.addSlide({ masterName: 'DARKBG' }); head(s, 9, 'Impact', true)
   s.addText('Security the user never has to think about', { placeholder: 'title' })
   const C = [['Users', 'Protected on every transfer\nwith no extra steps. Asked\nfor more only when it looks off.'], ['The wallet', 'Catches what PIN, OTP and\ndevice checks cannot: right\ncredentials, wrong hands.'], ['Operations', 'Fewer vague alerts, more\nexplained evidence. Analyst\nlabels train the model.']]
   const CW = 11.83 / 3

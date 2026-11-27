@@ -26,8 +26,8 @@ def gesture(c, op):
 
 INK, JADE, MINT = "#071A1C", "#11B88F", "#63E6BE"
 FRAG = {
-    "@LOCK_INK_26@": lockup(INK, JADE, 26), "@LOCK_INK_30@": lockup(INK, JADE, 30),
-    "@LOCK_DARK_34@": lockup("#fff", MINT, 34), "@LOCK_DARK_26@": lockup("#fff", MINT, 26),
+    "@LOCK_INK_26@": '<img src="@ASSETS@/lockup-ink.png" style="height:26px;display:block" alt="innate">', "@LOCK_INK_30@": '<img src="@ASSETS@/lockup-ink.png" style="height:30px;display:block" alt="innate">',
+    "@LOCK_DARK_34@": '<img src="@ASSETS@/lockup-dark.png" style="height:34px;display:block" alt="innate">', "@LOCK_DARK_26@": '<img src="@ASSETS@/lockup-dark.png" style="height:26px;display:block" alt="innate">',
     "@SYM_DARK_44@": symbol("#fff", MINT, 44), "@SYM_INK_26@": symbol(INK, JADE, 26),
     "@GESTURE@": gesture(JADE, 0.2),
 }
@@ -35,6 +35,6 @@ if __name__ == "__main__":
     src, dst = sys.argv[1:3]
     t = Path(src).read_text()
     assets = Path(sys.argv[3]) if len(sys.argv) > 3 else Path(__file__).parents[1] / "assets"
-    t = t.replace("@ASSETS@", "file://" + str(assets)).replace("@QR@", (assets / "qr-innate.svg").read_text())
     for k, v in FRAG.items(): t = t.replace(k, v)
+    t = t.replace("@ASSETS@", "file://" + str(assets)).replace("@QR@", (assets / "qr-innate.svg").read_text()).replace("@MECH@", (assets / "mechanism-guide.svg").read_text())
     Path(dst).write_text(t)

@@ -1,0 +1,12 @@
+/* Innate brand colours */
+:root {
+  --innate-ink:        #071A1C; /* Primary dark, logo, text */
+  --innate-deep-teal:  #0F4F4C; /* Secondary dark, navigation */
+  --innate-jade:       #11B88F; /* Signal, logo dot, primary action */
+  --innate-pulse-mint: #63E6BE; /* Dot on dark, highlights */
+  --innate-mint-mist:  #CFF7EE; /* Soft accent surfaces */
+  --innate-cloud:      #F5FBF9; /* Main light background */
+  --innate-stone:      #DDE8E5; /* Borders, dividers, disabled */
+  --innate-coral:      #FF7A6B; /* Risk: hold (never in logo) */
+  --innate-amber:      #F5B941; /* Risk: step-up (never in logo) */
+}

@@ -1,0 +1,11 @@
+INNATE COLOUR PALETTE
+Name            HEX       RGB             Use
+Innate Ink      #071A1C   7 / 26 / 28     Primary dark, logo, text
+Deep Teal       #0F4F4C   15 / 79 / 76    Secondary dark, navigation
+Living Jade     #11B88F   17 / 184 / 143  Signal colour, logo dot, primary action
+Pulse Mint      #63E6BE   99 / 230 / 190  Logo dot on dark, highlights
+Mint Mist       #CFF7EE   207 / 247 / 238 Soft accent surfaces
+Cloud           #F5FBF9   245 / 251 / 249 Main light background
+Stone           #DDE8E5   221 / 232 / 229 Borders, dividers, disabled
+Alert Coral     #FF7A6B   255 / 122 / 107 Risk state: hold (never in the logo)
+Caution Amber   #F5B941   245 / 185 / 65  Risk state: step-up (never in the logo)
