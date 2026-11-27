@@ -269,7 +269,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 8, 'Limits and roadmap')
   s.addText('Where it stands, and what comes next', { placeholder: 'title' })
   cap(s, 'Known edges', 0.75, 1.9, 5)
-  const E = [['Weak', CORAL, 'Human-like bots: replay with 15 to 30% noise\nand template-aware bots pass 48 to 82%.'], ['Limit', AMBER, 'Changing posture removes much of\nthe owner signal.'], ['Limit', AMBER, 'The web SDK cannot see text set\ndirectly; a native SDK can.'], ['Missing', MUTED, 'Team-collected data and real\nmalware sessions.']]
+  const E = [['Weak', CORAL, 'Human-like bots: replay with 15 to 30% noise\nand template-aware bots pass 32 to 87%.'], ['Limit', AMBER, 'Changing posture removes much of\nthe owner signal.'], ['Limit', AMBER, 'The web SDK cannot see text set\ndirectly; a native SDK can.'], ['Missing', MUTED, 'Team-collected data and real\nmalware sessions.']]
   E.forEach(([t, c, d], i) => {
     const y = 2.3 + i * 0.9
     if (i) hair(s, 0.75, y - 0.12, 5.6)
@@ -294,16 +294,20 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 {
   const s = pres.addSlide({ masterName: 'DARKBG' }); head(s, 9, 'Impact', true)
   s.addText('Security the user never has to think about', { placeholder: 'title' })
-  const C = [['Users', 'Protected on every transfer\nwith no extra steps. Asked\nfor more only when it looks off.'], ['The wallet', 'Catches what PIN, OTP and\ndevice checks cannot: right\ncredentials, wrong hands.'], ['Operations', 'Fewer vague alerts, more\nexplained evidence. Analyst\nlabels train the model.']]
+  // big number (E29, slide 8) + the decision screen it comes from
+  T(s, '78%', { x: 0.75, y: 1.75, w: 5.6, h: 1.5, fontFace: H, fontSize: 96, bold: true, color: MINT, valign: 'middle' })
+  s.addText([{ text: 'of thieves who know the PIN are held or asked for more. Rules only: ', options: { color: 'FFFFFF' } }, { text: '11%', options: { color: CORAL, bold: true } }, { text: '.', options: { color: 'FFFFFF' } }], { x: 0.75, y: 3.3, w: 5.4, h: 0.8, fontFace: B, fontSize: 17, margin: 0, valign: 'top' })
+  s.addImage({ path: S + 'decision-hold.png', x: 6.9, y: 1.85, w: 5.68, h: 2.59, altText: 'Innate decision screen: hold, with the reasons listed' })
+  T(s, 'Every answer comes with reasons the wallet can show.', { x: 6.9, y: 4.5, w: 5.68, h: 0.3, fontSize: 12, color: MUTED_D, align: 'center' })
+  const C = [['Users', 'Protected on every transfer, no extra steps. Asked for more only when it looks off.'], ['The wallet', 'Catches what PIN, OTP and device checks cannot: right credentials, wrong hands.'], ['Operations', 'Fewer vague alerts, more explained evidence. Analyst labels train the model.']]
   const CW = 11.83 / 3
   C.forEach(([h, d], i) => {
     const x = 0.75 + i * CW
-    T(s, h, { x, y: 2.0, w: CW, h: 0.4, fontFace: H, fontSize: 18, bold: true, color: MINT, align: 'center' })
-    T(s, d, { x, y: 2.55, w: CW, h: 1.0, fontSize: 14, color: 'DCE7E6', align: 'center' })
+    T(s, h, { x: x + 0.05, y: 4.95, w: CW - 0.1, h: 0.35, fontFace: H, fontSize: 16, bold: true, color: MINT, align: 'center' })
+    T(s, d, { x: x + 0.05, y: 5.32, w: CW - 0.1, h: 0.6, fontSize: 13, color: 'DCE7E6', align: 'center' })
   })
-  T(s, 'PIN is what you know.', { x: 0.75, y: 4.2, w: 11.83, h: 0.75, fontFace: H, fontSize: 38, bold: true, color: 'FFFFFF', align: 'center' })
-  T(s, 'Innate is how you are.', { x: 0.75, y: 4.95, w: 11.83, h: 0.75, fontFace: H, fontSize: 38, bold: true, color: MINT, align: 'center' })
-  T(s, URL + '  ·  Team Odylytics', { x: 0.75, y: 5.95, w: 11.83, h: 0.3, fontSize: 13, color: MUTED_D, align: 'center' })
+  s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.0, w: 11.83, h: 0.6, fontFace: H, fontSize: 26, bold: true, align: 'center', margin: 0, valign: 'middle' })
+  src(s, 'Team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026), 97 people, 5-fold CV by person, known recipient; bots from the team simulator.', true)
   s.addNotes('Close on the line, then point to the QR on slide 6.')
 }
 

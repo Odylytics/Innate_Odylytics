@@ -95,7 +95,7 @@ Not included in the package; DOIs are in `docs/research/paper-report.md`: Zheng 
 | Swipe rule (Touchalytics, 41 people) | "Uniform speed" rule flags 0 human strokes and catches 100% of uniform simulated swipes; swipe-based owner matching is near chance (AUC 0.48–0.60) and was dropped |
 | Digraph normalization (Aalto, 1,000 people) | No meaningful gain (EER 0.249 → 0.238), not shipped |
 | **Full system, 97 people, 5-fold by person (E29)** | With learned models: PIN-knowing impostor allowed 22% [20, 24], owner allowed 76% sitting and 49% walking, template-aware bot 72–87%. Rules only: impostor allowed 89% |
-| Adaptive bots (E27) | Replay with ±15–30% noise passes 48–72%; template-aware bots 75–82% |
+| Adaptive bots (E29) | Replay with ±15–30% noise passes 32–58%; template-aware bots 72–87% |
 | **Fine-tuned TypeFormer** (Aalto → StrokePIN; 60 train, 7 validation, 30 unseen test people; 3 enrollments) | Before: EER 0.292, impostor passes 70.6%. **After: EER 0.203, 41.8%.** Sit → walk: EER 0.311, 66.1%. Single run and split, no confidence interval, not directly comparable with the 97-person rows, not in the API |
 | Team-collected data | `TODO` |
 
