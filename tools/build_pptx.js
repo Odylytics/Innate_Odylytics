@@ -265,30 +265,37 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addNotes('Doughnuts show the decision mix per group. Impostor: 22% pass with learned models, 89% with rules alone. Owner friction is a step-up, not a block.')
 }
 
-// ---- 9 Roadmap and limits
+// ---- 9 Roadmap and limits: each known edge paired with its safety net today and what closes it
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 8, 'Limits and roadmap')
-  s.addText('Where it stands, and what comes next', { placeholder: 'title' })
-  cap(s, 'Known edges', 0.75, 1.9, 5)
-  const E = [['Weak', 'B04436', 'Bots copying a rhythm: 32 to 87% pass.'], ['Limit', '8A5F00', 'Owner walking, not sitting: 49% allowed.'], ['Missing', MUTED, 'Real data and real malware sessions.']]
-  E.forEach(([t, c, d], i) => {
-    const y = 2.4 + i * 1.08
-    if (i) hair(s, 0.75, y - 0.22, 5.6)
-    T(s, t, { x: 0.75, y, w: 1.2, h: 0.4, fontFace: H, fontSize: 16, bold: true, color: c })
-    T(s, d, { x: 2.0, y, w: 4.35, h: 0.7, fontSize: 16 })
+  s.addText('Where it stands, and how each gap closes', { placeholder: 'title' })
+  const X = [0.75, 4.55, 8.35], W = [3.6, 3.6, 4.23]
+  ;[['Known edge', 0], ['Safety net today', 1], ['What closes it', 2]].forEach(([t, i]) => cap(s, t, X[i], 1.85, W[i]))
+  hair(s, 0.75, 2.2, 11.83, INK)
+  const rows = [
+    [CORAL, 'Bots that copy a rhythm', '32 to 87% pass', 'Naive bots and replays within\n10% were all held (E29).', 'Real malware sessions (adb),\nthen retrain and recalibrate.'],
+    [AMBER, 'Owner changes posture', 'walking: 49% allowed', 'The owner is asked for face or\nOTP, never blocked.', 'A re-enrollment path after a\nstep-up (designed, not built).'],
+    [AMBER, 'Web SDK blind spots', 'no pasted-text or motion signal', 'Rhythm, touch and swipe\nare still scored.', 'A native SDK that sees pasted\ntext and phone motion.'],
+    ['8AA0A3', 'Public data only', '97 people, no real malware', 'Every figure reruns from research/,\nwith confidence intervals.', 'Consented volunteers, real bots,\nand the wallet\'s fraud labels.'],
+  ]
+  rows.forEach(([col, e, es, today, next], i) => {
+    const y = 2.42 + i * 0.8
+    if (i) hair(s, 0.75, y - 0.12, 11.83)
+    dl(s, X[0], y, 0.3, col, 0.14, e, { w: W[0] - 0.27, fontFace: H, fontSize: 14, bold: true })
+    T(s, es, { x: X[0] + 0.27, y: y + 0.32, w: W[0] - 0.27, h: 0.3, fontSize: 12, color: MUTED })
+    T(s, today, { x: X[1], y: y + 0.03, w: W[1], h: 0.6, fontSize: 13, color: MUTED })
+    T(s, next, { x: X[2], y: y + 0.03, w: W[2], h: 0.6, fontSize: 13 })
   })
-  T(s, 'So Innate steps up, never blocks: one layer of several.', { x: 0.75, y: 5.75, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.85, y: 1.8, w: 5.73, h: 4.75, rectRadius: 0.12, fill: { color: MIST }, line: { color: MIST, width: 0 } })
-  cap(s, 'Next', 7.2, 2.0, 4)
-  const N = [['Real data', 'Consented volunteers, real bots, wallet fraud labels.'], ['Fine-tuned Transformer', 'EER 0.29 to 0.20 on 30 unseen people.'], ['Native SDK', 'Sees pasted text and phone motion.']]
-  N.forEach(([h, d], i) => {
-    const y = 2.45 + i * 0.78
-    T(s, [{ text: h + '\n', options: { bold: true, fontSize: 16 } }, { text: d, options: { fontSize: 14, color: '2F4A4C' } }], { x: 7.2, y, w: 5.2, h: 0.72 })
+  cap(s, 'Two bets on top', 0.75, 5.75, 4)
+  const bets = [['Fine-tuned Transformer', 'EER 0.29 to 0.20, one run'], ['Innate Challenge', 'a short typed phrase when unsure']]
+  const BW = 5.8, BG = 11.83 - 2 * BW
+  bets.forEach(([h, d], i) => {
+    const x = 0.75 + i * (BW + BG)
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 6.05, w: BW, h: 0.4, rectRadius: 0.08, fill: { color: MIST }, line: { color: MIST, width: 0 } })
+    T(s, [{ text: h + '   ', options: { bold: true, color: TEAL, fontFace: H } }, { text: d }], { x, y: 6.05, w: BW, h: 0.4, fontSize: 12.5, align: 'center', valign: 'middle' })
   })
-  T(s, [{ text: 'Innate Challenge: ', options: { bold: true, fontSize: 16 } }, { text: 'more keys, fewer impostors (%)', options: { fontSize: 14, color: '2F4A4C' } }], { x: 7.2, y: 4.85, w: 5.2, h: 0.3 })
-  s.addChart(pres.charts.BAR, [{ name: 'Impostor pass rate', labels: ['6 keys (PIN)', '10 keys', '20 keys', '30 keys'], values: [81, 73, 59, 49] }], { x: 7.1, y: 5.15, w: 5.35, h: 1.35, barDir: 'bar', chartColors: [CORAL, CORAL, AMBER, JADE], showLegend: false, showTitle: false, showValue: true, dataLabelPosition: 'outEnd', dataLabelFontFace: B, dataLabelFontSize: 12, dataLabelColor: INK, catAxisLabelFontFace: B, catAxisLabelFontSize: 11, catAxisLabelColor: INK, catAxisLineShow: false, valAxisHidden: true, valAxisLineShow: false, valAxisMinVal: 0, valAxisMaxVal: 100, valGridLine: { style: 'none' }, catGridLine: { style: 'none' }, catAxisOrientation: 'maxMin', barGapWidthPct: 45 })
-  src(s, 'Innate Challenge: Aalto typing37k (Palin et al., MobileHCI 2019), 2,260 typists, timing only. TypeFormer: Stragapede et al., 2023. Adaptive attackers: Wang et al., ActReal, 2026 (preprint); Tey et al., NDSS 2013.')
-  s.addNotes('Be direct about the weak spots; they explain why the design steps up instead of blocking. The web SDK cannot see text that is set directly, only a native SDK can; this is the Native SDK item.')
+  src(s, 'Edges: team experiment E29 (slide 8). Fine-tuned Transformer: TypeFormer, Stragapede et al., 2023; team run E32 on 30 unseen people, single run, not yet in the API. Adaptive attackers: Wang et al., ActReal, 2026 (preprint); Tey et al., NDSS 2013.')
+  s.addNotes('Be direct about the weak spots, and pair each with what keeps it safe today and what closes it. Bots that copy a real rhythm pass 32 to 87 percent in our test, which is why Innate steps up instead of blocking. Owners who change posture are asked for face or OTP, never blocked. The two bets on top: a fine-tuned transformer, single run and not yet in the API, and the Innate Challenge, a short typed phrase when the wallet is unsure.')
 }
 
 // ---- 10 Business impact (dark): expected loss vs friction. No footer logo; sources line kept.
