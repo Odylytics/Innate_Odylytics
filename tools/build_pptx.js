@@ -164,8 +164,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   hair(s, 0.75, 2.3, 11.83, INK)
   const rows = [
     ['Remote-control malware', 'taps the transfer by itself', 'Passes. The app, PIN and device\nare all the victim\'s.', CORAL, 'hold', 'Machine rhythm, exact key centers.\nTransfer paused, user alerted.'],
-    ['Someone who knows the PIN', 'a relative, a thief', 'Passes. The PIN is correct.', AMBER, 'step_up', 'Rhythm does not match the owner.\nFace or OTP before money moves.'],
-    ['The real owner', 'every normal transfer', 'Passes, no friction.', JADE, 'allow', 'Matches the habit. Nothing changes.\nIf unsure: the usual step-up, never a block.'],
+    ['Someone who knows the PIN', 'a relative, a thief', 'Passes. The PIN is correct and\nthe phone is unlocked.', AMBER, 'step_up', 'Rhythm differs from the owner.\nFace or OTP before money moves.'],
+    ['The real owner', 'every normal transfer', 'Passes. Every check is right\nand nothing looks odd.', JADE, 'allow', 'Matches the owner\'s habit.\nNothing changes, no extra step.'],
   ]
   rows.forEach(([c, cs, today, col, act, what], i) => {
     const y = 2.5 + i * 1.05
@@ -174,19 +174,19 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
     T(s, cs, { x: X[0], y: y + 0.32, w: W[0], h: 0.3, fontSize: 12, color: MUTED })
     T(s, today, { x: X[1], y: y + 0.03, w: W[1], h: 0.6, fontSize: 13, color: MUTED })
     dl(s, X[2], y, 0.3, col, 0.14, act, { w: W[2] - 0.27, fontFace: H, fontSize: 14, bold: true })
-    T(s, what, { x: X[2] + 0.27, y: y + 0.32, w: W[2] - 0.27, h: 0.6, fontSize: 12.5 })
+    T(s, what, { x: X[2] + 0.27, y: y + 0.32, w: W[2] - 0.27, h: 0.6, fontSize: 13 })
   })
-  cap(s, 'How it plugs in', 0.75, 5.75, 3)
-  const st = [['1', 'SDK on the PIN pad and transfer form'], ['2', 'One API call at the confirm step'], ['3', 'Map actions to your existing flows']]
+  cap(s, 'How a wallet can roll it out (proposed)', 0.75, 5.75, 8)
+  const st = [['1', 'Shadow: score only, change nothing'], ['2', 'Step-up: ask face or OTP if unsure'], ['3', 'Hold: pause bot-like transfers']]
   const SW = 3.45, SG = (11.83 - 3 * SW) / 2
   st.forEach(([n, t], i) => {
     const x = 0.75 + i * (SW + SG)
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 6.05, w: SW, h: 0.4, rectRadius: 0.08, fill: { color: MIST }, line: { color: MIST, width: 0 } })
-    T(s, [{ text: n + '   ', options: { bold: true, color: TEAL, fontFace: H } }, { text: t }], { x, y: 6.05, w: SW, h: 0.4, fontSize: 11.5, align: 'center', valign: 'middle' })
+    T(s, [{ text: n + '   ', options: { bold: true, color: TEAL, fontFace: H } }, { text: t }], { x, y: 6.05, w: SW, h: 0.4, fontSize: 12.5, align: 'center', valign: 'middle' })
     if (i < 2) link(s, x + SW, x + SW + SG, 6.25)
   })
-  src(s, 'Decision mix per group: team experiment E29 (slide 8). Step-up as standard practice: Wiefling et al., IFIP SEC 2019. Integration: Innate scoring API, Swagger at nhip-api-taupe.vercel.app/docs.')
-  s.addNotes('Use this as the talk track for the wallet. Before: three very different people all look identical to the wallet because every credential passes. After: Innate separates them silently underneath. Malware is held, a PIN thief is asked for face or OTP, the owner sees nothing. Integration is three small steps and maps onto flows the wallet already runs. Numbers for each group are on slide 8.')
+  src(s, 'Decision mix per group: team experiment E29 (slide 8). Step-up as standard practice: Wiefling et al., IFIP SEC 2019. Integration: Innate scoring API, Swagger at nhip-api-taupe.vercel.app/docs. The rollout order is our proposal and has not been piloted.')
+  s.addNotes('Use this as the talk track for the wallet. Before: three very different people all look identical to the wallet because every credential passes. After: Innate separates them silently underneath. Malware is held, a PIN thief is asked for face or OTP, the owner sees nothing. Rollout is staged: first shadow mode that scores every transfer and changes nothing, then step-up, then hold. It reuses the face and OTP flows the wallet already runs; the order is our proposal and has not been piloted. Numbers for each group are on slide 8.')
 }
 
 // ---- 6 Product (dark)
@@ -207,8 +207,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
     dl(s, 8.2, y, 0.3, MINT, 0.12, h, { w: 4.1, fontSize: 14, bold: true, color: 'FFFFFF' })
     T(s, d, { x: 8.45, y: y + 0.32, w: 4.1, h: 0.3, fontSize: 12, color: MUTED_D })
   })
-  T(s, '55 automated tests  ·  4-tactic bot simulator + adb  ·  every figure reruns from research/', { x: 0.75, y: 6.3, w: 11, h: 0.3, fontSize: 11, color: MUTED_D })
-  src(s, 'Live product at innate.odylytics.com; tests: backend 43, bot simulator 8, phone input SDK 4; experiments E1 to E32 in research/EXPERIMENTS.md.', true)
+  T(s, '81 automated tests  ·  4-tactic bot simulator + adb  ·  every figure reruns from research/', { x: 0.75, y: 6.3, w: 11, h: 0.3, fontSize: 11, color: MUTED_D })
+  src(s, 'Live product at innate.odylytics.com; tests: backend 60, bot simulator 8, phone input SDK 4, web 9; experiments E1 to E32 in research/EXPERIMENTS.md.', true)
   s.addNotes('The phone app scores live against the API: sign up, make up a practice PIN, type it 5 to 10 times, then send money. The demo wallet and the guided story are static walkthroughs on a computer; their decisions are illustrative. Scan the QR to try the phone app.')
 }
 
@@ -280,7 +280,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   T(s, 'So Innate steps up, never blocks: one layer of several.', { x: 0.75, y: 5.75, w: 5.6, h: 0.4, fontSize: 14, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.85, y: 1.8, w: 5.73, h: 4.75, rectRadius: 0.12, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   cap(s, 'Next', 7.2, 2.0, 4)
-  const N = [['Real data', 'Consented volunteers and real bots.'], ['Fine-tuned Transformer', 'EER 0.29 to 0.20 on 30 unseen people.'], ['Native SDK', 'Sees pasted text and phone motion.']]
+  const N = [['Real data', 'Consented volunteers, real bots, wallet fraud labels.'], ['Fine-tuned Transformer', 'EER 0.29 to 0.20 on 30 unseen people.'], ['Native SDK', 'Sees pasted text and phone motion.']]
   N.forEach(([h, d], i) => {
     const y = 2.45 + i * 0.78
     T(s, [{ text: h + '\n', options: { bold: true, fontSize: 16 } }, { text: d, options: { fontSize: 14, color: '2F4A4C' } }], { x: 7.2, y, w: 5.2, h: 0.72 })
