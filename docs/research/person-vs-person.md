@@ -39,4 +39,3 @@ Không đưa số ngoại suy lên slide như số đo. Cách nói an toàn: "c�
 
 - `POST /v1/users/{id}/enroll` nhận `keep_open` (mặc định false: hành vi cũ, khoá ở lượt 3). Với `keep_open=true`, mỗi lượt dựng lại mẫu chuẩn; khoá khi gọi `POST /v1/users/{id}/enroll/finish` hoặc đủ 10 lượt. Mẫu chuẩn cũ không có cờ `open` vẫn coi là đã khoá.
 - **Giới hạn bảo mật:** trong lúc đăng ký còn mở, ai có SDK key và biết user_id đều thêm được lượt (tối đa 10). Đăng nhập bằng tên **không có mật khẩu**: chỉ dùng cho demo.
-- Đăng ký 5–10 lượt trong **một lần ngồi** vẫn yếu khi đổi tư thế (E9: ngồi → đi gần như mất tín hiệu).

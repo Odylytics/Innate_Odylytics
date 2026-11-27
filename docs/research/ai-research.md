@@ -459,10 +459,6 @@ Mã: `research/experiments/e28_pin_length.py`; bảng: `research/results/e28_pin
 
 `owner_model.predict` trả None khi thiếu đặc trưng của 6 phím, và web demo dùng PIN 1593 (4 số): kịch bản "người thứ hai biết PIN thì bị `step_up`" sẽ chỉ xảy ra ~30% lần (kẻ gian ở đây dùng máy khác, nên số thật có thể khác). **Nên đổi PIN demo sang 6 số** (trang thu dữ liệu đã dùng 6 số) hoặc huấn luyện mô hình chủ cho PIN 4 số.
 
-### E33 — báo động nhầm theo tư thế, đăng ký trộn ngồi/đi (StrokePIN, 27/11)
-
-Chuỗi `/score` đầy đủ, 10 người chưa từng thấy, người nhận quen. Đăng ký 3 lượt ngồi: chủ bị hỏi thêm 17% khi ngồi, **41% khi đi**; kẻ biết PIN lọt 24–31%. Đăng ký **2 ngồi + 2 đi**: chủ bị hỏi thêm ~18–20% ở cả hai tư thế, nhưng kẻ biết PIN lọt tăng ~10 điểm (34–39%). Chủ hầu như không bị giữ lệnh (0–1%). Tắt mô hình học (96 người): báo nhầm thấp nhưng kẻ biết PIN lọt 85–94%. Phân tích nguy cơ và đề xuất: [`false-alarm-posture.md`](false-alarm-posture.md). Mã: `research/experiments/e33_posture_false_alarm.py`.
-
 ## 7. Thứ tự làm
 
 1. **Gửi yêu cầu HuMIdb**, kiểm giấy phép Aalto (chạy nền, có thời gian chờ).
