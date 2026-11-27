@@ -7,12 +7,12 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{font:12.5px/1.5 'Manrope',system-ui,sans-serif;color:var(--ink);background:var(--cloud);width:210mm;height:297mm;overflow:hidden;position:relative}
-.top{background:var(--ink);color:#fff;padding:10mm 15mm 7mm;position:relative;overflow:hidden}
+.top{background:var(--ink);color:#fff;padding:8mm 15mm 6mm;position:relative;overflow:hidden}
 .top .sg{position:absolute;right:-18mm;top:-22mm;width:80mm;height:80mm;opacity:1}
 .top .sg svg{width:100%;height:100%}
 .top h1{font:600 20px/1.2 'Sora',sans-serif;margin-top:6mm;max-width:130mm;letter-spacing:-.01em;position:relative}
 .top .team{margin-top:3mm;color:rgba(255,255,255,.72);font-size:11.5px;position:relative}
-.main{padding:6.5mm 15mm 0}
+.main{padding:5mm 15mm 0}
 .lbl{font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:7px;margin:5mm 0 2mm}
 .lbl::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--jade)}
 table{border-collapse:separate;border-spacing:0;width:100%;background:#fff;border:1px solid var(--stone);border-radius:10px;overflow:hidden}
@@ -33,18 +33,19 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 .pw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);margin-top:9px}.pw img{height:20px}
 .note{position:absolute;left:15mm;right:15mm;bottom:9mm;font-size:10.5px;color:var(--soft);border-top:1px solid var(--stone);padding-top:6px}
 
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .stp{background:#fff;border:1px solid var(--stone);border-radius:10px;padding:7px 8px 8px;display:flex;flex-direction:column}
 .stp .hd{display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .stp .hd i{font-style:normal;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font:600 10.5px/18px 'Sora';text-align:center;flex:none}
 .stp .hd b{font-family:'Sora',sans-serif;font-weight:600;font-size:11.5px}
-.stp .im{height:26mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
+.stp .im{height:23mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
 .stp .im img{width:100%;height:100%;object-fit:contain;display:block}
-.stp p{font-size:10.6px;line-height:1.38;margin-top:6px;color:var(--soft)}
+.stp p{font-size:10px;line-height:1.38;margin-top:6px;color:var(--soft)}
 .res{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
 .res figure{display:flex;flex-direction:column;justify-content:center;margin:0;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:6px}
 .res img{width:100%;display:block;border-radius:5px}
-.res figcaption{font-size:10.4px;line-height:1.35;color:var(--soft);margin-top:5px}
+.res figure:first-child img{width:88%;margin:0 auto}
+.res figcaption{text-align:center;font-size:10.4px;line-height:1.35;color:var(--soft);margin-top:5px}
 .res figcaption b{color:var(--ink)}
 .dotk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
 .idea{display:grid;grid-template-columns:1fr 62mm;gap:6mm;align-items:center;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:4mm 5mm}
@@ -52,6 +53,11 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 .idea .cap{font-size:9.5px;color:var(--soft);margin-top:2px;text-align:center}
 .idea svg{width:100%;height:auto;display:block}
 .lg{display:inline-block;width:7px;height:7px;border-radius:50%;margin:0 3px 0 6px}
+.tip{font-size:10.4px;color:var(--soft);margin-top:5px;text-align:center}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.legend div{display:flex;align-items:center;gap:7px;font-size:10.4px;line-height:1.3;color:var(--soft)}
+.legend i{flex:none;width:9px;height:9px;border-radius:50%}
+.legend b{color:var(--ink)}
 </style></head>
 <body>
 <div class="top"><div class="sg">@GESTURE@</div><div style="display:flex;align-items:center;gap:16px;position:relative">@LOCK_DARK_34@<span style="width:1px;height:26px;background:rgba(255,255,255,.25)"></span><span style="font-size:12px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:9px">Powered by <img src="@ASSETS@/odylytics-on-dark.png" style="height:22px" alt="Odylytics"></span></div>
@@ -59,7 +65,7 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 <div class="team">Human verification for wallet transfers · Product guide · Team Odylytics · MoMo Tech Contest 2026</div></div>
 <div class="main">
 <div class="lbl" style="margin-top:0">The idea in 20 seconds</div>
-<div class="idea"><p><b>Everyone taps a PIN, or types a phrase, in their own rhythm:</b> how long the finger stays down, the gap between taps, where it lands. Innate runs silently under the wallet's PIN and confirm screens, learns the owner's pattern, and checks it on every transfer. A bot, or someone who only knows the PIN, does not match, so Innate asks for more or holds the transfer. The model is LightGBM, trained on real people and simulated bots; a fine-tuned Transformer is under evaluation.</p>
+<div class="idea"><p><b>Everyone taps a PIN, or types a phrase, in their own rhythm:</b> how long the finger stays down, the gap between taps, where it lands. Innate runs silently under the wallet's PIN and confirm screens, learns the owner's pattern, and checks it on every transfer. A bot, or someone who only knows the PIN, does not match, so Innate asks for more or holds the transfer. Model: LightGBM, trained on real people and simulated bots.</p>
 <div>@MECH@<div class="cap"><span class="lg" style="background:#0F4F4C;margin-left:0"></span>Person A<span class="lg" style="background:#11B88F"></span>Person B · same PIN, real recordings</div></div></div>
 <div class="lbl">Open the product</div>
 <div class="try"><div class="qr">@QR@</div>
@@ -70,15 +76,18 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 </table></div>
 <div class="lbl">Try it in 3 minutes: open <code style="font-size:10.5px">@WEB_URL@/#/demo</code></div>
 <div class="steps">
-<div class="stp"><div class="hd"><i>1</i><b>Enroll your rhythm</b></div><div class="im"><img src="@ASSETS@/shots/wallet-top.png" alt="Wallet PIN pad"></div><p>Type PIN <b>159357</b> on the wallet three times, as you normally would. Innate learns how you tap.</p></div>
-<div class="stp"><div class="hd"><i>2</i><b>Run a case</b></div><div class="im"><img src="@ASSETS@/shots/cases-zoom.png" alt="Two cases to try"></div><p>Press <b>Malware taps the PIN</b> (a bot) or <b>Thief who knows the PIN</b>, then hand the phone to a friend.</p></div>
-<div class="stp"><div class="hd"><i>3</i><b>Watch the guided story</b></div><div class="im"><img src="@ASSETS@/shots/story-modal.png" alt="Guided story"></div><p>Prefer to watch? Open <code>@WEB_URL@/#/demo?story=1</code>: 8 steps, about 90 seconds, scored live.</p></div>
+<div class="stp"><div class="hd"><i>1</i><b>Enroll and unlock</b></div><div class="im"><img src="@ASSETS@/shots/wallet-top.png" alt="Wallet PIN pad"></div><p>Type PIN <b>159357</b> three times to enroll, then once more to unlock the wallet.</p></div>
+<div class="stp"><div class="hd"><i>2</i><b>Send money</b></div><div class="im"><img src="@ASSETS@/shots/send-money.png" alt="Send money screen"></div><p>Tap <b>Transfer</b>, pick Mum and an amount, swipe up. Innate's decision appears on the right.</p></div>
+<div class="stp"><div class="hd"><i>3</i><b>Play a case</b></div><div class="im"><img src="@ASSETS@/shots/cases-zoom.png" alt="Two cases to try"></div><p>Press <b>Malware taps the PIN</b> or <b>Thief who knows the PIN</b> and watch the decision change.</p></div>
+<div class="stp"><div class="hd"><i>4</i><b>Or just watch</b></div><div class="im"><img src="@ASSETS@/shots/story-modal.png" alt="Guided story"></div><p>Open <code>/#/demo?story=1</code>: 8 steps, about 90 seconds, scored live.</p></div>
 </div>
+<p class="tip">Tap at your normal pace. A perfectly even, scripted tap pattern is exactly what Innate holds.</p>
 <div class="lbl">Read the result: every answer comes with reasons</div>
 <div class="res">
-<figure><img src="@ASSETS@/shots/decision-allow.png" alt="Allow decision"><figcaption><span class="dotk" style="background:var(--jade)"></span><b>allow</b>: the owner's own rhythm, nothing changes for the user. <span style="white-space:nowrap"><span class="dotk" style="background:#F5B941"></span><b>step_up</b></span> sits in between and asks for face or OTP.</figcaption></figure>
-<figure><img src="@ASSETS@/shots/decision-hold.png" alt="Hold decision with reasons"><figcaption><span class="dotk" style="background:#FF7A6B"></span><b>hold</b>: machine-regular timing, taps on exact key centers.</figcaption></figure>
+<figure><img src="@ASSETS@/shots/decision-allow.png" alt="Allow decision"><figcaption><b>allow</b>: the owner's own rhythm.</figcaption></figure>
+<figure><img src="@ASSETS@/shots/decision-hold.png" alt="Hold decision with reasons"><figcaption><b>hold</b>: machine rhythm and exact key centers, with reasons.</figcaption></figure>
 </div>
+<div class="legend"><div><i style="background:#11B88F"></i><span><b>allow</b> nothing changes for the user</span></div><div><i style="background:#F5B941"></i><span><b>step_up</b> asks for face or OTP</span></div><div><i style="background:#FF7A6B"></i><span><b>hold</b> pauses and alerts the user</span></div></div>
 </div>
 <p class="note">The wallet UI and characters are fictional and not any wallet's app. The owner score is a risk signal, not a replacement for PIN, OTP or face. Only timing, coordinates and event types are stored, never the PIN or any content. License CC BY-NC-SA 4.0.</p>
 </body></html>
