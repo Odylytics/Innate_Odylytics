@@ -31,14 +31,14 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 .try{display:flex;gap:6mm;align-items:center;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:4mm 5mm}
 .try table{border:0;border-radius:0}.try td{border:0;padding:2px 0;background:none}.try td:first-child{width:24%;font-size:11px;background:none;color:var(--teal)}
 .pw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);margin-top:9px}.pw img{height:20px}
-.note{position:absolute;left:15mm;right:15mm;bottom:9mm;font-size:10.5px;color:var(--soft);border-top:1px solid var(--stone);padding-top:6px}
+.note{position:absolute;left:15mm;right:15mm;bottom:8mm;font-size:9.6px;color:var(--soft);border-top:1px solid var(--stone);padding-top:6px}
 
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .stp{background:#fff;border:1px solid var(--stone);border-radius:10px;padding:7px 8px 8px;display:flex;flex-direction:column}
 .stp .hd{display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .stp .hd i{font-style:normal;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font:600 10.5px/18px 'Sora';text-align:center;flex:none}
 .stp .hd b{font-family:'Sora',sans-serif;font-weight:600;font-size:11.5px}
-.stp .im{height:23mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
+.stp .im{height:20mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
 .stp .im img{width:100%;height:100%;object-fit:contain;display:block}
 .stp p{font-size:10px;line-height:1.38;margin-top:6px;color:var(--soft)}
 .res{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
@@ -70,16 +70,17 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 <div class="lbl">Open the product</div>
 <div class="try"><div class="qr"><a href="@WEB_URL@">@QR@</a></div>
 <table>
-<tr><td>Link</td><td><a href="@WEB_URL@" style="color:inherit"><b class="u">@WEB_URL@</b></a> · any browser, no sign-up</td></tr>
-<tr><td>Login</td><td>None needed. Demo PIN <code>159357</code> (6 digits). The SDK key is built into the page.</td></tr>
+<tr><td>Link</td><td><a href="@WEB_URL@" style="color:inherit"><b class="u">@WEB_URL@</b></a> · any browser</td></tr>
+<tr><td>Phone</td><td><b>Live scoring.</b> Scan the QR, sign up, make up a practice PIN (not a real one), type it 5 to 10 times, send money.</td></tr>
+<tr><td>Computer</td><td><b>Static demo</b>, no sign-up, PIN <code>159357</code> (below). Decisions are illustrative.</td></tr>
 <tr><td>Developers</td><td>API docs <a href="https://nhip-api-taupe.vercel.app/docs" style="color:inherit">https://nhip-api-taupe.vercel.app/docs</a> · status /health</td></tr>
 </table></div>
-<div class="lbl">Try it in 3 minutes: open <a href="@WEB_URL@/#/demo" style="color:inherit"><code style="font-size:10.5px">@WEB_URL@/#/demo</code></a></div>
+<div class="lbl">Demo wallet on a computer, 3 minutes: open <a href="@WEB_URL@/#/demo" style="color:inherit"><code style="font-size:10.5px">@WEB_URL@/#/demo</code></a></div>
 <div class="steps">
 <div class="stp"><div class="hd"><i>1</i><b>Enroll and unlock</b></div><div class="im"><img src="@ASSETS@/shots/wallet-top.png" alt="Wallet PIN pad"></div><p>Type PIN <b>159357</b> three times to enroll, then once more to unlock the wallet.</p></div>
-<div class="stp"><div class="hd"><i>2</i><b>Send money</b></div><div class="im"><img src="@ASSETS@/shots/send-money.png" alt="Send money screen"></div><p>Tap <b>Transfer</b>, pick Mum and an amount, swipe up. Innate's decision appears on the right.</p></div>
+<div class="stp"><div class="hd"><i>2</i><b>Send money</b></div><div class="im"><img src="@ASSETS@/shots/send-money.png" alt="Send money screen"></div><p>Tap <b>Transfer</b>, pick Mum and an amount, swipe up. An illustrative decision appears on the right.</p></div>
 <div class="stp"><div class="hd"><i>3</i><b>Play a case</b></div><div class="im"><img src="@ASSETS@/shots/cases-zoom.png" alt="Two cases to try"></div><p>Press <b>Malware taps the PIN</b> or <b>Thief who knows the PIN</b> and watch the decision change.</p></div>
-<div class="stp"><div class="hd"><i>4</i><b>Or just watch</b></div><div class="im"><img src="@ASSETS@/shots/story-modal.png" alt="Guided story"></div><p>Open <code>/#/demo?story=1</code>: 8 steps, about 90 seconds, scored live.</p></div>
+<div class="stp"><div class="hd"><i>4</i><b>Or just watch</b></div><div class="im"><img src="@ASSETS@/shots/story-modal.png" alt="Guided story"></div><p>Open <code>/#/demo?story=1</code>: 8 steps, about 90 seconds, illustrative decisions.</p></div>
 </div>
 <p class="tip">Tap at your normal pace. A perfectly even, scripted tap pattern is exactly what Innate holds.</p>
 <div class="lbl">Read the result: every answer comes with reasons</div>
@@ -89,5 +90,5 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 </div>
 <div class="legend"><div><i style="background:#11B88F"></i><span><b>allow</b> nothing changes for the user</span></div><div><i style="background:#F5B941"></i><span><b>step_up</b> asks for face or OTP</span></div><div><i style="background:#FF7A6B"></i><span><b>hold</b> pauses and alerts the user</span></div></div>
 </div>
-<p class="note">The wallet UI and characters are fictional and not any wallet's app. The owner score is a risk signal, not a replacement for PIN, OTP or face. Only timing, coordinates and event types are stored, never the PIN or any content. License CC BY-NC-SA 4.0.</p>
+<p class="note">The wallet UI and characters are fictional, not any wallet's app. The owner score is a risk signal, not a replacement for PIN, OTP or face. Innate stores timing, coordinates and event types, never a real PIN or content. The phone app is a consented research build that also keeps name, email and a practice PIN. License CC BY-NC-SA 4.0.</p>
 </body></html>
