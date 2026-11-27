@@ -62,7 +62,8 @@ def test_full_flow(client):
         r = client.post(f"/v1/users/{user}/enroll",
                         json={"session_id": _post_session(client, human_session(user, OWNER, rng))}, headers=H)
         assert r.status_code == 200
-    assert r.json() == {"user_id": user, "enrolled_sessions": 3, "template_ready": True}
+    assert {k: r.json()[k] for k in ("user_id", "enrolled_sessions", "template_ready", "enroll_open")} == {
+        "user_id": user, "enrolled_sessions": 3, "template_ready": True, "enroll_open": False}
 
     # Chủ thật, người nhận cũ -> cho qua (trên phần lớn các lần thử)
     owner_results = [_score(client, _post_session(client, human_session(user, OWNER, rng)), amount=100_000)
@@ -489,3 +490,77 @@ def test_learned_models_load_by_default(client):
         assert (models / f).is_file(), f
     assert client.get("/health").json()["models"] == {"human": True, "owner": True}
     assert human_model.loaded() and owner_model.loaded()
+
+
+def test_open_enrollment_until_finish(client):
+    rng = random.Random(41)
+    u = "open_u"
+    for i in range(5):
+        r = client.post(f"/v1/users/{u}/enroll", headers=H, json={
+            "session_id": _post_session(client, human_session(u, OWNER, rng)), "keep_open": True})
+        assert r.status_code == 200, r.text
+    st = r.json()
+    assert st["enrolled_sessions"] == 5 and st["template_ready"] and st["enroll_open"]
+    assert 0 <= st["consistency"] <= 1
+    st = client.post(f"/v1/users/{u}/enroll/finish", headers=H).json()
+    assert not st["enroll_open"] and st["enrolled_sessions"] == 5
+    sid = _post_session(client, human_session(u, IMPOSTOR, rng))
+    assert client.post(f"/v1/users/{u}/enroll", json={"session_id": sid, "keep_open": True}, headers=H).status_code == 409
+
+
+def test_open_enrollment_auto_closes_at_max(client):
+    from app.main import MAX_ENROLL
+    rng = random.Random(42)
+    u = "max_u"
+    for _ in range(MAX_ENROLL):
+        st = client.post(f"/v1/users/{u}/enroll", headers=H, json={
+            "session_id": _post_session(client, human_session(u, OWNER, rng)), "keep_open": True}).json()
+    assert st["enrolled_sessions"] == MAX_ENROLL and not st["enroll_open"]
+
+
+def test_finish_needs_template(client):
+    rng = random.Random(43)
+    _post_session(client, human_session("fin_u", OWNER, rng))  # tạo user, chưa đăng ký
+    assert client.post("/v1/users/fin_u/enroll/finish", headers=H).status_code == 400
+    assert client.post("/v1/users/nobody_u/enroll/finish", headers=H).status_code == 404
+
+
+def test_consistency_owner_steadier_than_mixed():
+    from tests.synth import IMPOSTOR as IMP
+    from app.scoring import features as F
+    rng = random.Random(44)
+    own = [F.extract(human_session("c", OWNER, rng)) for _ in range(5)]
+    mixed = own[:3] + [F.extract(human_session("c", IMP, rng)) for _ in range(2)]
+    assert owner.consistency(own[:2]) is None
+    assert owner.consistency(own) > owner.consistency(mixed)
+
+
+def test_account_signup_login_and_unique_email(client):
+    body = {"email": " Ha@Example.com ", "password": "matkhau1", "full_name": "  Nguyễn  Hà "}
+    r = client.post("/v1/accounts/signup", json=body, headers=H)
+    assert r.status_code == 200, r.text
+    a = r.json()
+    assert a["email"] == "ha@example.com" and a["full_name"] == "Nguyễn Hà" and a["enrolled_sessions"] == 0
+    # cùng email (khác hoa thường) -> 409
+    assert client.post("/v1/accounts/signup", json={**body, "email": "HA@example.com"}, headers=H).status_code == 409
+    ok = client.post("/v1/accounts/login", json={"email": "ha@EXAMPLE.com", "password": "matkhau1"}, headers=H)
+    assert ok.status_code == 200 and ok.json()["user_id"] == a["user_id"]
+    assert client.post("/v1/accounts/login", json={"email": "ha@example.com", "password": "sai-roi"}, headers=H).status_code == 401
+    assert client.post("/v1/accounts/login", json={"email": "ai@example.com", "password": "matkhau1"}, headers=H).status_code == 401
+    # tài khoản dùng được ngay cho luồng đăng ký nhịp
+    rng = random.Random(51)
+    st = _enroll(client, a["user_id"], [human_session(a["user_id"], OWNER, rng) for _ in range(3)])
+    assert st["template_ready"]
+
+
+def test_account_password_is_hashed(client):
+    from app.db import Account, SessionLocal
+    client.post("/v1/accounts/signup", json={"email": "hash@example.com", "password": "bimat123"}, headers=H)
+    with SessionLocal() as db:
+        stored = db.get(Account, "hash@example.com").password_hash
+    assert "bimat123" not in stored and stored.startswith("scrypt$")
+
+
+def test_account_signup_validates(client):
+    assert client.post("/v1/accounts/signup", json={"email": "khong-phai-email", "password": "matkhau1"}, headers=H).status_code == 422
+    assert client.post("/v1/accounts/signup", json={"email": "x@example.com", "password": "123"}, headers=H).status_code == 422

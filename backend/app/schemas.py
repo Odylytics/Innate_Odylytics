@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 Num = Annotated[float, Field(allow_inf_nan=False)]
 Ms = Annotated[float, Field(allow_inf_nan=False, ge=0)]
@@ -147,12 +147,42 @@ class SessionCreated(BaseModel):
 
 class EnrollIn(BaseModel):
     session_id: str
+    keep_open: bool = False  # true: không khoá ở lượt thứ 3, chờ /enroll/finish (tối đa MAX_ENROLL lượt)
 
 
 class EnrollOut(BaseModel):
     user_id: str
     enrolled_sessions: int
     template_ready: bool
+    enroll_open: bool = True
+    consistency: float | None = None  # trung bình điểm khớp của mỗi lượt so với mẫu dựng từ các lượt còn lại
+
+
+class SignupIn(BaseModel):
+    email: str = Field(max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=6, max_length=128)  # giữ nguyên, kể cả khoảng trắng (login so đúng như gõ)
+    full_name: str | None = Field(default=None, max_length=100)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _strip_email(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+    @model_validator(mode="after")
+    def _norm(self):
+        self.email = self.email.strip().lower()
+        self.full_name = " ".join(self.full_name.split()) or None if self.full_name else None
+        return self
+
+
+class LoginIn(BaseModel):
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
+
+
+class AccountOut(EnrollOut):
+    email: str
+    full_name: str | None = None
 
 
 class UserOut(EnrollOut):

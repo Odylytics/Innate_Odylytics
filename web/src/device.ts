@@ -15,13 +15,14 @@ export const isIOS = () =>
   !/Android/.test(navigator.userAgent) && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
 
 /**
- * Phone-first entry: a phone that opens the bare site address (no #/route) lands on the data-collection app (#/collect).
+ * Phone-first entry: a phone that opens the bare site address (no #/route) lands on the wallet app's sign-in (#/app).
+ * The data-collection page stays at its own link (#/collect).
  * Any explicit route (#/ for the landing page, #/demo, #/ops ...) is respected, so shared links and "About Innate" still work.
  * Runs once, before React mounts.
  */
 export function phoneFirstEntry() {
   const h = window.location.hash
-  if ((h === '' || h === '#') && isPhone()) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/collect`)
+  if ((h === '' || h === '#') && isPhone()) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/app`)
 }
 
 // Android Chrome fires `beforeinstallprompt` once, often before React mounts, so catch it here and let the page use it later.
