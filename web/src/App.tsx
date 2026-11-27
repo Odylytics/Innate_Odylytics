@@ -7,6 +7,7 @@ import LandingPage from './landing/LandingPage'
 import { Atmosphere } from './landing/Atmosphere'
 import { AppIcon, Wordmark } from './landing/ui'
 import Demo from './Demo'
+import AppAuth from './AppAuth'
 import Collect from './Collect'
 import Ops from './Ops'
 import { scrollToEl, scrollToY, startSmoothScroll } from './smooth'
@@ -168,7 +169,8 @@ function Site() {
 
   const hash = useHash()
   const [path, query] = hash.replace(/^#/, '').split('?')
-  const isDemo = path.startsWith('/demo')
+  const isApp = path.startsWith('/app') // phone app: sign up / sign in, then rhythm set-up and wallet
+  const isDemo = path.startsWith('/demo') || isApp
   const isOps = path.startsWith('/ops')
   const sv = new URLSearchParams(query ?? '').get('story') // 1 = remote (old links), remote, stolen
   const storyCase: StoryCase | null = sv === 'stolen' ? 'stolen' : sv === '1' || sv === 'remote' ? 'remote' : null
@@ -185,7 +187,7 @@ function Site() {
           <AppPage />
           <div className="app-atmos" aria-hidden="true">{theme === 'dark' ? <Atmosphere dark /> : <Atmosphere />}</div>
           <Nav path={path} theme={theme} setTheme={setTheme} />
-          <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isDemo ? <><Demo key={String(storyCase)} storyCase={storyCase} />{choose && <DemoChoice />}</> : <Ops />}</main>
+          <main id="content" tabIndex={-1} style={{ outline: 'none' }}>{isApp ? <AppAuth /> : isDemo ? <><Demo key={String(storyCase)} storyCase={storyCase} />{choose && <DemoChoice />}</> : <Ops />}</main>
           {!isDemo && <Footer />}
         </>
       ) : (
@@ -201,7 +203,7 @@ export default function App() {
   // The collection page is for Vietnamese volunteers, so it defaults to Vietnamese until they pick a language.
   const [lang, setLang] = useState<Lang>(() => {
     const saved = store.get('innate.lang')
-    return saved === 'vi' || saved === 'en' ? saved : window.location.hash.startsWith('#/collect') ? 'vi' : 'en'
+    return saved === 'vi' || saved === 'en' ? saved : /^#\/(collect|app)/.test(window.location.hash) ? 'vi' : 'en'
   })
   useEffect(() => { document.documentElement.lang = lang; store.set('innate.lang', lang) }, [lang])
   const hash = useHash()

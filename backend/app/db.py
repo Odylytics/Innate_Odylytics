@@ -51,6 +51,16 @@ class Participant(Base):
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
+class Account(Base):
+    """Tài khoản đăng nhập của app demo trên điện thoại: một email một tài khoản, mật khẩu lưu dạng băm scrypt."""
+    __tablename__ = "accounts"
+    email: Mapped[str] = mapped_column(String(254), primary_key=True)  # đã chuẩn hoá chữ thường
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), unique=True)
+    full_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    password_hash: Mapped[str] = mapped_column(String(200))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
 class TouchSession(Base):
     __tablename__ = "sessions"
     id: Mapped[str] = mapped_column(String(32), primary_key=True)

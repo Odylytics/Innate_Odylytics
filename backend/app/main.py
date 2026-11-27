@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import secrets
@@ -13,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import schemas
-from .db import DATABASE_URL, Base, ChallengeNonce, Participant, SessionLocal, TouchSession, User, engine
+from .db import DATABASE_URL, Account, Base, ChallengeNonce, Participant, SessionLocal, TouchSession, User, engine
 from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
 
 # nạp sẵn hai mô hình học khi khởi động: tránh ~1 s ở lần /score đầu tiên (E26); thiếu thư viện hoặc file thì _load() tự rơi về luật
@@ -181,6 +182,48 @@ def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
     db.add(TouchSession(id=sid, user_id=body.user_id, device_id=body.device_id, raw=raw, features=feats))
     db.commit()
     return {"session_id": sid, "n_features": len(feats)}
+
+
+def _hash_pw(password: str, salt: bytes | None = None) -> str:
+    salt = salt or secrets.token_bytes(16)
+    h = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
+    return f"scrypt${salt.hex()}${h.hex()}"
+
+
+def _check_pw(password: str, stored: str) -> bool:
+    _, salt, _ = stored.split("$")
+    return secrets.compare_digest(_hash_pw(password, bytes.fromhex(salt)).encode(), stored.encode())
+
+
+def _account_out(db: Session, a: Account) -> dict:
+    return {**_enroll_status(db, db.get(User, a.user_id)), "email": a.email, "full_name": a.full_name}
+
+
+@v1.post("/accounts/signup", response_model=schemas.AccountOut, tags=["sdk"], dependencies=[SDK])
+def signup(body: schemas.SignupIn, db: Session = Depends(get_db)):
+    """Tạo tài khoản app demo: mỗi email một tài khoản. Sau đó app đăng ký nhịp cho user_id trả về."""
+    if db.get(Account, body.email) is not None:
+        raise HTTPException(409, "Email này đã có tài khoản")
+    uid = "acct_" + secrets.token_hex(6)
+    db.add(User(id=uid))
+    db.flush()  # hàng users phải có trước khoá ngoại của accounts
+    a = Account(email=body.email, user_id=uid, full_name=body.full_name, password_hash=_hash_pw(body.password))
+    db.add(a)
+    try:
+        db.commit()
+    except IntegrityError:  # request khác vừa đăng ký cùng email
+        db.rollback()
+        raise HTTPException(409, "Email này đã có tài khoản")
+    return _account_out(db, a)
+
+
+@v1.post("/accounts/login", response_model=schemas.AccountOut, tags=["sdk"], dependencies=[SDK])
+def login(body: schemas.LoginIn, db: Session = Depends(get_db)):
+    """Đăng nhập bằng email + mật khẩu. Sai email hay sai mật khẩu đều trả cùng một lỗi."""
+    a = db.get(Account, body.email.strip().lower())
+    if a is None or not _check_pw(body.password, a.password_hash):
+        raise HTTPException(401, "Sai email hoặc mật khẩu")
+    return _account_out(db, a)
 
 
 @v1.post("/users/{user_id}/enroll", response_model=schemas.EnrollOut, tags=["sdk"], dependencies=[SDK])

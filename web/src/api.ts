@@ -24,6 +24,7 @@ export interface Score {
   session_id: string; human_score: number; owner_match: number | null; risk: 'low' | 'medium' | 'high'
   risk_score: number; action: Action; reasons: string[]; explanation_vi: string
 }
+export interface AccountStatus extends UserStatus { email: string; full_name?: string | null }
 export interface UserStatus { user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number; enroll_open?: boolean; consistency?: number | null }
 export interface Flagged {
   session_id: string; user_id: string; created_at: string; action: Action | null; risk_score: number | null
@@ -61,6 +62,10 @@ export const api = {
   createSession: (s: SessionIn) => call<{ session_id: string; n_features: number }>('/v1/sessions', { method: 'POST', body: s }),
   enroll: (userId: string, sessionId: string, keepOpen = false) =>
     call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll`, { method: 'POST', body: { session_id: sessionId, keep_open: keepOpen } }),
+  signup: (b: { email: string; password: string; full_name?: string }) =>
+    call<AccountStatus>('/v1/accounts/signup', { method: 'POST', body: b }),
+  login: (b: { email: string; password: string }) =>
+    call<AccountStatus>('/v1/accounts/login', { method: 'POST', body: b }),
   finishEnroll: (userId: string) =>
     call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll/finish`, { method: 'POST' }),
   user: (userId: string) => call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}`),

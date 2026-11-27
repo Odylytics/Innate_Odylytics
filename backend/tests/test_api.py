@@ -533,3 +533,34 @@ def test_consistency_owner_steadier_than_mixed():
     mixed = own[:3] + [F.extract(human_session("c", IMP, rng)) for _ in range(2)]
     assert owner.consistency(own[:2]) is None
     assert owner.consistency(own) > owner.consistency(mixed)
+
+
+def test_account_signup_login_and_unique_email(client):
+    body = {"email": " Ha@Example.com ", "password": "matkhau1", "full_name": "  Nguyễn  Hà "}
+    r = client.post("/v1/accounts/signup", json=body, headers=H)
+    assert r.status_code == 200, r.text
+    a = r.json()
+    assert a["email"] == "ha@example.com" and a["full_name"] == "Nguyễn Hà" and a["enrolled_sessions"] == 0
+    # cùng email (khác hoa thường) -> 409
+    assert client.post("/v1/accounts/signup", json={**body, "email": "HA@example.com"}, headers=H).status_code == 409
+    ok = client.post("/v1/accounts/login", json={"email": "ha@EXAMPLE.com", "password": "matkhau1"}, headers=H)
+    assert ok.status_code == 200 and ok.json()["user_id"] == a["user_id"]
+    assert client.post("/v1/accounts/login", json={"email": "ha@example.com", "password": "sai-roi"}, headers=H).status_code == 401
+    assert client.post("/v1/accounts/login", json={"email": "ai@example.com", "password": "matkhau1"}, headers=H).status_code == 401
+    # tài khoản dùng được ngay cho luồng đăng ký nhịp
+    rng = random.Random(51)
+    st = _enroll(client, a["user_id"], [human_session(a["user_id"], OWNER, rng) for _ in range(3)])
+    assert st["template_ready"]
+
+
+def test_account_password_is_hashed(client):
+    from app.db import Account, SessionLocal
+    client.post("/v1/accounts/signup", json={"email": "hash@example.com", "password": "bimat123"}, headers=H)
+    with SessionLocal() as db:
+        stored = db.get(Account, "hash@example.com").password_hash
+    assert "bimat123" not in stored and stored.startswith("scrypt$")
+
+
+def test_account_signup_validates(client):
+    assert client.post("/v1/accounts/signup", json={"email": "khong-phai-email", "password": "matkhau1"}, headers=H).status_code == 422
+    assert client.post("/v1/accounts/signup", json={"email": "x@example.com", "password": "123"}, headers=H).status_code == 422

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, api, explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { ApiError, api, type AccountStatus, explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
 import { store } from './App'
 import BehindScenes from './BehindScenes'
 import type { Recorder } from './capture'
@@ -33,7 +33,8 @@ const WHO: Record<'you' | 'owner' | 'friend' | 'bot', L> = {
   bot: { en: 'Malware', vi: 'Mã độc' },
 }
 
-export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
+/** account: the phone app (#/app) signed in with email + password; without it the name login of the web demo is used. */
+export default function Demo({ storyCase, account, onLogout }: { storyCase: StoryCase | null; account?: AccountStatus; onLogout?: () => void }) {
   const story = storyCase !== null
   const STEPS = storyCase ? stepsOf(storyCase) : []
   const { t, lang, money, pct } = useT()
@@ -41,11 +42,12 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
 
   const [userId, setUserId] = useState(() => {
     if (story) return newId('story')
+    if (account) return account.user_id
     const saved = store.get('innate.user')
     if (saved) return saved
     const id = newId('web'); store.set('innate.user', id); return id
   })
-  const [name, setName] = useState(() => (story ? '' : store.get('innate.name') ?? ''))
+  const [name, setName] = useState(() => (story ? '' : account ? (account.full_name || account.email) : store.get('innate.name') ?? ''))
   const [status, setStatus] = useState<UserStatus>({ user_id: userId, enrolled_sessions: 0, template_ready: false })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<L | null>(null)
@@ -200,6 +202,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
           <h1>{storyCase ? tx(STORIES[storyCase].title) : tx({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}</h1>
           <p className="muted">{story
             ? tx({ en: 'Every score below comes from the live Innate API.', vi: 'Mọi điểm số dưới đây lấy từ API Innate thật.' })
+            : account ? tx({ en: `Set up your rhythm: type the PIN ${DEMO_PIN} ${MIN_JUDGE_ENROLL} to ${MAX_ENROLL} times and watch the accuracy check rise, then press Done. After that every transfer is checked against your rhythm.`, vi: `Thiết lập nhịp: gõ PIN ${DEMO_PIN} từ ${MIN_JUDGE_ENROLL} đến ${MAX_ENROLL} lần, xem thanh accuracy check tăng, rồi bấm Xong. Sau đó mỗi lần chuyển tiền đều được so với nhịp của bạn.` })
             : tx({ en: `Log in with your name, enroll your rhythm with ${MIN_JUDGE_ENROLL} to ${MAX_ENROLL} PIN entries (${DEMO_PIN}), then make a transfer. Another person can log in with your name and try.`, vi: `Đăng nhập bằng tên, đăng ký nhịp bằng ${MIN_JUDGE_ENROLL} đến ${MAX_ENROLL} lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền. Người khác có thể đăng nhập bằng tên bạn để thử.` })}</p>
         </div>
         <div className="row">
@@ -269,9 +272,10 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
           <section className="box">
             <div className="box-head">
               <h2>{tx({ en: 'Account', vi: 'Tài khoản' })}</h2>
-              {!story && <button className="btn ghost small" onClick={resetUser} disabled={busy}>{name ? tx({ en: 'Log out', vi: 'Đăng xuất' }) : tx({ en: 'Start over', vi: 'Làm lại từ đầu' })}</button>}
+              {!story && <button className="btn ghost small" onClick={account ? onLogout : resetUser} disabled={busy}>{name ? tx({ en: 'Log out', vi: 'Đăng xuất' }) : tx({ en: 'Start over', vi: 'Làm lại từ đầu' })}</button>}
             </div>
-            {!story && <NameLogin name={name} busy={busy} onLogin={login} />}
+            {account ? <p>{tx({ en: 'Signed in as ', vi: 'Đang đăng nhập: ' })}<b>{name}</b>{account.full_name && <span className="muted"> · {account.email}</span>}</p>
+              : !story && <NameLogin name={name} busy={busy} onLogin={login} />}
             <p className="muted mono mini">{userId}</p>
             <p className="muted">{!enrollingNow(status)
               ? tx({ en: `Rhythm enrolled (${status.enrolled_sessions} entries) and locked.`, vi: `Đã đăng ký nhịp (${status.enrolled_sessions} lần) và khoá mẫu chuẩn.` })
