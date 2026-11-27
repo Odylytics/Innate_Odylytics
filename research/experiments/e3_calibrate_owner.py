@@ -1,6 +1,6 @@
 """E3: calibrate the distance -> owner score mapping of owner.py on real PINs (StrokePIN).
 
-Uses owner.build_template/score as is. Enroll 3 sitting sessions; owner = the remaining sitting sessions; PIN-knowing impostor = another person, same PIN, same posture.
+Uses owner.build_template/score as is. Enroll 3 sessions; owner = the remaining sessions; PIN-knowing impostor = another person, same PIN.
 Split people into two halves: fit Platt (a,b) on half A, test on half B (no person leakage). Compare with the current mapping (d=2 -> 0.5).
 """
 import math, random, sys
@@ -18,8 +18,7 @@ for e in S:
     e["f"] = features.extract(e["session"])
 grp = defaultdict(list)
 for e in S:
-    if e["posture"] == "sit":
-        grp[(e["user"], e["pin"])].append(e)
+    grp[(e["user"], e["pin"])].append(e)
 by_pin = defaultdict(list)
 for (u, p), es in grp.items():
     by_pin[p] += [(u, e) for e in es]
@@ -53,7 +52,7 @@ A, B = R[R[:, 0] == 0], R[R[:, 0] == 1]
 a, b = fit(A[:, 2], A[:, 1])
 sig = lambda x, a, b: 1 / (1 + np.exp(-(a * x + b)))
 old = lambda x: 1 / (1 + np.exp(np.minimum(2 * (x - 2), 700)))
-out = [f"# E3 — owner score calibration (StrokePIN, 6-digit PIN, enrollment on 3 sitting sessions)", "",
+out = [f"# E3 — owner score calibration (StrokePIN, 6-digit PIN, enrollment on 3 sessions)", "",
        f"Platt fit on half A ({len(A)} sessions): score = sigmoid({a:.3f}·d + {b:.3f}). Tested on half B ({len(B)} sessions, entirely different people).", "",
        "| Mapping | Owner with score ≥ 0.5 | PIN-knowing impostor with score ≥ 0.5 |", "|---|---|---|"]
 for name, f in (("current (d=2→0.5)", old), (f"Fitted Platt (class-balanced)", lambda x: sig(x, a, b))):

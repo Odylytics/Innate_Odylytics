@@ -100,22 +100,19 @@ def eer_far(gen, imp, frr=0.05):
 
 
 def evaluate(model, S, users, device, ks=(3,), n_draw=5, n_imp=20, seed=0):
-    """E9 style: each (person, PIN) enrolls k SITTING sessions; the owner is tested in the same posture (sitting) or a changed posture (walking);
-    the PIN-knowing impostor = another person entering the same PIN, same posture. Score = mean Euclidean distance to the enrollment embeddings."""
+    """E9 style: each (person, PIN) enrolls k sessions; the owner is tested on the remaining sessions;
+    the PIN-knowing impostor = another person entering the same PIN. Score = mean Euclidean distance to the enrollment embeddings."""
     rng = random.Random(seed)
     uset = set(users)
     E = embed(model, [e["x"] for e in S], device)
     grp = defaultdict(list)
     for i, e in enumerate(S):
-        grp[(e["user"], e["pin"], e["posture"])].append(i)
-    postures = sorted({e["posture"] for e in S})
-    sit = next(p for p in postures if "it" in p.lower() or "sit" in p.lower()) if any("it" in p.lower() for p in postures) else postures[0]
-    walk = [p for p in postures if p != sit][0]
+        grp[(e["user"], e["pin"])].append(i)
     res = {}
     for k in ks:
-        gs, gw, imp = [], [], []
-        for (u, pin, ps), idx in grp.items():
-            if u not in uset or ps != sit or len(idx) <= k:
+        gs, imp = [], []
+        for (u, pin), idx in grp.items():
+            if u not in uset or len(idx) <= k:
                 continue
             for _ in range(n_draw):
                 enr = rng.sample(idx, k)
@@ -123,8 +120,7 @@ def evaluate(model, S, users, device, ks=(3,), n_draw=5, n_imp=20, seed=0):
                 en = E[enr]
                 d = lambda j: float(np.linalg.norm(en - E[j], axis=1).mean())
                 gs += [d(j) for j in te]
-                gw += [d(j) for j in grp.get((u, pin, walk), [])]
-                others = [j for (u2, p2, q2), js in grp.items() if p2 == pin and u2 != u and u2 in uset and q2 == sit for j in js]
+                others = [j for (u2, p2), js in grp.items() if p2 == pin and u2 != u and u2 in uset for j in js]
                 imp += [d(j) for j in rng.sample(others, min(n_imp, len(others)))]
-        res[k] = {"same_posture": eer_far(gs, imp), "walk": eer_far(gw, imp) if gw else None, "n": (len(gs), len(gw), len(imp))}
+        res[k] = {"owner": eer_far(gs, imp), "n": (len(gs), len(imp))}
     return res

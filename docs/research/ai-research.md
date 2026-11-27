@@ -90,7 +90,7 @@ human_score, owner_match, new recipient, amount ─► fusion (normalization + w
 
 | Source | Used for | Access | To do |
 |---|---|---|---|
-| **Data the team collects itself** (~25 people × ≥2 sittings, one device) | Problem B and the final evaluation | Self-collected, with consent form | Draft the form (R7); this is the main source |
+| **Data the team collects itself** (~25 people × ≥2 collection rounds, one device) | Problem B and the final evaluation | Self-collected, with consent form | Draft the form (R7); this is the main source |
 | **HuMIdb** (600 people, 14 sensors, BeCAPTCHA bot benchmark) | Problem A | Requires signing a license agreement and emailing the authors, then receiving a download account; ~5 GB [search, a GitHub mirror, needs confirming on the original BiDAlab page] | **Send the request early** because there is a waiting time |
 | **Aalto typing37k** (37,370 people) | Estimating population variance for shrinkage; preliminary check of timing features | Data downloadable from the project page [paper, notes] | Check the license and size |
 | BB-MAS, BehavePassDB, MobileTouchDB, FETA | Secondary comparison | License **not checked** | Check before use, record in the README |
@@ -102,8 +102,8 @@ Note: public data is not PINs on the team's self-drawn keyboard, so use it only 
 | # | Hypothesis | Procedure | Metric | Real data needed? |
 |---|---|---|---|---|
 | E1 | Shrunk Mahalanobis ≥ scaled Manhattan with only 3–5 samples (**proxy run: no, it is worse**; not yet repeated on StrokePIN) | Same data split; compare by number of enrollment entries 1/3/5 | EER, FAR@FRR 5% + confidence intervals | Yes |
-| E2 | Shrinkage toward the population beats a fixed σ floor (**run on DSL and StrokePIN; the deployable version = timing only, now in `owner.py`: FAR@FRR 5% 0.66 → 0.50, E10b**) | Estimate the prior from Aalto/team data; compare with the current floor | As E1 | Yes (Aalto for the prior) |
-| E3 | Calibration (Platt/isotonic) lowers FAR at the same FRR | Fit on sitting 1, test on sitting 2 | FAR@FRR 5%, DET curve | Yes |
+| E2 | Shrinkage toward the population beats a fixed σ floor (**run on DSL and StrokePIN; the deployable version = timing only, now in `owner.py`: FAR@FRR 5% 0.70 → 0.54, E10b**) | Estimate the prior from Aalto/team data; compare with the current floor | As E1 | Yes (Aalto for the prior) |
+| E3 | Calibration (Platt/isotonic) lowers FAR at the same FRR | Fit on collection round 1, test on collection round 2 | FAR@FRR 5%, DET curve | Yes |
 | E4 | RF/LightGBM beats the rules in problem A and **still catches unseen bots** (**run: E4 synthetic humans too optimistic; E4b real humans: catches 100% of naive bots, tactic 3 26%, tactic 4 20–73%, unseen bots weak**) | Leave-one-tactic-out over 4 tactics + `adb` as a separate test set | Catch rate per tactic | Needs real human sessions |
 | E5 | The replay check catches tactic 3 without rejecting the real owner (**run: catches 100% at ±5–10% noise, loses from ±20%**) | Threshold from the distribution of distances between real sessions of the same person | Tactic 3 catch rate, added FRR | Yes |
 | E6 | New signals (timing quantization, coordinate jitter) separate bots from humans | Add one feature group at a time, measure the improvement | Importance, ΔAUC/ΔFAR | Yes, together with `adb` data |
@@ -147,12 +147,12 @@ Code: `research/experiments/e5_replay.py`; table: `research/results/e5_replay.md
 
 ### E5b — calibrating the replay check on real people (24/11)
 
-Code: `research/experiments/e5b_replay_real.py`; table: `research/results/e5b_replay_real.md`. Real StrokePIN people (1,842 person-PIN pairs, 4–10 entries of the same PIN, both sitting and walking), using the backend's own `replay.distance`; the adaptive replay adds timing noise ±n and coordinate noise ±max(0.02, 0.4n) key widths.
+Code: `research/experiments/e5b_replay_real.py`; table: `research/results/e5b_replay_real.md`. Real StrokePIN people (1,817 person-PIN pairs, ~5 entries of the same PIN; re-run 27/11), using the backend's own `replay.distance`; the adaptive replay adds timing noise ±n and coordinate noise ±max(0.02, 0.4n) key widths.
 
-- **The old threshold of 0.085 (chosen on synthetic humans in E5; the backend now uses 0.07 after E5b) gives a real-human FPR of 0.28% → 0.40% → 0.64% when compared against 3 → 5 → 8 past sessions**: it grows almost linearly with the number of sessions. Linear extrapolation to 50 sessions (the backend compares up to 50) gives **~3.7%** at 0.085 (about 0.7% at the current 0.07): this could not be measured because the data has only ~9 entries per pair, so it is a guess. Since a replay is sent straight to `hold`, this level is too costly.
-- Real-human distance percentiles: 0.1% = 0.071; 1% = 0.094; median 0.189. Median distance of replayed sessions: ±5% → 0.025; ±10% → 0.050; ±15% → 0.075; ±20% → 0.101.
-- **The default threshold was changed to 0.07** (FPR ~0.1% at 8 sessions, ~0.7% extrapolated at 50). The price: it catches 100% of replays with noise up to ±10% but only **29% at ±15%** (old threshold: 86%) and 0% from ±20%. An adaptive attacker adding noise ≥15% still gets past this check; the session then looks like a different person and only the (weak) "owner" score stands in the way.
-- **Limit:** the history in the data is short (~9 entries, one collection round), so the effect of many past sessions must be re-measured with the team's data (long histories, many days). The real people here typed a PIN assigned by the researchers, not their own memorized PIN, so they may be less or more regular than real users.
+- **The old threshold of 0.085 (chosen on synthetic humans in E5; the backend now uses 0.07 after E5b) gives a real-human FPR of 0.50% → 1.11% when compared against 2 → 4 past sessions**: it grows with the number of sessions. Linear extrapolation to 50 sessions (the backend compares up to 50) gives **~15%** at 0.085 (about 3% at the current 0.07): this could not be measured because the data has only ~5 entries per pair, so it is a very distant guess. Since a replay is sent straight to `hold`, this level is too costly.
+- Real-human distance percentiles: 0.1% = 0.064; 1% = 0.088; median 0.176. Median distance of replayed sessions: ±5% → 0.025; ±10% → 0.050; ±15% → 0.075; ±20% → 0.100.
+- **The default threshold was changed to 0.07** (FPR ~0.2% at 4 sessions, ~3% extrapolated at 50). The price: it catches 100% of replays with noise up to ±10% but only **28% at ±15%** (old threshold: 85%) and 0% from ±20%. An adaptive attacker adding noise ≥15% still gets past this check; the session then looks like a different person and only the (weak) "owner" score stands in the way.
+- **Limit:** the history in the data is short (~5 entries, one collection round), so the effect of many past sessions must be re-measured with the team's data (long histories, many days). The real people here typed a PIN assigned by the researchers, not their own memorized PIN, so they may be less or more regular than real users.
 
 ### E11 — human/bot on free-text fields, real Aalto people (24/11)
 
@@ -182,20 +182,20 @@ Reading the results:
 
 ### E12 / E12b — LEARNED owner verification model (task A, 24/11)
 
-Code: `research/experiments/e12_learned_owner.py` (`--no-contact` for E12b), `train_owner_model.py`; tables: `research/results/e12_learned_owner.md`, `e12b_learned_owner_no_contact.md`. StrokePIN, split by **person** (58 train / 39 test, 3 splits), enrollment of 3 sitting entries, PIN-knowing impostor, prior from training people only. Replaces `mean(|z|)` (all features equal) with a classifier learned on the |z| vector.
+Code: `research/experiments/e12_learned_owner.py` (`--no-contact` for E12b), `train_owner_model.py`; tables: `research/results/e12_learned_owner.md`, `e12b_learned_owner_no_contact.md`. StrokePIN, split by **person** (58 train / 39 test, 3 splits), enrollment of 3 entries, PIN-knowing impostor, prior from training people only (re-run 27/11). Replaces `mean(|z|)` (all features equal) with a classifier learned on the |z| vector.
 
-| | Same posture: EER | Same posture: FAR@FRR5% | Posture change: EER | Posture change: FAR@FRR5% |
-|---|---|---|---|---|
-| E12 (with contact size) baseline | 0.149 | 0.558 | 0.354 | 0.943 |
-| E12 LightGBM | 0.108 | 0.200 | 0.264 | 0.675 |
-| **E12b (contact size removed)** baseline | 0.161 | 0.573 | 0.363 | 0.944 |
-| E12b logistic regression | 0.206 (**+0.045, worse**) | 0.510 (confidence interval contains 0) | 0.319 | 0.737 |
-| **E12b LightGBM** | 0.158 (−0.003, not significant) | **0.375 (−0.198 [−0.363, −0.085])** | **0.309 (−0.053 [−0.078, −0.033])** | **0.708 (−0.236)** |
+| | EER | FAR@FRR5% |
+|---|---|---|
+| E12 (with contact size) baseline | 0.149 | 0.528 |
+| E12 LightGBM | 0.097 | 0.171 |
+| **E12b (contact size removed)** baseline | 0.160 | 0.549 |
+| E12b logistic regression | 0.188 (**+0.028, worse**) | 0.546 (confidence interval contains 0) |
+| **E12b LightGBM** | **0.140 (−0.020 [−0.026, −0.014])** | **0.316 (−0.233 [−0.410, −0.134])** |
 
 Reading the results:
 - **E12 looks good because of device noise:** the largest weights the regression learned are `tap_w_mean` and `tap_h_mean` (contact area size = different phones across people). The impostors in StrokePIN use *their own* phone; in a real scenario B the impostor holds the victim's actual phone, so this effect disappears. **The trustworthy number is E12b** (contact size removed), not E12.
-- **E12b: the learned LightGBM still helps for real**, mainly at the FRR 5% operating point (impostor passes 0.573 → 0.375) and under posture change; **same-posture EER does not improve**. Logistic regression (linear weights) is **not** better than the old distance in EER.
-- **Wired into the backend** (`app/scoring/owner_model.py`, `app/models/owner_lgbm.*`, optional; if a library or file is missing, or the PIN is not 6 keys, the old distance score is used; `NHIP_OWNER_MODEL=off` to turn it off). The score is mapped so the FRR 5% threshold = 0.5. On 29 held-out people: FRR 5.0% same posture, impostor passes 0.359; **after a posture change the owner is rejected 22.1%**.
+- **E12b: the learned LightGBM still helps for real**, clearest at the FRR 5% operating point (impostor passes 0.549 → 0.316); EER drops slightly (0.160 → 0.140). Logistic regression (linear weights) is **not** better than the old distance in EER.
+- **Wired into the backend** (`app/scoring/owner_model.py`, `app/models/owner_lgbm.*`, optional; if a library or file is missing, or the PIN is not 6 keys, the old distance score is used; `NHIP_OWNER_MODEL=off` to turn it off). The score is mapped so the FRR 5% threshold = 0.5. On 29 held-out people: FRR 5.0%, impostor passes 0.359. The model file in the API was trained before 27/11 on both StrokePIN collection conditions and has not been retrained.
 - **Limit:** trained on 97 public people, each with one phone (device noise remains in the center offset due to normalizing by the estimated key size), 6-digit PIN assigned by the researchers, one collection round. The model is **temporary**; it must be retrained with the team's data.
 
 ### E13 — "Innate Challenge": are more keystrokes better? (24/11)
@@ -288,8 +288,8 @@ Compared with E4 (synthetic humans):
 
 Code: `research/experiments/e10_deployable_prior.py` (compares variants), `e10b_backend_path.py` (checks the backend code itself), `make_population_prior.py` (generates the prior); tables: `research/results/e10_deployable_prior.md`, `e10b_backend_path.md`. Data: StrokePIN, real people, **leave-one-person-out** prior.
 
-E9 used a prior specific to (PIN, posture), but at runtime the PIN is not known in advance. E10 tried a prior **shared across all PINs and both postures**:
-- **Timing only:** the shared prior lowers FAR@FRR 5% by ~8–11 points, close to the per-PIN upper bound (−0.11).
+E9 used a prior specific to the PIN, but at runtime the PIN is not known in advance. E10 tried a prior **shared across all PINs** (re-run 27/11):
+- **Timing only:** the shared prior lowers FAR@FRR 5% by ~9–12 points, close to the per-PIN upper bound (−0.115).
 - **Adding center offset: shrinkage for center offset makes it WORSE** (EER +0.04, FAR +0.06; even the per-PIN prior makes EER worse by +0.03). The variation in center offset differs too much between people and devices. **This is a correction to the E9 conclusion** (at that time I said E2 should apply to all features).
 - **The hybrid variant wins:** shrinkage **for timing only**, keeping a floored sd for center offset.
 
@@ -297,18 +297,16 @@ E9 used a prior specific to (PIN, posture), but at runtime the PIN is not known 
 
 E10b runs **`owner.build_template`/`owner.score` themselves** with all identity features as in the real backend, k=3:
 
-| Test posture | Shrinkage | EER | FAR @ FRR 5% |
-|---|---|---|---|
-| Same (sitting) | off (old) | 0.153 | 0.663 |
-| Same (sitting) | **on** | 0.146 | **0.495** |
-| | paired difference | −0.007 [−0.011, −0.004] | **−0.167 [−0.190, −0.114]** |
-| Changed (walking) | off / on | 0.352 / 0.355 | 0.943 / 0.943 |
+| Shrinkage | EER | FAR @ FRR 5% |
+|---|---|---|
+| off (old) | 0.157 | 0.704 |
+| **on** | 0.148 | **0.541** |
+| paired difference | −0.008 [−0.011, −0.005] | **−0.163 [−0.196, −0.121]** |
 
 Reading the results:
-- A real improvement and **no EER trade-off** in the same posture: impostors getting through drop from 66% to 50% at FRR 5%.
-- **It does not rescue the posture-change case** (0.943 unchanged). That problem needs enrollment across several postures, not shrinkage.
-- A FAR of 50% is still very high: the "owner" score still cannot serve as a blocking gate.
-- **Interaction with the new security fix (24/11):** `/enroll` now returns 409 once a template exists (this stops someone else injecting their own rhythm into an enrolled account). This **conflicts with the E9 recommendation to enroll across several postures**: a controlled re-enrollment path (e.g. after strong authentication) is needed, not yet designed.
+- A real improvement and **no EER trade-off**: impostors getting through drop from 70% to 54% at FRR 5%.
+- A FAR of 54% is still very high: the "owner" score still cannot serve as a blocking gate.
+- **Interaction with the new security fix (24/11):** `/enroll` now returns 409 once a template exists (this stops someone else injecting their own rhythm into an enrolled account). The owner still needs a controlled re-enrollment path (e.g. after strong authentication), not yet designed.
 
 **Limit:** the prior in `population_prior.json` is computed on **all 97 people** (the real build), so scoring it again on StrokePIN itself would leak; E10b uses leave-one-out to avoid that. The prior is a statistic derived from CC BY-NC-SA 4.0 data: state it in the README. Only tested on 6-digit PINs on phones in one collection round.
 
@@ -341,30 +339,27 @@ TypeFormer details: trained on the Aalto mobile typing set; the input is a seque
 
 ### E9 — owner verification on REAL phone PINs (StrokePIN)
 
-This is the first experiment on **real-human data, 6-digit PIN, with touch coordinates**, run with the backend's **own `features.py` and `owner.py`**. Data: StrokePIN (97 people, 17,895 valid entries, 20 shared PINs, sitting/walking; CC BY-NC-SA 4.0; see `datasets.md`). Code: `research/experiments/strokepin_loader.py`, `e9_strokepin_owner.py`; table: `research/results/e9_strokepin_owner.md`.
+This is the first experiment on **real-human data, 6-digit PIN, with touch coordinates**, run with the backend's **own `features.py` and `owner.py`**. Data: StrokePIN (97 people, 20 shared PINs; CC BY-NC-SA 4.0; see `datasets.md`). Code: `research/experiments/strokepin_loader.py`, `e9_strokepin_owner.py`; table: `research/results/e9_strokepin_owner.md`.
 
-Setup: enroll with k=3 **sitting** entries; test the owner (same posture or changed to **walking**); the impostor **knows the PIN** (another person enters the same PIN); scores pooled over all (person, PIN) pairs; 95% bootstrap CI by person. Each pair has only ~5 sitting entries, so with k=5 there are no sitting entries left to test the same posture.
+Setup: enroll with k=3 entries; test the owner on the remaining entries; the impostor **knows the PIN** (another person enters the same PIN); scores pooled over all (person, PIN) pairs; 95% bootstrap CI by person. Each pair has only ~5 entries, so with k=5 there are no entries left to test. Numbers re-run 27/11.
 
-**Same posture (sitting), k=3, current backend (floored sd):**
+**k=3, current backend (floored sd):**
 
 | Feature set | EER | FAR @ FRR 5% |
 |---|---|---|
-| Timing | 0.201 [0.195, 0.208] | 0.697 |
-| + center offset | 0.166 [0.158, 0.177] | 0.734 |
-| + center offset + contact size | 0.158 [0.147, 0.167] | 0.718 |
-
-**Posture change (sitting → walking), k=3:** EER 0.32–0.36, FAR@FRR 5% 0.84–0.94.
+| Timing | 0.201 [0.193, 0.209] | 0.686 |
+| + center offset | 0.166 [0.157, 0.174] | 0.671 |
+| + center offset + contact size | 0.155 [0.145, 0.164] | 0.656 |
 
 Reading the results:
-- **The "owner" signal is real but weak with 3 enrollment entries:** EER 16–20% when the impostor knows the PIN. At the FRR 5% operating point, **FAR is still 57–73%**: most impostors get through. That means the "owner" score cannot serve as a blocking gate; this fits the `step_up` design and the pooling of bot and context signals. This figure is the first real measurement, so it replaces the 10–15% expectation derived from papers.
-- **A posture change destroys nearly the whole signal** (EER 0.32–0.40, FAR@5% 0.75–0.94). Enrolling only while sitting and then entering the PIN while walking is nearly useless; center offset even makes it worse (0.32 → 0.36). Design consequence: enrollment must cover several postures/contexts, or the "owner" score must be down-weighted when a posture change is detected (motion sensors).
-- **Center offset and contact size improve EER** (0.201 → 0.166 → 0.158), consistent with Buschek 2015. **But they do not yet improve FAR@FRR 5%** (0.70 → 0.73 → 0.72, wide CI).
-- **The floored sd of `owner.py` is clearly better than plain scaled Manhattan** on real PINs (EER 0.158 versus 0.227 using all three feature groups). On DSL the two are about equal (E1/E2 proxy). The floor helps when there are only 3 samples and the PIN is short.
-- **E2 (shrinking the variance toward the population) replicates on real data:** it lowers FAR@FRR 5% relative to the current backend, paired by person: timing −0.140 [−0.161, −0.107]; timing + center offset + size −0.159 [−0.198, −0.117]; EER nearly unchanged (−0.001 and +0.005). For the "timing + center offset" set alone, EER is **worse** by +0.031 [+0.026, +0.037]. The effect is consistent with DSL: the improvement is in the tail, not in EER.
+- **The "owner" signal is real but weak with 3 enrollment entries:** EER 16–20% when the impostor knows the PIN. At the FRR 5% operating point, **FAR is still 54–69%**: most impostors get through. That means the "owner" score cannot serve as a blocking gate; this fits the `step_up` design and the pooling of bot and context signals. This figure is the first real measurement, so it replaces the 10–15% expectation derived from papers.
+- **Center offset and contact size improve EER** (0.201 → 0.166 → 0.155), consistent with Buschek 2015. **FAR@FRR 5% only edges down slightly** (0.69 → 0.67 → 0.66, wide CI).
+- **The floored sd of `owner.py` is clearly better than plain scaled Manhattan** on real PINs (EER 0.155 versus 0.230 using all three feature groups). On DSL the two are about equal (E1/E2 proxy). The floor helps when there are only 3 samples and the PIN is short.
+- **E2 (shrinking the variance toward the population) replicates on real data:** it lowers FAR@FRR 5% relative to the current backend, paired by person: timing −0.121 [−0.145, −0.095]; timing + center offset + size −0.118 [−0.160, −0.072]; EER nearly unchanged (−0.002 and +0.003). For the "timing + center offset" set alone, EER is **worse** by +0.031 [+0.025, +0.036]. The effect is consistent with DSL: the improvement is in the tail, not in EER.
 
 **Important limits; the figures above are inflated in two ways:**
-1. **Device differences between people.** There are 94 different key-size pairs across 97 people, so each person most likely uses their own phone. Center offset and contact size therefore carry **device** information as well. In a real scenario B, the impostor holds **the victim's actual phone**, so this difference disappears. Hence the improvement from center offset/size (0.201 → 0.158) is an upper bound; the number closer to reality is the "timing" row (EER ~0.20).
-2. PINs were assigned by the researchers (20 shared PINs, many weak ones such as 111111, 123456), users did not type their own memorized PIN; each pair has only ~5 entries per posture, and enrollment and testing happen in the same collection round (no multi-day gap yet).
+1. **Device differences between people.** There are 94 different key-size pairs across 97 people, so each person most likely uses their own phone. Center offset and contact size therefore carry **device** information as well. In a real scenario B, the impostor holds **the victim's actual phone**, so this difference disappears. Hence the improvement from center offset/size (0.201 → 0.155) is an upper bound; the number closer to reality is the "timing" row (EER ~0.20).
+2. PINs were assigned by the researchers (20 shared PINs, many weak ones such as 111111, 123456), users did not type their own memorized PIN; each pair has only ~5 entries, and enrollment and testing happen in the same collection round (no multi-day gap yet).
 
 ### E18–E20 — Vietnamese challenge phrase and swipes on real people (25/11)
 
@@ -400,50 +395,49 @@ Code: `research/experiments/aalto_note_orient.py`, `e22_improve_far.py`; table: 
 | K=8 | 0.235 | 0.457 |
 | raw + key-pair normalization (12), K=3 | 0.248 | 0.502 |
 | **+ learned model (LightGBM on the deviation vector), K=3** | **0.227** | **0.429** |
-| + holding posture (tilt angle), K=3 | 0.144 | 0.277 |
+| + phone holding angle (tilt angle), K=3 | 0.144 | 0.277 |
 
 - **Adding enrollment sentences helps but with diminishing returns:** going from 1 to 3 sentences cuts FAR by 10 points, going from 3 to 8 sentences adds only 6 points.
 - **A learned model helps by ~7 points of FAR** (0.502 → 0.429), in the same direction as E12b.
-- **Device tilt angle gives the best number (FAR 0.277) but should NOT be trusted:** all of a person's sentences fall within one session, so posture coincides between enrollment and test (E9: a posture change nearly wipes out the signal, EER 0.309). On a real phone it requires asking for sensor permission (iOS Safari), is sensitive data, and measures only "how the phone is being held". Not to be put into the product without two-session data.
+- **Device tilt angle gives the best number (FAR 0.277) but should NOT be trusted:** all of a person's sentences fall within one session, so the holding angle coincides between enrollment and test. On a real phone it requires asking for sensor permission (iOS Safari), is sensitive data, and measures only "how the phone is being held". Not to be put into the product without two-session data.
 - FRR/FAR trade-off table (raw E13, 30 keys): FRR 5% → FAR 49%; 10% → 39%; 20% → 29%; 30% → 22%; 40% → 17%.
 
 ### E23 — adding phone motion to the owner check (StrokePIN, 97 people, 25/11)
 
 Code: `research/experiments/e23_imu_fusion.py`; table: `research/results/e23_imu_fusion.md`. E9 protocol; IMU features: gravity (mean, deviation per axis), accelerometer and gyroscope jitter. E2 detector (shrinkage toward the population), k = 3 enrollment entries.
 
-| Feature set | Same posture (sitting): EER / FAR@FRR5% | Posture change (walking): EER / FAR@FRR5% |
-|---|---|---|
-| PIN (timing + center offset) | 0.197 / 0.692 | 0.374 / 0.936 |
-| Motion only | 0.038 / 0.030 | 0.441 / 0.913 |
-| PIN + motion | 0.057 / 0.075 | 0.420 / 0.910 |
+| Feature set | EER / FAR@FRR5% (re-run 27/11) |
+|---|---|
+| PIN (timing + center offset) | 0.196 / 0.658 |
+| Motion only | 0.038 / 0.029 |
+| PIN + motion | 0.054 / 0.061 |
 
-**This number cannot be trusted:** each person has one phone, so acceleration/gravity carry the **device fingerprint** (sensor bias, holding angle) and not only the person's habits; the impostors in the data use a different phone. The same flaw that removed contact size (E12b). The scenario of an impostor holding the victim's actual phone is not simulated. **With a posture change it all vanishes (EER 0.42–0.48).** StrokePIN records acceleration/gyroscope at ~5 Hz, so matching the touch moment and the jerk could not be checked. Conclusion: motion is a candidate for an anti-bot gate ("a hand is holding it"), and has not been shown for the owner check. 4-channel design: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
+**This number cannot be trusted:** each person has one phone, so acceleration/gravity carry the **device fingerprint** (sensor bias, holding angle) and not only the person's habits; the impostors in the data use a different phone. The same flaw that removed contact size (E12b). The scenario of an impostor holding the victim's actual phone is not simulated. StrokePIN records acceleration/gyroscope at ~5 Hz, so matching the touch moment and the jerk could not be checked. Conclusion: motion is a candidate for an anti-bot gate ("a hand is holding it"), and has not been shown for the owner check. 4-channel design: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
 
 ### E24–E27 — whole-system decisions, threshold sweep, adaptive bots, latency (StrokePIN, 25/11)
 
 Code: `research/experiments/e24_end_to_end.py` (includes E25, E27, E27b), `e26_latency.py`; full tables: `research/results/e24_end_to_end.md`, `e26_latency.md`. Runs the exact `/score` chain (rules + human/bot model, replay check, owner check + owner model, fusion) in-process, on **10 people never seen by either learned model** (small sample in number of people, hundreds of sessions per group). PIN-knowing impostor = another person entering the same PIN on their own phone (confounded with device noise). Bots come from the team's generator/script.
 
-**E24, known recipient, current thresholds (A=0.25, B=0.55):**
+**E24, known recipient, current thresholds (A=0.25, B=0.55), re-run 27/11:**
 | Group | allow | step_up | hold |
 |---|---|---|---|
-| owner, sitting | 80% | 19% | 1% |
-| owner, posture changed (walking) | 63% | 37% | 0% |
-| PIN-knowing impostor (other phone) | 28% | 70% | 2% |
+| owner | 81% | 18% | 1% |
+| PIN-knowing impostor (other phone) | 28% | 71% | 1% |
 | bot T1, T2, T3 (replay ±5%) | 0% | 0% | **100%** |
-| bot T4 (population sampling) | 7% | 67% | 26% |
+| bot T4 (population sampling) | 5% | 72% | 23% |
 | replay ±10% | 0% | 0% | **100%** |
-| replay ±15% | **58%** | 13% | 30% |
+| replay ±15% | **60%** | 13% | 28% |
 | replay ±20% | **72%** | 26% | 1% |
-| replay ±30% | **48%** | 48% | 4% |
-| **template-aware** bot (samples from the victim's mean/spread) | **75–82%** | 6–17% | 8–12% |
+| replay ±30% | **44%** | 53% | 3% |
+| **template-aware** bot (samples from the victim's mean/spread) | **79–86%** | 5–15% | 6–9% |
 
-- **With a new recipient**, the owner is only `allow`ed 17% (79% `step_up`): the "new recipient" weight of 0.15 pushes risk past A. This is by design, but it is a large friction.
-- **The learned models matter:** with both learned models off, the PIN-knowing impostor is `allow`ed 90% (only the rules and distance remain).
-- **The real weakness (E27):** replay bots with noise ≥ 15% and bots that know the victim's template **fool the system** (allow 48–82%). The system reliably blocks naive bots and low-noise replay; it cannot block an adaptive attacker.
+- **With a new recipient**, the owner is only `allow`ed 18% (79% `step_up`): the "new recipient" weight of 0.15 pushes risk past A. This is by design, but it is a large friction.
+- **The learned models matter:** with both learned models off, the PIN-knowing impostor is `allow`ed 89% (only the rules and distance remain).
+- **The real weakness (E27):** replay bots with noise ≥ 15% and bots that know the victim's template **fool the system** (allow 44–86%). The system reliably blocks naive bots and low-noise replay; it cannot block an adaptive attacker.
 
-**E25, sweep of threshold A** (B has little influence): there is no optimum for both sides. A=0.25 (current): owner sitting allow 80%, PIN-knowing impostor not-allowed 72%, template-aware bot not-allowed 25%. A=0.30: 91% / 50% / 17%. A=0.20: 65% / 90% / 36%. A=0.10: 17% / 99% / 80% (nearly all owners are bothered). Choose by policy (how many real people we accept asking for extra verification); this should be settled once the team has same-device data.
+**E25, sweep of threshold A** (B has little influence): there is no optimum for both sides. A=0.25 (current): owner allow 81%, PIN-knowing impostor not-allowed 72%, template-aware bot not-allowed 21%. A=0.30: 90% / 54% / 13%. A=0.20: 64% / 90% / 33%. A=0.10: 18% / 100% / 79% (nearly all owners are bothered). Choose by policy (how many real people we accept asking for extra verification); this should be settled once the team has same-device data.
 
-**E27b, replay threshold** (currently 0.07): 0.085 catches ±15% replay 86% (versus 30%) with the owner held 3% (short history here; E5b extrapolates a higher FPR for long histories); 0.10: catches ±20% 47% but the owner is held 6%. The threshold has not been changed; decide after measuring the team's long histories (T3).
+**E27b, replay threshold** (currently 0.07): 0.085 catches ±15% replay 85% (versus 28%) with the owner held 3% (short history here; E5b extrapolates a higher FPR for long histories); 0.10: catches ±20% 50% but the owner is held 6%. The threshold has not been changed; decide after measuring the team's long histories (T3).
 
 **E26, local latency (TestClient, SQLite, no network):** `POST /sessions` p50 2.2 ms / p95 2.9 ms; `/score` p50 3.8 ms / p95 4.7 ms / p99 6.2 ms. **The first call used to take ~1 s** (lazy loading of the LightGBM models). **Fixed on 25/11:** `main.py` preloads both models at startup; re-measured: `/score` p50 3.7 ms, p99 14.2 ms, max 36.5 ms. The loading cost moved to the cold start on Vercel (Vercel/Neon not measured).
 
@@ -451,16 +445,12 @@ Code: `research/experiments/e24_end_to_end.py` (includes E25, E27, E27b), `e26_l
 
 Code: `research/experiments/e28_pin_length.py`; table: `research/results/e28_pin_length.md`. Same 10 people never seen by either learned model and E24 protocol (known recipient). The 4-digit PIN is simulated by cutting the first 4 taps of a real 6-digit session (**an approximation**).
 
-| PIN | Learned owner model runs? | Owner sitting: allow / step_up / hold | PIN-knowing impostor: allow / step_up / hold |
+| PIN | Learned owner model runs? | Owner: allow / step_up / hold | PIN-knowing impostor: allow / step_up / hold |
 |---|---|---|---|
 | 6-digit | yes | 81% / 19% / 0% | 28% / 70% / 2% |
 | **4-digit** | **no** (falls back to distance) | 90% / 7% / 3% | **68% / 30% / 2%** |
 
 `owner_model.predict` returns None when the 6-key features are missing, and the web demo uses PIN 1593 (4 digits): the scenario "a second person who knows the PIN gets `step_up`" would happen only ~30% of the time (the impostors here use a different phone, so the real number may differ). **The demo PIN should be changed to 6 digits** (the data collection page already uses 6 digits) or an owner model should be trained for 4-digit PINs.
-
-### E33 — false alarms by posture, mixed sitting/walking enrollment (StrokePIN, 27/11)
-
-Full `/score` chain, 10 people never seen, known recipient. Enrolling 3 sitting entries: the owner is asked for extra verification 17% when sitting, **41% when walking**; PIN-knowing impostors get through 24–31%. Enrolling **2 sitting + 2 walking**: the owner is asked for extra verification ~18–20% in both postures, but PIN-knowing impostors getting through rises by ~10 points (34–39%). The owner is almost never held (0–1%). With the learned models off (96 people): false alarms are low but PIN-knowing impostors get through 85–94%. Risk analysis and proposal: [`false-alarm-posture.md`](false-alarm-posture.md). Code: `research/experiments/e33_posture_false_alarm.py`.
 
 ## 7. Order of work
 

@@ -25,12 +25,12 @@ S = strokepin_loader.load()
 for e in S:
     e["f"] = features.extract(e["session"])
 USERS = sorted({e["user"] for e in S}); PINS = sorted({e["pin"] for e in S})
-by = defaultdict(lambda: defaultdict(list)); by_pin = defaultdict(list); by_user = defaultdict(list)
+by = defaultdict(list); by_pin = defaultdict(list); by_user = defaultdict(list)
 for e in S:
-    by[(e["user"], e["pin"])][e["posture"]].append(e); by_pin[e["pin"]].append(e); by_user[e["user"]].append(e)
+    by[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e); by_user[e["user"]].append(e)
 grp, bpp = defaultdict(list), defaultdict(lambda: defaultdict(list))
 for e in S:
-    grp[(e["user"], e["pin"], e["posture"])].append(e); bpp[(e["pin"], e["posture"])][e["user"]].append(e)
+    grp[(e["user"], e["pin"])].append(e); bpp[e["pin"]][e["user"]].append(e)
 TK = sorted(k for k in S[0]["f"] if k.startswith(("pin_hold_", "pin_flight_")) or k == "pin_total")
 NAMES = [n for n in bot_features.FEATURE_NAMES if n not in bot_features.CONTACT_FEATURES]
 EXCL = {"tap_w_mean", "tap_h_mean"}
@@ -86,24 +86,24 @@ def train_owner(fit, val):
     owner._PRIOR = {"within_var": dict(zip(TK, np.mean(list(WV.values()), axis=0).tolist())), "n_taps": 6, "nu": 5}
 
     def rows(users, allowed):
-        X, y, post, keys = [], [], [], None
-        for (u, p, po), es in grp.items():
-            if u not in users or po != "sit" or len(es) < 3: continue
+        X, y, keys = [], [], None
+        for (u, p), es in grp.items():
+            if u not in users or len(es) < 3: continue
             for _ in range(3):
                 enr = rng.sample(es, 3); tpl = owner.build_template([e["f"] for e in enr])
                 keys = keys or sorted(k for k in tpl["mu"] if k not in EXCL)
-                for tp, gen in (("sit", [e for e in es if e not in enr]), ("walk", grp.get((u, p, "walk"), []))):
-                    if not gen: continue
-                    pool = [e for v, ves in bpp[(p, tp)].items() if v != u and v in allowed for e in ves]
-                    for lab, ents in ((0, gen), (1, rng.sample(pool, min(15, len(pool))))):
-                        for e in ents:
-                            z = owner.score(e["f"], tpl)[1]; X.append([abs(z[k]) for k in keys]); y.append(lab); post.append(tp)
-        return np.array(X), np.array(y), np.array(post), keys
-    Xt, yt, _, keys = rows(fs, fs); Xv, yv, pv, _ = rows(set(val), fs | set(val))
+                gen = [e for e in es if e not in enr]
+                if not gen: continue
+                pool = [e for v, ves in bpp[p].items() if v != u and v in allowed for e in ves]
+                for lab, ents in ((0, gen), (1, rng.sample(pool, min(15, len(pool))))):
+                    for e in ents:
+                        z = owner.score(e["f"], tpl)[1]; X.append([abs(z[k]) for k in keys]); y.append(lab)
+        return np.array(X), np.array(y), keys
+    Xt, yt, keys = rows(fs, fs); Xv, yv, _ = rows(set(val), fs | set(val))
     m = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05, num_leaves=7, min_child_samples=30, subsample=0.8, subsample_freq=1,
                            colsample_bytree=0.8, random_state=SEED, verbose=-1).fit(Xt, yt)
     p = m.predict_proba(Xv)[:, 1]
-    thr = float(np.quantile(p[(yv == 0) & (pv == "sit")], 1 - FRR))
+    thr = float(np.quantile(p[yv == 0], 1 - FRR))
     owner_model._state["m"] = (m.booster_, {"features": keys, "threshold": thr})
 
 
@@ -118,7 +118,7 @@ def decide(raw, f, tpl, history, new_recipient):
     return risk, action, h, o
 
 
-GROUPS = ["owner, same posture (sitting)", "owner, changed posture (walking)", "PIN-knowing impostor (other person, other device)", "bot T1 uniform", "bot T2 timing noise",
+GROUPS = ["owner", "PIN-knowing impostor (other person, other device)", "bot T1 uniform", "bot T2 timing noise",
           "bot T3 replay ±5%", "bot T4 population sampling", "replay ±10%", "replay ±15%", "replay ±20%", "replay ±30%",
           "template-aware bot (scale 1.0)", "template-aware bot (scale 0.5)"]
 FOLD = [0]
@@ -139,22 +139,21 @@ for fi in range(FOLDS):
     if RULES_ONLY: human_model._state['m'] = None; owner_model._state['m'] = None  # rules only (still trained to keep the same random sequence)
     print(f"fold {fi + 1}/{FOLDS}: {len(test)} test people, models trained ({time.time() - t0:.0f}s)", flush=True)
     for u in sorted(test):
-        pins = [p for (uu, p), post in by.items() if uu == u and len(post["sit"]) >= 5]
+        pins = [p for (uu, p), ents in by.items() if uu == u and len(ents) >= 5]
         for pin in rng.sample(pins, min(N_PINS, len(pins))):
-            post = by[(u, pin)]; es = post["sit"][:]; rng.shuffle(es); enr, tests = es[:3], es[3:]
+            es = by[(u, pin)][:]; rng.shuffle(es); enr, tests = es[:3], es[3:]
             tpl = owner.build_template([e["f"] for e in enr]); hist = [e["f"] for e in enr]
             for e in tests:
                 record(GROUPS[0], u, e["session"], tpl, hist); hist = hist + [e["f"]]
-            for e in post["walk"][:4]: record(GROUPS[1], u, e["session"], tpl, hist)
-            others = [e for e in by_pin[pin] if e["user"] != u and e["posture"] == "sit"]
-            for e in rng.sample(others, min(4, len(others))): record(GROUPS[2], u, {**e["session"], "user_id": u}, tpl, hist)
+            others = [e for e in by_pin[pin] if e["user"] != u]
+            for e in rng.sample(others, min(4, len(others))): record(GROUPS[1], u, {**e["session"], "user_id": u}, tpl, hist)
             victim = [e["session"] for e in es]; pop = [e["session"] for e in rng.sample(by_pin[pin], min(150, len(by_pin[pin])))]
             for _ in range(2):
-                for gi, t in ((3, 1), (4, 2), (5, 3), (6, 4)):
+                for gi, t in ((2, 1), (3, 2), (4, 3), (5, 4)):
                     record(GROUPS[gi], u, strip(tactics.generate(t, u, pin, victim if t == 3 else pop if t == 4 else victim, rng)), tpl, hist)
                 src = rng.choice(victim)
-                for gi, n in ((7, 0.10), (8, 0.15), (9, 0.20), (10, 0.30)): record(GROUPS[gi], u, strip(noisy_replay(src, n)), tpl, hist)
-                for gi, sc in ((11, 1.0), (12, 0.5)): record(GROUPS[gi], u, strip(mimic(victim[:6], sc)), tpl, hist)
+                for gi, n in ((6, 0.10), (7, 0.15), (8, 0.20), (9, 0.30)): record(GROUPS[gi], u, strip(noisy_replay(src, n)), tpl, hist)
+                for gi, sc in ((10, 1.0), (11, 0.5)): record(GROUPS[gi], u, strip(mimic(victim[:6], sc)), tpl, hist)
 
 import os, pickle
 if os.environ.get('E29_DUMP'): pickle.dump({g: R[g] for g in GROUPS}, open(os.environ['E29_DUMP'], 'wb'))
@@ -188,12 +187,12 @@ for g in GROUPS:
 L += ["", "## NEW recipient", "", "| Group | n | hold | step_up | allow |", "|---|---|---|---|---|"]
 for g in GROUPS:
     L.append(f"| {g} | {len(R[g])} | " + " | ".join(fmt(rate(R[g], 2, A0, B0, w)) for w in ("hold", "step_up", "allow")) + " |")
-L += ["", "## Sweep of threshold A (B=0.55, known recipient): sitting owner allowed / not allowed for ...", "",
-      "| A | sitting owner allow | PIN-knowing impostor | bot T4 | template-aware 1.0 | replay ±15% |", "|---|---|---|---|---|---|"]
+L += ["", "## Sweep of threshold A (B=0.55, known recipient): owner allowed / not allowed for ...", "",
+      "| A | owner allow | PIN-knowing impostor | bot T4 | template-aware 1.0 | replay ±15% |", "|---|---|---|---|---|---|"]
 for A in (0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40):
     L.append(f"| {A:.2f}{' ←' if A == A0 else ''} | {fmt(rate(R[GROUPS[0]], 1, A, 0.55, 'allow'))} | "
-             + " | ".join(fmt(rate(R[g], 1, A, 0.55, "notallow")) for g in (GROUPS[2], GROUPS[6], GROUPS[11], GROUPS[8])) + " |")
-v = rate(R[GROUPS[2]], 1, A0, B0, "allow")[3]
+             + " | ".join(fmt(rate(R[g], 1, A, 0.55, "notallow")) for g in (GROUPS[1], GROUPS[5], GROUPS[10], GROUPS[7])) + " |")
+v = rate(R[GROUPS[1]], 1, A0, B0, "allow")[3]
 srt = np.sort(v); n = len(srt); gini = float((2 * np.arange(1, n + 1) - n - 1).dot(srt) / (n * srt.sum())) if srt.sum() else 0.0
 L += ["", "## Per-victim distribution (PIN-knowing impostor, known recipient, A=0.25)", "",
       f"Share of PIN-knowing impostor sessions allowed, computed separately for each victim ({n} people): median {100 * np.median(v):.0f}%, 90th percentile {100 * np.quantile(v, .9):.0f}%, maximum {100 * v.max():.0f}%.",

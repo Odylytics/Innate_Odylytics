@@ -1,6 +1,6 @@
 // "Accuracy check" while enrolling: share of PIN-knowing impostors stopped (1 - FAR at FRR 5%) after k enrollment entries.
-// k = 2..4 measured on real phone PINs (E30, StrokePIN, sitting, backend distance: research/results/e30_enroll_curve.md).
-// k >= 5 is extrapolated with a power law through k = 3 and 4 (StrokePIN has at most 5 sittings, so no test entry is left).
+// k = 2..4 measured on real phone PINs (E30, StrokePIN, backend distance: research/results/e30_enroll_curve.md).
+// k >= 5 is extrapolated with a power law through k = 3 and 4 (StrokePIN has at most 5 entries per person and PIN, so no test entry is left).
 const MEASURED: Record<number, number> = { 2: 0.857, 3: 0.503, 4: 0.429 }
 const B = Math.log(MEASURED[3] / MEASURED[4]) / Math.log(4 / 3)
 

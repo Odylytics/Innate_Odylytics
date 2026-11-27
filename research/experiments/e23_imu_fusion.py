@@ -2,9 +2,9 @@
 
 E9: owner verification on REAL phone PINs (StrokePIN), using the backend's own features.py / owner.py.
 
-Each (person, PIN) pair: enroll with k random SITTING sessions. Test:
-  - owner, same posture (the remaining sitting sessions) or changed posture (the WALKING sessions)
-  - PIN-KNOWING impostor: another person's sessions entering the same PIN, same posture as the test session (scenario B)
+Each (person, PIN) pair: enroll with k random sessions. Test:
+  - owner: the remaining sessions
+  - PIN-KNOWING impostor: another person's sessions entering the same PIN (scenario B)
 Score = normalized distance (low = looks like the owner). Pool the scores of all pairs, then compute EER and FAR@FRR 5%; bootstrap CI by person.
 Three feature sets (timing / + offset / + touch size) x three detectors:
   backend (current owner.py: floored sd), Manhattan scaled (Killourhy & Maxion), E2 (variance shrinkage toward the population).
@@ -59,22 +59,20 @@ print({n: len(v) for n, v in KEYS.items()})
 for e in S:
     e["v"] = {n: np.array([e["f"][k] for k in ks]) for n, ks in KEYS.items()}
 
-grp = defaultdict(list)  # (user, pin, posture) -> entries
+grp = defaultdict(list)  # (user, pin) -> entries
 for e in S:
-    grp[(e["user"], e["pin"], e["posture"])].append(e)
-by_pin_post = defaultdict(lambda: defaultdict(list))  # (pin, posture) -> user -> entries
-for (u, p, po), es in grp.items():
-    by_pin_post[(p, po)][u] += es
+    grp[(e["user"], e["pin"])].append(e)
+by_pin = defaultdict(lambda: defaultdict(list))  # pin -> user -> entries
+for (u, p), es in grp.items():
+    by_pin[p][u] += es
 users = sorted({e["user"] for e in S})
-print(f"{len(S)} sessions, {len(users)} people; median sitting sessions/PIN/person:",
-      int(np.median([len(v) for (u, p, po), v in grp.items() if po == "sit"])), "; walking:",
-      int(np.median([len(v) for (u, p, po), v in grp.items() if po == "walk"])))
+print(f"{len(S)} sessions, {len(users)} people; median sessions/PIN/person:", int(np.median([len(v) for v in grp.values()])))
 
 
-def within_var(pin, posture, exclude, name):
-    """Mean within-person variance of OTHER people (leave-user-out), by (PIN, posture)."""
+def within_var(pin, exclude, name):
+    """Mean within-person variance of OTHER people (leave-user-out), by PIN."""
     vs = [np.var(np.array([e["v"][name] for e in es]), axis=0, ddof=1)
-          for u, es in by_pin_post[(pin, posture)].items() if u != exclude and len(es) >= 2]
+          for u, es in by_pin[pin].items() if u != exclude and len(es) >= 2]
     return np.mean(vs, axis=0)
 
 
@@ -89,30 +87,26 @@ def detectors(name, X, prior_var):
             f"E2 shrinkage toward population (nu={NU})": lambda x: (np.abs(x - mu) / np.sqrt(var_eb)).mean(-1)}
 
 
-# scores[(k, test_posture, set, detector)][user] = (gen[], imp[])
+# scores[(k, set, detector)][user] = (gen[], imp[])
 scores = defaultdict(lambda: defaultdict(lambda: ([], [])))
-for (u, p, po), es in grp.items():
-    if po != "sit":
-        continue
+for (u, p), es in grp.items():
     for k in KS:
         if len(es) < k:
             continue
         for _ in range(N_DRAW):
             enr = rng.sample(es, k)
-            rest_sit = [e for e in es if e not in enr]
-            walk = grp.get((u, p, "walk"), [])
-            for tpost, gen_es in (("same posture (sitting)", rest_sit), ("changed posture (walking)", walk)):
-                if not gen_es:
-                    continue
-                imp_pool = [e for v, ves in by_pin_post[(p, "sit" if tpost.startswith("same") else "walk")].items() if v != u for e in ves]
-                imp = rng.sample(imp_pool, min(N_IMP, len(imp_pool)))
-                for name in SETS:
-                    X = np.array([e["v"][name] for e in enr])
-                    pv = within_var(p, "sit", u, name)
-                    for dn, f in detectors(name, X, pv).items():
-                        g, i = scores[(k, tpost, name, dn)][u]
-                        g += list(f(np.array([e["v"][name] for e in gen_es])))
-                        i += list(f(np.array([e["v"][name] for e in imp])))
+            gen_es = [e for e in es if e not in enr]
+            if not gen_es:
+                continue
+            imp_pool = [e for v, ves in by_pin[p].items() if v != u for e in ves]
+            imp = rng.sample(imp_pool, min(N_IMP, len(imp_pool)))
+            for name in SETS:
+                X = np.array([e["v"][name] for e in enr])
+                pv = within_var(p, u, name)
+                for dn, f in detectors(name, X, pv).items():
+                    g, i = scores[(k, name, dn)][u]
+                    g += list(f(np.array([e["v"][name] for e in gen_es])))
+                    i += list(f(np.array([e["v"][name] for e in imp])))
 
 
 def metrics(gen, imp):
@@ -137,34 +131,32 @@ def ci(per_user):
 
 
 lines = ["# E23 — PIN + motion. Owner verification on real phone PINs (StrokePIN, 97 people, 6-digit PINs)", "",
-         f"Uses the backend's `features.py` + `owner.py`. The impostor **knows the PIN** (another person entering the same PIN). Enrollment k sitting sessions; "
+         f"Uses the backend's `features.py` + `owner.py`. The impostor **knows the PIN** (another person entering the same PIN). Enrollment k sessions; "
          f"scores pooled over all (person, PIN) pairs, 95% bootstrap CI by person ({BOOT} resamples). Lower is better. "
          "Real-person data; each person has one phone, so device differences between people also contribute to the separation.", ""]
 for k in KS:
-    for tpost in ("same posture (sitting)", "changed posture (walking)"):
-        lines += [f"## k = {k} enrollment sessions, test {tpost}", "", "| Feature set | Detector | EER | FAR @ FRR 5% |", "|---|---|---|---|"]
-        for (k2, t2, name, dn), per_user in scores.items():
-            if (k2, t2) != (k, tpost):
-                continue
-            (e, f), lo, hi = ci(per_user)
-            lines.append(f"| {name} | {dn} | {e:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {f:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] |")
-        lines.append("")
+    lines += [f"## k = {k} enrollment sessions", "", "| Feature set | Detector | EER | FAR @ FRR 5% |", "|---|---|---|---|"]
+    for (k2, name, dn), per_user in scores.items():
+        if k2 != k:
+            continue
+        (e, f), lo, hi = ci(per_user)
+        lines.append(f"| {name} | {dn} | {e:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {f:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] |")
+    lines.append("")
 # PAIRED comparison (same bootstrap sample by person): E2 minus backend, negative = E2 better
 lines += ["## Paired comparison: E2 (shrinkage toward the population) minus the current backend, negative = E2 better", "",
-          "| k | Test | Feature set | dEER | dFAR @ FRR 5% |", "|---|---|---|---|---|"]
+          "| k | Feature set | dEER | dFAR @ FRR 5% |", "|---|---|---|---|"]
 for k in KS:
-    for tpost in ("same posture (sitting)", "changed posture (walking)"):
-        for name in SETS:
-            a = scores.get((k, tpost, name, "backend (owner.py: floored sd)"))
-            b = scores.get((k, tpost, name, f"E2 shrinkage toward population (nu={NU})"))
-            if not a or not b:
-                continue
-            us = sorted(a)
-            d = np.array([np.subtract(metrics(*pooled(b, r)), metrics(*pooled(a, r)))
-                          for r in (rng.choices(us, k=len(us)) for _ in range(BOOT))])
-            m = np.subtract(metrics(*pooled(b, us)), metrics(*pooled(a, us)))
-            lo, hi = np.quantile(d, 0.025, axis=0), np.quantile(d, 0.975, axis=0)
-            lines.append(f"| {k} | {tpost} | {name} | {m[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {m[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |")
+    for name in SETS:
+        a = scores.get((k, name, "backend (owner.py: floored sd)"))
+        b = scores.get((k, name, f"E2 shrinkage toward population (nu={NU})"))
+        if not a or not b:
+            continue
+        us = sorted(a)
+        d = np.array([np.subtract(metrics(*pooled(b, r)), metrics(*pooled(a, r)))
+                      for r in (rng.choices(us, k=len(us)) for _ in range(BOOT))])
+        m = np.subtract(metrics(*pooled(b, us)), metrics(*pooled(a, us)))
+        lo, hi = np.quantile(d, 0.025, axis=0), np.quantile(d, 0.975, axis=0)
+        lines.append(f"| {k} | {name} | {m[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {m[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |")
 lines.append("")
 out = ROOT / "research/results/e23_imu_fusion.md"
 out.write_text("\n".join(lines), encoding="utf-8")

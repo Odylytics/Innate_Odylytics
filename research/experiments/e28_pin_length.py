@@ -47,16 +47,16 @@ def decide(raw, tpl, hist):
 
 out = ["# E28 — 4-digit PIN (demo) and 6-digit PIN: system decisions", "",
        "10 people never seen by either learned model; the 4-digit PIN is simulated by cutting the first 4 taps of a real 6-digit PIN (approximation). Known recipient. The PIN-knowing impostor uses a different device.", "",
-       "| PIN | learned owner model runs? | sitting owner: allow / step_up / hold | PIN-knowing impostor: allow / step_up / hold |", "|---|---|---|---|"]
+       "| PIN | learned owner model runs? | owner: allow / step_up / hold | PIN-knowing impostor: allow / step_up / hold |", "|---|---|---|---|"]
 for k in (6, 4):
     res = {"owner": [], "imp": []}; used = []
-    by = defaultdict(lambda: defaultdict(list)); by_pin = defaultdict(list)
+    by = defaultdict(list); by_pin = defaultdict(list)
     for e in S:
-        by[(e["user"], e["pin"])][e["posture"]].append(e); by_pin[e["pin"]].append(e)
-    for (u, pin), post in by.items():
-        if u not in EVAL or len(post["sit"]) < 5:
+        by[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
+    for (u, pin), ents in by.items():
+        if u not in EVAL or len(ents) < 5:
             continue
-        es = post["sit"][:]; rng.shuffle(es)
+        es = ents[:]; rng.shuffle(es)
         enr, tests = es[:3], es[3:]
         feats_ = [features.extract(trunc(e["session"], k)) for e in enr]
         tpl = owner.build_template(feats_)
@@ -64,7 +64,7 @@ for k in (6, 4):
         for e in tests:
             act, um = decide(trunc(e["session"], k), tpl, hist); res["owner"].append(act); used.append(um)
             hist.append(features.extract(trunc(e["session"], k)))
-        others = [e for e in by_pin[pin] if e["user"] != u and e["posture"] == "sit"]
+        others = [e for e in by_pin[pin] if e["user"] != u]
         for e in rng.sample(others, min(4, len(others))):
             res["imp"].append(decide(trunc({**e["session"], "user_id": u}, k), tpl, hist)[0])
     pc = lambda L, x: f"{100 * np.mean([a == x for a in L]):.0f}%"  # noqa: E731

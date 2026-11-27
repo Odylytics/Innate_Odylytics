@@ -1,10 +1,10 @@
 """E5b: calibrate the replay check on REAL HUMANS (StrokePIN), using the backend's own replay.distance.
 
-Account history = the entries of the SAME PIN by the SAME person (both sitting and walking, ~10 entries; a real user enters one PIN).
+Account history = the entries of the SAME PIN by the SAME person (~5 entries; a real user enters one PIN).
  - Real human: each entry is compared with the remaining entries of the same group -> nearest distance. At which threshold is it mistaken for a replay?
  - Replay: take one entry from the history, add timing noise ±n and coordinate noise ±max(0.02, 0.4n) key widths (as in E5, converted to units of
    key width so it does not depend on the device), compare with the whole history (including the original). How many are caught?
-The history is only ~9 entries, so the "more old sessions raise FPR" effect of E5 (seen at 4-digit PIN, history 200) can NOT be measured: see the limits.
+The history is only ~4 entries, so the "more old sessions raise FPR" effect of E5 (seen at 4-digit PIN, history 200) can NOT be measured: see the limits.
 """
 
 import copy
@@ -50,7 +50,7 @@ def nearest(f, hist):
 
 
 # 1) new real human vs history, by history size
-gen = {h: [] for h in (3, 5, 8)}
+gen = {h: [] for h in (2, 3, 4)}  # each pair has ~5 entries, so history is at most 4
 for (u, p), es in grp.items():
     for i, e in enumerate(es):
         others = [x["f"] if "f" in x else features.extract(x["session"]) for j, x in enumerate(es) if j != i]
@@ -71,7 +71,7 @@ for (u, p), es in grp.items():
         rep[n].append(nearest(features.extract(replay_of(src["session"], n)), hist))
 
 lines = ["# E5b — calibrating the replay check on real humans (StrokePIN)", "",
-         f"{len(grp)} (person, PIN) pairs, each with 4–10 entries of the same PIN (both sitting and walking). Current threshold in the backend: **{CUR_THR}** "
+         f"{len(grp)} (person, PIN) pairs, each with ~5 entries of the same PIN. Current threshold in the backend: **{CUR_THR}** "
          "(chosen on synthetic data in E5). Distance = the backend's `replay.distance`.", "",
          "## Are new real humans mistaken for replays? (nearest distance to their own history)", "",
          "| Old sessions compared | Trials | Median distance | FPR at current threshold | FPR at 0.5x threshold |", "|---|---|---|---|---|"]
@@ -79,24 +79,24 @@ for h, v in gen.items():
     a = np.array(v)
     lines.append(f"| {h} | {len(a)} | {np.median(a):.3f} | {(a < CUR_THR).mean():.4f} | {(a < CUR_THR / 2).mean():.4f} |")
 q = {x: float(np.quantile(allg, x)) for x in (0.001, 0.005, 0.01, 0.05)}
-slope = float((np.array(gen[8]) < CUR_THR).mean() - (np.array(gen[3]) < CUR_THR).mean()) / 5
-fpr50 = float((np.array(gen[3]) < CUR_THR).mean()) + slope * (50 - 3)
+slope = float((np.array(gen[4]) < CUR_THR).mean() - (np.array(gen[2]) < CUR_THR).mean()) / 2
+fpr50 = float((np.array(gen[4]) < CUR_THR).mean()) + slope * (50 - 4)
 lines += ["", f"Real-human distance percentiles: 0.1% = {q[0.001]:.3f}; 0.5% = {q[0.005]:.3f}; 1% = {q[0.01]:.3f}; 5% = {q[0.05]:.3f}. "
           f"Median distance of replayed sessions by noise: " + ", ".join(f"±{int(n*1000)/10}% -> {np.median(rep[n]):.3f}" for n in NOISES) + ".", "",
-          f"**Linear extrapolation** of FPR by number of old sessions (data only goes up to 8): ~{slope*100:.3f} percentage points per additional old session, so with 50 sessions about **{fpr50:.1%}** "
-          "(not measured: this is a guess, the history in the data is only ~9 entries).", "",
+          f"**Linear extrapolation** of FPR by number of old sessions (data only goes up to 4): ~{slope*100:.3f} percentage points per additional old session, so with 50 sessions about **{fpr50:.1%}** "
+          "(not measured: this is a guess, the history in the data is only ~4 entries, a very long extrapolation, so for reference only).", "",
           f"Real-human distance: 1st percentile = **{thr1:.3f}**, 5th percentile = {thr5:.3f}, median = {np.median(allg):.3f}.", "",
           "## How many replayed sessions are caught (adaptive attacker: timing noise ±n, coordinates ±max(0.02, 0.4n) key widths)", "",
           "| Noise ±n | " + " | ".join(f"{int(n*1000)/10}%" for n in NOISES) + " |", "|---|" + "---|" * len(NOISES),
           f"| Current threshold ({CUR_THR}) | " + " | ".join(f"{(np.array(rep[n]) < CUR_THR).mean():.2f}" for n in NOISES) + " |",
           f"| FPR 1% threshold ({thr1:.3f}) | " + " | ".join(f"{(np.array(rep[n]) < thr1).mean():.2f}" for n in NOISES) + " |",
           f"| FPR 5% threshold ({thr5:.3f}) | " + " | ".join(f"{(np.array(rep[n]) < thr5).mean():.2f}" for n in NOISES) + " |", ""]
-lines += ["## Trade-off by threshold (FPR measured at 3/5/8 old sessions; linear extrapolation to 50; catch rate by noise)", "",
-          "| Threshold | FPR @3 | FPR @8 | FPR @50 (extrapolated) | " + " | ".join(f"catch ±{int(n*1000)/10}%" for n in NOISES) + " |",
+lines += ["## Trade-off by threshold (FPR measured at 2/3/4 old sessions; linear extrapolation to 50; catch rate by noise)", "",
+          "| Threshold | FPR @2 | FPR @4 | FPR @50 (extrapolated) | " + " | ".join(f"catch ±{int(n*1000)/10}%" for n in NOISES) + " |",
           "|---|---|---|---|" + "---|" * len(NOISES)]
 for th in (0.05, 0.06, 0.07, 0.085, 0.094):
-    f3, f8 = float((np.array(gen[3]) < th).mean()), float((np.array(gen[8]) < th).mean())
-    lines.append(f"| {th} | {f3:.4f} | {f8:.4f} | {f3 + (f8 - f3) / 5 * 47:.1%} | " + " | ".join(f"{(np.array(rep[n]) < th).mean():.2f}" for n in NOISES) + " |")
+    f2, f4 = float((np.array(gen[2]) < th).mean()), float((np.array(gen[4]) < th).mean())
+    lines.append(f"| {th} | {f2:.4f} | {f4:.4f} | {f4 + (f4 - f2) / 2 * 46:.1%} | " + " | ".join(f"{(np.array(rep[n]) < th).mean():.2f}" for n in NOISES) + " |")
 lines.append("")
 (ROOT / "research/results/e5b_replay_real.md").write_text("\n".join(lines), encoding="utf-8")
 print("\n".join(lines))

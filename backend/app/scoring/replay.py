@@ -7,8 +7,8 @@ import math
 import os
 from statistics import fmean
 
-# Calibrated on REAL PEOPLE (research/experiments/e5b_replay_real.py, StrokePIN): 0.07 -> FPR ~0.1% with 8 old sessions, ~0.7% extrapolated at 50;
-# catches 100% of replays with noise up to ±10%, 29% at ±15%. The old threshold 0.085 (chosen on fake data) caught 86% at ±15% but with extrapolated FPR ~3.7%:
+# Calibrated on REAL PEOPLE (research/experiments/e5b_replay_real.py, StrokePIN): 0.07 -> FPR ~0.2% with 4 old sessions, ~3.0% extrapolated at 50;
+# catches 100% of replays with noise up to ±10%, 28% at ±15%. The old threshold 0.085 (chosen on fake data) caught 85% at ±15% but with extrapolated FPR ~15%:
 # a session judged a replay is held outright, so wrongly flagging the real owner costs more than missing a high-noise attacker. Recalibrate on team data.
 REPLAY_THRESHOLD = float(os.environ.get("NHIP_REPLAY_THRESHOLD", 0.07))
 MIN_FEATURES = 5

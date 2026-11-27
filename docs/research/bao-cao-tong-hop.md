@@ -10,8 +10,8 @@ Malware that uses the Accessibility permission to tap on the user's behalf, or a
 
 | Question | Needs enrollment | Catches whom | Strength measured so far |
 |---|---|---|---|
-| Human or machine? | No | Malware, scripts, `adb` | Naive bots and replay with noise ≤±10%: held 100% (E24). Adaptive bots: 48–82% get through. |
-| Is it the owner? | Yes (3 sessions) | Acquaintances, thieves who know the PIN | EER 16–20% same posture, 32–36% when posture changes (E9). Not strong enough to be a blocking gate. |
+| Human or machine? | No | Malware, scripts, `adb` | Naive bots and replay with noise ≤±10%: held 100% (E24). Adaptive bots: 44–86% get through. |
+| Is it the owner? | Yes (3 sessions) | Acquaintances, thieves who know the PIN | EER 16–20% (E9). Not strong enough to be a blocking gate. |
 
 **Honest positioning:** the strong part is detecting automated control and replay. Owner recognition is an additional risk signal, fused by weights, not an AND gate.
 
@@ -90,15 +90,16 @@ Naive bots are caught 100%; for human-like bots the model easily learns shortcut
 
 ### 5.2 Replay
 
-**E5b, calibration on real humans (1,842 person-PIN pairs):** the backend threshold 0.085 (synthetic data) was lowered to **0.07**. The rate at which a human session is mistaken for a replay grows with the number of old sessions (0.28% at 3 sessions, 0.64% at 8, extrapolated ~3.7% at 50). Catch rate by replay attacker noise:
+**E5b, calibration on real humans (1,817 person-PIN pairs):** the backend threshold 0.085 (synthetic data) was lowered to **0.07**. The rate at which a human session is mistaken for a replay grows with the number of old sessions (0.08% at 2 sessions, 0.14% at 3, 0.20% at 4 at the 0.07 threshold; extrapolated ~3.0% at 50, a guess). Catch rate by replay attacker noise:
 
 | Threshold | ±5% | ±10% | ±15% | ±20% | ±30% |
 |---|---|---|---|---|---|
-| 0.085 | 1.00 | 1.00 | 0.86 | 0.09 | 0.00 |
-| 0.094 (FPR 1%) | 1.00 | 1.00 | 0.98 | 0.30 | 0.00 |
-| 0.117 (FPR 5%) | 1.00 | 1.00 | 1.00 | 0.92 | 0.03 |
+| **0.07 (chosen)** | 1.00 | 1.00 | 0.28 | 0.00 | 0.00 |
+| 0.085 | 1.00 | 1.00 | 0.85 | 0.10 | 0.00 |
+| 0.088 (FPR 1%) | 1.00 | 1.00 | 0.92 | 0.16 | 0.00 |
+| 0.107 (FPR 5%) | 1.00 | 1.00 | 1.00 | 0.73 | 0.01 |
 
-A higher threshold catches more but wrongly blocks the owner: in E27b, a threshold of 0.12 made a sitting owner get held 17% of the time.
+A higher threshold catches more but wrongly blocks the owner: in E27b, a threshold of 0.12 made the owner get held 15% of the time.
 
 ### 5.3 Owner recognition
 
@@ -106,27 +107,24 @@ A higher threshold catches more but wrongly blocks the owner: in E27b, a thresho
 
 | Condition | EER | FAR@FRR5% |
 |---|---|---|
-| Same posture (sitting), timing, backend | 0.201 | 0.710 |
-| Same posture, timing, **shrinkage toward the population (E2)** | 0.200 | 0.570 |
-| Same posture, timing + offset from center + touch size | 0.157 | 0.740 |
-| Posture change (walking), timing | 0.323 | 0.839 |
+| Timing, backend | 0.201 | 0.686 |
+| Timing, **shrinkage toward the population (E2)** | 0.199 | 0.565 |
+| Timing + offset from center + touch size | 0.155 | 0.656 |
 
-A posture change removes almost all of the signal. Touch size may carry a device signal (one phone per person).
+Touch size may carry a device signal (one phone per person). Numbers re-run 27/11.
 
 **E12b, learned model, without touch size:**
 
-| Posture | Model | EER | FAR@FRR5% |
-|---|---|---|---|
-| Sitting | baseline mean |z| | 0.161 | 0.573 |
-| Sitting | LightGBM | 0.158 | 0.375 |
-| Walking | baseline | 0.363 | 0.944 |
-| Walking | LightGBM | 0.309 | 0.708 |
+| Model | EER | FAR@FRR5% |
+|---|---|---|
+| baseline mean |z| | 0.160 | 0.549 |
+| LightGBM | 0.140 | 0.316 |
 
-**E1/E2 (CMU, computer keyboard) and E10:** shrinking the variance toward the population lowers FAR@FRR5% by 7–11 points, EER unchanged; put into `owner.py` (`population_prior.json`, nu=5).
+**E1/E2 (CMU, computer keyboard) and E10:** shrinking the variance toward the population lowers FAR@FRR5% by 9–16 points, EER unchanged; put into `owner.py` (`population_prior.json`, nu=5).
 
-**E13, number of keys (Aalto, timing only):** EER 0.364 → 0.245 and FAR 0.807 → 0.489 when going from 6 to 30 keys. This is the basis for Innate Challenge. **E14:** owner typing 6 new digits gets EER 0.33. **E22:** the learned model lowers FAR by a further ~7 points on the typed phrase; the posture feature is optimistic so it was dropped.
+**E13, number of keys (Aalto, timing only):** EER 0.364 → 0.245 and FAR 0.807 → 0.489 when going from 6 to 30 keys. This is the basis for Innate Challenge. **E14:** owner typing 6 new digits gets EER 0.33. **E22:** the learned model lowers FAR by a further ~7 points on the typed phrase; the holding-angle feature is optimistic so it was dropped.
 
-**E23, motion (IMU):** IMU alone reaches EER 0.038–0.070 in the same posture (FAR@FRR5% 0.03–0.10), but it is a **device confound** (one phone per person) and useless when posture changes (EER 0.44–0.48). **Do not claim owner recognition by IMU.**
+**E23, motion (IMU):** IMU alone reaches EER 0.038–0.068 (FAR@FRR5% 0.03–0.09), but it is a **device confound** (one phone per person). **Do not claim owner recognition by IMU.**
 
 **E21/E21b:** per-digraph normalization barely changes anything; a per-digraph profile makes it worse.
 
@@ -134,38 +132,37 @@ A posture change removes almost all of the signal. Touch size may carry a device
 
 ### 5.4 Whole system (E24, E25, E27, E28)
 
-10 people never seen by either learned model, 3 sitting enrollment sessions, thresholds A=0.25 B=0.55, known recipient:
+10 people never seen by either learned model, 3 enrollment sessions, thresholds A=0.25 B=0.55, known recipient (re-run 27/11):
 
 | Group | hold | step up | allow |
 |---|---|---|---|
-| Owner, sitting | 1% | 19% | 80% |
-| Owner, walking | 0% | 37% | 63% |
-| PIN-knowing impostor (different phone) | 2% | 70% | 28% |
+| Owner | 1% | 18% | 81% |
+| PIN-knowing impostor (different phone) | 1% | 71% | 28% |
 | Uniform bot / timing noise / replay ±5% / ±10% | 100% | 0% | 0% |
-| Population-sampling bot (T4) | 26% | 67% | 7% |
-| Replay ±15% | 30% | 13% | 58% |
+| Population-sampling bot (T4) | 23% | 72% | 5% |
+| Replay ±15% | 28% | 13% | 60% |
 | Replay ±20% | 1% | 26% | 72% |
-| Replay ±30% | 4% | 48% | 48% |
-| Template-aware bot (scale 1.0) | 8% | 17% | 75% |
-| Template-aware bot (scale 0.5) | 12% | 6% | 82% |
+| Replay ±30% | 3% | 53% | 44% |
+| Template-aware bot (scale 1.0) | 6% | 15% | 79% |
+| Template-aware bot (scale 0.5) | 9% | 5% | 86% |
 
-New recipient: a sitting owner is allowed only 17% (step_up 79%).
+New recipient: the owner is allowed only 18% (step_up 79%).
 
 **E25, sweep of threshold A (B=0.55):**
 
-| A | Sitting owner allowed | PIN-knowing impostor not allowed |
+| A | Owner allowed | PIN-knowing impostor not allowed |
 |---|---|---|
-| 0.10 | 17% | 99% |
-| 0.20 | 65% | 90% |
-| **0.25 (current)** | **80%** | **72%** |
-| 0.30 | 91% | 50% |
-| 0.40 | 96% | 14% |
+| 0.10 | 18% | 100% |
+| 0.20 | 64% | 90% |
+| **0.25 (current)** | **81%** | **72%** |
+| 0.30 | 90% | 54% |
+| 0.40 | 97% | 13% |
 
 There is no optimum for both sides.
 
-**E28, PIN length (simulated by cutting the first 4 taps):** a 4-digit PIN makes the owner model unable to run, and a PIN-knowing impostor is allowed 68% (6 digits: 28%). **Conclusion applied: the web demo switched to the 6-digit PIN `159357`.** With 6 digits and AI on, a new sitting owner is allowed 16/25 times in the demo scenario (`docs/plan/web-demo.md`).
+**E28, PIN length (simulated by cutting the first 4 taps):** a 4-digit PIN makes the owner model unable to run, and a PIN-knowing impostor is allowed 68% (6 digits: 28%). **Conclusion applied: the web demo switched to the 6-digit PIN `159357`.** With 6 digits and AI on, a new owner is allowed 16/25 times in the demo scenario (`docs/plan/web-demo.md`).
 
-**E3, owner score calibration:** the old mapping (d=2→0.5) lets 84% of PIN-knowing impostors exceed 0.5 (owner 96%); class-balanced Platt leaves 27% (owner 90%). At FRR 5% FAR is still ~50%. Wiring it into the backend (`NHIP_OWNER_MAP=platt`) only changes the fallback path, drops a sitting owner at a new recipient from 92% to 2% allowed, and blocks template updates, so it is **left off by default** (`e24_platt_map.md`).
+**E3, owner score calibration:** the old mapping (d=2→0.5) lets 84% of PIN-knowing impostors exceed 0.5 (owner 96%); class-balanced Platt leaves 27% (owner 90%). At FRR 5% FAR is still ~50%. Wiring it into the backend (`NHIP_OWNER_MAP=platt`) only changes the fallback path, drops the owner at a new recipient from 91% to 3% allowed, and blocks template updates, so it is **left off by default** (`e24_platt_map.md`).
 
 **E7, template poisoning (synthetic data):** without a drift cap the impostor is accepted 100% and the owner is locked out (0.58). Freezing when drift >0.5 sd gives 0.77 (versus 0.85 for the 1 sd cap), with a warning flag. Implemented in `owner.update`; the flag is not yet exposed in the API.
 
@@ -175,41 +172,39 @@ There is no optimum for both sides.
 
 | Group | hold | step up | allow |
 |---|---|---|---|
-| Owner, sitting | 1% | 23% | 76% [73, 79] |
-| Owner, walking | 1% | 50% | 49% [45, 53] |
-| PIN-knowing impostor (different phone) | 1% | 77% | **22% [20, 24]** |
+| Owner | 1% | 22% | 77% [74, 80] |
+| PIN-knowing impostor (different phone) | 1% | 82% | **17% [15, 19]** |
 | Uniform bot / timing noise / replay ±5% / ±10% | 100% | 0% | 0% |
-| Population-sampling bot (T4) | 32% | 65% | 3% |
-| Replay ±15% | 29% | 20% | 51% [48, 54] |
-| Replay ±20% | 3% | 39% | 58% [55, 62] |
-| Replay ±30% | 6% | 62% | 32% [28, 35] |
-| Template-aware bot (scale 1.0) | 4% | 24% | 72% [69, 76] |
-| Template-aware bot (scale 0.5) | 5% | 9% | 87% [84, 89] |
+| Population-sampling bot (T4) | 34% | 63% | 2% |
+| Replay ±15% | 32% | 20% | 49% [45, 52] |
+| Replay ±20% | 4% | 39% | 56% [53, 59] |
+| Replay ±30% | 8% | 65% | 27% [24, 31] |
+| Template-aware bot (scale 1.0) | 4% | 19% | 77% [73, 80] |
+| Template-aware bot (scale 0.5) | 5% | 6% | 89% [87, 91] |
 
-- The conclusion of E24 does not change, and is narrower: a PIN-knowing impostor gets through **22% (not 28%)**, and a walking owner is only allowed 49% (E24: 63%).
-- New recipient: a sitting owner is allowed only 7%, a PIN-knowing impostor 0%, the template-aware bot 6% (scale 1.0) to 22% (scale 0.5).
-- Sweep of A: A=0.20 blocks a PIN-knowing impostor 95% but the owner only gets through 53%; A=0.30 lets the owner through 89% but blocks a PIN-knowing impostor 58%.
-- **Distribution by victim:** the median share of PIN-knowing impostors allowed is 21%, the 90th percentile is 33%, the maximum 58%, Gini 0.28. No victim is allowed above 90%; 1/97 above 50%. That is, no one is "always exposed" in this configuration.
+- The conclusion of E24 does not change, and is narrower: a PIN-knowing impostor gets through **17% (not 28%)**. Numbers re-run 27/11.
+- New recipient: the owner is allowed only 15%, a PIN-knowing impostor 0%, the template-aware bot 18% (scale 1.0) to 40% (scale 0.5).
+- Sweep of A: A=0.20 blocks a PIN-knowing impostor 96% but the owner only gets through 55%; A=0.30 lets the owner through 89% but blocks a PIN-knowing impostor 67%.
+- **Distribution by victim:** the median share of PIN-knowing impostors allowed is 17%, the 90th percentile is 29%, the maximum 46%, Gini 0.33. No victim is allowed above 50%. That is, no one is "always exposed" in this configuration.
 
 **Online demo configuration (rules only, learned models off), same 97 people, known recipient** (`e29_rules_only.md`):
 
 | Group | hold | step up | allow |
 |---|---|---|---|
-| Owner, sitting | 1% | 4% | 95% [94, 96] |
-| Owner, walking | 0% | 13% | 87% [84, 89] |
+| Owner | 0% | 3% | 96% [95, 98] |
 | PIN-knowing impostor (different phone) | 0% | 10% | **89% [88, 91]** |
 | Uniform bot / timing noise / replay ±5% / ±10% | 100% | 0% | 0% |
-| Population-sampling bot (T4) | 0% | 22% | 78% [75, 81] |
-| Replay ±15% | 27% | 1% | 72% [70, 74] |
+| Population-sampling bot (T4) | 0% | 18% | 82% [80, 84] |
+| Replay ±15% | 30% | 1% | 69% [66, 72] |
 | Replay ±20% / ±30% | 1% / 0% | 1% / 1% | 98% / 99% |
-| Template-aware bot (scale 1.0 / 0.5) | 1% / 2% | 5% / 2% | 95% / 95% |
+| Template-aware bot (scale 1.0 / 0.5) | 0% / 4% | 3% / 1% | 96% / 96% |
 
-- **Rules only can barely tell someone who knows the PIN from the owner:** 89% are allowed, versus 22% with the learned models. Distribution by victim: median 92%, 54/97 victims allowed above 90%.
-- The owner has an easier time (95% through) because the system is less suspicious, not because it discriminates better.
+- **Rules only can barely tell someone who knows the PIN from the owner:** 89% are allowed, versus 17% with the learned models. Distribution by victim: median 92%, 49/97 victims allowed above 90%.
+- The owner has an easier time (96% through) because the system is less suspicious, not because it discriminates better.
 - The rule part still firmly catches naive bots and replay ≤±10% (100% hold).
-- **Consequence for the demo:** the scenario "Bảo knows the PIN and gets `step_up`" uses a synthetic persona with clearly different habits, so it works on the rules-only build; with the learned models on, the demo outcome changes (earlier measurement: Bảo was `hold` 14/25 times) and must be re-recorded as a trial. On real people, rules only lets 89% through and the learned models 22%. Do not use the demo (simulated sessions) as evidence of "blocks someone who knows the PIN"; use the E29 measurements.
+- **Consequence for the demo:** the scenario "Bảo knows the PIN and gets `step_up`" uses a synthetic persona with clearly different habits, so it works on the rules-only build; with the learned models on, the demo outcome changes (earlier measurement: Bảo was `hold` 14/25 times) and must be re-recorded as a trial. On real people, rules only lets 89% through and the learned models 17%. Do not use the demo (simulated sessions) as evidence of "blocks someone who knows the PIN"; use the E29 measurements.
 
-**E30, number of enrollment sessions (owner recognition by distance, sitting, 97 people):**
+**E30, number of enrollment sessions (owner recognition by distance, 97 people):**
 
 | k | EER | FAR@FRR5% |
 |---|---|---|
@@ -217,9 +212,9 @@ There is no optimum for both sides.
 | 3 | 0.146 | 0.503 [0.421, 0.627] |
 | 4 | 0.138 | 0.429 [0.360, 0.534] |
 
-More enrollment means fewer impostors get through, with the clearest drop from 2 to 3 sessions. k=1 cannot compute a standard deviation; k=5 leaves no test session because StrokePIN has at most 5 sitting sessions per person-PIN, and k=4 tests on only 1 session. The population prior is taken from the backend's file and does not exclude each victim separately, so it may be slightly optimistic.
+More enrollment means fewer impostors get through, with the clearest drop from 2 to 3 sessions. k=1 cannot compute a standard deviation; k=5 leaves no test session because StrokePIN has at most 5 sessions per person-PIN, and k=4 tests on only 1 session. The population prior is taken from the backend's file and does not exclude each victim separately, so it may be slightly optimistic.
 
-**E31, tuning the fusion weights and threshold A on the E29 data** (tune on 3 folds, test on 2 other folds by person): the best configuration found (wb 0.50, wo 0.30, A 0.26) only raises the average not-allowed rate of the 7 adaptive attack groups from 55% to 57% on the test folds, while lowering PIN-knowing impostor blocking from 81% to 77%. The improvement is smaller than the fluctuation between folds, so **keep the current weights and thresholds**. Lesson: this is not a parameter-tuning problem but a limit of the signal.
+**E31, tuning the fusion weights and threshold A on the E29 data** (tune on 3 folds, test on 2 other folds by person): the best configuration found (wb 0.50, wo 0.30, A 0.26) does not raise the average not-allowed rate of the 7 adaptive attack groups on the test folds (54% → 54%; tune folds 55% → 56%), while lowering PIN-knowing impostor blocking from 86% to 81% (re-run 27/11). The improvement is smaller than the fluctuation between folds, so **keep the current weights and thresholds**. Lesson: this is not a parameter-tuning problem but a limit of the signal.
 
 ### 5.5 Performance and infrastructure
 
@@ -230,9 +225,9 @@ More enrollment means fewer impostors get through, with the clearest drop from 2
 ## 6. Known limitations (should be stated verbatim on the slides)
 
 1. No team data and no real bots; bot training and test share the same 4 generators.
-2. **When the learned models are off (load error or switch), the system falls back to rules only and a PIN-knowing impostor is allowed 89% on real people (E29 rules only)**; the better number (22%) holds only with the learned models on. A test and the script `check_online.py` exist to watch for this.
-3. Owner recognition by touch rhythm is weak (FAR ~50% at FRR 5%), a posture change loses the signal; the PIN-knowing impostor in the measurements uses a different phone, so the numbers are optimistic.
-4. Template-aware bots get past 72–87% and replay ±15% to ±20% gets past 51–58% (E29, 97 people); no countermeasure yet (ActReal reports adaptive attack success of 71–77%).
+2. **When the learned models are off (load error or switch), the system falls back to rules only and a PIN-knowing impostor is allowed 89% on real people (E29 rules only)**; the better number (17%) holds only with the learned models on. A test and the script `check_online.py` exist to watch for this.
+3. Owner recognition by touch rhythm is weak (FAR ~50% at FRR 5%); the PIN-knowing impostor in the measurements uses a different phone, so the numbers are optimistic.
+4. Template-aware bots get past 77–89% and replay ±15% to ±20% gets past 49–56% (E29, 97 people); no countermeasure yet (ActReal reports adaptive attack success of 71–77%).
 5. The learned models use StrokePIN data (CC BY-NC-SA 4.0), so the whole repo follows that license; the models are temporary until team data exists.
 6. No controlled re-enrollment path yet (design in `../plan/dang-ky-lai.md`); there is no way to unfreeze a frozen template.
 7. Vietnamese typing style is not verified on a real keyboard; `vi_*` is not yet wired into owner recognition.

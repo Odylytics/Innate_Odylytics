@@ -1,6 +1,6 @@
-"""E30: number of enrollment sessions k (2, 3, 4) and error distribution by victim, owner recognition by the backend distance (owner.py), StrokePIN, same posture (sitting).
+"""E30: number of enrollment sessions k (2, 3, 4) and error distribution by victim, owner recognition by the backend distance (owner.py), StrokePIN.
 
-StrokePIN has at most 5 sitting sessions per (person, PIN): k=4 leaves 1 test session; k=1 has no standard deviation (dropped); k=5 leaves no test session.
+StrokePIN has at most 5 sessions per (person, PIN): k=4 leaves 1 test session; k=1 has no standard deviation (dropped); k=5 leaves no test session.
 Population prior: the backend's population_prior.json file (computed from a subset of people, without excluding each victim individually: may be slightly optimistic).
 Impostor = another person entering the same PIN on their own device (confounded with device noise). Score = mean |z|; a common threshold is chosen for FRR 5%.
 Gini by victim: FAR of each victim at the common threshold (Eberz 2017: the average hides people who are "always let through").
@@ -22,8 +22,7 @@ for e in S:
     e["f"] = features.extract(e["session"])
 grp = defaultdict(list); by_pin = defaultdict(list)
 for e in S:
-    if e["posture"] == "sit":
-        grp[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
+    grp[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
 USERS = sorted({u for u, _ in grp})
 
 
@@ -43,8 +42,8 @@ def gini(x):
     return float((2 * np.arange(1, n + 1) - n - 1).dot(x) / (n * x.sum())) if x.sum() else 0.0
 
 
-L = ["# E30 — number of enrollment sessions and error distribution by victim (StrokePIN, sitting, backend distance)", "",
-     "k=1 has no standard deviation; k=5 leaves no test session (at most 5 sitting sessions per person-PIN). 95% CI by bootstrap over people. "
+L = ["# E30 — number of enrollment sessions and error distribution by victim (StrokePIN, backend distance)", "",
+     "k=1 has no standard deviation; k=5 leaves no test session (at most 5 sessions per person-PIN). 95% CI by bootstrap over people. "
      "FAR@FRR5% uses a common threshold; the Gini and 'victims with FAR>90%' columns are per victim (the account owner).", "",
      "| k | EER | FAR@FRR5% | Gini of FAR by victim | victims with FAR > 90% | median victim FAR |", "|---|---|---|---|---|---|"]
 for k in (2, 3, 4):

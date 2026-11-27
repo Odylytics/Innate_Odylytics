@@ -88,7 +88,7 @@ class CollectionMeta(BaseModel):
     """Data-collection label. user_id = the account being operated; participant_id = the real person holding the device."""
 
     participant_id: Ident
-    sitting: int = Field(ge=1, le=20)  # which sitting (1 = enrollment, 2+ = tests over time)
+    sitting: int = Field(ge=1, le=20)  # which collection round (1 = enrollment, 2+ = tests over time)
     # impostor: knows the PIN, tries to tap like the account owner; bot: session produced by the attacker simulator
     role: Literal["genuine", "impostor", "bot"]
     tactic: int | None = Field(default=None, ge=1, le=4)  # bot tactic 1–4 (only when role = bot)

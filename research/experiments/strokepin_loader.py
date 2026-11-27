@@ -1,10 +1,12 @@
 """Load StrokePIN (Yao & Wang, 2026; CC BY-NC-SA 4.0) as sessions in the backend's SessionIn format.
 
-Data: 97 people, 200 entries each, 20 6-digit PINs SHARED by everyone, 2 postures (sitting/walking). Standard
+Data: 97 people, 20 6-digit PINs SHARED by everyone. StrokePIN recorded two conditions; since 11/27 the repo uses only the first
+(column `Posture` = "sit"), filtered here; other scripts do not consider the recording condition. Standard
 numeric keypad, coordinates in px. Key centers are NOT provided: estimated per person and per digit = the median touch coordinates
 of that person for that digit; key size = the median distance between adjacent columns/rows (also per person).
 
-Returned session: {"user", "pin", "posture", "sample", "session": SessionIn-dict (no swipe/screens)}
+Returned session: {"user", "pin", "sample", "session": SessionIn-dict (no swipe/screens)}
+Key centers are still estimated over all of that person's entries (as before 11/27).
 """
 
 from pathlib import Path
@@ -30,7 +32,7 @@ def _entries(path: Path) -> list[dict]:
                 taps.append(cur)
                 cur = None
         if len(taps) == len(pin) == 6:  # drop sessions missing Up events and PIN `10140` (5 digits, 11 sessions; a leading 0 may have been lost)
-            out.append({"pin": pin, "posture": e.Posture.iloc[0], "sample": sid, "taps": taps})
+            out.append({"pin": pin, "cond": e.Posture.iloc[0], "sample": sid, "taps": taps})
     return out
 
 
@@ -56,9 +58,9 @@ def load(max_users: int | None = None) -> list[dict]:
             taps = [{"key": ch, "t_down": (t["t_down"] - t0) / 1e6, "t_up": (t["t_up"] - t0) / 1e6, "x": t["x"], "y": t["y"],
                      "w": t["w"], "h": t["h"], "key_cx": c[ch][0], "key_cy": c[ch][1], "key_w": key_w, "key_h": key_h}
                     for ch, t in zip(e["pin"], e["taps"])]
-            if any(t["t_up"] < t["t_down"] for t in taps):
+            if any(t["t_up"] < t["t_down"] for t in taps) or e["cond"] != "sit":
                 continue
-            sessions.append({"user": user, "pin": e["pin"], "posture": e["posture"], "sample": e["sample"],
+            sessions.append({"user": user, "pin": e["pin"], "sample": e["sample"],
                              "session": {"user_id": user, "pin_taps": taps, "swipes": [], "screens": []}})
     return sessions
 
@@ -67,6 +69,6 @@ if __name__ == "__main__":
     s = load()
     users = {x["user"] for x in s}
     pins = {x["pin"] for x in s}
-    print(f"{len(s)} valid entries, {len(users)} people, {len(pins)} PINs, posture: {pd.Series([x['posture'] for x in s]).value_counts().to_dict()}")
+    print(f"{len(s)} valid entries, {len(users)} people, {len(pins)} PINs")
     t = s[0]["session"]["pin_taps"]
     print("example:", s[0]["user"], s[0]["pin"], [round(x["t_up"] - x["t_down"]) for x in t], "ms hold;", "key_w/h:", round(t[0]["key_w"]), round(t[0]["key_h"]))

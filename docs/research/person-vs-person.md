@@ -22,8 +22,8 @@ An **enrollment progress/sample quality bar** is rarer in the academic literatur
 Two numbers, both with sources:
 
 1. **Main bar = % of PIN-knowing impostors blocked** = 1 − FAR@FRR5% by number of enrollment rounds k (`web/src/enrollCurve.ts`).
-   - k = 2, 3, 4: **really measured** on StrokePIN, sitting, backend distance (E30): 14%, 50%, 57%.
-   - k ≥ 5: **extrapolated** with a power law through k = 3 and 4 (StrokePIN has at most 5 sitting rounds, so no rounds are left to test). The interface states clearly "extrapolated, not measured". k = 5 → ~62%, k = 10 → ~74%.
+   - k = 2, 3, 4: **really measured** on StrokePIN, backend distance (E30): 14%, 50%, 57%.
+   - k ≥ 5: **extrapolated** with a power law through k = 3 and 4 (StrokePIN has at most 5 rounds per person–PIN, so no rounds are left to test). The interface states clearly "extrapolated, not measured". k = 5 → ~62%, k = 10 → ~74%.
 2. **Rhythm stability of the enrolling person** (`owner.consistency`): each round is scored against a template built from the remaining rounds (leave-one-out), then averaged. High = steady typing. This is **not** the accuracy of recognizing the person.
 
 Do not put the extrapolated numbers on slides as measurements. A safe way to say it: "the more times you enter, the more PIN-knowing impostors are blocked; going from 3 to 4 rounds is measured, beyond 4 is an estimate".
@@ -39,4 +39,3 @@ Do not put the extrapolated numbers on slides as measurements. A safe way to say
 
 - `POST /v1/users/{id}/enroll` accepts `keep_open` (default false: the old behavior, locks at round 3). With `keep_open=true`, each round rebuilds the template; it locks when `POST /v1/users/{id}/enroll/finish` is called or at 10 rounds. An old template without the `open` flag is still treated as locked.
 - **Security limit:** while enrollment is still open, anyone with the SDK key who knows the user_id can add rounds (up to 10). Login by name has **no password**: demo use only.
-- Enrolling 5–10 rounds in **one sitting** is still weak when posture changes (E9: sitting → walking nearly loses the signal).

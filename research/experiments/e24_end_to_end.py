@@ -1,7 +1,7 @@
 """E24 + E25 + E27: decision matrix for the WHOLE SYSTEM, threshold sweep, and adaptive bots.
 
 Runs exactly the backend `/score` chain (human.score + human_model, replay, owner.score + owner_model, fusion.fuse) in process, without HTTP/DB.
-Data: StrokePIN (real people, 6-digit PINs, sitting/walking). Uses ONLY people who are NOT in the training set of the human/machine model (train_human_model.py: seed 7,
+Data: StrokePIN (real people, 6-digit PINs). Uses ONLY people who are NOT in the training set of the human/machine model (train_human_model.py: seed 7,
 us[62:]) AND of the owner model (train_owner_model.py: seed 21, us[68:]), so we do not measure on trained data.
 The "PIN-knowing" impostor = another person entering the same PIN on THEIR OWN DEVICE (confounded with device noise; treat the results gently); bots come from the team's generator; adaptive bots come from this script.
 Run: python research/experiments/e24_end_to_end.py   (needs numpy, pandas, lightgbm; fastapi not needed)
@@ -30,9 +30,9 @@ EVAL = sorted(not_in_human_train & not_in_owner_train)
 print(f"people never seen by both learned models: {len(EVAL)}/{len(USERS)}; human/machine model: {human_model.loaded()}, owner model: {owner_model.loaded()}")
 for e in S:
     e["f"] = features.extract(e["session"])
-by = defaultdict(lambda: defaultdict(list))  # (user, pin) -> posture -> entries
+by = defaultdict(list)  # (user, pin) -> entries
 for e in S:
-    by[(e["user"], e["pin"])][e["posture"]].append(e)
+    by[(e["user"], e["pin"])].append(e)
 by_pin = defaultdict(list)
 for e in S:
     by_pin[e["pin"]].append(e)
@@ -90,7 +90,7 @@ def mimic(victim_sessions, scale):
     return out
 
 
-GROUPS = ["owner, same posture (sitting)", "owner, changed posture (walking)", "PIN-knowing impostor (other person, other device)", "T1 uniform bot", "T2 timing-noise bot",
+GROUPS = ["owner", "PIN-knowing impostor (other person, other device)", "T1 uniform bot", "T2 timing-noise bot",
           "T3 replay ±5% bot", "T4 population-sampling bot", "replay ±10%", "replay ±15%", "replay ±20%", "replay ±30%",
           "template-aware bot (scale 1.0)", "template-aware bot (scale 0.5)"]
 rows = {g: [] for g in GROUPS}  # g -> [(risk_known, risk_new, human, owner, action_known, action_new, models_off: (..))]
@@ -107,30 +107,28 @@ def record(g, raw, tpl, hist):
     rows[g].append(tuple(r))
 
 
-for (u, pin), post in by.items():
-    if u not in EVAL or len(post["sit"]) < 5:
+for (u, pin), ents in by.items():
+    if u not in EVAL or len(ents) < 5:
         continue
-    es = post["sit"][:]; rng.shuffle(es)
+    es = ents[:]; rng.shuffle(es)
     enr, tests = es[:3], es[3:]
     tpl = owner.build_template([e["f"] for e in enr])
     hist = [e["f"] for e in enr]
     for e in tests:
         record(GROUPS[0], e["session"], tpl, hist); hist = hist + [e["f"]]
-    for e in post["walk"][:4]:
-        record(GROUPS[1], e["session"], tpl, hist)
-    others = [e for e in by_pin[pin] if e["user"] != u and e["posture"] == "sit"]
+    others = [e for e in by_pin[pin] if e["user"] != u]
     for e in rng.sample(others, min(4, len(others))):
-        record(GROUPS[2], {**e["session"], "user_id": u}, tpl, hist)
+        record(GROUPS[1], {**e["session"], "user_id": u}, tpl, hist)
     victim = [e["session"] for e in es]
     pop = [e["session"] for e in rng.sample(by_pin[pin], min(150, len(by_pin[pin])))]
     for _ in range(2):
-        for gi, t in ((3, 1), (4, 2), (5, 3), (6, 4)):
+        for gi, t in ((2, 1), (3, 2), (4, 3), (5, 4)):
             raw = strip(tactics.generate(t, u, pin, victim if t == 3 else pop if t == 4 else victim, rng))
             record(GROUPS[gi], raw, tpl, hist)
         src = rng.choice(victim)
-        for gi, n in ((7, 0.10), (8, 0.15), (9, 0.20), (10, 0.30)):
+        for gi, n in ((6, 0.10), (7, 0.15), (8, 0.20), (9, 0.30)):
             record(GROUPS[gi], strip(noisy_replay(src, n)), tpl, hist)
-        for gi, sc in ((11, 1.0), (12, 0.5)):
+        for gi, sc in ((10, 1.0), (11, 0.5)):
             record(GROUPS[gi], strip(mimic(victim[:6], sc)), tpl, hist)
 
 
@@ -139,7 +137,7 @@ def pct(v):
 
 
 L = ["# E24 / E25 / E27 — whole-system decisions on StrokePIN (real people) + bots", "",
-     f"{len(EVAL)} people never seen by either learned model; enrollment 3 sitting sessions per (person, PIN); replay history = the previous sessions. Current thresholds A={fusion.THRESHOLD_A}, B={fusion.THRESHOLD_B}. "
+     f"{len(EVAL)} people never seen by either learned model; enrollment 3 sessions per (person, PIN); replay history = the previous sessions. Current thresholds A={fusion.THRESHOLD_A}, B={fusion.THRESHOLD_B}. "
      "The PIN-knowing impostor uses a DIFFERENT DEVICE (confounded with device noise). Bots are the team's generator/scripts, not real bots.", ""]
 for ctx, ia in (("known recipient, normal amount", 4), ("NEW recipient", 5)):
     L += [f"## E24 — {ctx}", "", "| Group | n | allow | step_up | hold | (no learned model) allow |", "|---|---|---|---|---|---|"]
@@ -157,24 +155,24 @@ def act(risk, h, A, B):
 
 
 L += ["## E25 — sweep of threshold A (allow < A) and B (hold > B), known recipient, with learned models", "",
-      "Goal: the owner in the same posture almost always gets `allow` (hold ≤ 1%), and PIN-knowing impostors and bots are blocked (not `allow`) as often as possible.", "",
-      "| A | B | owner sitting: allow / hold | owner walking: allow | owner sitting, NEW recipient: allow | PIN-knowing impostor: not allow | T4: not allow | template-aware 1.0: not allow | replay ±15%: not allow |", "|---|---|---|---|---|---|---|---|---|"]
+      "Goal: the owner almost always gets `allow` (hold ≤ 1%), and PIN-knowing impostors and bots are blocked (not `allow`) as often as possible.", "",
+      "| A | B | owner: allow / hold | owner, NEW recipient: allow | PIN-knowing impostor: not allow | T4: not allow | template-aware 1.0: not allow | replay ±15%: not allow |", "|---|---|---|---|---|---|---|---|"]
 def line(A, B):
     d = lambda g: [act(r[0][0], r[0][2], A, B) for r in rows[g]]  # noqa: E731
     na = lambda g: np.mean([x != "allow" for x in d(g)])  # noqa: E731
     s = d(GROUPS[0])
     new = [act(r[0][1], r[0][2], A, B) for r in rows[GROUPS[0]]]
-    return (f"| {A:.2f} | {B:.2f} | {pct([x == 'allow' for x in s])} / {pct([x == 'hold' for x in s])} | {pct([x == 'allow' for x in d(GROUPS[1])])} | {pct([x == 'allow' for x in new])} | "
-            f"{100 * na(GROUPS[2]):.0f}% | {100 * na(GROUPS[6]):.0f}% | {100 * na(GROUPS[11]):.0f}% | {100 * na(GROUPS[8]):.0f}% |")
+    return (f"| {A:.2f} | {B:.2f} | {pct([x == 'allow' for x in s])} / {pct([x == 'hold' for x in s])} | {pct([x == 'allow' for x in new])} | "
+            f"{100 * na(GROUPS[1]):.0f}% | {100 * na(GROUPS[5]):.0f}% | {100 * na(GROUPS[10]):.0f}% | {100 * na(GROUPS[7]):.0f}% |")
 for A, B in [(fusion.THRESHOLD_A, fusion.THRESHOLD_B), (0.10, 0.55), (0.15, 0.55), (0.20, 0.55), (0.30, 0.55), (0.35, 0.55), (0.40, 0.60), (0.45, 0.65), (0.25, 0.40), (0.25, 0.70)]:
     L.append(line(A, B) + (" ← current" if (A, B) == (fusion.THRESHOLD_A, fusion.THRESHOLD_B) else ""))
 L.append("")
 L += ["## E27b — sweep of the replay threshold (the backend currently uses 0.07), with learned models, known recipient", "",
       "A session judged to be a replay gets `hold`. Trade-off: a higher threshold catches more noisy replay bots but wrongly blocks the owner.", "",
-      "| Threshold | owner sitting: hold | owner walking: hold | replay ±10% | ±15% | ±20% | ±30% | template-aware bot (1.0): hold |", "|---|---|---|---|---|---|---|---|"]
+      "| Threshold | owner: hold | replay ±10% | ±15% | ±20% | ±30% | template-aware bot (1.0): hold |", "|---|---|---|---|---|---|---|"]
 for thr in (0.05, 0.07, 0.085, 0.10, 0.12, 0.15):
     h = lambda g: pct([(r[2] < thr) or r[0][4] == "hold" for r in rows[g]])  # noqa: E731
-    L.append(f"| {thr:.3f} | {h(GROUPS[0])} | {h(GROUPS[1])} | {h(GROUPS[7])} | {h(GROUPS[8])} | {h(GROUPS[9])} | {h(GROUPS[10])} | {h(GROUPS[11])} |")
+    L.append(f"| {thr:.3f} | {h(GROUPS[0])} | {h(GROUPS[6])} | {h(GROUPS[7])} | {h(GROUPS[8])} | {h(GROUPS[9])} | {h(GROUPS[10])} |")
 L.append("")
 out = ROOT / "research/results/e24_end_to_end.md"
 out.write_text("\n".join(L) + "\n", encoding="utf-8")

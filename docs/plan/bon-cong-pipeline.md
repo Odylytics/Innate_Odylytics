@@ -17,8 +17,8 @@ The strength of the idea: an attacker must fake touch, shaking, PIN rhythm, typi
 ## Each channel: what exists, evidence, limits
 | Channel | Used for | Team's evidence | Limits, stated plainly |
 |---|---|---|---|
-| **1. Motion** (accelerometer, gyroscope, gravity) | Bot: phone lying still on a table, no hand holding it; owner recognition: how it is held | **E23 (StrokePIN):** motion alone gives EER 0.04–0.07 and FAR 3–10% in the same posture (PIN timing + offsets: EER 0.17–0.20, FAR 69–75%). **Changing posture (sitting → walking): EER 0.44–0.48, equal to guessing.** | **The E23 numbers are optimistic because of the device:** each person has one phone with a different sensor bias, so part of it is recognizing the device, not the person. Someone holding the victim's own phone would not be caught this way. StrokePIN only has accelerometer/gyroscope at ~5 Hz, so it **cannot measure the jolt of a tap**. Literature: HMOG 25.7–34.2% (touch only) → 7–10% (with motion added); BeCAPTCHA ~60% → 80–90%; **ActReal: a system-level agent can fake even the sensors, with 71.1% success against a touch + motion detector.** Web: `DeviceMotion` needs HTTPS and asks for permission on iOS Safari, at most ~60 Hz. |
-| **2. PIN entry** | Owner recognition, human/machine, replay | Already built: EER 0.16, FAR 37.5% (machine learning), naive bot 100%, replay ≤ ±10% 100% | Loses signal when posture changes; a PIN-knowing impostor gets through often. |
+| **1. Motion** (accelerometer, gyroscope, gravity) | Bot: phone lying still on a table, no hand holding it; owner recognition: how it is held | **E23 (StrokePIN):** motion alone gives EER 0.04–0.07 and FAR 3–10% (PIN timing + offsets: EER 0.17–0.20, FAR 66–67%). | **The E23 numbers are optimistic because of the device:** each person has one phone with a different sensor bias, so part of it is recognizing the device, not the person. Someone holding the victim's own phone would not be caught this way. StrokePIN only has accelerometer/gyroscope at ~5 Hz, so it **cannot measure the jolt of a tap**. Literature: HMOG 25.7–34.2% (touch only) → 7–10% (with motion added); BeCAPTCHA ~60% → 80–90%; **ActReal: a system-level agent can fake even the sensors, with 71.1% success against a touch + motion detector.** Web: `DeviceMotion` needs HTTPS and asks for permission on iOS Safari, at most ~60 Hz. |
+| **2. PIN entry** | Owner recognition, human/machine, replay | Already built: EER 0.14, FAR 31.6% (machine learning), naive bot 100%, replay ≤ ±10% 100% | A PIN-knowing impostor gets through often. |
 | **3. Typed phrase** | Extra signal when unsure; Vietnamese tone mark typing style | **E22:** FAR 43–52% at 30 keys (learned model 43%); even-typing bot AUC 0.996 | Vietnamese typing style not yet measured on real people (waiting for tests on phones). |
 | **4. Touch area / swipe** | Bot (constant-velocity swipe) | **E19:** the constant-velocity rule catches 100% of constant-swipe bots, 0/20,896 real human strokes wrongly blocked | Swipe **cannot** recognize the owner (AUC ~0.5); touch area size is device noise (E12b). Channel 4 is an anti-bot gate, not an owner-recognition gate. |
 
@@ -32,7 +32,7 @@ Suggestion: keep the random phrase as the anti-bot/anti-replay gate; a fixed phr
 ## Is the bot caught?
 - **Naive bot** (script, `adb`, basic malware): yes, the touch/swipe and PIN channels already catch ~100%; the motion channel adds "no hand holding it".
 - **Smart bot** (samples from the population, fakes sensors): **not guaranteed**. This is a known limit (E4b: 20–73%; ActReal). The only advantage of fusion is that it forces the attacker to fake several channels consistently.
-- **Independent multiplies, correlated does not:** if the 4 channels were independent, FAR could multiply (e.g. 37.5% × 43% ≈ 16%), but with the same posture, the same device and the same session they are **correlated**; do not multiply before measuring.
+- **Independent multiplies, correlated does not:** if the 4 channels were independent, FAR could multiply (e.g. 31.6% × 43% ≈ 14%), but with the same device and the same session they are **correlated**; do not multiply before measuring.
 
 ## Next work (by value)
 1. **Test an `adb` bot on a phone lying still on a table vs a person holding the phone:** measure motion vibration. Cheap, and decides whether channel 1 is really an anti-bot gate. Needs ≥ 100 Hz (native Android) or ≥ 50 Hz (web, if the device allows).
@@ -44,7 +44,7 @@ Suggestion: keep the random phrase as the anti-bot/anti-replay gate; a fixed phr
 
 ### 7.1 Two scoring layers
 1. **Layer 1, human or machine** (no enrollment needed): rules + optional LightGBM + replay check (`human.py`, `human_model.py`, `replay.py`). Already built. The online version has had the learned models on since 26/11 (`/health`: `human:true, owner:true`; before that it fell back to rules because lightgbm could not load on Vercel).
-2. **Layer 2, person vs person** (needs enrollment): compare the action with the owner's template (`owner.py`, optional `owner_model.py`). Already built; it is only a **risk signal, not a gate** (a PIN-knowing impostor gets through 38–57% at FRR 5%).
+2. **Layer 2, person vs person** (needs enrollment): compare the action with the owner's template (`owner.py`, optional `owner_model.py`). Already built; it is only a **risk signal, not a gate** (a PIN-knowing impostor gets through 32–55% at FRR 5%).
 3. Fusion in `fusion.py`, then `allow | step_up | hold`. Layer 2 only leads to `step_up`, never blocks on its own.
 
 ### 7.2 Four scenarios
@@ -53,12 +53,12 @@ Suggestion: keep the random phrase as the anti-bot/anti-replay gate; a fixed phr
 | **Android** | Accessibility malware injects taps. **Layer 1 is the main layer**; add the phone tilt channel (7.3). | The thief is a person who may know the PIN. **Layer 2 is the main layer**; the impostor uses the owner's own device (no device noise as in the StrokePIN data). |
 | **iPhone** | **Out of scope.** The team's assessment: iOS has no Accessibility equivalent for injecting taps; in the "victim types by following the scammer's instructions" case the person typing is the real owner, Innate cannot catch it, and only context remains (new recipient, amount). Not verified against documentation. | Same as Android; the web SDK has not checked touch size on iOS. |
 
-The owner template is tied to each device: changing device or posture requires a controlled re-enrollment (`dang-ky-lai.md`, not implemented). There are no measurements split by iPhone/Android yet.
+The owner template is tied to each device: changing device requires a controlled re-enrollment (`dang-ky-lai.md`, not implemented). There are no measurements split by iPhone/Android yet.
 
 ### 7.3 Phone tilt while tapping (protects remotely taken over Android)
 - **Idea:** malware injects taps through software, and the phone is usually lying still (e.g. 2 a.m. on a table); a person holding the phone has a tilt angle within a familiar range and a slight shake coinciding with each tap.
 - **Proposed features:** mean tilt angle during PIN entry (gravity vector), deviation of the angle during entry, acceleration amplitude around each `t_down`/`t_up`, correlation between acceleration peaks and tap times.
-- **Put in layer 1 (anti-bot), not used for owner recognition.** E23 gives EER 0.04 but that is device noise and disappears entirely when posture changes; repo convention: do not claim IMU owner recognition.
+- **Put in layer 1 (anti-bot), not used for owner recognition.** E23 gives EER 0.04 but that is device noise; repo convention: do not claim IMU owner recognition.
 - **Limits stated up front:** if the victim is holding the phone when the malware taps, the signal weakens; malware with Accessibility can read and replay sensors (ActReal 71–77%), so it is only additional evidence; web `DeviceMotion` limits frequency and permissions, so the official version needs a native Android SDK; sensor data needs additional consent (Personal Data Protection Law (Luật BVDLCN) 2025); StrokePIN is only ~5 Hz so there is **no data yet to measure this idea**.
 - **Work:** (1) add sensor reading at ≥ 50 Hz to `#/collect` on Android, with two conditions (held in hand and lying on a table), and update the consent form; (2) run an `adb`/`dispatchGesture` bot on a real Android phone to get "still phone with injected taps" samples; (3) measure whether the two groups separate, and only then write `imu_*` into `features.py`.
 
@@ -114,4 +114,4 @@ Decision: **random phrase by default** (anti-bot and anti-replay gate). **A fixe
 
 **How to tell it:** each person has their own tapping rhythm and touch habits; enroll 3 times, compare the current action with that template; the result is a risk signal, not a key.
 
-**Limits stated up front** (numbers on StrokePIN, 97 people, not the team's own data): a PIN-knowing impostor gets through 38–57% at FRR 5%; changing posture nearly loses the signal; touch data is sensitive data (Personal Data Protection Law (Luật BVDLCN) 2025), collected only with consent. No separate iPhone/Android measurements, no real bots yet; PIN-first, phone tilt and the fixed phrase have not been measured.
+**Limits stated up front** (numbers on StrokePIN, 97 people, not the team's own data): a PIN-knowing impostor gets through 32–55% at FRR 5%; touch data is sensitive data (Personal Data Protection Law (Luật BVDLCN) 2025), collected only with consent. No separate iPhone/Android measurements, no real bots yet; PIN-first, phone tilt and the fixed phrase have not been measured.

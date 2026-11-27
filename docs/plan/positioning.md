@@ -59,9 +59,9 @@ Fusion: human/machine score + owner-match score + context (new recipient, unusua
 
 ## Limits that must be stated plainly (public real-human data; not the team's data yet)
 
-- "Owner" score: **EER ~16%; at FRR 5%, 38–57% of PIN-knowing impostors still get through** (E9, E10b, E12b: 57% basic distance, 38% learned model); a posture change nearly loses the signal. This is a **risk signal, not an authentication gate**.
+- "Owner" score: **EER ~14–16%; at FRR 5%, 32–55% of PIN-knowing impostors still get through** (E9, E10b, E12b: 55% basic distance, 32% learned model). This is a **risk signal, not an authentication gate**.
 - Human-like bots (replay tactics, population sampling) are caught weakly; a system-level adaptive attacker can fool both touch and sensors (Wang 2026, ActReal: 71–77%).
-- **Whole-system measurement (E24, E27, 10 people never seen by the learned model):** owners pass 80%, naive bots and replay with noise ≤ ±10% are held 100%; but replay with ±15–30% noise and bots that know the victim's template are let through 48–82% of the time. A 4-digit PIN (web demo) stops the learned owner model from running (E28).
+- **Whole-system measurement (E24, E27, 10 people never seen by the learned model):** owners pass 81%, naive bots and replay with noise ≤ ±10% are held 100%; but replay with ±15–30% noise and bots that know the victim's template are let through 44–86% of the time. A 4-digit PIN (web demo) stops the learned owner model from running (E28).
 - The web SDK cannot see text set directly without keys; a native SDK is needed.
 - No real bot (`adb`, `dispatchGesture`) yet and no team data in any measurement.
 

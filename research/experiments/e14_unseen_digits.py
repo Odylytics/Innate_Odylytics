@@ -3,10 +3,10 @@
 Question: the account number changes with every transaction, so it cannot be matched by digit position like the PIN template (pin_hold_0..5).
 With features that do NOT depend on content, how much of the owner can still be recognized when the digit string was never seen at enrollment?
 
-StrokePIN: 97 people, 20 shared 6-digit PINs, sitting/walking. Each person: enroll with 3 sessions x 3 PINs (9 "transactions") while sitting.
-Test (impostor = another person typing the SAME digit string, same posture):
+StrokePIN: 97 people, 20 shared 6-digit PINs. Each person: enroll with 3 sessions x 3 PINs (9 "transactions").
+Test (impostor = another person typing the SAME digit string):
   A. same digit string as enrolled (unused session)      B. new digit string
-  C. new digit string, 12 digits (2 sessions of 2 new PINs pooled) D. new digit string, while walking
+  C. new digit string, 12 digits (2 sessions of 2 new PINs pooled)
 Features: hold time/flight time (pooled, and by the geometric distance between two keys), offset from the key center by key column/row.
 Touch size REMOVED (it carries device information, as in E12b). Detectors: mean|z| distance (as in the backend) and learned LightGBM
 on |z| from training people (split by PERSON, 3 splits). 95% bootstrap CI by person, averaged across splits.
@@ -56,9 +56,9 @@ def feats(entries: list[dict]) -> np.ndarray:
 S = strokepin_loader.load()
 for e in S:
     e["v"] = feats([e])
-grp = defaultdict(list)  # (user, pin, posture) -> sessions
+grp = defaultdict(list)  # (user, pin) -> sessions
 for e in S:
-    grp[(e["user"], e["pin"], e["posture"])].append(e)
+    grp[(e["user"], e["pin"])].append(e)
 USERS = sorted({e["user"] for e in S})
 
 
@@ -66,7 +66,7 @@ def floor_from(train_users) -> np.ndarray:
     """Std floor = half the median within-person std (from training people only, no leakage)."""
     sds = []
     for u in train_users:
-        X = np.array([e["v"] for (uu, _p, po), es in grp.items() if uu == u and po == "sit" for e in es])
+        X = np.array([e["v"] for (uu, _p), es in grp.items() if uu == u for e in es])
         sds.append(np.nanstd(X, axis=0))
     return 0.5 * np.nanmedian(np.array(sds), axis=0)
 
@@ -81,36 +81,34 @@ def rows(users, floor, seed):
         Z.append(np.abs((v - mu) / sd)); y.append(lab); w.append(u)
 
     for u in users:
-        pins = sorted(p for (uu, p, po), es in grp.items() if uu == u and po == "sit" and len(es) >= K_PER_PIN + 1)
+        pins = sorted(p for (uu, p), es in grp.items() if uu == u and len(es) >= K_PER_PIN + 1)
         if len(pins) < N_PIN_ENR + 2:
             continue
         rng.shuffle(pins)
         enr_pins, new_pins = pins[:N_PIN_ENR], pins[N_PIN_ENR:]
         enr, seen_rest = [], []
         for p in enr_pins:
-            es = rng.sample(grp[(u, p, "sit")], len(grp[(u, p, "sit")]))
+            es = rng.sample(grp[(u, p)], len(grp[(u, p)]))
             enr += es[:K_PER_PIN]; seen_rest += es[K_PER_PIN:]
         X = np.array([e["v"] for e in enr])
         mu, sd = np.nanmean(X, axis=0), np.fmax(np.nanstd(X, axis=0), floor)
 
-        def others(p, po):
-            return [e for (v, pp, ppo), es in grp.items() if pp == p and ppo == po and v != u for e in es]
+        def others(p):
+            return [e for (v, pp), es in grp.items() if pp == p and v != u for e in es]
 
-        tests = {"A": [(e, "sit") for e in seen_rest],
-                 "B": [(e, "sit") for p in new_pins for e in grp[(u, p, "sit")]],
-                 "D": [(e, "walk") for p in new_pins for e in grp.get((u, p, "walk"), [])]}
+        tests = {"A": seen_rest, "B": [e for p in new_pins for e in grp[(u, p)]]}
         for cond, items in tests.items():
-            for e, po in rng.sample(items, min(N_GEN, len(items))):
+            for e in rng.sample(items, min(N_GEN, len(items))):
                 add(cond, e["v"], 0, u, mu, sd)
-                for imp in rng.sample(others(e["pin"], po), min(N_IMP, len(others(e["pin"], po)))):
+                for imp in rng.sample(others(e["pin"]), min(N_IMP, len(others(e["pin"])))):
                     add(cond, imp["v"], 1, u, mu, sd)
         # C: 12 digits = 2 sessions of 2 different new PINs; impostor = ONE other person typing exactly those 2 PINs
         for _ in range(N_GEN):
             p1, p2 = rng.sample(new_pins, 2)
-            add("C", feats([rng.choice(grp[(u, p1, "sit")]), rng.choice(grp[(u, p2, "sit")])]), 0, u, mu, sd)
-            cand = [v for v in USERS if v != u and grp.get((v, p1, "sit")) and grp.get((v, p2, "sit"))]
+            add("C", feats([rng.choice(grp[(u, p1)]), rng.choice(grp[(u, p2)])]), 0, u, mu, sd)
+            cand = [v for v in USERS if v != u and grp.get((v, p1)) and grp.get((v, p2))]
             for v in rng.sample(cand, min(N_IMP, len(cand))):
-                add("C", feats([rng.choice(grp[(v, p1, "sit")]), rng.choice(grp[(v, p2, "sit")])]), 1, u, mu, sd)
+                add("C", feats([rng.choice(grp[(v, p1)]), rng.choice(grp[(v, p2)])]), 1, u, mu, sd)
     return {c: tuple(np.array(a) for a in t) for c, t in out.items()}
 
 
@@ -145,10 +143,9 @@ for sp in SPLITS:
         for name, s in (("mean|z| distance", np.nanmean(Z, axis=1)), ("learned LightGBM", gb.predict_proba(Z)[:, 1])):
             res[(c, name)].append((metrics(s, y), *boot_ci(s, y, w)))
 
-LABEL = {"A": "same digit string as enrolled", "B": "**new digit string** (6 digits)", "C": "**new digit string, 12 digits** (2 sessions pooled)",
-         "D": "new digit string, while **walking**"}
+LABEL = {"A": "same digit string as enrolled", "B": "**new digit string** (6 digits)", "C": "**new digit string, 12 digits** (2 sessions pooled)"}
 L = ["# E14 — recognizing the owner when typing a new digit string (simulated account numbers; StrokePIN, real people)", "",
-     f"Enrollment {N_PIN_ENR} PINs x {K_PER_PIN} sessions while sitting. Impostor = another person typing the **same digit string**, same posture. "
+     f"Enrollment {N_PIN_ENR} PINs x {K_PER_PIN} sessions. Impostor = another person typing the **same digit string**. "
      f"{len(FEATS)} content-independent features, **no** touch size. Split by person (58 training / "
      f"{len(USERS) - 58} test), {len(SPLITS)} splits; 95% bootstrap CI by person, averaged across splits. Lower is better.", "",
      "| Test | Detector | EER | FAR @ FRR 5% | Owner sessions / impostor / people (last split) |", "|---|---|---|---|---|"]
@@ -156,7 +153,7 @@ for (c, name), v in sorted(res.items()):
     est, lo, hi = (np.mean([x[i] for x in v], axis=0) for i in range(3))
     g, i_, n = n_test[c]
     L.append(f"| {LABEL[c]} | {name} | {est[0]:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {est[1]:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] | {g} / {i_} / {n} |")
-L += ["", "Comparison with E12b (same PIN, per-digit-position features, no touch size): distance EER 0.161 / FAR 0.573; "
-      "LightGBM EER 0.158 / FAR 0.375. Different protocol (E12b enrolls 3 sessions of ONE PIN), so only the direction is comparable, not individual numbers."]
+L += ["", "Comparison with E12b (same PIN, per-digit-position features, no touch size): distance EER 0.160 / FAR 0.549; "
+      "LightGBM EER 0.140 / FAR 0.316. Different protocol (E12b enrolls 3 sessions of ONE PIN), so only the direction is comparable, not individual numbers."]
 (ROOT / "research/results/e14_unseen_digits.md").write_text("\n".join(L) + "\n", encoding="utf-8")
 print("\n".join(L))

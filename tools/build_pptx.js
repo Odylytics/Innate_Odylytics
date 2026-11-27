@@ -120,7 +120,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   T(s, 'Unsure? A short typed phrase adds signal.', { x: 8.7, y: 5.2, w: 3.9, h: 0.3, fontSize: 11.5, italic: true, color: MUTED })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.75, y: 5.75, w: 11.83, h: 0.62, rectRadius: 0.08, fill: { color: MIST }, line: { color: MIST, width: 0 } })
   T(s, [{ text: 'One risk score, not four gates in a row. ', options: { bold: true } }, { text: 'Four gates at 95% each would block nearly 1 in 5 genuine owners (1 minus 0.95 to the power of 4).' }], { x: 0.75, y: 5.75, w: 11.83, h: 0.62, fontSize: 13, align: 'center', valign: 'middle' })
-  src(s, 'Chart: two StrokePIN participants (Yao & Wang, IEEE TDSC 2026), 5 sitting entries each, pair at the 75th percentile of separation; different phones, illustrative. Zheng et al., ICNP 2014. Channels: Innate backend features.')
+  src(s, 'Chart: two StrokePIN participants (Yao & Wang, IEEE TDSC 2026), 5 entries each, pair at the 75th percentile of separation; different phones, illustrative. Zheng et al., ICNP 2014. Channels: Innate backend features.')
   s.addNotes('Same PIN, two people: the pattern of hold times and gaps is different and stable. Innate learns the owner pattern and checks it silently.')
 }
 
@@ -244,10 +244,10 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 7, 'Evidence')
   s.addText('On 97 real people, owners pass; impostors get challenged', { placeholder: 'title' })
   const D = [
-    ['Genuine owner\nsitting, n = 1,164', [76, 23, 1], '76%', 'passes silently', 'Walking instead of sitting: 49% allowed'],
-    ['PIN-knowing impostor\nn = 2,328', [22, 77, 1], '78%', 'held or asked', 'Rules only: 89% allowed'],
+    ['Genuine owner\nn = 1,164', [77, 22, 1], '77%', 'passes silently', 'New recipient: 15% pass silently'],
+    ['PIN-knowing impostor\nn = 2,328', [17, 82, 1], '83%', 'held or asked', 'Rules only: 89% allowed'],
     ['Naive bots: even, noisy,\nreplay within 5%', [0, 0, 100], '100%', 'held', 'Replay within 10% also 100% held'],
-    ['Bot sampling the\nhuman population', [3, 65, 32], '97%', 'held or asked', 'The hardest naive bot'],
+    ['Bot sampling the\nhuman population', [2, 63, 34], '97%', 'held or asked', 'The hardest naive bot'],
   ]
   const W = 11.83 / 4
   D.forEach(([t, v, big, sub, note], i) => {
@@ -262,7 +262,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   ;[[JADE, 'allow', 5.29, 0.5], [AMBER, 'step_up', 6.32, 0.68], [CORAL, 'hold', 7.52, 0.45]].forEach(([c, t, x, w]) => dl(s, x, 5.9, 0.28, c, 0.12, t, { w, fontSize: 11, color: MUTED }))
   T(s, 'Share of sessions, %. Owner sessions that are asked for more get the wallet\'s usual face or OTP, never a block.', { x: 0.75, y: 6.25, w: 11.83, h: 0.3, fontSize: 12, color: MUTED, align: 'center' })
   src(s, 'Team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026, DOI 10.21227/thft-4721), 97 people, 5-fold CV by person, models retrained per fold; bots from the team simulator. Protocol after Georgiev et al., FETA, 2022.')
-  s.addNotes('Doughnuts show the decision mix per group. Impostor: 22% pass with learned models, 89% with rules alone. Owner friction is a step-up, not a block.')
+  s.addNotes('Doughnuts show the decision mix per group. Impostor: 17% pass with learned models, 89% with rules alone. Owner friction is a step-up, not a block.')
 }
 
 // ---- 9 Roadmap and limits: each known edge paired with its safety net today and what closes it
@@ -273,8 +273,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   ;[['Known edge', 0], ['Safety net today', 1], ['What closes it', 2]].forEach(([t, i]) => cap(s, t, X[i], 1.85, W[i]))
   hair(s, 0.75, 2.2, 11.83, INK)
   const rows = [
-    [CORAL, 'Bots that copy a rhythm', '32 to 87% pass', 'Naive bots and replays within\n10% were all held (E29).', 'Real malware sessions (adb),\nthen retrain and recalibrate.'],
-    [AMBER, 'Owner changes posture', 'walking: 49% allowed', 'The owner is asked for face or\nOTP, never blocked.', 'A re-enrollment path after a\nstep-up (designed, not built).'],
+    [CORAL, 'Bots that copy a rhythm', '27 to 89% pass', 'Naive bots and replays within\n10% were all held (E29).', 'Real malware sessions (adb),\nthen retrain and recalibrate.'],
+    [AMBER, 'Owners get asked too', '23% of known-recipient transfers', 'The step-up is the wallet\'s own\nface or OTP, never a block.', 'Tune threshold A on the wallet\'s\nown data, starting in shadow mode.'],
     [AMBER, 'Web SDK blind spots', 'no pasted-text or motion signal', 'Rhythm, touch and swipe\nare still scored.', 'A native SDK that sees pasted\ntext and phone motion.'],
     ['8AA0A3', 'Public data only', '97 people, no real malware', 'Every figure reruns from research/,\nwith confidence intervals.', 'Consented volunteers, real bots,\nand the wallet\'s fraud labels.'],
   ]
@@ -295,7 +295,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
     T(s, [{ text: h + '   ', options: { bold: true, color: TEAL, fontFace: H } }, { text: d }], { x, y: 6.05, w: BW, h: 0.4, fontSize: 12.5, align: 'center', valign: 'middle' })
   })
   src(s, 'Edges: team experiment E29 (slide 8). Fine-tuned Transformer: TypeFormer, Stragapede et al., 2023; team run E32 on 30 unseen people, single run, not yet in the API. Adaptive attackers: Wang et al., ActReal, 2026 (preprint); Tey et al., NDSS 2013.')
-  s.addNotes('Be direct about the weak spots, and pair each with what keeps it safe today and what closes it. Bots that copy a real rhythm pass 32 to 87 percent in our test, which is why Innate steps up instead of blocking. Owners who change posture are asked for face or OTP, never blocked. The two bets on top: a fine-tuned transformer, single run and not yet in the API, and the Innate Challenge, a short typed phrase when the wallet is unsure.')
+  s.addNotes('Be direct about the weak spots, and pair each with what keeps it safe today and what closes it. Bots that copy a real rhythm pass 27 to 89 percent in our test, which is why Innate steps up instead of blocking. Owners are asked for face or OTP on 23 percent of known-recipient transfers, never blocked, and the threshold is tuned on the wallet\'s own data, starting in shadow mode. The two bets on top: a fine-tuned transformer, single run and not yet in the API, and the Innate Challenge, a short typed phrase when the wallet is unsure.')
 }
 
 // ---- 10 Business impact (dark): expected loss vs friction. No footer logo; sources line kept.
@@ -305,8 +305,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   T(s, 'Expected loss = transfers \u00D7 fraud rate \u00D7 loss per case \u00D7 share that gets through', { x: 0.75, y: 1.5, w: 11.83, h: 0.3, fontSize: 15, color: MUTED_D })
   const K = [
     ['banknote', 'THE PRIZE', [{ text: '8 trillion+', options: { color: 'FFFFFF' } }], 'VND lost to online scams in Vietnam in 2025. Source: Ministry of Public Security.'],
-    ['shield-check', 'WHAT INNATE CHANGES', [{ text: '100%', options: { color: CORAL } }, { text: ' to ', options: { color: MUTED_D, fontSize: 20 } }, { text: '22%', options: { color: MINT } }], 'of people who know the PIN get through: PIN alone vs Innate (97 people, a different phone, so an upper bound).'],
-    ['clock', 'WHAT IT COSTS', [{ text: '24%', options: { color: 'FFFFFF' } }], 'of normal owner transfers are asked for more when sitting, 51% when walking (97 people).'],
+    ['shield-check', 'WHAT INNATE CHANGES', [{ text: '100%', options: { color: CORAL } }, { text: ' to ', options: { color: MUTED_D, fontSize: 20 } }, { text: '17%', options: { color: MINT } }], 'of people who know the PIN get through: PIN alone vs Innate (97 people, a different phone, so an upper bound).'],
+    ['clock', 'WHAT IT COSTS', [{ text: '23%', options: { color: 'FFFFFF' } }], 'of normal owner transfers are asked for more (known recipient, 97 people).'],
   ]
   const KW = 3.75, KG = (11.83 - 3 * KW) / 2
   K.forEach(([ic, lab, big, cap_], i) => {
@@ -320,8 +320,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.75, y: 5.15, w: 11.83, h: 0.75, rectRadius: 0.12, fill: { color: '0E2527' }, line: { color: '1F3C3E', width: 0.75 } })
   T(s, 'Start in shadow mode, tune on the wallet\u2019s own data, spend friction where loss per case is highest.', { x: 1.05, y: 5.15, w: 11.23, h: 0.75, fontSize: 16, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' })
   s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.15, w: 11.83, h: 0.5, fontFace: H, fontSize: 20, bold: true, align: 'center', margin: 0, valign: 'middle' })
-  T(s, 'Sources: VND 8 trillion+: Ministry of Public Security, 2025, as reported by Saigon Giai Phong and VnEconomy. 100% to 22% and 24%: team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026), 97 people, impostor on a different phone, known recipient.', { x: 0.75, y: 6.7, w: 10.6, h: 0.5, fontSize: 9, italic: true, color: MUTED_D, valign: 'middle' })
-  s.addNotes('Business case in one line: expected loss is transfers times fraud rate times loss per case times the share that gets through. Innate attacks the last factor: a PIN check alone lets every person who knows the PIN through, Innate lets 22 percent through in our test on 97 people (E29, slide 8). That test used a different phone for the impostor, so treat 78 percent as an upper bound, and a step-up is a challenge, not a guaranteed stop. The cost is friction: about 24 percent of normal owner transfers are asked for more when sitting, 51 percent when walking. We have no wallet fraud rate or loss per case, so we do not state a revenue figure; the wallet can plug its own numbers into the formula. The VND 8 trillion figure is national losses from all online scams (Ministry of Public Security, press reports), not only PIN theft. Strategy: shadow mode first, tune the threshold on real data, then spend step-ups where loss per case is highest. Close on the line, then point to the QR on slide 6.')
+  T(s, 'Sources: VND 8 trillion+: Ministry of Public Security, 2025, as reported by Saigon Giai Phong and VnEconomy. 100% to 17% and 23%: team experiment E29 on StrokePIN (Yao & Wang, IEEE TDSC 2026), 97 people, impostor on a different phone, known recipient.', { x: 0.75, y: 6.7, w: 10.6, h: 0.5, fontSize: 9, italic: true, color: MUTED_D, valign: 'middle' })
+  s.addNotes('Business case in one line: expected loss is transfers times fraud rate times loss per case times the share that gets through. Innate attacks the last factor: a PIN check alone lets every person who knows the PIN through, Innate lets 17 percent through in our test on 97 people (E29, slide 8). That test used a different phone for the impostor, so treat 83 percent as an upper bound, and a step-up is a challenge, not a guaranteed stop. The cost is friction: about 23 percent of normal owner transfers (known recipient) are asked for more. We have no wallet fraud rate or loss per case, so we do not state a revenue figure; the wallet can plug its own numbers into the formula. The VND 8 trillion figure is national losses from all online scams (Ministry of Public Security, press reports), not only PIN theft. Strategy: shadow mode first, tune the threshold on real data, then spend step-ups where loss per case is highest. Close on the line, then point to the QR on slide 6.')
 }
 
 ;(async () => { await pres.writeFile({ fileName: OUT }); await applyTheme(OUT, THEME); console.log('wrote', OUT) })()

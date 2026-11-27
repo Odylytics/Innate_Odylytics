@@ -39,16 +39,15 @@ Because the end user has only 3–5 samples, this is a **few-shot** problem. Pop
 
 | | Fingerprint, face | PIN-entry habit |
 |---|---|---|
-| Nature | A body characteristic, nearly fixed | Behavior: changes with posture, mood, time |
-| Accuracy | Very high | **EER ~16%**; at FRR 5%, **38–57%** of PIN-knowing impostors still get through (E9, E12b: 57% with basic distance, 38% with the learned model) |
-| Changed conditions | Stable | **Sitting → walking: the signal is nearly lost** (EER 32–40%) |
+| Nature | A body characteristic, nearly fixed | Behavior: changes with mood, time |
+| Accuracy | Very high | **EER ~14–16%**; at FRR 5%, **32–55%** of PIN-knowing impostors still get through (E9, E12b: 55% with basic distance, 32% with the learned model) |
 | Where the template is stored | In the device's secure chip | **On the server** → must be protected like sensitive biometric data |
 
 Consequence: Innate **does not replace** passwords or Face ID. A low match score **does not hard-block**; it requires stronger authentication. That is why `step_up` exists.
 
 ## How enrollment should be done (a little different from Face ID)
 
-- **Several postures** (sitting, standing, walking) and **several different sittings**. E9 shows that enrolling only while sitting is not enough; Buschek 2015 shows that enrolling within a single session gives numbers twice as optimistic.
+- **Several different collection rounds** (several sittings). Buschek 2015 shows that enrolling within a single session gives numbers twice as optimistic.
 - The template **updates itself slowly** over time, with a **drift cap** so that an impostor cannot "teach" it gradually (E7: without the cap the impostor is accepted 100% and the owner is locked out).
 - Store only **timing, coordinates, event type**; do not store the PIN content, the amount, or the transfer note.
 - Also enroll the **input fields other than the PIN** (amount, recipient, note) if their typing rhythm is to be used as an owner signal.

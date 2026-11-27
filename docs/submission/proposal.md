@@ -52,18 +52,18 @@ When a phone is taken over, or someone knows the PIN, the money leaves through t
 
 | Task | Result |
 |---|---|
-| **Whole system** (E29, StrokePIN, 97 people, 5-fold cross-validation by person, models retrained per fold, known recipient) | Owner sitting: 76% allow / 23% step_up / 1% hold (walking: 49% allow). PIN-knowing impostor (a different phone, so an upper bound): 22% [20, 24] allow / 77% step_up / 1% hold; with the learned models off (rules only) the impostor is allowed 89%. Naive bots and replay ≤ ±10%: **100% hold**. Bot sampling the population: 3% allow / 65% step_up / 32% hold |
-| **Adaptive bots** (E29) | Replay with ±15–30% noise: 32–58% allowed; a bot that knows the victim's template: 72–87% allowed. A stated limit |
-| Owner recognition alone (E12b, StrokePIN, PIN-knowing impostor, 3 enrollment entries) | Machine learning cuts impostors getting through at FRR 5% from **57% to 38%**; no improvement in EER (0.16). Posture change (sitting→walking): EER ~0.31, 71% of impostors get through |
+| **Whole system** (E29, StrokePIN, 97 people, 5-fold cross-validation by person, models retrained per fold, known recipient) | Owner: 77% allow / 22% step_up / 1% hold. PIN-knowing impostor (a different phone, so an upper bound): 17% [15, 19] allow / 82% step_up / 1% hold; with the learned models off (rules only) the impostor is allowed 89%. Naive bots and replay ≤ ±10%: **100% hold**. Bot sampling the population: 2% allow / 63% step_up / 34% hold |
+| **Adaptive bots** (E29) | Replay with ±15–30% noise: 27–56% allowed; a bot that knows the victim's template: 77–89% allowed. A stated limit |
+| Owner recognition alone (E12b, StrokePIN, PIN-knowing impostor, 3 enrollment entries) | Machine learning cuts impostors getting through at FRR 5% from **55% to 32%**; EER 0.160 → 0.140 |
 | Human/machine (unseen real people; generated bots) | Naive bot (even rhythm, timing noise): **100% caught**; a classifier alone catches only 12–26% of replays |
-| Replay check (calibrated on real people, E5b) | Catches **100%** of replays with noise ≤ 10%, 29% at ±15%, 0% from ±20%; false alarm on the owner ~0.1% on short histories (extrapolated about 0.7% at 50 sessions) |
+| Replay check (calibrated on real people, E5b) | Catches **100%** of replays with noise ≤ 10%, 28% at ±15%, 0% from ±20%; false alarm on the owner ~0.2% at 4 past sessions (extrapolated about 3% at 50 sessions; raising the threshold to 0.085 would catch 85% at ±15% but extrapolates to about 15%) |
 | Innate Challenge (E13, 2,260 people typing English phrases) | Impostors getting through at FRR 5% from 81% to 49% going from 6 to 30 keys; Vietnamese not measured |
 | Swipe rules (E19, 41 people, 20,896 strokes) | Uniform-velocity rule: 0 real-human strokes wrongly blocked; the old "straight" rule wrongly blocked 13% of sessions (replaced) |
 
 ## 7. Impact and business view
 
-- **Expected loss = transfers × fraud rate × loss per case × share that gets through.** Innate attacks the last factor: against someone who knows the PIN it goes from 100% (a PIN check alone) to 22% in our test. That is an upper bound (different phone; a step-up is a challenge, not a guaranteed stop).
-- **Cost side, friction:** about 24% of normal owner transfers are asked for more when sitting, 51% when walking. The threshold trades friction against stopping impostors with no free optimum (E24, E31).
+- **Expected loss = transfers × fraud rate × loss per case × share that gets through.** Innate attacks the last factor: against someone who knows the PIN it goes from 100% (a PIN check alone) to 17% in our test. That is an upper bound (different phone; a step-up is a challenge, not a guaranteed stop).
+- **Cost side, friction:** about 23% of normal owner transfers (known recipient) are asked for more. The threshold trades friction against stopping impostors with no free optimum (E24, E31).
 - **We have no wallet fraud rate or loss per case, so we state no revenue figure**; the wallet can plug its own numbers into the formula. Strategy: shadow mode first, tune on the wallet's own data, spend friction where loss per case is highest (new recipients, large amounts).
 - **Users:** protected without extra steps; asked for more only when there are signs, with a reason.
 - **Partners (wallets, banks):** SDK + one API call; configurable thresholds; complements the existing authentication layers.
@@ -71,8 +71,8 @@ When a phone is taken over, or someone knows the PIN, the money leaves through t
 
 ## 8. Risks and limits
 
-- Human-like bots (replay with noise ≥ 15%, template-aware bots 72–87% allowed) and system-level adaptive attackers (ActReal 2026) can get through: Innate is **one layer** among many.
-- The owner walking instead of sitting is allowed only 49% of the time; the owner is then asked for face or OTP, never blocked. Owner recognition alone is weak (~38% of PIN-knowing impostors get through at FRR 5%).
+- Human-like bots (replay with noise ≥ 15%, template-aware bots 77–89% allowed) and system-level adaptive attackers (ActReal 2026) can get through: Innate is **one layer** among many.
+- Owners get asked too: 23% of known-recipient transfers get a step-up (face or OTP), and only 1% are held. Owner recognition alone is weak (~32% of PIN-knowing impostors get through at FRR 5%). Fix: tune threshold A on the wallet's own data, starting in shadow mode.
 - The web SDK cannot see text set directly without key events and has no motion signal → a native SDK is needed.
 - **Public data only and no real bots yet**; the current models are temporary. Our own consented collection through the phone app is ongoing and not used in any figure. Plan in section 9.
 - The web demo wallet and the guided story are static (illustrative decisions); live scoring runs in the phone app.

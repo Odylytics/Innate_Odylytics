@@ -39,7 +39,7 @@ MAX_ENROLL = 10  # open enrollment (keep_open) locks itself at this attempt
 EXPORT_BYTE_BUDGET = 3 * 1024 * 1024  # each export page stops at ~3 MB of raw data: under Vercel's 4.5 MB response limit
 UPDATE_MIN_OWNER = 0.8  # update the template only after a session that was allowed through with a high match score
 UPDATE_MIN_HUMAN = 0.8
-REPLAY_HISTORY = 50  # number of most recent sessions used for matching; FPR grows with the session count (E5: 4-digit PIN; E5b: real people, extrapolated ~0.7% at 50 with threshold 0.07)
+REPLAY_HISTORY = 50  # number of most recent sessions used for matching; FPR grows with the session count (E5: 4-digit PIN; E5b: real people, extrapolated ~3.0% at 50 with threshold 0.07)
 
 
 @asynccontextmanager

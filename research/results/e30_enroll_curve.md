@@ -1,6 +1,6 @@
-# E30 — number of enrollment sessions and error distribution by victim (StrokePIN, sitting, backend distance)
+# E30 — number of enrollment sessions and error distribution by victim (StrokePIN, backend distance)
 
-k=1 has no standard deviation; k=5 leaves no test session (at most 5 sitting sessions per person-PIN). 95% CI by bootstrap over people. FAR@FRR5% uses a common threshold; the Gini and 'victims with FAR>90%' columns are per victim (the account owner).
+k=1 has no standard deviation; k=5 leaves no test session (at most 5 sessions per person-PIN). 95% CI by bootstrap over people. FAR@FRR5% uses a common threshold; the Gini and 'victims with FAR>90%' columns are per victim (the account owner).
 
 | k | EER | FAR@FRR5% | Gini of FAR by victim | victims with FAR > 90% | median victim FAR |
 |---|---|---|---|---|---|

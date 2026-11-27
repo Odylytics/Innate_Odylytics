@@ -172,7 +172,7 @@ Technical notes:
 - Enroll 3–5 rounds → mean + variation of each feature.
 - Score = **scaled Manhattan** (|x − mean| / standard deviation, summed) — the best of the 14 detectors in Killourhy & Maxion 2009 (EER 9.6%); Zheng 2014 also uses it.
 - Easy to explain ("PIN 40% slower").
-- **Realistic expectation**: papers reach EER 3–7% with dozens of enrollment rounds; 3–5 rounds in **one sitting** will be worse, and same-session results are twice as optimistic as cross-session (Buschek 2015). → Split enrollment across **≥ 2 sittings** where possible; measure and report the real numbers.
+- **Realistic expectation**: papers reach EER 3–7% with dozens of enrollment rounds; 3–5 rounds in **one collection round** will be worse, and same-session results are twice as optimistic as cross-session (Buschek 2015). → Split enrollment across **≥ 2 collection rounds** where possible; measure and report the real numbers.
 
 **Version 2 — Pairwise verifier**
 - Learn one shared model: *"do these two sessions come from the same person?"*
@@ -241,7 +241,7 @@ Full paper list: [docs/research/paper-report.md](../research/paper-report.md) ·
 | 5. Machine attack | The "hacker console" taps into the app by itself from another device | Simulates Accessibility malware → reports "not a real person" |
 | 6. Dashboard | Open the operations dashboard, view the case summary, mark correct/incorrect | The "Future Workspace" angle |
 
-Preparation: enroll and try in the same posture; set the threshold to lean toward `step_up` rather than blocking; have a backup video in case the venue network is poor.
+Preparation: set the threshold to lean toward `step_up` rather than blocking; have a backup video in case the venue network is poor.
 
 ---
 
@@ -263,11 +263,11 @@ Preparation: enroll and try in the same posture; set the threshold to lean towar
 |---|---|---|---|
 | **08:00–09:00** | **Whole team**: fix the 2 data contracts — the session JSON the SDK sends (touch events: `t_down`, `t_up`, `x`, `y`, `w`, `h`, `key`) and the API response schema (section 3). Create the repo, deploy "hello world" for the API and frontend right from the start | | |
 | **09:00–12:00** | Function extracting ~40 features from sample JSON; model 2 version 1 (scaled Manhattan) | FastAPI: receive sessions, save to DB, `/enroll`, `/score` (fake numbers first); deploy | Pointer Events SDK + custom-drawn PIN keypad; flow Home → Transfer → Enter account number → PIN |
-| **12:00–13:00** | **Integration 1 + sitting 1 data collection**: 3 people × 5 sessions on **one demo phone** | | |
+| **12:00–13:00** | **Integration 1 + data collection round 1**: 3 people × 5 sessions on **one demo phone** | | |
 | **13:00–17:00** | Model 1 (Random Forest/LightGBM) on human sessions + bot sessions; fusion function (tanh normalization, weights); Vietnamese reason sentences from z-score | 4-tactic simulator → generate bot sessions for Member 1; **real attack source**: `adb shell input tap` from the laptop into the demo wallet; load the models into the API | Rhythm enrollment screen, result screen with reasons; table-style dashboard (suspicious sessions + reasons + correct/incorrect button) |
 | **17:00** | ⚑ **Decision milestone**: if model 2 cannot separate the 3 people on the team → the pitch focuses on **"human or machine"**, with "is it the owner" as a secondary signal | | |
-| **17:00–19:00** | **End-to-end integration 2 + sitting 2 data collection**: the team redoes 5 sessions each + 3–5 friends (with consent forms) + a round of "knows the PIN, impersonates the owner" | | |
-| **19:00–21:00** | Evaluation: time-based split (sitting 1 enroll → sitting 2 test), FAR@FRR 5%, EER, bot catch rate per tactic | Template update with drift cap; measure latency; demo account; cost cap | Run the full flow on the demo phone, fix interface bugs; rehearse the demo script in section 6 |
+| **17:00–19:00** | **End-to-end integration 2 + data collection round 2**: the team redoes 5 sessions each + 3–5 friends (with consent forms) + a round of "knows the PIN, impersonates the owner" | | |
+| **19:00–21:00** | Evaluation: time-based split (collection round 1 enroll → collection round 2 test), FAR@FRR 5%, EER, bot catch rate per tactic | Template update with drift cap; measure latency; demo account; cost cap | Run the full flow on the demo phone, fix interface bugs; rehearse the demo script in section 6 |
 | **21:00–23:00** | Put preliminary numbers into the slides | Draft README (libraries, AI tools, data sources, existing assets) | 10-page slide skeleton + 3-minute video script |
 
 **Cut from the build day** (do later if time allows, does not affect the demo): pairwise model (version 2), LLM summary in the dashboard, accelerometer, drift direction check.
@@ -276,7 +276,7 @@ Preparation: enroll and try in the same posture; set the threshold to lean towar
 
 | Milestone | Work |
 |---|---|
-| By 27/11 | Collect ~25 people × ≥ 2 sittings × 5 sessions in total; **contest registration + questions to the organizers before 23:59 27/11** |
+| By 27/11 | Collect ~25 people × ≥ 2 collection rounds × 5 sessions in total; **contest registration + questions to the organizers before 23:59 27/11** |
 | 28/11–1/12 | Re-evaluate on the full data (DET, confidence intervals, per-person error distribution); the cut items above if time allows |
 | 2/12 | Feature freeze; load test, backup, always-on hosting |
 | 3/12 | Final slides, video, 1-page PDF, source code zip. **Submit before 23:59** |
@@ -285,9 +285,9 @@ Preparation: enroll and try in the same posture; set the threshold to lean towar
 
 | Risk | Handling |
 |---|---|
-| 3–5 enrollment rounds are not enough to tell people apart | Measure early (1/3/5 rounds), split enrollment across ≥ 2 sittings, report the real numbers; 17:00 decision milestone on build day → shift focus to "human or machine" (do not rely on "being coached" — no study exists) |
+| 3–5 enrollment rounds are not enough to tell people apart | Measure early (1/3/5 rounds), split enrollment across ≥ 2 collection rounds, report the real numbers; 17:00 decision milestone on build day → shift focus to "human or machine" (do not rely on "being coached" — no study exists) |
 | The "being coached" signal / a victim scammed over the phone | Only vendor material exists (BioCatch…) → present as an extension direction, not in the main figures |
-| Judges nervous on stage → the real owner wrongly rejected | Enroll & try in the same posture; threshold leans toward `step_up` |
+| Judges nervous on stage → the real owner wrongly rejected | Threshold leans toward `step_up` |
 | A sophisticated bot (tactic 4) gets through | Acknowledge in the pitch; combine several signals; native SDK has extra device signals |
 | Falsely good numbers from flawed evaluation | Time-based split, one device, report single-session level |
 | Data law | Personal Data Protection Law (Luật BVDLCN) 2025 + Decree 356/2025 (effective 1/1/2026) classify biometrics as sensitive data → treat touch/swipe data as sensitive: ask for explicit consent, store only timing/coordinate features, do not store content, state it clearly in the README |

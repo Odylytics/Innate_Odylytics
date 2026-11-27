@@ -1,11 +1,11 @@
 # Team data collection plan (small group, 25/11/2026)
 
-Goal: replace the "temporary" numbers (a model trained on public data and generated bots) with measurements under **the team's own conditions**: same device, same posture, the PIN and challenge sentences of the same person. This is the most valuable remaining task (see `ai-research.md`, E22).
+Goal: replace the "temporary" numbers (a model trained on public data and generated bots) with measurements under **the team's own conditions**: same device, the PIN and challenge sentences of the same person. This is the most valuable remaining task (see `ai-research.md`, E22).
 
 ## Scale and schedule
 - **10–20 volunteers** (friends, acquaintances), each doing **2 sessions at least 1 day apart** (session 1 enrolls, session 2 tests across time exactly as in FETA). Finish collecting before 01/12 so the numbers make it into the slides; **after 03/12 the slides cannot be changed**.
-- Each person uses **their own phone** (a keyboard they know), sitting and holding the phone as usual. Record the posture (`note`: sitting/walking/lying).
-- Collection page `#/collect` (version of 25/11): it asks only for full name + email and a consent box, then a 10-digit keypad: **create your own 6-digit PIN** (stored, see below), 5 entries in total (later entries must match the first; wrong entries are not recorded); only after all 5 are done are the 5 sessions sent. It does not ask for posture, sitting number, or role. Original plan: 3 entries of PIN `1593` (enrollment), 5 entries of the test PIN, 5 random challenge sentences (`GET /v1/challenge`), and a few rounds where a second person (a PIN-knowing impostor) taps on that person's account.
+- Each person uses **their own phone** (a keyboard they know), holding the phone as usual.
+- Collection page `#/collect` (version of 25/11): it asks only for full name + email and a consent box, then a 10-digit keypad: **create your own 6-digit PIN** (stored, see below), 5 entries in total (later entries must match the first; wrong entries are not recorded); only after all 5 are done are the 5 sessions sent. It does not ask for sitting number or role. Original plan: 3 entries of PIN `1593` (enrollment), 5 entries of the test PIN, 5 random challenge sentences (`GET /v1/challenge`), and a few rounds where a second person (a PIN-knowing impostor) taps on that person's account.
 - Bots: use `attacker/` (4 tactics) and `adb` on 1–2 real devices to get a bot set independent of the generator.
 
 ## Using the existing infrastructure

@@ -42,7 +42,7 @@ PDF text was extracted and compared.
 
 | Claim in the plan | Result of the check |
 |---|---|
-| Zheng 2014: EER 3.65–7.34% when entering a PIN | **Correct.** PIN `3-2-4-4` 3.65%, `1-1-1-1` 6.96%, `5-5-5-5` 7.34%, 8-digit PIN ~4.5%. 80+ people, one posture, 85 training entries per person, and **uses acceleration, pressure, contact size and timing together**. |
+| Zheng 2014: EER 3.65–7.34% when entering a PIN | **Correct.** PIN `3-2-4-4` 3.65%, `1-1-1-1` 6.96%, `5-5-5-5` 7.34%, 8-digit PIN ~4.5%. 80+ people, 85 training entries per person, and **uses acceleration, pressure, contact size and timing together**. |
 | Buschek 2015: adding touch position cuts EER by 26.4–36.8% | **Correct.** 28 people, 2 weeks. Evaluating within a single session gives EER less than half that of across sessions. |
 | FETA 2022: EER 4.9% → 13.8% | **Correct.** Reviewed 30 papers, all made at least one error. Putting impostor data into training flatters results by 2.55 points, mixing device generations by 3.2–5.8 points. |
 | BioTouchPass2: EER 2.38% | **Correct.** 217 people, 4-digit PIN, RNN model. Under imitation attacks, EER is 10.4–15%. |
@@ -81,7 +81,7 @@ Other points:
 |---|---|
 | 1 | Register for the contest and send questions to the organizers **before 23:59 on 27/11** |
 | 2 | Web demo wallet + Pointer Events SDK + custom-drawn PIN keypad (currently blocking everything else) |
-| 3 | Collect real data: ≥ 2 sittings, one phone, with consent forms |
+| 3 | Collect real data: ≥ 2 collection rounds, one phone, with consent forms |
 | 4 | Backend: "duplicate of an old session" check to catch tactic 3 |
 | 5 | Model 1 (LightGBM/RF), keeping the `adb` bot source separate as an independent test set |
 | 6 | Calibrate `owner.py` (the mapping d=2 → 0.5 is too lenient) on real data |

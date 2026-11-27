@@ -1,7 +1,7 @@
 """E22: ways to reduce FAR (strangers getting through) for Innate Challenge, measured on Aalto (1,000 evaluation people, 30 keys, test sentence differs from enrollment sentence, E13 protocol).
 
-(a) number of enrollment sentences K = 1, 3, 5, 8;  (b) add a phone-holding posture signal (tilt angles beta/gamma: mean, std) — OPTIMISTIC because all sentences of one person
-fall in ONE session, so the posture matches between enrollment and test (it cannot be separated by time); on a real phone this is a sensor that needs permission, iOS Safari requires a permission grant, and it is sensitive data;
+(a) number of enrollment sentences K = 1, 3, 5, 8;  (b) add a phone-holding angle signal (tilt angles beta/gamma: mean, std) — OPTIMISTIC because all sentences of one person
+fall in ONE session, so the holding angle matches between enrollment and test (it cannot be separated by time); on a real phone this is a sensor that needs permission, iOS Safari requires a permission grant, and it is sensitive data;
 (c) replace "mean |z|" with a learned model (LightGBM on the deviation vector, trained on a separate group of people, disjoint from the evaluation group).
 Data: research/data/aalto_note_orient.jsonl (aalto_note_orient.py; gitignored). Run: python experiments/e22_improve_far.py
 """
@@ -66,7 +66,7 @@ def f_orient(s):
 
 
 FE = {"raw (6, as in E13)": f_time, "raw + digraph-normalized (12)": f_time_z,
-      "12 + phone-holding posture (16)": lambda s: np.concatenate([f_time_z(s), f_orient(s)])}
+      "12 + phone-holding angle (16)": lambda s: np.concatenate([f_time_z(s), f_orient(s)])}
 cache = {}
 
 
@@ -120,7 +120,7 @@ L = ["# E22 — ways to reduce FAR at 30 keys (Aalto, real people; test sentence
      "| Configuration | EER | FAR @ FRR 5% |", "|---|---|---|"]
 for name in FE:
     pv = prior_var(name)
-    for K in (3,) if "posture" not in name and "normalized" in name else (1, 3, 5, 8) if name.startswith("raw (6") else (3,):
+    for K in (3,) if "angle" not in name and "normalized" in name else (1, 3, 5, 8) if name.startswith("raw (6") else (3,):
         d = deviations(name, K, pv, eval_p, 12)
         L.append(report(f"{name}, K={K} enrollment sentences", {p: (g.mean(1), i.mean(1)) for p, (g, i) in d.items()}))
 

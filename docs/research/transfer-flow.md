@@ -69,20 +69,18 @@ Already in the API: the `set_text` rule on the amount field, the PIN model (huma
 
 ## 4. Proposed experiments
 
-**E14. Owner recognition when typing new digits (doable now, StrokePIN data).** StrokePIN has 20 6-digit PINs shared by 97 people. Enroll on one group of PINs and then test on **unseen PINs**, using content-independent features. This is the closest simulation of typing a new account number. Question: when the content changes, how much owner-account signal remains compared with E12b (FAR 0.375 at FRR 5% on the same PIN)? Limits: 6 digits is shorter than an account number, and the keypad in StrokePIN may differ from the app's keypad.
+**E14. Owner recognition when typing new digits (doable now, StrokePIN data).** StrokePIN has 20 6-digit PINs shared by 97 people. Enroll on one group of PINs and then test on **unseen PINs**, using content-independent features. This is the closest simulation of typing a new account number. Question: when the content changes, how much owner-account signal remains compared with E12b (FAR 0.316 at FRR 5% on the same PIN)? Limits: 6 digits is shorter than an account number, and the keypad in StrokePIN may differ from the app's keypad.
 
-**E14 result (25/11, [`../../research/results/e14_unseen_digits.md`](../../research/results/e14_unseen_digits.md)).** Enrollment 3 PINs x 3 rounds while sitting, 20 content-independent features, no touch size used, the impostor types the same digit string:
+**E14 result (25/11, [`../../research/results/e14_unseen_digits.md`](../../research/results/e14_unseen_digits.md)).** Enrollment 3 PINs x 3 rounds, 20 content-independent features, no touch size used, the impostor types the same digit string:
 
 | Test | LightGBM: EER | LightGBM: FAR @ FRR 5% |
 |---|---|---|
-| same digit string as enrolled | 0.250 | 0.537 |
-| new digit string, 6 digits | 0.325 | 0.697 |
-| new digit string, 12 digits | 0.268 | 0.588 |
-| new digit string, while walking | 0.367 | 0.822 |
+| same digit string as enrolled | 0.245 | 0.500 |
+| new digit string, 6 digits | 0.328 | 0.697 |
+| new digit string, 12 digits | 0.284 | 0.607 |
 
-- With a new digit string the signal clearly weakens: at the level where the owner is bothered only 5% of the time, **~70% of impostors still get through** with 6 digits, **~59%** with 12 digits. Longer typing helps, in line with E13.
+- With a new digit string the signal clearly weakens: at the level where the owner is bothered only 5% of the time, **~70% of impostors still get through** with 6 digits, **~61%** with 12 digits. Longer typing helps, in line with E13.
 - LightGBM is better than simple distance on every row; simple distance is nearly useless at FRR 5% (FAR ~0.92).
-- Changing posture (walking) loses almost all the signal, as in E9.
 - **Conclusion:** account number typing rhythm is **not enough to stand alone**. It should only be additional evidence on top of the PIN score, and only means something when the account number is long enough. The next thing to measure: does combining the PIN score (E12b) with the account number score reduce FAR.
 - Limits: StrokePIN has no real account numbers; 12 digits is 2 separate typing rounds put together, not one continuous entry; one phone per person.
 
@@ -115,7 +113,7 @@ Order: E14 first (needs no app, answers the question "does typing the account nu
 
 Sources: [Timo](https://timo.vn/blogs/so-tai-khoan-ngan-hang-la-gi-nhung-dieu-ban-can-biet-ve-so-tai-khoan-ngan-hang/), [QuanTriMang](https://quantrimang.com/cong-nghe/so-tai-khoan-ngan-hang-ghi-o-dau-co-bao-nhieu-so-152869), [TheBank](https://m.thebank.vn/blog/16614-tong-hop-dau-so-tai-khoan-cua-cac-ngan-hang-vietcombank-agribank-bidv-hien-nay.html), [VietnamBiz](https://vietnambiz.vn/cap-nhat-danh-sach-dau-so-tai-khoan-cac-ngan-hang-moi-nhat--2022530154256452.htm), [Chanhtuoi](https://chanhtuoi.com/dau-so-tai-khoan-cac-ngan-hang-p8902.html). In addition, many banks let customers choose a "vanity number" or use a phone number as the account number; the length is then different from the table above. For this part we **did not find a confirming source**.
 
-**Meaning:** the largest banks (Vietcombank, BIDV, VietinBank, Agribank, Techcombank, MB) use **12–14 digits**. By E14, 12 unseen digits give EER 0.27 and FAR 0.59 (FRR 5%), compared with 0.33 / 0.70 for only 6 digits. That means for most recipients at these banks, the account number step **adds roughly twice as many keys** as the PIN, which is the range where the signal starts to be useful. For ACB and VPBank (8–9 digits) the benefit is smaller.
+**Meaning:** the largest banks (Vietcombank, BIDV, VietinBank, Agribank, Techcombank, MB) use **12–14 digits**. By E14, 12 unseen digits give EER 0.28 and FAR 0.61 (FRR 5%), compared with 0.33 / 0.70 for only 6 digits. That means for most recipients at these banks, the account number step **adds roughly twice as many keys** as the PIN, which is the range where the signal starts to be useful. For ACB and VPBank (8–9 digits) the benefit is smaller.
 
 ### 5.2. How transfers happen
 

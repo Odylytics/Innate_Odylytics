@@ -81,7 +81,7 @@ Only timing (ms, counted from entering the screen) and coordinates (px), **no PI
 - `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = key center and size (`getBoundingClientRect`).
 - Do not send `pressure`. Do not rely on `isTrusted`.
 - Limits: ≤ 30 swipes per session, ≤ 200 points per swipe (~3 seconds at 60 Hz); longer ones are truncated by the SDK.
-- **During data collection** add `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = which sitting it is (1 enrollment, 2+ testing); `role` = `genuine`, `impostor` (knows the PIN, tries to tap like the owner) or `bot` (with `tactic` 1–4, sent by the [simulator](../attacker/README.md)). Impersonation entries: `user_id` is the owner's account, `participant_id` is the person tapping.
+- **During data collection** add `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = which collection round it is (1 enrollment, 2+ testing); `role` = `genuine`, `impostor` (knows the PIN, tries to tap like the owner) or `bot` (with `tactic` 1–4, sent by the [simulator](../attacker/README.md)). Impersonation entries: `user_id` is the owner's account, `participant_id` is the person tapping.
 - The server rejects (422): `t_up < t_down`, NaN/negative numbers, `user_id` with unusual characters, too many events.
 
 **Input fields other than the PIN (`fields`, optional):** amount, recipient, note. Only **timing, event type and character count** are sent, not the content.

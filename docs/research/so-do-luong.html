@@ -66,10 +66,10 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
     <div class="cards">
       <article class="card"><div class="head"><h3>With learned models</h3><span class="tag ok">Current online build (since 26/11)</span></div>
         <dl><dt>Includes</dt><dd>Rules + LightGBM human/bot, distance + LightGBM owner check, replay.</dd>
-        <dt>Measured</dt><dd>97 people (E29): PIN-knowing impostor allowed <b>22%</b>, owner sitting 76%, owner walking 49%.</dd></dl></article>
+        <dt>Measured</dt><dd>97 people (E29): PIN-knowing impostor allowed <b>17%</b>, owner allowed 77%.</dd></dl></article>
       <article class="card"><div class="head"><h3>Rules only</h3><span class="tag bad">Fallback, or when models are off</span></div>
         <dl><dt>Includes</dt><dd>Human/bot rules + normalized distance + replay; learned models off (<code>/health</code> reports models false). The online build was in this state until 26/11, because lightgbm could not be loaded on Vercel; fixed.</dd>
-        <dt>Measured</dt><dd>97 people (E29b): PIN-knowing impostor allowed <b>89%</b>, owner sitting 95%. Naive bots and replay within ±10% still 100% hold.</dd></dl></article>
+        <dt>Measured</dt><dd>97 people (E29b): PIN-knowing impostor allowed <b>89%</b>, owner allowed 96%. Naive bots and replay within ±10% still 100% hold.</dd></dl></article>
     </div>
   </section>
 
@@ -201,26 +201,26 @@ svg .acc{fill:var(--acc-bg);stroke:var(--accent);stroke-width:1.5}
         <dl><dt>Input</dt><dd>The current session and the history of past sessions of the same account.</dd>
         <dt>How it runs</dt><dd>Mean relative difference of key hold, key gap, plus center offset. Takes the nearest past session; ≤ 0.07 is replay.</dd>
         <dt>Output</dt><dd>human forced to ≤ 0.1, so hold.</dd>
-        <dt>Measured</dt><dd>Catches 100% up to ±10%, 30% at ±15%, 1% at ±20%. Wrongly blocks the owner 0.28% (3 past sessions) to 0.64% (8 sessions) (E5b).</dd></dl></article>
+        <dt>Measured</dt><dd>Catches 100% up to ±10%, 28% at ±15%, 0% at ±20%. Wrongly blocks the owner 0.08% (2 past sessions) to 0.20% (4 sessions) (E5b).</dd></dl></article>
 
       <article class="card"><div class="head"><h3>Owner check by distance</h3><span class="tag bad">Weak, not a gate</span></div>
         <dl><dt>Input</dt><dd>The session and the template (mu, sd of each feature).</dd>
         <dt>How it runs</dt><dd>z = (x − mu) / sd, d = mean |z|, converted to a score with a sigmoid. The sd of timing features is shrunk toward the population variance (nu = 5) because there are only 3 samples.</dd>
         <dt>Output</dt><dd>owner 0 to 1; 0 if there is no PIN evidence.</dd>
-        <dt>Measured</dt><dd>EER 0.20, FAR 0.57 at FRR 5% in the same posture; after a posture change EER 0.32 (E9).</dd></dl></article>
+        <dt>Measured</dt><dd>EER 0.20, FAR 0.57 at FRR 5% with shrinkage toward the population, 3 enrollment sessions (E9).</dd></dl></article>
 
       <article class="card"><div class="head"><h3>LightGBM owner check</h3><span class="tag warn">Better, still weak</span></div>
         <dl><dt>Input</dt><dd>|z| of 24 features, without touch size (avoids learning the device).</dd>
         <dt>How it runs</dt><dd>Learns which features matter more instead of treating all features equally. Runs only for a full 6-key PIN; a 4-digit PIN falls back to distance.</dd>
         <dt>Output</dt><dd>Replaces the owner score, FRR 5% threshold is 0.5.</dd>
         <dt>Config</dt><dd>Off in the online demo build.</dd>
-        <dt>Measured</dt><dd>FAR@FRR5% drops 0.573 → 0.375 (sitting), 0.944 → 0.708 (walking) (E12b).</dd></dl></article>
+        <dt>Measured</dt><dd>FAR@FRR5% drops 0.549 → 0.316 (E12b).</dd></dl></article>
 
       <article class="card"><div class="head"><h3>Risk fusion</h3><span class="tag warn">No optimal point</span></div>
         <dl><dt>Input</dt><dd>human, owner, new recipient, amount off history.</dd>
         <dt>How it runs</dt><dd>Weighted sum, then two thresholds A = 0.25 and B = 0.55. Not three sequential AND gates, because then the rate of wrongly blocking the owner compounds.</dd>
         <dt>Output</dt><dd>risk, action, the contributions.</dd>
-        <dt>Measured</dt><dd>A = 0.25, 97 people (E29, with learned models): owner sitting allowed 76%, PIN-knowing impostor not allowed 78%. Raising A lets the owner through more easily but lets more PIN-knowing impostors in. Tuning the weights on data adds only ~2 points, so they stay as they are (E31).</dd></dl></article>
+        <dt>Measured</dt><dd>A = 0.25, 97 people (E29, with learned models): owner allowed 77%, PIN-knowing impostor not allowed 83%. Raising A lets the owner through more easily but lets more PIN-knowing impostors in. Tuning the weights on data adds nothing on the test folds (54% → 54%), so they stay as they are (E31).</dd></dl></article>
     </div>
   </section>
 

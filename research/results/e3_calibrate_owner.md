@@ -1,4 +1,4 @@
-# E3 — owner score calibration (StrokePIN, 6-digit PIN, enrollment on 3 sitting sessions)
+# E3 — owner score calibration (StrokePIN, 6-digit PIN, enrollment on 3 sessions)
 
 Platt fit on half A (18634 sessions): score = sigmoid(-1.216·d + 1.390). Tested on half B (18788 sessions, entirely different people).
 
@@ -13,10 +13,10 @@ Conclusion: see the numbers above. Platt only shifts the threshold and adds no s
 
 ## Is it wired into the backend? Tried (26/11): there is a switch, NOT on by default
 
-`owner.py` has `NHIP_OWNER_MAP=platt` (default `legacy`). E24 rerun with Platt (`e24_platt_map.md`):
+`owner.py` has `NHIP_OWNER_MAP=platt` (default `legacy`). E24 rerun with Platt (`e24_platt_map.md`, rerun 27/11):
 - The columns **with the learned model are unchanged**: for 6-digit PINs the owner score comes from `owner_model` (LightGBM), and Platt only changes the fallback distance path (4-digit PIN, model off, missing features).
-- Fallback path, known recipient: PIN-knowing impostor passes 90% -> 79%, sitting owner 96% -> 94%. A slight benefit.
-- Fallback path, **new recipient**: sitting owner allow 92% -> 2%, PIN-knowing impostor 62% -> 0%. The maximum owner score under Platt is only ~0.63, so the owner's fused risk is always >= 0.13, and adding 0.15 for a new recipient exceeds A=0.25: everyone gets `step_up`.
+- Fallback path, known recipient: PIN-knowing impostor passes 89% -> 77%, owner 96% -> 94%. A slight benefit.
+- Fallback path, **new recipient**: owner allow 91% -> 3%, PIN-knowing impostor 61% -> 0%. The maximum owner score under Platt is only ~0.63, so the owner's fused risk is always >= 0.13, and adding 0.15 for a new recipient exceeds A=0.25: everyone gets `step_up`.
 - `UPDATE_MIN_OWNER = 0.8` is also never reached under Platt, so the template stops updating (the `test_full_flow` test fails when it is on).
 
 To turn Platt on, A/B and `UPDATE_MIN_OWNER` must be moved at the same time and E24/E25 re-measured. That is only worth doing if the fallback path is really used, and it should be done on the team's data instead of StrokePIN.
