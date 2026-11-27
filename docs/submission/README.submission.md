@@ -11,7 +11,7 @@ Innate runs silently when a payment is confirmed. It scores how the person touch
 | | |
 |---|---|
 | Demo website | **https://innate.odylytics.com/**. On a computer: static demo wallet at `/#/demo` and guided story at `/#/demo?story=1` (no login, nothing is sent, decisions are illustrative). On a phone the site opens the phone app at `/#/collect` (live scoring against the API) |
-| Scoring API | https://nhip-api-taupe.vercel.app · Swagger at `/docs` · status at `/health` |
+| Scoring API | https://nhip-api-taupe.vercel.app (the hostname keeps our earlier project name, Nhịp, so the live deploy does not break) · Swagger at `/docs` · status at `/health` |
 | Credentials | Demo wallet: none, demo PIN `159357` (6 digits). Phone app: sign up with your own email and a password, then make up a throwaway 6-digit practice PIN; do not reuse a real PIN or password. The SDK key is built into the web app |
 
 Phone app (live scoring): sign up, type your practice PIN 5 to 10 times while an accuracy bar shows how well Innate would stop someone who knows it, then send a transfer (allowed). Hand the phone to someone who knows your PIN to see the difference. Demo wallet on a computer (static): enroll with PIN `159357` three times, send a transfer, then play the malware or PIN-thief case to see the three decisions, allow, step_up and hold. Those decisions are illustrative, not scored. The product stays online until 11 Dec 2026. Check it any time with `python backend/scripts/check_online.py <API URL>`.

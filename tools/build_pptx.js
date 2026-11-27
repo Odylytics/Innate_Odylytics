@@ -185,7 +185,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
     T(s, [{ text: n + '   ', options: { bold: true, color: TEAL, fontFace: H } }, { text: t }], { x, y: 6.05, w: SW, h: 0.4, fontSize: 12.5, align: 'center', valign: 'middle' })
     if (i < 2) link(s, x + SW, x + SW + SG, 6.25)
   })
-  src(s, 'Decision mix per group: team experiment E29 (slide 8). Step-up as standard practice: Wiefling et al., IFIP SEC 2019. Integration: Innate scoring API, Swagger at nhip-api-taupe.vercel.app/docs. The rollout order is our proposal and has not been piloted.')
+  src(s, 'Decision mix per group: team experiment E29 (slide 8). Step-up as standard practice: Wiefling et al., IFIP SEC 2019. Integration: Innate scoring API with Swagger docs. The rollout order is our proposal and has not been piloted.')
   s.addNotes('Use this as the talk track for the wallet. Before: three very different people all look identical to the wallet because every credential passes. After: Innate separates them silently underneath. Malware is held, a PIN thief is asked for face or OTP, the owner sees nothing. Rollout is staged: first shadow mode that scores every transfer and changes nothing, then step-up, then hold. It reuses the face and OTP flows the wallet already runs; the order is our proposal and has not been piloted. Numbers for each group are on slide 8.')
 }
 
