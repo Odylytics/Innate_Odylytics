@@ -68,13 +68,13 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 <div class="idea"><p><b>Everyone taps a PIN, or types a phrase, in their own rhythm:</b> how long the finger stays down, the gap between taps, where it lands. Innate runs silently under the wallet's PIN and confirm screens, learns the owner's pattern, and checks it on every transfer. A bot, or someone who only knows the PIN, does not match, so Innate asks for more or holds the transfer. Model: LightGBM, trained on real people and simulated bots.</p>
 <div>@MECH@<div class="cap"><span class="lg" style="background:#0F4F4C;margin-left:0"></span>Person A<span class="lg" style="background:#11B88F"></span>Person B · same PIN, real recordings</div></div></div>
 <div class="lbl">Open the product</div>
-<div class="try"><div class="qr">@QR@</div>
+<div class="try"><div class="qr"><a href="@WEB_URL@">@QR@</a></div>
 <table>
-<tr><td>Link</td><td><b class="u">@WEB_URL@</b> · any browser, no sign-up</td></tr>
+<tr><td>Link</td><td><a href="@WEB_URL@" style="color:inherit"><b class="u">@WEB_URL@</b></a> · any browser, no sign-up</td></tr>
 <tr><td>Login</td><td>None needed. Demo PIN <code>159357</code> (6 digits). The SDK key is built into the page.</td></tr>
-<tr><td>Developers</td><td>API docs https://nhip-api-taupe.vercel.app/docs · status /health</td></tr>
+<tr><td>Developers</td><td>API docs <a href="https://nhip-api-taupe.vercel.app/docs" style="color:inherit">https://nhip-api-taupe.vercel.app/docs</a> · status /health</td></tr>
 </table></div>
-<div class="lbl">Try it in 3 minutes: open <code style="font-size:10.5px">@WEB_URL@/#/demo</code></div>
+<div class="lbl">Try it in 3 minutes: open <a href="@WEB_URL@/#/demo" style="color:inherit"><code style="font-size:10.5px">@WEB_URL@/#/demo</code></a></div>
 <div class="steps">
 <div class="stp"><div class="hd"><i>1</i><b>Enroll and unlock</b></div><div class="im"><img src="@ASSETS@/shots/wallet-top.png" alt="Wallet PIN pad"></div><p>Type PIN <b>159357</b> three times to enroll, then once more to unlock the wallet.</p></div>
 <div class="stp"><div class="hd"><i>2</i><b>Send money</b></div><div class="im"><img src="@ASSETS@/shots/send-money.png" alt="Send money screen"></div><p>Tap <b>Transfer</b>, pick Mum and an amount, swipe up. Innate's decision appears on the right.</p></div>

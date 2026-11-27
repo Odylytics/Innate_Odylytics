@@ -61,7 +61,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addImage({ path: A + 'odylytics-on-dark.png', x: 4.45, y: 0.6, w: 1.4, h: 1.4 * 549 / 1813, altText: 'Odylytics' })
   cap(s, 'MoMo Tech Contest 2026  ·  Cybersecurity + Anti-fraud', 0.75, 2.2, 8, true)
   T(s, 'Silent human verification for every transfer', { x: 0.75, y: 2.6, w: 8.6, h: 2.0, fontFace: H, fontSize: 44, bold: true, color: 'FFFFFF', lineSpacingMultiple: 0.98 })
-  T(s, 'Everyone taps a PIN in their own rhythm: how long the finger stays down, the gap between taps, where it lands. Innate learns that pattern and checks it silently on every transfer. The owner does nothing extra.', { x: 0.75, y: 4.4, w: 6.9, h: 1.2, fontSize: 16, color: MUTED_D, lineSpacingMultiple: 1.15 })
+  T(s, 'Everyone taps a PIN in their own rhythm: how long the finger stays down, the gap between taps, where it lands. Innate learns that pattern and checks it silently on every transfer.', { x: 0.75, y: 4.4, w: 6.9, h: 1.2, fontSize: 16, color: MUTED_D, lineSpacingMultiple: 1.15 })
   T(s, 'Your behavior is your signature', { x: 0.75, y: 5.95, w: 7, h: 0.4, fontFace: H, fontSize: 20, bold: true, color: MINT })
   T(s, 'MoMo Tech Day: Imagine the Future Workspace', { x: 7.2, y: 6.95, w: 5.38, h: 0.3, fontSize: 11, color: MUTED_D, align: 'right' })
   s.addNotes('Open with the one-line promise: a layer that verifies the human at the moment of transfer, with no extra step for the owner.')
@@ -197,8 +197,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addImage({ path: A + 'innate-home.png', x: lx + 0.12, y: ly + 0.12, w: lw - 0.24, h: ih, altText: 'Innate website on a laptop' })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: lx - 0.35, y: ly + ih + 0.24, w: lw + 0.7, h: 0.15, rectRadius: 0.06, fill: { color: 'C9D3D1' }, line: { color: 'C9D3D1', width: 0 } })
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 8.2, y: 2.0, w: 1.55, h: 1.55, rectRadius: 0.1, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF', width: 0 } })
-  s.addImage({ path: A + 'qr-innate.png', x: 8.25, y: 2.05, w: 1.45, h: 1.45, altText: 'QR code for innate.odylytics.com' })
-  T(s, URL, { x: 10.0, y: 2.15, w: 2.6, h: 0.45, fontFace: H, fontSize: 17, bold: true, color: 'FFFFFF' })
+  s.addImage({ path: A + 'qr-innate.png', x: 8.25, y: 2.05, w: 1.45, h: 1.45, altText: 'QR code for innate.odylytics.com', hyperlink: { url: 'https://' + URL } })
+  T(s, URL, { x: 10.0, y: 2.15, w: 2.6, h: 0.45, fontFace: H, fontSize: 17, bold: true, color: 'FFFFFF', hyperlink: { url: 'https://' + URL } })
   T(s, 'Scan to open the demo wallet. No login needed.', { x: 10.0, y: 2.65, w: 2.55, h: 0.7, fontSize: 12, color: MUTED_D })
   const L = [['Guided story, 90 seconds', 'Owner allowed, malware held, PIN thief stepped up.'], ['Demo wallet', 'Enroll with PIN 159357, then play thief or malware.'], ['Scoring API and ops dashboard', 'Swagger for developers, labeled reasons for analysts.']]
   L.forEach(([h, d], i) => {
