@@ -71,18 +71,16 @@ Không có bộ dữ liệu công khai nào cho việc chọn ngân hàng trong 
 
 **E14. Nhận ra chủ khi gõ chữ số mới (làm được ngay, dữ liệu StrokePIN).** StrokePIN có 20 PIN 6 số dùng chung cho 97 người. Cho đăng ký trên một nhóm PIN rồi kiểm tra trên **các PIN chưa thấy**, dùng đặc trưng không phụ thuộc nội dung. Đây là mô phỏng gần nhất của việc gõ một số tài khoản mới. Câu hỏi: khi nội dung đổi, tín hiệu chủ tài khoản còn lại bao nhiêu so với E12b (FAR 0,375 tại FRR 5% khi cùng PIN)? Giới hạn: 6 số ngắn hơn số tài khoản, và bàn phím trong StrokePIN có thể khác bàn phím của app.
 
-**Kết quả E14 (25/11, [`../../research/results/e14_unseen_digits.md`](../../research/results/e14_unseen_digits.md)).** Đăng ký 3 PIN x 3 lượt khi ngồi, 20 đặc trưng không phụ thuộc nội dung, không dùng kích thước chạm, kẻ gian gõ cùng chuỗi số:
+**Kết quả E14 (25/11, [`../../research/results/e14_unseen_digits.md`](../../research/results/e14_unseen_digits.md)).** Đăng ký 3 PIN x 3 lượt, 20 đặc trưng không phụ thuộc nội dung, không dùng kích thước chạm, kẻ gian gõ cùng chuỗi số:
 
 | Kiểm thử | LightGBM: EER | LightGBM: FAR @ FRR 5% |
 |---|---|---|
-| cùng chuỗi số đã đăng ký | 0.250 | 0.537 |
-| chuỗi số mới, 6 số | 0.325 | 0.697 |
-| chuỗi số mới, 12 số | 0.268 | 0.588 |
-| chuỗi số mới, khi đi | 0.367 | 0.822 |
+| cùng chuỗi số đã đăng ký | 0.245 | 0.500 |
+| chuỗi số mới, 6 số | 0.328 | 0.697 |
+| chuỗi số mới, 12 số | 0.284 | 0.607 |
 
-- Khi chuỗi số mới, tín hiệu yếu đi rõ: ở mức chỉ làm phiền chủ 5% số lần, **~70% kẻ gian vẫn lọt** với 6 số, **~59%** với 12 số. Gõ dài hơn giúp, đúng hướng E13.
+- Khi chuỗi số mới, tín hiệu yếu đi rõ: ở mức chỉ làm phiền chủ 5% số lần, **~70% kẻ gian vẫn lọt** với 6 số, **~61%** với 12 số. Gõ dài hơn giúp, đúng hướng E13.
 - LightGBM tốt hơn khoảng cách đơn giản ở mọi dòng; khoảng cách đơn giản gần như vô dụng ở FRR 5% (FAR ~0,92).
-- Đổi tư thế (đi) làm mất gần hết tín hiệu, như E9.
 - **Kết luận:** nhịp gõ số tài khoản **không đủ để đứng một mình**. Chỉ nên là bằng chứng cộng thêm vào điểm PIN, và chỉ có ý nghĩa khi số tài khoản đủ dài. Việc tiếp theo nên đo: gộp điểm PIN (E12b) với điểm số tài khoản có giảm được FAR không.
 - Giới hạn: StrokePIN không có số tài khoản thật; 12 số là gộp 2 lượt gõ riêng, không phải một lần gõ liền; mỗi người một máy.
 

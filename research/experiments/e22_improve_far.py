@@ -1,7 +1,7 @@
 """E22: những cách giảm FAR (kẻ lạ lọt) cho Innate Challenge, đo trên Aalto (1.000 người đánh giá, 30 phím, câu thử khác câu đăng ký, giao thức E13).
 
-(a) số câu đăng ký K = 1, 3, 5, 8;  (b) thêm tín hiệu tư thế cầm máy (góc nghiêng beta/gamma: trung bình, độ lệch) — LẠC QUAN vì mọi câu của một người
-nằm trong MỘT buổi nên tư thế trùng giữa đăng ký và thử (không tách theo thời gian được); trên điện thoại thật là cảm biến cần xin quyền, iOS Safari cần cấp quyền, và là dữ liệu nhạy cảm;
+(a) số câu đăng ký K = 1, 3, 5, 8;  (b) thêm tín hiệu góc cầm máy (góc nghiêng beta/gamma: trung bình, độ lệch) — LẠC QUAN vì mọi câu của một người
+nằm trong MỘT buổi nên góc cầm trùng giữa đăng ký và thử (không tách theo thời gian được); trên điện thoại thật là cảm biến cần xin quyền, iOS Safari cần cấp quyền, và là dữ liệu nhạy cảm;
 (c) thay "trung bình |z|" bằng mô hình học (LightGBM trên vector lệch, huấn luyện ở nhóm người riêng, không trùng nhóm đánh giá).
 Dữ liệu: research/data/aalto_note_orient.jsonl (aalto_note_orient.py; gitignored). Chạy: python experiments/e22_improve_far.py
 """
@@ -66,7 +66,7 @@ def f_orient(s):
 
 
 FE = {"thô (6, như E13)": f_time, "thô + chuẩn hoá cặp phím (12)": f_time_z,
-      "12 + tư thế cầm máy (16)": lambda s: np.concatenate([f_time_z(s), f_orient(s)])}
+      "12 + góc cầm máy (16)": lambda s: np.concatenate([f_time_z(s), f_orient(s)])}
 cache = {}
 
 
@@ -120,7 +120,7 @@ L = ["# E22 — các cách giảm FAR ở 30 phím (Aalto, người thật; câu
      "| Cấu hình | EER | FAR @ FRR 5% |", "|---|---|---|"]
 for name in FE:
     pv = prior_var(name)
-    for K in (3,) if "tư thế" not in name and "chuẩn" in name else (1, 3, 5, 8) if name.startswith("thô (6") else (3,):
+    for K in (3,) if "góc cầm" not in name and "chuẩn" in name else (1, 3, 5, 8) if name.startswith("thô (6") else (3,):
         d = deviations(name, K, pv, eval_p, 12)
         L.append(report(f"{name}, K={K} câu đăng ký", {p: (g.mean(1), i.mean(1)) for p, (g, i) in d.items()}))
 

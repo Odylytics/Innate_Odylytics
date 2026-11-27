@@ -1,6 +1,6 @@
-"""E30: số lượt đăng ký k (2, 3, 4) và phân bố lỗi theo nạn nhân, nhận chủ bằng khoảng cách của backend (owner.py), StrokePIN, cùng tư thế (ngồi).
+"""E30: số lượt đăng ký k (2, 3, 4) và phân bố lỗi theo nạn nhân, nhận chủ bằng khoảng cách của backend (owner.py), StrokePIN.
 
-StrokePIN chỉ có tối đa 5 lượt ngồi mỗi (người, PIN): k=4 để lại 1 lượt kiểm thử; k=1 không có độ lệch chuẩn (bỏ); k=5 không còn lượt kiểm thử.
+StrokePIN chỉ có tối đa 5 lượt mỗi (người, PIN): k=4 để lại 1 lượt kiểm thử; k=1 không có độ lệch chuẩn (bỏ); k=5 không còn lượt kiểm thử.
 Prior dân số: file population_prior.json của backend (tính từ một phần người, không loại riêng từng nạn nhân: có thể lạc quan nhẹ).
 Kẻ gian = người khác nhập cùng PIN trên máy của họ (lẫn nhiễu thiết bị). Điểm = trung bình |z|; ngưỡng chung chọn để FRR 5%.
 Gini theo nạn nhân: FAR của từng nạn nhân tại ngưỡng chung (Eberz 2017: trung bình che người "lọt mãi mãi").
@@ -22,8 +22,7 @@ for e in S:
     e["f"] = features.extract(e["session"])
 grp = defaultdict(list); by_pin = defaultdict(list)
 for e in S:
-    if e["posture"] == "sit":
-        grp[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
+    grp[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
 USERS = sorted({u for u, _ in grp})
 
 
@@ -43,8 +42,8 @@ def gini(x):
     return float((2 * np.arange(1, n + 1) - n - 1).dot(x) / (n * x.sum())) if x.sum() else 0.0
 
 
-L = ["# E30 — số lượt đăng ký và phân bố lỗi theo nạn nhân (StrokePIN, ngồi, khoảng cách của backend)", "",
-     "k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử (tối đa 5 lượt ngồi mỗi người–PIN). CI 95% bootstrap theo người. "
+L = ["# E30 — số lượt đăng ký và phân bố lỗi theo nạn nhân (StrokePIN, khoảng cách của backend)", "",
+     "k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử (tối đa 5 lượt mỗi người–PIN). CI 95% bootstrap theo người. "
      "FAR@FRR5% dùng ngưỡng chung; cột Gini và 'nạn nhân FAR>90%' là theo từng nạn nhân (người chủ tài khoản).", "",
      "| k | EER | FAR@FRR5% | Gini FAR theo nạn nhân | nạn nhân FAR > 90% | trung vị FAR nạn nhân |", "|---|---|---|---|---|---|"]
 for k in (2, 3, 4):

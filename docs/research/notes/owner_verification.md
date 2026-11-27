@@ -34,7 +34,7 @@ Yes. On a soft PIN keypad, timing (hold time and inter-key latency) combined wit
 ### Cited Findings
 - Zheng et al. collected 11,062 PIN entries from over 80 users. They used four feature sets: time, pressure, touched size and acceleration (a 4-digit PIN gives 7 time features; an 8-digit PIN gives 15). They report average EERs "down to 3.65%" — [Zheng 2014](https://www.eecis.udel.edu/~hnw/paper/tapping.pdf)
 - Per-PIN EERs in Zheng Table 3 range from 3.65% to 7.37%. PINs with repeated digits (1-1-1-1, 5-5-5-5) are less accurate than 3-2-4-4 and the two 8-digit PINs. Combining all four feature sets always beat any single set — [Zheng 2014](https://www.eecis.udel.edu/~hnw/paper/tapping.pdf)
-- Buschek et al. (28 users × 2 sessions × 3 postures × 6 passwords × 20 repetitions) added spatial features to the usual hold/flight times: touch down/up location, offset to the key centre, "jumps" between touches, and drag. Combined spatial and temporal sets gave 26.4–36.8% lower EER than the best temporal-only sets, and 8.5–26.3% lower than spatial-only sets — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
+- Buschek et al. (28 users × 2 sessions × 6 passwords × 20 repetitions per condition) added spatial features to the usual hold/flight times: touch down/up location, offset to the key centre, "jumps" between touches, and drag. Combined spatial and temporal sets gave 26.4–36.8% lower EER than the best temporal-only sets, and 8.5–26.3% lower than spatial-only sets — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 - Buschek: in the best wrapper-selected feature sets, offsets were the most important addition. Down-pressure had low single-feature EER but never appeared in the best sets — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 - Buschek: single-session evaluation gave EERs less than half of those across sessions (classifiers had 51–73% lower EER within a session), so they recommend collecting data in at least 2 sessions — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 - The Buschek related-work section cites prior PIN-unlock work with EERs of 3.65–7.34% using distance-based anomaly detection, which matches Zheng — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
@@ -56,7 +56,7 @@ They are useful, but much weaker per gesture than PIN features. Touchalytics nee
 - Touchalytics proposes 30 behavioural stroke features. Median EER is 0% intra-session, 2–3% inter-session, and below 4% one week after enrollment — [Frank 2012/2013](https://arxiv.org/abs/1207.6231)
 - Touchalytics ranks features by relative mutual information with user identity. Top features: 20th-percentile pairwise velocity (19.63%), average velocity (8.84%), 80th-percentile velocity (7.85%), median velocity at the last 3 points (7.24%), and largest deviation from the end-to-end line (6.08%, a curvature proxy) — [Frank 2012](https://arxiv.org/abs/1207.6231)
 - Touchalytics: the EER converges to 2–3% at about 11–12 strokes per decision and stays there up to 20 strokes. They used 11 strokes, i.e. 11–43 s per decision — [Frank 2012](https://arxiv.org/abs/1207.6231)
-- HMOG: tap, key-hold and swipe features alone had 25.7–34.2% EER. HMOG (motion) features gave 7.16% (walking) and 10.05% (sitting). Adding tap/keystroke features to HMOG lowered EER from 17.93% to 11.74% (walking) and from 19.11% to 15.25% (sitting) — [Sitová 2015](https://arxiv.org/abs/1501.01199)
+- HMOG: tap, key-hold and swipe features alone had 25.7–34.2% EER. HMOG (motion) features gave 7.16–10.05%. Adding tap/keystroke features to HMOG lowered EER from 17.93–19.11% to 11.74–15.25% — [Sitová 2015](https://arxiv.org/abs/1501.01199)
 
 ### Inferences
 - A wallet session usually has only a few swipes before payment, far fewer than Touchalytics' 11 strokes. Swipe features should be a low-weight signal in Model 2 and mainly a bot/human signal in Model 1.
@@ -132,7 +132,7 @@ More enrollment samples help a lot, and 1 is clearly worse. Deep shared models (
 - Buschek: training and testing in one session gives less than half the EER of cross-session testing, so enrollment should span at least 2 sessions/days — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 
 ### Inferences
-- With 3–5 PIN entries in one sitting, a Zheng-style template will be noisier than the published 3.65–7%. Present demo results honestly, and grow the template over the first weeks using Q5's guarded update.
+- With 3–5 PIN entries in one session, a Zheng-style template will be noisier than the published 3.65–7%. Present demo results honestly, and grow the template over the first weeks using Q5's guarded update.
 
 ### Gaps
 - No paper found reports PIN-tap EER specifically at 3 enrollments.

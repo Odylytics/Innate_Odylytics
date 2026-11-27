@@ -1,6 +1,6 @@
-# E30 — số lượt đăng ký và phân bố lỗi theo nạn nhân (StrokePIN, ngồi, khoảng cách của backend)
+# E30 — số lượt đăng ký và phân bố lỗi theo nạn nhân (StrokePIN, khoảng cách của backend)
 
-k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử (tối đa 5 lượt ngồi mỗi người–PIN). CI 95% bootstrap theo người. FAR@FRR5% dùng ngưỡng chung; cột Gini và 'nạn nhân FAR>90%' là theo từng nạn nhân (người chủ tài khoản).
+k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử (tối đa 5 lượt mỗi người–PIN). CI 95% bootstrap theo người. FAR@FRR5% dùng ngưỡng chung; cột Gini và 'nạn nhân FAR>90%' là theo từng nạn nhân (người chủ tài khoản).
 
 | k | EER | FAR@FRR5% | Gini FAR theo nạn nhân | nạn nhân FAR > 90% | trung vị FAR nạn nhân |
 |---|---|---|---|---|---|

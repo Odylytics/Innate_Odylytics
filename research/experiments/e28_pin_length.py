@@ -47,16 +47,16 @@ def decide(raw, tpl, hist):
 
 out = ["# E28 — PIN 4 số (demo) và PIN 6 số: quyết định của hệ thống", "",
        "10 người chưa từng thấy bởi cả hai mô hình học; PIN 4 số mô phỏng bằng cách cắt 4 lần chạm đầu của PIN 6 số thật (xấp xỉ). Người nhận quen. Kẻ biết PIN dùng máy khác.", "",
-       "| PIN | mô hình học chủ chạy? | chủ ngồi: allow / step_up / hold | kẻ biết PIN: allow / step_up / hold |", "|---|---|---|---|"]
+       "| PIN | mô hình học chủ chạy? | chủ: allow / step_up / hold | kẻ biết PIN: allow / step_up / hold |", "|---|---|---|---|"]
 for k in (6, 4):
     res = {"chủ": [], "kẻ": []}; used = []
-    by = defaultdict(lambda: defaultdict(list)); by_pin = defaultdict(list)
+    by = defaultdict(list); by_pin = defaultdict(list)
     for e in S:
-        by[(e["user"], e["pin"])][e["posture"]].append(e); by_pin[e["pin"]].append(e)
-    for (u, pin), post in by.items():
-        if u not in EVAL or len(post["sit"]) < 5:
+        by[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
+    for (u, pin), ents in by.items():
+        if u not in EVAL or len(ents) < 5:
             continue
-        es = post["sit"][:]; rng.shuffle(es)
+        es = ents[:]; rng.shuffle(es)
         enr, tests = es[:3], es[3:]
         feats_ = [features.extract(trunc(e["session"], k)) for e in enr]
         tpl = owner.build_template(feats_)
@@ -64,7 +64,7 @@ for k in (6, 4):
         for e in tests:
             act, um = decide(trunc(e["session"], k), tpl, hist); res["chủ"].append(act); used.append(um)
             hist.append(features.extract(trunc(e["session"], k)))
-        others = [e for e in by_pin[pin] if e["user"] != u and e["posture"] == "sit"]
+        others = [e for e in by_pin[pin] if e["user"] != u]
         for e in rng.sample(others, min(4, len(others))):
             res["kẻ"].append(decide(trunc({**e["session"], "user_id": u}, k), tpl, hist)[0])
     pc = lambda L, x: f"{100 * np.mean([a == x for a in L]):.0f}%"  # noqa: E731

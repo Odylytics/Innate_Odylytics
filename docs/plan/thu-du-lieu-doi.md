@@ -1,10 +1,10 @@
 # Kế hoạch thu dữ liệu của đội (nhóm nhỏ, 25/11/2026)
 
-Mục tiêu: thay các số "tạm" (mô hình huấn luyện trên dữ liệu công khai và bot sinh) bằng số đo trên **đúng điều kiện của đội**: cùng máy, cùng tư thế, PIN và câu thử thách của cùng một người. Đây là việc đáng giá nhất còn lại (xem `ai-research.md`, E22).
+Mục tiêu: thay các số "tạm" (mô hình huấn luyện trên dữ liệu công khai và bot sinh) bằng số đo trên **đúng điều kiện của đội**: cùng máy, PIN và câu thử thách của cùng một người. Đây là việc đáng giá nhất còn lại (xem `ai-research.md`, E22).
 
 ## Quy mô và lịch
 - **10–20 người tự nguyện** (bạn bè, người quen), mỗi người **2 buổi cách nhau ≥ 1 ngày** (buổi 1 đăng ký, buổi 2 kiểm thử theo thời gian đúng FETA). Thu xong trước 01/12 để kịp số liệu vào slide; **sau 03/12 không sửa được slide**.
-- Mỗi người dùng **điện thoại của chính họ** (bàn phím quen), ngồi cầm máy như bình thường. Ghi tư thế (`note`: ngồi/đi/nằm).
+- Mỗi người dùng **điện thoại của chính họ** (bàn phím quen), cầm máy như bình thường.
 - Trang thu `#/collect` (bản 25/11): chỉ hỏi họ tên + email và một ô đồng ý, rồi bàn phím 10 số: **tự tạo PIN 6 số** (được lưu, xem dưới), tổng cộng nhập 5 lần (các lần sau phải khớp lần đầu, lần sai không ghi); xong 5 lần mới gửi cả 5 phiên. Không hỏi tư thế, lần ngồi, vai. Kế hoạch ban đầu: 3 lần nhập PIN `1593` (đăng ký), 5 lần nhập PIN kiểm thử, 5 câu thử thách ngẫu nhiên (`GET /v1/challenge`), vài lượt người thứ hai (kẻ gian biết PIN) bấm thử tài khoản của người đó.
 - Bot: dùng `attacker/` (4 chiến thuật) và `adb` trên 1–2 máy thật để có tập bot độc lập với bộ sinh.
 

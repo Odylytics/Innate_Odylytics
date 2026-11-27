@@ -90,7 +90,7 @@ human_score, owner_match, người nhận mới, số tiền ─► fusion (chu�
 
 | Nguồn | Dùng cho | Truy cập | Việc cần làm |
 |---|---|---|---|
-| **Dữ liệu đội tự thu** (~25 người × ≥2 lần ngồi, một máy) | Bài B và đánh giá cuối | Tự thu, có phiếu đồng ý | Soạn phiếu (R7); đây là nguồn chính |
+| **Dữ liệu đội tự thu** (~25 người × ≥2 lần thu, một máy) | Bài B và đánh giá cuối | Tự thu, có phiếu đồng ý | Soạn phiếu (R7); đây là nguồn chính |
 | **HuMIdb** (600 người, 14 cảm biến, benchmark bot BeCAPTCHA) | Bài A | Cần ký thỏa thuận cấp phép và gửi email cho nhóm tác giả, rồi nhận tài khoản tải về; ~5 GB [search, một bản mirror trên GitHub, cần xác nhận ở trang gốc BiDAlab] | **Gửi yêu cầu sớm** vì có thời gian chờ |
 | **Aalto typing37k** (37.370 người) | Ước lượng phương sai dân số cho co rút; kiểm tra sơ bộ đặc trưng thời gian | Dữ liệu tải được từ trang dự án [paper, ghi chú] | Kiểm tra giấy phép và kích thước |
 | BB-MAS, BehavePassDB, MobileTouchDB, FETA | So sánh phụ | Giấy phép **chưa kiểm** | Kiểm trước khi dùng, ghi vào README |
@@ -103,7 +103,7 @@ Lưu ý: dữ liệu công khai không phải PIN trên bàn phím tự vẽ c�
 |---|---|---|---|---|
 | E1 | Mahalanobis co rút ≥ scaled Manhattan khi chỉ có 3–5 mẫu (**proxy đã chạy: không, kém hơn**; chưa lặp lại trên StrokePIN) | Cùng chia dữ liệu; so theo số lượt đăng ký 1/3/5 | EER, FAR@FRR 5% + khoảng tin cậy | Có |
 | E2 | Co rút về dân số tốt hơn sàn σ cố định (**đã chạy trên DSL và StrokePIN; bản triển khai được = chỉ thời gian, đã vào `owner.py`: FAR@FRR 5% 0,66 → 0,50, E10b**) | Ước lượng prior từ Aalto/dữ liệu đội; so với sàn hiện tại | Như E1 | Có (Aalto để lấy prior) |
-| E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần ngồi 1, kiểm thử lần ngồi 2 | FAR@FRR 5%, đường DET | Có |
+| E3 | Hiệu chỉnh (Platt/isotonic) giảm FAR ở cùng FRR | Fit trên lần thu 1, kiểm thử lần thu 2 | FAR@FRR 5%, đường DET | Có |
 | E4 | RF/LightGBM vượt luật ở bài A và **vẫn bắt bot lạ** (**đã chạy: E4 người giả quá lạc quan; E4b người thật: bắt 100% bot ngây thơ, CT3 26%, CT4 20–73%, bot lạ yếu**) | Leave-one-tactic-out trên 4 chiến thuật + `adb` làm tập kiểm thử riêng | Tỷ lệ bắt theo chiến thuật | Cần phiên người thật |
 | E5 | Kiểm tra phát lại bắt chiến thuật 3 mà không từ chối chủ thật (**đã chạy: bắt 100% ở ±5–10% nhiễu, thua từ ±20%**) | Ngưỡng từ phân bố khoảng cách giữa các phiên thật của cùng người | Tỷ lệ bắt chiến thuật 3, FRR tăng thêm | Có |
 | E6 | Tín hiệu mới (lượng tử hoá thời gian, dao động toạ độ) tách bot khỏi người | Thêm từng nhóm đặc trưng, đo cải thiện | Độ quan trọng, ΔAUC/ΔFAR | Có, cùng với dữ liệu `adb` |
@@ -147,12 +147,12 @@ Mã: `research/experiments/e5_replay.py`; bảng: `research/results/e5_replay.md
 
 ### E5b — hiệu chỉnh kiểm tra phát lại trên người thật (24/11)
 
-Mã: `research/experiments/e5b_replay_real.py`; bảng: `research/results/e5b_replay_real.md`. Người thật StrokePIN (1.842 cặp người–PIN, 4–10 lượt cùng PIN, cả ngồi và đi), dùng chính `replay.distance` của backend; phát lại thích nghi với nhiễu thời gian ±n và toạ độ ±max(0,02; 0,4n) bề rộng phím.
+Mã: `research/experiments/e5b_replay_real.py`; bảng: `research/results/e5b_replay_real.md`. Người thật StrokePIN (1.817 cặp người–PIN, ~5 lượt cùng PIN; chạy lại 27/11), dùng chính `replay.distance` của backend; phát lại thích nghi với nhiễu thời gian ±n và toạ độ ±max(0,02; 0,4n) bề rộng phím.
 
-- **Ngưỡng 0,085 (chọn trên người giả ở E5) cho FPR người thật 0,28% → 0,40% → 0,64% khi so với 3 → 5 → 8 phiên cũ**: tăng gần tuyến tính theo số phiên. Ngoại suy tuyến tính tới 50 phiên (backend đang so tới 50) cho **~3,7%**: không đo được vì dữ liệu chỉ có ~9 lượt mỗi cặp, đây là suy đoán. Vì phát lại bị `hold` thẳng nên mức này quá đắt.
-- Phân vị khoảng cách người thật: 0,1% = 0,071; 1% = 0,094; trung vị 0,189. Khoảng cách trung vị của phiên phát lại: ±5% → 0,025; ±10% → 0,050; ±15% → 0,075; ±20% → 0,101.
-- **Đã đổi ngưỡng mặc định sang 0,07** (FPR ~0,1% tại 8 phiên, ~0,7% ngoại suy tại 50). Cái giá: bắt 100% phát lại có nhiễu tới ±10% nhưng chỉ **29% ở ±15%** (ngưỡng cũ: 86%) và 0% từ ±20%. Kẻ tấn công thích nghi thêm nhiễu ≥15% vẫn qua mặt kiểm tra này; lúc đó phiên trông như một người khác và chỉ còn điểm "chủ" (yếu) cản lại.
-- **Giới hạn:** lịch sử trong dữ liệu ngắn (~9 lượt, một đợt thu), nên hiệu ứng nhiều phiên cũ phải đo lại bằng dữ liệu của đội (lịch sử dài, nhiều ngày). Người thật ở đây gõ PIN do người nghiên cứu giao, không phải PIN riêng đã thuộc, nên có thể ít đều hơn hoặc nhiều hơn người dùng thật.
+- **Ngưỡng 0,085 (chọn trên người giả ở E5) cho FPR người thật 0,50% → 1,11% khi so với 2 → 4 phiên cũ**: tăng theo số phiên. Ngoại suy tuyến tính tới 50 phiên (backend đang so tới 50) cho **~15%**: không đo được vì dữ liệu chỉ có ~5 lượt mỗi cặp, đây là suy đoán rất xa. Vì phát lại bị `hold` thẳng nên mức này quá đắt.
+- Phân vị khoảng cách người thật: 0,1% = 0,064; 1% = 0,088; trung vị 0,176. Khoảng cách trung vị của phiên phát lại: ±5% → 0,025; ±10% → 0,050; ±15% → 0,075; ±20% → 0,100.
+- **Đã đổi ngưỡng mặc định sang 0,07** (FPR ~0,2% tại 4 phiên, ~3% ngoại suy tại 50). Cái giá: bắt 100% phát lại có nhiễu tới ±10% nhưng chỉ **28% ở ±15%** (ngưỡng cũ: 85%) và 0% từ ±20%. Kẻ tấn công thích nghi thêm nhiễu ≥15% vẫn qua mặt kiểm tra này; lúc đó phiên trông như một người khác và chỉ còn điểm "chủ" (yếu) cản lại.
+- **Giới hạn:** lịch sử trong dữ liệu ngắn (~5 lượt, một đợt thu), nên hiệu ứng nhiều phiên cũ phải đo lại bằng dữ liệu của đội (lịch sử dài, nhiều ngày). Người thật ở đây gõ PIN do người nghiên cứu giao, không phải PIN riêng đã thuộc, nên có thể ít đều hơn hoặc nhiều hơn người dùng thật.
 
 ### E11 — người/máy trên ô văn bản tự do, người thật Aalto (24/11)
 
@@ -182,20 +182,20 @@ Tỷ lệ bot bị bắt ở FRR 5% (LightGBM, đặc trưng `fld_*` hiện có 
 
 ### E12 / E12b — mô hình xác minh chủ HỌC ĐƯỢC (việc A, 24/11)
 
-Mã: `research/experiments/e12_learned_owner.py` (`--no-contact` cho E12b), `train_owner_model.py`; bảng: `research/results/e12_learned_owner.md`, `e12b_learned_owner_no_contact.md`. StrokePIN, chia theo **người** (58 huấn luyện / 39 kiểm thử, 3 cách chia), đăng ký 3 lượt ngồi, kẻ gian biết PIN, prior chỉ từ người huấn luyện. Thay `mean(|z|)` (mọi đặc trưng ngang nhau) bằng bộ phân loại học trên vector |z|.
+Mã: `research/experiments/e12_learned_owner.py` (`--no-contact` cho E12b), `train_owner_model.py`; bảng: `research/results/e12_learned_owner.md`, `e12b_learned_owner_no_contact.md`. StrokePIN, chia theo **người** (58 huấn luyện / 39 kiểm thử, 3 cách chia), đăng ký 3 lượt, kẻ gian biết PIN, prior chỉ từ người huấn luyện (chạy lại 27/11). Thay `mean(|z|)` (mọi đặc trưng ngang nhau) bằng bộ phân loại học trên vector |z|.
 
-| | Cùng tư thế: EER | Cùng tư thế: FAR@FRR5% | Đổi tư thế: EER | Đổi tư thế: FAR@FRR5% |
-|---|---|---|---|---|
-| E12 (có kích thước chạm) baseline | 0,149 | 0,558 | 0,354 | 0,943 |
-| E12 LightGBM | 0,108 | 0,200 | 0,264 | 0,675 |
-| **E12b (bỏ kích thước chạm)** baseline | 0,161 | 0,573 | 0,363 | 0,944 |
-| E12b hồi quy logistic | 0,206 (**+0,045, tệ hơn**) | 0,510 (khoảng tin cậy chứa 0) | 0,319 | 0,737 |
-| **E12b LightGBM** | 0,158 (−0,003, không có ý nghĩa) | **0,375 (−0,198 [−0,363, −0,085])** | **0,309 (−0,053 [−0,078, −0,033])** | **0,708 (−0,236)** |
+| | EER | FAR@FRR5% |
+|---|---|---|
+| E12 (có kích thước chạm) baseline | 0,149 | 0,528 |
+| E12 LightGBM | 0,097 | 0,171 |
+| **E12b (bỏ kích thước chạm)** baseline | 0,160 | 0,549 |
+| E12b hồi quy logistic | 0,188 (**+0,028, tệ hơn**) | 0,546 (khoảng tin cậy chứa 0) |
+| **E12b LightGBM** | **0,140 (−0,020 [−0,026, −0,014])** | **0,316 (−0,233 [−0,410, −0,134])** |
 
 Đọc kết quả:
 - **E12 đẹp vì nhiễu thiết bị:** trọng số lớn nhất hồi quy học được là `tap_w_mean` và `tap_h_mean` (kích thước vùng chạm = khác máy giữa các người). Kẻ gian trong StrokePIN dùng máy *của họ*; kịch bản B thật thì kẻ gian cầm đúng máy nạn nhân nên hiệu ứng này mất. **Số đáng tin là E12b** (đã bỏ kích thước chạm), không phải E12.
-- **E12b: LightGBM học vẫn có lợi thật**, chủ yếu ở điểm vận hành FRR 5% (kẻ gian lọt 0,573 → 0,375) và khi đổi tư thế; **EER cùng tư thế không cải thiện**. Hồi quy logistic (trọng số tuyến tính) **không** tốt hơn khoảng cách cũ về EER.
-- **Đã nối vào backend** (`app/scoring/owner_model.py`, `app/models/owner_lgbm.*`, tuỳ chọn; thiếu thư viện, thiếu file hoặc PIN không đủ 6 phím thì dùng điểm khoảng cách cũ; `NHIP_OWNER_MODEL=off` để tắt). Điểm được ánh xạ để ngưỡng FRR 5% = 0,5. Trên 29 người giữ lại: FRR 5,0% cùng tư thế, kẻ gian lọt 0,359; **đổi tư thế chủ bị từ chối 22,1%**.
+- **E12b: LightGBM học vẫn có lợi thật**, rõ nhất ở điểm vận hành FRR 5% (kẻ gian lọt 0,549 → 0,316); EER giảm nhẹ (0,160 → 0,140). Hồi quy logistic (trọng số tuyến tính) **không** tốt hơn khoảng cách cũ về EER.
+- **Đã nối vào backend** (`app/scoring/owner_model.py`, `app/models/owner_lgbm.*`, tuỳ chọn; thiếu thư viện, thiếu file hoặc PIN không đủ 6 phím thì dùng điểm khoảng cách cũ; `NHIP_OWNER_MODEL=off` để tắt). Điểm được ánh xạ để ngưỡng FRR 5% = 0,5. Trên 29 người giữ lại: FRR 5,0%, kẻ gian lọt 0,359. File mô hình trong API được huấn luyện trước 27/11 trên cả hai điều kiện thu của StrokePIN, chưa huấn luyện lại.
 - **Giới hạn:** huấn luyện trên 97 người công khai, mỗi người một máy (nhiễu thiết bị còn lại trong lệch tâm do chuẩn hoá theo cỡ phím ước lượng), PIN 6 số do người nghiên cứu giao, một đợt thu. Mô hình **tạm thời**; phải huấn luyện lại bằng dữ liệu của đội.
 
 ### E13 — "Innate Challenge": nhiều phím hơn thì tốt hơn? (24/11)
@@ -289,8 +289,8 @@ So với E4 (người giả):
 
 Mã: `research/experiments/e10_deployable_prior.py` (so các biến thể), `e10b_backend_path.py` (kiểm tra chính mã backend), `make_population_prior.py` (sinh prior); bảng: `research/results/e10_deployable_prior.md`, `e10b_backend_path.md`. Dữ liệu: StrokePIN, người thật, prior **bỏ-một-người**.
 
-E9 dùng prior riêng theo (PIN, tư thế), mà khi chạy thật không biết trước PIN. E10 thử prior **dùng chung mọi PIN và cả hai tư thế**:
-- **Chỉ thời gian:** prior chung giảm FAR@FRR 5% ~8–11 điểm, gần bằng bản cận trên theo PIN (−0,11).
+E9 dùng prior riêng theo PIN, mà khi chạy thật không biết trước PIN. E10 thử prior **dùng chung mọi PIN** (chạy lại 27/11):
+- **Chỉ thời gian:** prior chung giảm FAR@FRR 5% ~9–12 điểm, gần bằng bản cận trên theo PIN (−0,12).
 - **Thêm lệch tâm: co rút cho lệch tâm làm TỆ HƠN** (EER +0,04, FAR +0,06; kể cả prior theo PIN cũng làm EER tệ +0,03). Độ dao động lệch tâm khác nhau quá nhiều giữa người và thiết bị. **Đây là điều chỉnh so với kết luận E9** (khi đó tôi nói E2 nên áp dụng cho mọi đặc trưng).
 - **Biến thể lai thắng:** co rút **chỉ cho thời gian**, giữ sd có sàn cho lệch tâm.
 
@@ -298,18 +298,16 @@ E9 dùng prior riêng theo (PIN, tư thế), mà khi chạy thật không biết
 
 E10b chạy **chính `owner.build_template`/`owner.score`** với mọi đặc trưng nhận dạng như backend thật, k=3:
 
-| Tư thế kiểm thử | Co rút | EER | FAR @ FRR 5% |
-|---|---|---|---|
-| Cùng (ngồi) | tắt (cũ) | 0,153 | 0,663 |
-| Cùng (ngồi) | **bật** | 0,146 | **0,495** |
-| | chênh lệch ghép cặp | −0,007 [−0,011, −0,004] | **−0,167 [−0,190, −0,114]** |
-| Đổi (đi) | tắt / bật | 0,352 / 0,355 | 0,943 / 0,943 |
+| Co rút | EER | FAR @ FRR 5% |
+|---|---|---|
+| tắt (cũ) | 0,157 | 0,704 |
+| **bật** | 0,148 | **0,541** |
+| chênh lệch ghép cặp | −0,008 [−0,011, −0,005] | **−0,163 [−0,196, −0,121]** |
 
 Đọc kết quả:
-- Cải thiện thật và **không đánh đổi EER** ở cùng tư thế: kẻ gian lọt giảm từ 66% xuống 50% ở FRR 5%.
-- **Không cứu được trường hợp đổi tư thế** (0,943 không đổi). Vấn đề đó cần đăng ký nhiều tư thế, không phải co rút.
-- FAR 50% vẫn rất cao: điểm "chủ" vẫn không thể làm cổng chặn.
-- **Tương tác với sửa bảo mật mới (24/11):** `/enroll` giờ trả 409 khi đã có mẫu chuẩn (chặn người khác tiêm nhịp của mình vào tài khoản đã đăng ký). Điều này **xung đột với khuyến nghị đăng ký nhiều tư thế** của E9: cần một đường đăng ký lại có kiểm soát (vd. sau khi xác thực mạnh), chưa thiết kế.
+- Cải thiện thật và **không đánh đổi EER**: kẻ gian lọt giảm từ 70% xuống 54% ở FRR 5%.
+- FAR 54% vẫn rất cao: điểm "chủ" vẫn không thể làm cổng chặn.
+- **Tương tác với sửa bảo mật mới (24/11):** `/enroll` giờ trả 409 khi đã có mẫu chuẩn (chặn người khác tiêm nhịp của mình vào tài khoản đã đăng ký). Chủ vẫn cần một đường đăng ký lại có kiểm soát (vd. sau khi xác thực mạnh), chưa thiết kế.
 
 **Giới hạn:** prior trong `population_prior.json` tính trên **cả 97 người** (bản chạy thật), nên khi chấm lại trên chính StrokePIN sẽ rò rỉ; E10b dùng bỏ-một-người để tránh. Prior là thống kê từ dữ liệu CC BY-NC-SA 4.0: ghi trong README. Chỉ kiểm trên PIN 6 số trên điện thoại ở một đợt thu.
 
@@ -342,30 +340,27 @@ Chi tiết TypeFormer: huấn luyện trên bộ gõ di động Aalto; đầu v�
 
 ### E9 — xác minh chủ trên PIN điện thoại THẬT (StrokePIN)
 
-Đây là thí nghiệm đầu tiên trên **dữ liệu người thật, PIN 6 số, có toạ độ chạm**, chạy bằng **chính `features.py` và `owner.py` của backend**. Dữ liệu: StrokePIN (97 người, 17.895 lượt hợp lệ, 20 PIN chung, ngồi/đi; CC BY-NC-SA 4.0; xem `datasets.md`). Mã: `research/experiments/strokepin_loader.py`, `e9_strokepin_owner.py`; bảng: `research/results/e9_strokepin_owner.md`.
+Đây là thí nghiệm đầu tiên trên **dữ liệu người thật, PIN 6 số, có toạ độ chạm**, chạy bằng **chính `features.py` và `owner.py` của backend**. Dữ liệu: StrokePIN (97 người, 20 PIN chung; CC BY-NC-SA 4.0; xem `datasets.md`). Mã: `research/experiments/strokepin_loader.py`, `e9_strokepin_owner.py`; bảng: `research/results/e9_strokepin_owner.md`.
 
-Thiết lập: đăng ký k=3 lượt **ngồi**; kiểm thử chủ (cùng tư thế hoặc đổi sang **đi**); kẻ gian **biết PIN** (người khác nhập cùng PIN); điểm gộp mọi cặp (người, PIN); CI 95% bootstrap theo người. Mỗi cặp chỉ có ~5 lượt ngồi, nên k=5 không có lượt ngồi còn lại để kiểm thử cùng tư thế.
+Thiết lập: đăng ký k=3 lượt; kiểm thử chủ bằng các lượt còn lại; kẻ gian **biết PIN** (người khác nhập cùng PIN); điểm gộp mọi cặp (người, PIN); CI 95% bootstrap theo người. Mỗi cặp chỉ có ~5 lượt, nên k=5 không còn lượt kiểm thử. Số chạy lại 27/11.
 
-**Cùng tư thế (ngồi), k=3, backend hiện tại (sd có sàn):**
+**k=3, backend hiện tại (sd có sàn):**
 
 | Bộ đặc trưng | EER | FAR @ FRR 5% |
 |---|---|---|
-| Thời gian | 0,201 [0,195, 0,208] | 0,697 |
-| + lệch tâm | 0,166 [0,158, 0,177] | 0,734 |
-| + lệch tâm + kích thước chạm | 0,158 [0,147, 0,167] | 0,718 |
-
-**Đổi tư thế (ngồi → đi), k=3:** EER 0,32–0,36, FAR@FRR 5% 0,84–0,94.
+| Thời gian | 0,201 [0,193, 0,209] | 0,686 |
+| + lệch tâm | 0,166 [0,157, 0,174] | 0,671 |
+| + lệch tâm + kích thước chạm | 0,155 [0,145, 0,164] | 0,656 |
 
 Đọc kết quả:
-- **Tín hiệu "chủ" có thật nhưng yếu với 3 lượt đăng ký:** EER 16–20% khi kẻ gian biết PIN. Ở điểm vận hành FRR 5%, **FAR vẫn 57–73%**: đa số kẻ gian lọt. Nghĩa là điểm "chủ" không thể làm cổng chặn; đúng với thiết kế `step_up` và với việc gộp thêm tín hiệu bot và ngữ cảnh. Con số này là số đo thật đầu tiên, nên thay thế kỳ vọng 10–15% rút ra từ paper.
-- **Đổi tư thế phá gần hết tín hiệu** (EER 0,32–0,40, FAR@5% 0,75–0,94). Đăng ký chỉ khi ngồi rồi nhập khi đi gần như vô dụng; lệch tâm còn làm tệ hơn (0,32 → 0,36). Hệ quả thiết kế: đăng ký phải bao nhiều tư thế/ngữ cảnh, hoặc giảm trọng số điểm "chủ" khi phát hiện đổi tư thế (cảm biến chuyển động).
-- **Lệch tâm và kích thước chạm cải thiện EER** (0,201 → 0,166 → 0,158), khớp với Buschek 2015. **Nhưng chưa cải thiện FAR@FRR 5%** (0,70 → 0,73 → 0,72, CI rộng).
-- **Sd có sàn của `owner.py` hơn hẳn Manhattan scaled thuần** trên PIN thật (EER 0,158 so với 0,227 khi dùng cả ba nhóm đặc trưng). Trên DSL thì hai cách ngang nhau (E1/E2 proxy). Sàn có ích khi chỉ có 3 mẫu và PIN ngắn.
-- **E2 (co rút phương sai về dân số) lặp lại trên dữ liệu thật:** giảm FAR@FRR 5% so với backend hiện tại, ghép cặp theo người: thời gian −0,140 [−0,161, −0,107]; thời gian + lệch tâm + kích thước −0,159 [−0,198, −0,117]; EER gần như không đổi (−0,001 và +0,005). Riêng bộ "thời gian + lệch tâm" EER **tệ hơn** +0,031 [+0,026, +0,037]. Hiệu ứng nhất quán với DSL: cải thiện nằm ở phần đuôi, không phải EER.
+- **Tín hiệu "chủ" có thật nhưng yếu với 3 lượt đăng ký:** EER 16–20% khi kẻ gian biết PIN. Ở điểm vận hành FRR 5%, **FAR vẫn 54–69%**: đa số kẻ gian lọt. Nghĩa là điểm "chủ" không thể làm cổng chặn; đúng với thiết kế `step_up` và với việc gộp thêm tín hiệu bot và ngữ cảnh. Con số này là số đo thật đầu tiên, nên thay thế kỳ vọng 10–15% rút ra từ paper.
+- **Lệch tâm và kích thước chạm cải thiện EER** (0,201 → 0,166 → 0,155), khớp với Buschek 2015. **FAR@FRR 5% chỉ nhích nhẹ** (0,69 → 0,67 → 0,66, CI rộng).
+- **Sd có sàn của `owner.py` hơn hẳn Manhattan scaled thuần** trên PIN thật (EER 0,155 so với 0,230 khi dùng cả ba nhóm đặc trưng). Trên DSL thì hai cách ngang nhau (E1/E2 proxy). Sàn có ích khi chỉ có 3 mẫu và PIN ngắn.
+- **E2 (co rút phương sai về dân số) lặp lại trên dữ liệu thật:** giảm FAR@FRR 5% so với backend hiện tại, ghép cặp theo người: thời gian −0,121 [−0,145, −0,095]; thời gian + lệch tâm + kích thước −0,118 [−0,160, −0,072]; EER gần như không đổi (−0,002 và +0,003). Riêng bộ "thời gian + lệch tâm" EER **tệ hơn** +0,031 [+0,025, +0,036]. Hiệu ứng nhất quán với DSL: cải thiện nằm ở phần đuôi, không phải EER.
 
 **Giới hạn quan trọng, số liệu trên bị thổi phồng ở hai điểm:**
-1. **Khác thiết bị giữa các người.** 94 cặp kích thước phím khác nhau trên 97 người, nên nhiều khả năng mỗi người dùng một điện thoại. Lệch tâm và kích thước chạm vì thế mang cả thông tin **thiết bị**. Trong kịch bản B thật, kẻ gian cầm **đúng điện thoại của nạn nhân**, nên khác biệt này biến mất. Vì vậy cải thiện nhờ lệch tâm/kích thước (0,201 → 0,158) là cận trên; con số sát thực tế hơn là hàng "thời gian" (EER ~0,20).
-2. PIN do người nghiên cứu giao (20 PIN chung, nhiều PIN yếu như 111111, 123456), người dùng không gõ PIN riêng đã thuộc; mỗi cặp chỉ ~5 lượt mỗi tư thế, đăng ký và kiểm thử trong cùng một đợt thu (chưa có khoảng cách nhiều ngày).
+1. **Khác thiết bị giữa các người.** 94 cặp kích thước phím khác nhau trên 97 người, nên nhiều khả năng mỗi người dùng một điện thoại. Lệch tâm và kích thước chạm vì thế mang cả thông tin **thiết bị**. Trong kịch bản B thật, kẻ gian cầm **đúng điện thoại của nạn nhân**, nên khác biệt này biến mất. Vì vậy cải thiện nhờ lệch tâm/kích thước (0,201 → 0,155) là cận trên; con số sát thực tế hơn là hàng "thời gian" (EER ~0,20).
+2. PIN do người nghiên cứu giao (20 PIN chung, nhiều PIN yếu như 111111, 123456), người dùng không gõ PIN riêng đã thuộc; mỗi cặp chỉ ~5 lượt, đăng ký và kiểm thử trong cùng một đợt thu (chưa có khoảng cách nhiều ngày).
 
 ### E18–E20 — câu thử thách tiếng Việt và vuốt trên người thật (25/11)
 
@@ -401,50 +396,49 @@ Mã: `research/experiments/aalto_note_orient.py`, `e22_improve_far.py`; bảng: 
 | K=8 | 0,235 | 0,457 |
 | thô + chuẩn hoá cặp phím (12), K=3 | 0,248 | 0,502 |
 | **+ mô hình học (LightGBM trên vector lệch), K=3** | **0,227** | **0,429** |
-| + tư thế cầm máy (góc nghiêng), K=3 | 0,144 | 0,277 |
+| + góc cầm máy (góc nghiêng), K=3 | 0,144 | 0,277 |
 
 - **Thêm câu đăng ký giúp nhưng giảm dần:** 1 → 3 câu cắt FAR 10 điểm, 3 → 8 câu chỉ thêm 6 điểm.
 - **Mô hình học giúp ~7 điểm FAR** (0,502 → 0,429), cùng hướng với E12b.
-- **Góc nghiêng thiết bị cho số đẹp nhất (FAR 0,277) nhưng KHÔNG nên tin:** mọi câu của một người nằm trong một buổi nên tư thế trùng giữa đăng ký và thử (E9: đổi tư thế gần như mất tín hiệu, EER 0,309). Trên điện thoại thật cần xin quyền cảm biến (iOS Safari), là dữ liệu nhạy cảm, và chỉ đo được "đang cầm kiểu nào". Không đưa vào sản phẩm khi chưa có dữ liệu hai buổi.
+- **Góc nghiêng thiết bị cho số đẹp nhất (FAR 0,277) nhưng KHÔNG nên tin:** mọi câu của một người nằm trong một buổi nên góc cầm trùng giữa đăng ký và thử. Trên điện thoại thật cần xin quyền cảm biến (iOS Safari), là dữ liệu nhạy cảm, và chỉ đo được "đang cầm kiểu nào". Không đưa vào sản phẩm khi chưa có dữ liệu hai buổi.
 - Bảng đánh đổi FRR/FAR (E13 thô, 30 phím): FRR 5% → FAR 49%; 10% → 39%; 20% → 29%; 30% → 22%; 40% → 17%.
 
 ### E23 — thêm chuyển động điện thoại vào nhận chủ (StrokePIN, 97 người, 25/11)
 
 Mã: `research/experiments/e23_imu_fusion.py`; bảng: `research/results/e23_imu_fusion.md`. Giao thức E9; đặc trưng IMU: trọng lực (trung bình, độ lệch theo trục), độ rung gia tốc và con quay. Bộ phát hiện E2 (co rút về dân số), k = 3 lượt đăng ký.
 
-| Bộ đặc trưng | Cùng tư thế (ngồi): EER / FAR@FRR5% | Đổi tư thế (đi): EER / FAR@FRR5% |
-|---|---|---|
-| PIN (thời gian + lệch tâm) | 0,197 / 0,692 | 0,374 / 0,936 |
-| Chỉ chuyển động | 0,038 / 0,030 | 0,441 / 0,913 |
-| PIN + chuyển động | 0,057 / 0,075 | 0,420 / 0,910 |
+| Bộ đặc trưng | EER / FAR@FRR5% (chạy lại 27/11) |
+|---|---|
+| PIN (thời gian + lệch tâm) | 0,196 / 0,658 |
+| Chỉ chuyển động | 0,038 / 0,029 |
+| PIN + chuyển động | 0,054 / 0,061 |
 
-**Không tin được số này:** mỗi người một điện thoại, nên gia tốc/trọng lực mang **dấu vết thiết bị** (độ lệch cảm biến, góc cầm) chứ không chỉ thói quen người; kẻ gian trong dữ liệu dùng máy khác. Cùng lỗi đã loại kích thước chạm (E12b). Kịch bản kẻ gian cầm đúng điện thoại của nạn nhân không được mô phỏng. **Đổi tư thế thì mất hết (EER 0,42–0,48).** StrokePIN lấy gia tốc/con quay ~5 Hz nên không kiểm được khớp thời điểm chạm và cú giật. Kết luận: chuyển động là ứng viên cho cổng chống bot ("có tay cầm"), chưa chứng minh được cho nhận chủ. Thiết kế 4 kênh: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
+**Không tin được số này:** mỗi người một điện thoại, nên gia tốc/trọng lực mang **dấu vết thiết bị** (độ lệch cảm biến, góc cầm) chứ không chỉ thói quen người; kẻ gian trong dữ liệu dùng máy khác. Cùng lỗi đã loại kích thước chạm (E12b). Kịch bản kẻ gian cầm đúng điện thoại của nạn nhân không được mô phỏng. StrokePIN lấy gia tốc/con quay ~5 Hz nên không kiểm được khớp thời điểm chạm và cú giật. Kết luận: chuyển động là ứng viên cho cổng chống bot ("có tay cầm"), chưa chứng minh được cho nhận chủ. Thiết kế 4 kênh: [`../plan/bon-cong-pipeline.md`](../plan/bon-cong-pipeline.md).
 
 ### E24–E27 — quyết định toàn hệ thống, quét ngưỡng, bot thích nghi, độ trễ (StrokePIN, 25/11)
 
 Mã: `research/experiments/e24_end_to_end.py` (gồm E25, E27, E27b), `e26_latency.py`; bảng đầy đủ: `research/results/e24_end_to_end.md`, `e26_latency.md`. Chạy đúng chuỗi `/score` (luật + mô hình người/máy, kiểm tra phát lại, nhận chủ + mô hình chủ, hợp nhất) trong tiến trình, trên **10 người chưa từng thấy bởi cả hai mô hình học** (cỡ mẫu nhỏ về số người, hàng trăm phiên mỗi nhóm). Kẻ biết PIN = người khác nhập cùng PIN trên máy của họ (lẫn nhiễu thiết bị). Bot do bộ sinh/script của đội.
 
-**E24, người nhận quen, ngưỡng hiện tại (A=0,25, B=0,55):**
+**E24, người nhận quen, ngưỡng hiện tại (A=0,25, B=0,55), chạy lại 27/11:**
 | Nhóm | allow | step_up | hold |
 |---|---|---|---|
-| chủ, ngồi | 80% | 19% | 1% |
-| chủ, đổi tư thế (đi) | 63% | 37% | 0% |
-| kẻ biết PIN (máy khác) | 28% | 70% | 2% |
+| chủ | 81% | 18% | 1% |
+| kẻ biết PIN (máy khác) | 28% | 71% | 1% |
 | bot CT1, CT2, CT3 (phát lại ±5%) | 0% | 0% | **100%** |
-| bot CT4 (lấy mẫu dân số) | 7% | 67% | 26% |
+| bot CT4 (lấy mẫu dân số) | 5% | 72% | 23% |
 | phát lại ±10% | 0% | 0% | **100%** |
-| phát lại ±15% | **58%** | 13% | 30% |
+| phát lại ±15% | **60%** | 13% | 28% |
 | phát lại ±20% | **72%** | 26% | 1% |
-| phát lại ±30% | **48%** | 48% | 4% |
-| bot **biết mẫu chuẩn** (lấy mẫu theo trung bình/độ lệch của nạn nhân) | **75–82%** | 6–17% | 8–12% |
+| phát lại ±30% | **44%** | 53% | 3% |
+| bot **biết mẫu chuẩn** (lấy mẫu theo trung bình/độ lệch của nạn nhân) | **79–86%** | 5–15% | 6–9% |
 
-- **Với người nhận mới**, chủ chỉ `allow` 17% (79% `step_up`): trọng số "người nhận mới" 0,15 đẩy rủi ro qua A. Đây là thiết kế, nhưng là ma sát lớn.
-- **Mô hình học quan trọng:** tắt hai mô hình học thì kẻ biết PIN `allow` 90% (chỉ còn luật và khoảng cách).
-- **Điểm yếu thật (E27):** bot phát lại có nhiễu ≥ 15% và bot biết mẫu chuẩn của nạn nhân **qua mặt hệ thống** (allow 48–82%). Hệ thống chặn chắc bot ngây thơ và phát lại nhiễu thấp; không chặn được kẻ tấn công thích nghi.
+- **Với người nhận mới**, chủ chỉ `allow` 18% (79% `step_up`): trọng số "người nhận mới" 0,15 đẩy rủi ro qua A. Đây là thiết kế, nhưng là ma sát lớn.
+- **Mô hình học quan trọng:** tắt hai mô hình học thì kẻ biết PIN `allow` 89% (chỉ còn luật và khoảng cách).
+- **Điểm yếu thật (E27):** bot phát lại có nhiễu ≥ 15% và bot biết mẫu chuẩn của nạn nhân **qua mặt hệ thống** (allow 44–86%). Hệ thống chặn chắc bot ngây thơ và phát lại nhiễu thấp; không chặn được kẻ tấn công thích nghi.
 
-**E25, quét ngưỡng A** (B ít ảnh hưởng): không có điểm tối ưu cho cả hai phía. A=0,25 (hiện tại): chủ ngồi allow 80%, kẻ biết PIN không-allow 72%, bot biết mẫu chuẩn không-allow 25%. A=0,30: 91% / 50% / 17%. A=0,20: 65% / 90% / 36%. A=0,10: 17% / 99% / 80% (chủ bị phiền gần hết). Chọn theo chính sách (chấp nhận hỏi thêm bao nhiêu người thật); nên chốt sau khi có dữ liệu đội cùng máy.
+**E25, quét ngưỡng A** (B ít ảnh hưởng): không có điểm tối ưu cho cả hai phía. A=0,25 (hiện tại): chủ allow 81%, kẻ biết PIN không-allow 72%, bot biết mẫu chuẩn không-allow 21%. A=0,30: 90% / 54% / 13%. A=0,20: 64% / 90% / 33%. A=0,10: 18% / 100% / 79% (chủ bị phiền gần hết). Chọn theo chính sách (chấp nhận hỏi thêm bao nhiêu người thật); nên chốt sau khi có dữ liệu đội cùng máy.
 
-**E27b, ngưỡng phát lại** (hiện 0,07): 0,085 bắt phát lại ±15% 86% (so với 30%) với chủ bị hold 3% (lịch sử ngắn ở đây; E5b ngoại suy FPR cao hơn khi lịch sử dài); 0,10: ±20% bắt 47% nhưng chủ hold 6%. Chưa đổi ngưỡng; quyết sau khi đo lịch sử dài của đội (T3).
+**E27b, ngưỡng phát lại** (hiện 0,07): 0,085 bắt phát lại ±15% 85% (so với 28%) với chủ bị hold 3% (lịch sử ngắn ở đây; E5b ngoại suy FPR cao hơn khi lịch sử dài); 0,10: ±20% bắt 50% nhưng chủ hold 6%. Chưa đổi ngưỡng; quyết sau khi đo lịch sử dài của đội (T3).
 
 **E26, độ trễ local (TestClient, SQLite, không mạng):** `POST /sessions` p50 2,2 ms / p95 2,9 ms; `/score` p50 3,8 ms / p95 4,7 ms / p99 6,2 ms. **Lần gọi đầu từng mất ~1 s** (nạp mô hình LightGBM lười). **Đã sửa 25/11:** `main.py` nạp sẵn hai mô hình khi khởi động; đo lại: `/score` p50 3,7 ms, p99 14,2 ms, max 36,5 ms. Chi phí nạp chuyển sang khởi động nguội trên Vercel (chưa đo Vercel/Neon).
 
@@ -452,7 +446,7 @@ Mã: `research/experiments/e24_end_to_end.py` (gồm E25, E27, E27b), `e26_laten
 
 Mã: `research/experiments/e28_pin_length.py`; bảng: `research/results/e28_pin_length.md`. Cùng 10 người chưa từng thấy bởi cả hai mô hình học và giao thức E24 (người nhận quen). PIN 4 số mô phỏng bằng cách cắt 4 lần chạm đầu của phiên 6 số thật (**xấp xỉ**).
 
-| PIN | Mô hình chủ học chạy? | Chủ ngồi: allow / step_up / hold | Kẻ biết PIN: allow / step_up / hold |
+| PIN | Mô hình chủ học chạy? | Chủ: allow / step_up / hold | Kẻ biết PIN: allow / step_up / hold |
 |---|---|---|---|
 | 6 số | có | 81% / 19% / 0% | 28% / 70% / 2% |
 | **4 số** | **không** (rơi về khoảng cách) | 90% / 7% / 3% | **68% / 30% / 2%** |

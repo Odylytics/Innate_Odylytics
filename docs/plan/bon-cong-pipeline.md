@@ -17,8 +17,8 @@ Chạy ngầm:   (1) chuyển động  +  (2) nhập PIN  +  (4) chạm/vuốt  
 ## Từng kênh: đã có gì, bằng chứng, hạn chế
 | Kênh | Dùng để | Bằng chứng của đội | Hạn chế nói thẳng |
 |---|---|---|---|
-| **1. Chuyển động** (gia tốc, con quay, trọng lực) | Bot: máy nằm yên trên bàn, không có tay cầm; nhận chủ: cách cầm | **E23 (StrokePIN):** chỉ chuyển động cho EER 0,04–0,07 và FAR 3–10% khi cùng tư thế (PIN thời gian + lệch tâm: EER 0,17–0,20, FAR 69–75%). **Đổi tư thế (ngồi → đi): EER 0,44–0,48, ngang đoán mò.** | **Số E23 lạc quan do thiết bị:** mỗi người một điện thoại, cảm biến lệch khác nhau, nên một phần là nhận máy chứ không nhận người. Kẻ cầm chính điện thoại của nạn nhân sẽ không bị bắt như vậy. StrokePIN chỉ lấy gia tốc/con quay ~5 Hz nên **không đo được cú giật khi chạm**. Tài liệu: HMOG 25,7–34,2% (chỉ chạm) → 7–10% (thêm chuyển động); BeCAPTCHA ~60% → 80–90%; **ActReal: tác tử cấp hệ thống giả được cả cảm biến, thành công 71,1% trước bộ dò chạm + chuyển động.** Web: `DeviceMotion` cần HTTPS và hỏi quyền trên iOS Safari, tối đa ~60 Hz. |
-| **2. Nhập PIN** | Nhận chủ, người/máy, phát lại | Đã có: EER 0,16, FAR 37,5% (học máy), bot ngây thơ 100%, phát lại ≤ ±10% 100% | Đổi tư thế mất tín hiệu; kẻ biết PIN lọt nhiều. |
+| **1. Chuyển động** (gia tốc, con quay, trọng lực) | Bot: máy nằm yên trên bàn, không có tay cầm; nhận chủ: cách cầm | **E23 (StrokePIN):** chỉ chuyển động cho EER 0,04–0,07 và FAR 3–10% (PIN thời gian + lệch tâm: EER 0,17–0,20, FAR 69–75%). | **Số E23 lạc quan do thiết bị:** mỗi người một điện thoại, cảm biến lệch khác nhau, nên một phần là nhận máy chứ không nhận người. Kẻ cầm chính điện thoại của nạn nhân sẽ không bị bắt như vậy. StrokePIN chỉ lấy gia tốc/con quay ~5 Hz nên **không đo được cú giật khi chạm**. Tài liệu: HMOG 25,7–34,2% (chỉ chạm) → 7–10% (thêm chuyển động); BeCAPTCHA ~60% → 80–90%; **ActReal: tác tử cấp hệ thống giả được cả cảm biến, thành công 71,1% trước bộ dò chạm + chuyển động.** Web: `DeviceMotion` cần HTTPS và hỏi quyền trên iOS Safari, tối đa ~60 Hz. |
+| **2. Nhập PIN** | Nhận chủ, người/máy, phát lại | Đã có: EER 0,14, FAR 31,6% (học máy), bot ngây thơ 100%, phát lại ≤ ±10% 100% | Kẻ biết PIN lọt nhiều. |
 | **3. Gõ câu** | Thêm tín hiệu khi chưa chắc; kiểu gõ dấu tiếng Việt | **E22:** FAR 43–52% ở 30 phím (mô hình học 43%); bot gõ đều AUC 0,996 | Kiểu gõ tiếng Việt chưa đo trên người thật (chờ thử trên điện thoại). |
 | **4. Vùng chạm / vuốt** | Bot (vuốt vận tốc đều) | **E19:** luật vận tốc đều bắt 100% bot vuốt đều, 0/20.896 nét người thật bị chặn nhầm | Vuốt **không** nhận chủ được (AUC ~0,5); kích thước vùng chạm là nhiễu thiết bị (E12b). Kênh 4 là cổng chống bot, không phải cổng nhận chủ. |
 
@@ -32,7 +32,7 @@ Gợi ý: giữ câu ngẫu nhiên làm cổng chống bot/phát lại; câu c�
 ## Bot có bị bắt không?
 - **Bot ngây thơ** (script, `adb`, mã độc cơ bản): có, kênh chạm/vuốt và PIN đã bắt ~100%; kênh chuyển động thêm "không có tay cầm".
 - **Bot khôn** (lấy mẫu từ dân số, giả cảm biến): **không đảm bảo**. Đây là giới hạn đã biết (E4b: 20–73%; ActReal). Lợi thế duy nhất của hợp nhất là buộc kẻ tấn công giả nhất quán nhiều kênh.
-- **Độc lập thì nhân, tương quan thì không:** nếu 4 kênh độc lập, FAR có thể nhân (vd. 37,5% × 43% ≈ 16%), nhưng cùng một tư thế, cùng một máy, cùng một phiên thì chúng **tương quan**, đừng nhân khi chưa đo.
+- **Độc lập thì nhân, tương quan thì không:** nếu 4 kênh độc lập, FAR có thể nhân (vd. 31,6% × 43% ≈ 14%), nhưng cùng một máy, cùng một phiên thì chúng **tương quan**, đừng nhân khi chưa đo.
 
 ## Việc nên làm tiếp (theo giá trị)
 1. **Thử bot `adb` trên điện thoại nằm yên trên bàn vs người cầm máy:** đo độ rung chuyển động. Rẻ, quyết định xem kênh 1 có thật sự là cổng chống bot. Cần ≥ 100 Hz (gốc Android) hoặc ≥ 50 Hz (web, nếu máy cho).
@@ -44,7 +44,7 @@ Gợi ý: giữ câu ngẫu nhiên làm cổng chống bot/phát lại; câu c�
 
 ### 7.1 Hai tầng chấm điểm
 1. **Tầng 1, người hay máy** (không cần đăng ký): luật + LightGBM tuỳ chọn + kiểm tra phát lại (`human.py`, `human_model.py`, `replay.py`). Đã có. Bản online có mô hình học bật từ 26/11 (`/health`: `human:true, owner:true`; trước đó rơi về luật vì lightgbm không nạp được trên Vercel).
-2. **Tầng 2, người với người** (cần đăng ký): so thao tác với mẫu của chủ (`owner.py`, `owner_model.py` tuỳ chọn). Đã có; chỉ là **tín hiệu rủi ro, không phải cổng** (kẻ biết PIN lọt 38–57% ở FRR 5%).
+2. **Tầng 2, người với người** (cần đăng ký): so thao tác với mẫu của chủ (`owner.py`, `owner_model.py` tuỳ chọn). Đã có; chỉ là **tín hiệu rủi ro, không phải cổng** (kẻ biết PIN lọt 32–55% ở FRR 5%).
 3. Hợp nhất trong `fusion.py` rồi `allow | step_up | hold`. Tầng 2 chỉ dẫn tới `step_up`, không bao giờ tự chặn.
 
 ### 7.2 Bốn kịch bản
@@ -53,12 +53,12 @@ Gợi ý: giữ câu ngẫu nhiên làm cổng chống bot/phát lại; câu c�
 | **Android** | Mã độc Trợ năng tiêm cú chạm. **Tầng 1 là lớp chính**; thêm kênh nghiêng máy (7.3). | Kẻ trộm là người, có thể biết PIN. **Tầng 2 là lớp chính**; kẻ gian dùng đúng máy của chủ (không còn nhiễu thiết bị như dữ liệu StrokePIN). |
 | **iPhone** | **Ngoài phạm vi.** Nhận định của đội: iOS không có tương đương Trợ năng để tiêm cú chạm; kiểu "nạn nhân tự gõ theo lời kẻ lừa" thì người gõ là chủ thật, Innate không bắt được, chỉ còn ngữ cảnh (người nhận mới, số tiền). Chưa kiểm chứng bằng tài liệu. | Như Android; web SDK chưa kiểm kích thước chạm trên iOS. |
 
-Mẫu chủ gắn theo từng máy: đổi máy hoặc đổi tư thế phải đăng ký lại có kiểm soát (`dang-ky-lai.md`, chưa cài). Chưa có số đo nào tách theo iPhone/Android.
+Mẫu chủ gắn theo từng máy: đổi máy phải đăng ký lại có kiểm soát (`dang-ky-lai.md`, chưa cài). Chưa có số đo nào tách theo iPhone/Android.
 
 ### 7.3 Nghiêng máy khi bấm (bảo vệ Android bị chiếm từ xa)
 - **Ý:** mã độc tiêm cú chạm bằng phần mềm, máy thường nằm yên (vd. 2 giờ sáng trên bàn); người cầm máy thì góc nghiêng nằm trong khoảng quen thuộc và có rung nhẹ trùng thời điểm mỗi cú chạm.
 - **Đặc trưng đề xuất:** góc nghiêng trung bình lúc nhập PIN (vector trọng lực), độ lệch của góc trong lúc nhập, biên độ gia tốc quanh mỗi `t_down`/`t_up`, tương quan giữa đỉnh gia tốc và thời điểm chạm.
-- **Đặt vào tầng 1 (chống bot), không đưa vào nhận chủ.** E23 cho EER 0,04 nhưng là nhiễu thiết bị và mất hết khi đổi tư thế; quy ước repo: không tuyên bố IMU nhận chủ.
+- **Đặt vào tầng 1 (chống bot), không đưa vào nhận chủ.** E23 cho EER 0,04 nhưng là nhiễu thiết bị; quy ước repo: không tuyên bố IMU nhận chủ.
 - **Giới hạn nói trước:** nạn nhân đang cầm máy lúc mã độc bấm thì tín hiệu yếu đi; mã độc có Trợ năng đọc và phát lại được cảm biến (ActReal 71–77%), nên chỉ là bằng chứng cộng thêm; web `DeviceMotion` hạn chế tần số và quyền, bản chính thức cần SDK native Android; dữ liệu cảm biến cần thêm đồng ý (Luật BVDLCN 2025); StrokePIN chỉ ~5 Hz nên **chưa có dữ liệu nào để đo ý này**.
 - **Việc làm:** (1) thêm đọc cảm biến ≥ 50 Hz vào `#/collect` trên Android, hai điều kiện cầm máy và đặt trên bàn, cập nhật phiếu đồng ý; (2) chạy bot `adb`/`dispatchGesture` trên máy Android thật để có mẫu "máy đứng yên bị tiêm cú chạm"; (3) đo hai nhóm có tách được không rồi mới viết `imu_*` vào `features.py`.
 
@@ -114,4 +114,4 @@ Quyết định: **mặc định câu ngẫu nhiên** (cổng chống bot và ph
 
 **Cách kể:** mỗi người có nhịp bấm và thói quen chạm riêng; đăng ký 3 lần, so thao tác hiện tại với mẫu đó; kết quả là tín hiệu rủi ro, không phải chìa khoá.
 
-**Giới hạn nói trước** (số trên StrokePIN, 97 người, chưa phải dữ liệu của đội): kẻ biết PIN lọt 38–57% ở FRR 5%; đổi tư thế gần như mất tín hiệu; dữ liệu chạm là dữ liệu nhạy cảm (Luật BVDLCN 2025), chỉ thu khi có đồng ý. Chưa có số đo riêng iPhone/Android, chưa có bot thật; PIN-trước, nghiêng máy và câu cố định chưa được đo.
+**Giới hạn nói trước** (số trên StrokePIN, 97 người, chưa phải dữ liệu của đội): kẻ biết PIN lọt 32–55% ở FRR 5%; dữ liệu chạm là dữ liệu nhạy cảm (Luật BVDLCN 2025), chỉ thu khi có đồng ý. Chưa có số đo riêng iPhone/Android, chưa có bot thật; PIN-trước, nghiêng máy và câu cố định chưa được đo.

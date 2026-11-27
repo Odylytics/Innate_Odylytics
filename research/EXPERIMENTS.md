@@ -12,24 +12,24 @@
 | E5 | Phát hiện phát lại, nhiễu thích nghi | giả | `e5_replay.py` | `e5_replay.md` | Bắt tới ±10–15% |
 | E5b | Hiệu chỉnh phát lại trên người thật | thật (StrokePIN) | `e5b_replay_real.py` | `e5b_replay_real.md` | Ngưỡng 0,07; 29% ở ±15% |
 | E7 | Đầu độc mẫu chuẩn | giả | `e7_poisoning.py` | `e7_poisoning.md` | Nên "freeze + flag" (chưa áp dụng) |
-| E9 | Nhận chủ trên PIN điện thoại thật | thật (StrokePIN) | `strokepin_loader.py`, `e9_strokepin_owner.py` | `e9_strokepin_owner.md` | EER ~0,16; đổi tư thế mất tín hiệu |
+| E9 | Nhận chủ trên PIN điện thoại thật | thật (StrokePIN) | `strokepin_loader.py`, `e9_strokepin_owner.py` | `e9_strokepin_owner.md` | EER ~0,16 |
 | E10/E10b | Co rút về dân số dùng được khi triển khai | thật | `make_population_prior.py`, `e10_deployable_prior.py`, `e10b_backend_path.py` | `e10_*.md`, `e10b_*.md` | Vào `owner.py`, sinh `population_prior.json` |
 | E11 | Người/máy trên ô văn bản tự do | thật (Aalto) | `aalto_note_extract.py`, `e11_text_field_bots.py` | `e11_text_field_bots.md` | Bot ngây thơ ~100% khi đã thấy; bot lạ 0% |
-| E12/E12b | Mô hình chủ học được | thật (StrokePIN) | `e12_learned_owner.py`, `train_owner_model.py` | `e12_learned_owner.md`, `e12b_*.md` | FAR@FRR5% 0,573 → 0,375 |
+| E12/E12b | Mô hình chủ học được | thật (StrokePIN) | `e12_learned_owner.py`, `train_owner_model.py` | `e12_learned_owner.md`, `e12b_*.md` | FAR@FRR5% 0,549 → 0,316 |
 | E13 | Nhiều phím hơn có tốt hơn? (Innate Challenge) | thật (Aalto) | `e13_length_effect.py` | `e13_length_effect.md` | FAR 81% → 49% từ 6 → 30 phím |
 | E14 | Chủ khi gõ chuỗi số mới (số tài khoản) | thật (StrokePIN) | `e14_unseen_digits.py` | `e14_unseen_digits.md` | EER 0,33 (6 số mới); xem `docs/research/transfer-flow.md` |
 | E18 | Số cách gõ Telex/VNI của một câu | lý thuyết | `e18_vi_variation.py` | `e18_vi_variation.txt` | 3–6,6 bit biến thể (trần) |
 | E19 | Luật vuốt và nhận chủ bằng vuốt | thật (Touchalytics) | `e19_touchalytics.py` | `e19_touchalytics.txt` | Luật cũ chặn nhầm 13,4%; luật vận tốc đều 0/20.896; vuốt không nhận chủ (AUC ~0,5) |
 | E20 | Bao nhiêu âm tiết có chỗ chọn dấu thanh | mô phỏng | `e20_vi_style_sim.py` | `e20_vi_style_sim.txt` | AUC 0,66 (1) → 0,89 (8); chọn câu ≥ 4 |
 | E21/E21b | Chuẩn hoá theo cặp phím | thật (Aalto) | `aalto_note_chars.py`, `e21_digraph_norm.py`, `e21b_digraph_profile.py` | `e21_digraph_norm.md`, `e21b_*.md` | Gần như không đổi; hồ sơ cặp phím tệ hơn |
-| E22 | Cách giảm FAR của câu thử thách | thật (Aalto) | `aalto_note_orient.py`, `e22_improve_far.py` | `e22_improve_far.md` | Mô hình học −7 điểm; tư thế lạc quan, bỏ |
-| E23 | Chuyển động điện thoại cho nhận chủ | thật (StrokePIN) | `e23_imu_fusion.py` | `e23_imu_fusion.md` | EER 0,04 nhưng là nhiễu thiết bị; đổi tư thế mất |
+| E22 | Cách giảm FAR của câu thử thách | thật (Aalto) | `aalto_note_orient.py`, `e22_improve_far.py` | `e22_improve_far.md` | Mô hình học −7 điểm; góc cầm máy lạc quan, bỏ |
+| E23 | Chuyển động điện thoại cho nhận chủ | thật (StrokePIN) | `e23_imu_fusion.py` | `e23_imu_fusion.md` | EER 0,04 nhưng là nhiễu thiết bị |
 | E24 | Quyết định toàn hệ thống (allow/step_up/hold) | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Bot ngây thơ và phát lại ≤ ±10% 100% hold |
 | E25 | Quét ngưỡng A, B | thật + bot | `e24_end_to_end.py` | `e24_end_to_end.md` | Không có điểm tối ưu cho cả hai phía |
 | E26 | Độ trễ API local | giả | `e26_latency.py` | `e26_latency.md` | `/score` p50 3,7 ms, max 36 ms sau khi nạp sẵn mô hình (trước: lần đầu ~1 s) |
 | E28 | PIN 4 số (demo) hay 6 số: quyết định của hệ thống | thật (StrokePIN cắt 4 chạm, xấp xỉ) | `e28_pin_length.py` | `e28_pin_length.md` | PIN 4 số: mô hình chủ học không chạy; kẻ biết PIN được allow 68% (6 số: 28%) |
-| E29 | E24 trên cả 97 người (CV 5 phần theo người, huấn luyện lại mô hình), CI | thật + bot | `e29_cv_end_to_end.py` | `e29_cv_end_to_end.md` | Kẻ biết PIN allow 22% [20,24]; chủ ngồi 76%, đi 49%; bot biết mẫu chuẩn allow 72–87%; không nạn nhân nào bị allow >90% (Gini 0,28) |
-| E29b | E29 với mô hình học tắt (chế độ dự phòng: luật thuần; bản online ở chế độ này đến 26/11) | thật + bot | `e29_cv_end_to_end.py` với `E29_MODELS=off` | `e29_rules_only.md` | Kẻ biết PIN allow **89%**, chủ ngồi 95%, bot biết mẫu chuẩn 95%; bot ngây thơ và phát lại ≤±10% vẫn 100% hold |
+| E29 | E24 trên cả 97 người (CV 5 phần theo người, huấn luyện lại mô hình), CI | thật + bot | `e29_cv_end_to_end.py` | `e29_cv_end_to_end.md` | Kẻ biết PIN allow 17% [15,19]; chủ 77%; bot biết mẫu chuẩn allow 77–89%; không nạn nhân nào bị allow >90% (Gini 0,33) |
+| E29b | E29 với mô hình học tắt (chế độ dự phòng: luật thuần; bản online ở chế độ này đến 26/11) | thật + bot | `e29_cv_end_to_end.py` với `E29_MODELS=off` | `e29_rules_only.md` | Kẻ biết PIN allow **89%**, chủ 96%, bot biết mẫu chuẩn 96%; bot ngây thơ và phát lại ≤±10% vẫn 100% hold |
 | E30 | Số lượt đăng ký k=2,3,4 và Gini theo nạn nhân | thật (StrokePIN) | `e30_enroll_curve.py` | `e30_enroll_curve.md` | FAR@FRR5% 0,857 (k=2) → 0,503 (k=3) → 0,429 (k=4) |
 | E31 | Chỉnh trọng số fusion + ngưỡng A trên E29 (tune 3 phần, kiểm 2 phần) | thật + bot | `e31_tune_fusion.py` (đọc pickle của `e29` với `E29_DUMP`) | `e31_tune_fusion.md` | Tốt nhất wb 0,50 / wo 0,30 / A 0,26 chỉ hơn +2 điểm trên phần kiểm (55% → 57%) và hạ chặn kẻ biết PIN 81% → 77%: nằm trong dao động, GIỮ cấu hình hiện tại |
 | E32 | Fine-tune TypeFormer (Aalto) lên StrokePIN, 60/7/30 người tách theo người | thật (StrokePIN) | `finetune/finetune.py`, `finetune/zero_shot.py` | `e32_typeformer_finetune.md` | k=3: EER 0,292 → 0,203, FAR@FRR5% 0,706 → 0,418 (30 người chưa thấy); một lần chạy, chưa CI, chưa vào API |

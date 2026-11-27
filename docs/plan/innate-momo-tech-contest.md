@@ -170,7 +170,7 @@ Ghi chú kỹ thuật:
 - Đăng ký 3–5 lượt → trung bình + độ dao động từng đặc trưng.
 - Điểm = **scaled Manhattan** (|x − trung bình| / độ lệch chuẩn, cộng lại) — tốt nhất trong 14 bộ phát hiện của Killourhy & Maxion 2009 (EER 9,6%); Zheng 2014 cũng dùng.
 - Dễ giải thích ("PIN chậm hơn 40%").
-- **Kỳ vọng thực tế**: các bài báo đạt EER 3–7% với hàng chục lượt đăng ký; 3–5 lượt trong **một lần ngồi** sẽ kém hơn, và kết quả cùng phiên lạc quan gấp đôi so với khác phiên (Buschek 2015). → Đăng ký chia **≥ 2 lần ngồi** khi có thể; đo và báo đúng số.
+- **Kỳ vọng thực tế**: các bài báo đạt EER 3–7% với hàng chục lượt đăng ký; 3–5 lượt trong **một lần thu** sẽ kém hơn, và kết quả cùng phiên lạc quan gấp đôi so với khác phiên (Buschek 2015). → Đăng ký chia **≥ 2 lần thu** khi có thể; đo và báo đúng số.
 
 **Bản 2 — Mô hình so cặp (pairwise verifier)**
 - Học một mô hình chung: *"hai phiên này có cùng một người không?"*
@@ -239,7 +239,7 @@ Danh mục paper đầy đủ: [docs/research/paper-report.md](../research/paper
 | 5. Tấn công bằng máy | "Bảng điều khiển hacker" tự bấm vào app từ máy khác | Mô phỏng mã độc Trợ năng → báo "không phải người thật" |
 | 6. Dashboard | Mở dashboard vận hành, xem tóm tắt vụ việc, đánh dấu đúng/sai | Góc "Future Workspace" |
 
-Chuẩn bị: đăng ký và thử cùng tư thế; đặt ngưỡng nghiêng về `step_up` thay vì chặn; có video dự phòng nếu mạng hội trường kém.
+Chuẩn bị: đặt ngưỡng nghiêng về `step_up` thay vì chặn; có video dự phòng nếu mạng hội trường kém.
 
 ---
 
@@ -261,11 +261,11 @@ Chuẩn bị: đăng ký và thử cùng tư thế; đặt ngưỡng nghiêng v�
 |---|---|---|---|
 | **08:00–09:00** | **Cả đội**: chốt 2 hợp đồng dữ liệu — JSON phiên SDK gửi lên (sự kiện chạm: `t_down`, `t_up`, `x`, `y`, `w`, `h`, `key`) và schema phản hồi API (mục 3). Tạo repo, deploy "hello world" cho API và frontend ngay từ đầu | | |
 | **09:00–12:00** | Hàm trích xuất ~40 đặc trưng từ JSON mẫu; mô hình 2 bản 1 (scaled Manhattan) | FastAPI: nhận phiên, lưu DB, `/enroll`, `/score` (trả số giả trước); deploy | SDK Pointer Events + bàn phím PIN tự vẽ; luồng Trang chủ → Chuyển tiền → Nhập STK → PIN |
-| **12:00–13:00** | **Ghép lần 1 + thu dữ liệu lần ngồi 1**: 3 người × 5 phiên trên **một điện thoại demo** | | |
+| **12:00–13:00** | **Ghép lần 1 + thu dữ liệu lần thu 1**: 3 người × 5 phiên trên **một điện thoại demo** | | |
 | **13:00–17:00** | Mô hình 1 (Random Forest/LightGBM) trên phiên người + phiên bot; hàm hợp nhất (chuẩn hoá tanh, trọng số); câu lý do tiếng Việt từ z-score | Bộ giả lập 4 chiến thuật → sinh phiên bot cho Người 1; **nguồn tấn công thật**: `adb shell input tap` từ laptop vào ví demo; nạp mô hình vào API | Màn hình đăng ký nhịp, màn hình kết quả có lý do; dashboard dạng bảng (phiên đáng ngờ + lý do + nút đúng/sai) |
 | **17:00** | ⚑ **Mốc quyết định**: nếu mô hình 2 không tách nổi 3 người trong đội → pitch tập trung vào **"người hay máy"**, "có phải chủ" thành tín hiệu phụ | | |
-| **17:00–19:00** | **Ghép lần 2 end-to-end + thu dữ liệu lần ngồi 2**: đội làm lại 5 phiên mỗi người + 3–5 bạn bè (có phiếu đồng ý) + lượt "biết PIN, đóng giả chủ" | | |
-| **19:00–21:00** | Đánh giá: tách theo thời gian (lần ngồi 1 đăng ký → lần ngồi 2 kiểm thử), FAR@FRR 5%, EER, tỷ lệ bắt bot từng chiến thuật | Cập nhật mẫu chuẩn có trần độ trôi; đo độ trễ; tài khoản demo; giới hạn chi phí | Chạy thử toàn luồng trên điện thoại demo, sửa lỗi giao diện; chạy thử kịch bản demo mục 6 |
+| **17:00–19:00** | **Ghép lần 2 end-to-end + thu dữ liệu lần thu 2**: đội làm lại 5 phiên mỗi người + 3–5 bạn bè (có phiếu đồng ý) + lượt "biết PIN, đóng giả chủ" | | |
+| **19:00–21:00** | Đánh giá: tách theo thời gian (lần thu 1 đăng ký → lần thu 2 kiểm thử), FAR@FRR 5%, EER, tỷ lệ bắt bot từng chiến thuật | Cập nhật mẫu chuẩn có trần độ trôi; đo độ trễ; tài khoản demo; giới hạn chi phí | Chạy thử toàn luồng trên điện thoại demo, sửa lỗi giao diện; chạy thử kịch bản demo mục 6 |
 | **21:00–23:00** | Đưa số liệu sơ bộ vào slide | README nháp (thư viện, công cụ AI, nguồn dữ liệu, tài sản có sẵn) | Khung slide 10 trang + kịch bản video 3 phút |
 
 **Cắt khỏi ngày build** (làm sau nếu kịp, không ảnh hưởng demo): mô hình so cặp (bản 2), tóm tắt LLM ở dashboard, cảm biến gia tốc, kiểm tra hướng trôi.
@@ -274,7 +274,7 @@ Chuẩn bị: đăng ký và thử cùng tư thế; đặt ngưỡng nghiêng v�
 
 | Mốc | Việc |
 |---|---|
-| Đến 27/11 | Thu đủ ~25 người × ≥ 2 lần ngồi × 5 phiên; **đăng ký thi + câu hỏi cho BTC trước 23:59 27/11** |
+| Đến 27/11 | Thu đủ ~25 người × ≥ 2 lần thu × 5 phiên; **đăng ký thi + câu hỏi cho BTC trước 23:59 27/11** |
 | 28/11–1/12 | Đánh giá lại trên dữ liệu đủ (DET, khoảng tin cậy, phân bố lỗi theo người); phần cắt ở trên nếu kịp |
 | 2/12 | Đóng băng tính năng; kiểm thử tải, sao lưu, hosting chạy liên tục |
 | 3/12 | Slide cuối, video, PDF 1 trang, zip mã nguồn. **Nộp trước 23:59** |
@@ -283,9 +283,9 @@ Chuẩn bị: đăng ký và thử cùng tư thế; đặt ngưỡng nghiêng v�
 
 | Rủi ro | Xử lý |
 |---|---|
-| 3–5 lượt đăng ký không đủ để phân biệt người | Đo sớm (1/3/5 lượt), đăng ký chia ≥ 2 lần ngồi, báo đúng số; mốc quyết định 17:00 ngày build → chuyển trọng tâm sang "người hay máy" (không dựa vào "bị dẫn dắt" — chưa có nghiên cứu) |
+| 3–5 lượt đăng ký không đủ để phân biệt người | Đo sớm (1/3/5 lượt), đăng ký chia ≥ 2 lần thu, báo đúng số; mốc quyết định 17:00 ngày build → chuyển trọng tâm sang "người hay máy" (không dựa vào "bị dẫn dắt" — chưa có nghiên cứu) |
 | Tín hiệu "bị dẫn dắt" / nạn nhân bị lừa qua điện thoại | Chỉ có tài liệu của hãng (BioCatch…) → trình bày là hướng mở rộng, không đưa vào số liệu chính |
-| Giám khảo căng thẳng trên sân khấu → từ chối nhầm chủ thật | Đăng ký & thử cùng tư thế; ngưỡng nghiêng về `step_up` |
+| Giám khảo căng thẳng trên sân khấu → từ chối nhầm chủ thật | Ngưỡng nghiêng về `step_up` |
 | Bot tinh vi (chiến thuật 4) qua mặt | Thừa nhận trong pitch; kết hợp nhiều tín hiệu; native SDK có thêm tín hiệu thiết bị |
 | Số liệu đẹp giả do đánh giá sai | Tách theo thời gian, một thiết bị, báo mức phiên đơn lẻ |
 | Pháp lý dữ liệu | Luật BVDLCN 2025 + NĐ 356/2025 (hiệu lực 1/1/2026) xếp sinh trắc học vào dữ liệu nhạy cảm → coi dữ liệu chạm/vuốt là nhạy cảm: xin đồng ý rõ ràng, chỉ lưu đặc trưng thời gian/toạ độ, không lưu nội dung, ghi rõ trong README |

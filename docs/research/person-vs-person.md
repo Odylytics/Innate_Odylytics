@@ -22,8 +22,8 @@ Kết luận: phân biệt người với người **không phải ý tưởng m
 Hai con số, cả hai đều có nguồn:
 
 1. **Thanh chính = % kẻ biết PIN bị chặn** = 1 − FAR@FRR5% theo số lượt đăng ký k (`web/src/enrollCurve.ts`).
-   - k = 2, 3, 4: **đo thật** trên StrokePIN, ngồi, khoảng cách của backend (E30): 14%, 50%, 57%.
-   - k ≥ 5: **ngoại suy** bằng luật luỹ thừa qua k = 3 và 4 (StrokePIN có tối đa 5 lần ngồi nên không còn lượt thử). Giao diện ghi rõ "ngoại suy, chưa đo". k = 5 → ~62%, k = 10 → ~74%.
+   - k = 2, 3, 4: **đo thật** trên StrokePIN, khoảng cách của backend (E30): 14%, 50%, 57%.
+   - k ≥ 5: **ngoại suy** bằng luật luỹ thừa qua k = 3 và 4 (StrokePIN có tối đa 5 lượt mỗi người–PIN nên không còn lượt thử). Giao diện ghi rõ "ngoại suy, chưa đo". k = 5 → ~62%, k = 10 → ~74%.
 2. **Độ ổn định nhịp của chính người đăng ký** (`owner.consistency`): mỗi lượt chấm với mẫu dựng từ các lượt còn lại (leave-one-out), lấy trung bình. Cao = gõ đều tay. Đây **không** phải độ chính xác nhận người.
 
 Không đưa số ngoại suy lên slide như số đo. Cách nói an toàn: "càng nhập nhiều lần càng chặn được nhiều kẻ biết PIN; 3→4 lượt đo thật, trên 4 là ước lượng".

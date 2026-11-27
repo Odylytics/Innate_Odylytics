@@ -30,7 +30,7 @@ Khi điện thoại bị chiếm quyền, tiền rời đi bằng chính app, PI
 1. **Lớp kiểm chứng con người ở bước xác nhận giao dịch**, bổ sung cho các lớp có sẵn (thiết bị, xác thực, rủi ro giao dịch). Vị trí trong chồng bảo mật: [`../plan/positioning.md`](../plan/positioning.md).
 2. **Ba phép so khớp 1:1 từ cùng một phiên thao tác:** người hay máy (không cần đăng ký), có phải chủ (cần 3–5 lần đăng ký), phát lại phiên cũ. Hợp nhất thành quyết định `allow / step_up / hold` + lý do.
 3. **Innate Challenge:** khi không chắc, thay vì OTP hay quét mặt, hệ thống hiện một câu tiếng Việt ngẫu nhiên (máy chủ chọn, token ký dùng một lần) và người dùng gõ lại (~10 giây). Nhiều phím hơn cho nhiều tín hiệu hơn (đo trên câu tiếng Anh: EER nhận chủ 0,364 → 0,245 khi từ 6 lên 30 phím; thêm mô hình học thì kẻ gian lọt còn ~43%; xem [`../plan/innate-challenge.md`](../plan/innate-challenge.md)). Gõ tiếng Việt qua Telex/VNI để lại thêm dấu vết (vị trí phím dấu thanh, sửa lỗi, có dùng bộ gõ hay không) mà một nhịp gõ bị phát lại không mang theo: **đây là giả thuyết chưa đo trên người Việt** ([`../plan/innate-challenge-vi.md`](../plan/innate-challenge-vi.md)). Nội dung câu do hệ thống sinh nên không phải dữ liệu riêng tư.
-4. **Trung thực về năng lực:** điểm "chủ" là tín hiệu rủi ro, không phải cổng. Thiết kế quanh điều đó (step_up, đăng ký nhiều tư thế, đường thay thế).
+4. **Trung thực về năng lực:** điểm "chủ" là tín hiệu rủi ro, không phải cổng. Thiết kế quanh điều đó (step_up, đường thay thế).
 
 ## 5. AI bên dưới
 
@@ -49,7 +49,7 @@ Khi điện thoại bị chiếm quyền, tiền rời đi bằng chính app, PI
 
 | Việc | Kết quả |
 |---|---|
-| Nhận chủ (StrokePIN, 97 người, PIN 6 số, kẻ gian biết PIN, 3 lần đăng ký) | Học máy cắt kẻ gian lọt ở FRR 5% từ **57% xuống 38%**; không cải thiện EER (0,16). Đổi tư thế (ngồi→đi): EER ~0,31, kẻ gian lọt 71% |
+| Nhận chủ (StrokePIN, 97 người, PIN 6 số, kẻ gian biết PIN, 3 lần đăng ký) | Học máy cắt kẻ gian lọt ở FRR 5% từ **55% xuống 32%**; EER 0,16 → 0,14 |
 | Người/máy (người thật chưa từng thấy; bot sinh) | Bot ngây thơ (nhịp đều, nhiễu thời gian): **bắt 100%**; lấy mẫu từ dân số: 61%; phân loại một mình chỉ bắt 12–26% phát lại |
 | Kiểm tra phát lại (hiệu chỉnh trên người thật) | Bắt **100%** phát lại có nhiễu ≤ 10%, 29% ở ±15%, 0% từ ±20%; nhầm chủ ~0,1% |
 | Innate Challenge (2.260 người gõ câu tiếng Anh) | Kẻ gian lọt ở FRR 5% từ **81% xuống 49%** khi từ 6 lên 30 phím (còn ~43% với mô hình học); bắt bot gõ đều AUC 0,92 → 0,996. Tiếng Việt chưa đo |
@@ -66,7 +66,7 @@ Khi điện thoại bị chiếm quyền, tiền rời đi bằng chính app, PI
 ## 8. Rủi ro và giới hạn
 
 - Bot giống người (lấy mẫu dân số 20–73%, phát lại nhiễu ≥ 15%) và kẻ tấn công thích nghi cấp hệ thống (ActReal 2026) có thể qua mặt: Innate là **một lớp** trong nhiều lớp.
-- Điểm "chủ" yếu (~38% kẻ biết PIN lọt ở FRR 5%); đổi tư thế gần như mất tín hiệu → đăng ký nhiều tư thế, `step_up` thay vì chặn.
+- Điểm "chủ" yếu (~32% kẻ biết PIN lọt ở FRR 5%) → `step_up` thay vì chặn.
 - Web SDK không thấy văn bản đặt thẳng không qua phím → cần SDK native.
 - **Chưa có dữ liệu của đội và bot thật**; mô hình hiện tạm thời. Kế hoạch ở mục 9.
 - Quyền riêng tư: chỉ lưu thời gian, toạ độ, loại sự kiện, số ký tự; dữ liệu nhạy cảm theo Luật BVDLCN 2025, thu có đồng ý.
@@ -76,7 +76,7 @@ Khi điện thoại bị chiếm quyền, tiền rời đi bằng chính app, PI
 | Mốc | Việc |
 |---|---|
 | 27/11 | Đăng ký thi, gửi câu hỏi BTC |
-| 28–30/11 | Thu dữ liệu người thật có đồng ý (≥ 2 lần ngồi, một điện thoại) và bot thật (`adb`, `dispatchGesture`) |
+| 28–30/11 | Thu dữ liệu người thật có đồng ý (≥ 2 lần thu, một điện thoại) và bot thật (`adb`, `dispatchGesture`) |
 | 30/11–01/12 | Huấn luyện lại (`train_human_model.py --export …`), hiệu chỉnh ngưỡng, số liệu cuối |
 | 02/12 | Đóng băng tính năng, kiểm tra tải, README khai tài sản |
 | 03/12 | Nộp bài |

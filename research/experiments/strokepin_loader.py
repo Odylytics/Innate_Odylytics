@@ -1,10 +1,12 @@
 """Nạp StrokePIN (Yao & Wang, 2026; CC BY-NC-SA 4.0) thành phiên đúng định dạng SessionIn của backend.
 
-Dữ liệu: 97 người, mỗi người 200 lần nhập, 20 PIN 6 số CHUNG cho mọi người, 2 tư thế (ngồi/đi). Bàn phím số
+Dữ liệu: 97 người, 20 PIN 6 số CHUNG cho mọi người. StrokePIN thu hai điều kiện; từ 27/11 repo chỉ dùng điều kiện đầu
+(cột `Posture` = "sit"), lọc ở đây, các script khác không xét điều kiện thu. Bàn phím số
 chuẩn, toạ độ px. Tâm phím KHÔNG có sẵn: ước lượng theo từng người và từng chữ số = trung vị toạ độ chạm
 của người đó cho chữ số đó; kích thước phím = khoảng cách trung vị giữa các cột/hàng liền kề (cũng theo người).
 
-Phiên trả về: {"user", "pin", "posture", "sample", "session": SessionIn-dict (không có swipe/screens)}
+Phiên trả về: {"user", "pin", "sample", "session": SessionIn-dict (không có swipe/screens)}
+Tâm phím vẫn ước lượng trên mọi lượt của người đó (như trước 27/11).
 """
 
 from pathlib import Path
@@ -30,7 +32,7 @@ def _entries(path: Path) -> list[dict]:
                 taps.append(cur)
                 cur = None
         if len(taps) == len(pin) == 6:  # bỏ lượt thiếu sự kiện Up và PIN `10140` (5 số, 11 lượt; có thể mất số 0 đầu)
-            out.append({"pin": pin, "posture": e.Posture.iloc[0], "sample": sid, "taps": taps})
+            out.append({"pin": pin, "cond": e.Posture.iloc[0], "sample": sid, "taps": taps})
     return out
 
 
@@ -56,9 +58,9 @@ def load(max_users: int | None = None) -> list[dict]:
             taps = [{"key": ch, "t_down": (t["t_down"] - t0) / 1e6, "t_up": (t["t_up"] - t0) / 1e6, "x": t["x"], "y": t["y"],
                      "w": t["w"], "h": t["h"], "key_cx": c[ch][0], "key_cy": c[ch][1], "key_w": key_w, "key_h": key_h}
                     for ch, t in zip(e["pin"], e["taps"])]
-            if any(t["t_up"] < t["t_down"] for t in taps):
+            if any(t["t_up"] < t["t_down"] for t in taps) or e["cond"] != "sit":
                 continue
-            sessions.append({"user": user, "pin": e["pin"], "posture": e["posture"], "sample": e["sample"],
+            sessions.append({"user": user, "pin": e["pin"], "sample": e["sample"],
                              "session": {"user_id": user, "pin_taps": taps, "swipes": [], "screens": []}})
     return sessions
 
@@ -67,6 +69,6 @@ if __name__ == "__main__":
     s = load()
     users = {x["user"] for x in s}
     pins = {x["pin"] for x in s}
-    print(f"{len(s)} lượt nhập hợp lệ, {len(users)} người, {len(pins)} PIN, tư thế: {pd.Series([x['posture'] for x in s]).value_counts().to_dict()}")
+    print(f"{len(s)} lượt nhập hợp lệ, {len(users)} người, {len(pins)} PIN")
     t = s[0]["session"]["pin_taps"]
     print("ví dụ:", s[0]["user"], s[0]["pin"], [round(x["t_up"] - x["t_down"]) for x in t], "ms giữ;", "key_w/h:", round(t[0]["key_w"]), round(t[0]["key_h"]))

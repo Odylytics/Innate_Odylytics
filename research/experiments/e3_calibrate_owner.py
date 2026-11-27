@@ -1,6 +1,6 @@
 """E3: hiệu chỉnh ánh xạ khoảng cách -> điểm chủ của owner.py trên PIN thật (StrokePIN).
 
-Dùng đúng owner.build_template/score. Đăng ký 3 lượt ngồi; chủ = lượt ngồi còn lại; kẻ gian biết PIN = người khác, cùng PIN, cùng tư thế.
+Dùng đúng owner.build_template/score. Đăng ký 3 lượt; chủ = các lượt còn lại; kẻ gian biết PIN = người khác, cùng PIN.
 Chia người làm hai nửa: fit Platt (a,b) trên nửa A, kiểm trên nửa B (không rò người). So ánh xạ hiện tại (d=2 -> 0,5).
 """
 import math, random, sys
@@ -18,8 +18,7 @@ for e in S:
     e["f"] = features.extract(e["session"])
 grp = defaultdict(list)
 for e in S:
-    if e["posture"] == "sit":
-        grp[(e["user"], e["pin"])].append(e)
+    grp[(e["user"], e["pin"])].append(e)
 by_pin = defaultdict(list)
 for (u, p), es in grp.items():
     by_pin[p] += [(u, e) for e in es]
@@ -53,7 +52,7 @@ A, B = R[R[:, 0] == 0], R[R[:, 0] == 1]
 a, b = fit(A[:, 2], A[:, 1])
 sig = lambda x, a, b: 1 / (1 + np.exp(-(a * x + b)))
 old = lambda x: 1 / (1 + np.exp(np.minimum(2 * (x - 2), 700)))
-out = [f"# E3 — hiệu chỉnh điểm chủ (StrokePIN, PIN 6 số, đăng ký 3 lượt ngồi)", "",
+out = [f"# E3 — hiệu chỉnh điểm chủ (StrokePIN, PIN 6 số, đăng ký 3 lượt)", "",
        f"Fit Platt trên nửa A ({len(A)} phiên): score = sigmoid({a:.3f}·d + {b:.3f}). Kiểm trên nửa B ({len(B)} phiên, người khác hẳn).", "",
        "| Ánh xạ | Chủ có score ≥ 0,5 | Kẻ gian biết PIN có score ≥ 0,5 |", "|---|---|---|"]
 for name, f in (("hiện tại (d=2→0,5)", old), (f"Platt đã fit (cân bằng lớp)", lambda x: sig(x, a, b))):

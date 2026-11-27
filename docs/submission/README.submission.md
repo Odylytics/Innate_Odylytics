@@ -88,13 +88,13 @@ Not included in the package; DOIs are in `docs/research/paper-report.md`: Zheng 
 
 | Test | Result |
 |---|---|
-| Owner check, StrokePIN, 97 people, PIN-knowing impostor, 3 enrollments, split by person | Baseline distance: EER 0.161, impostor passes 57.3% at 5% owner rejection. **Learned model: EER 0.158, 37.5%.** After a posture change (sit → walk): EER 0.309, 70.8% |
+| Owner check, StrokePIN, 97 people, PIN-knowing impostor, 3 enrollments, split by person | Baseline distance: EER 0.160, impostor passes 54.9% at 5% owner rejection. **Learned model: EER 0.140, 31.6%.** |
 | Human vs bot (real humans, simulated bots) | Naive bots 100%; replay 12–26% for the classifier alone; population-sampling bots 20–73% |
-| Replay check (threshold 0.07) | Catches 100% of replays with noise up to ±10%, 29% at ±15%, 0% from ±20%. Human false-positive rate about 0.1% at 8 past sessions |
+| Replay check (threshold 0.07) | Catches 100% of replays with noise up to ±10%, 28% at ±15%, 0% from ±20%. Human false-positive rate about 0.2% at 4 past sessions |
 | Innate Challenge (2,260 people typing sentences, timing only) | Impostor passes at 5% rejection: 81% (6 keys) → 49% (30 keys). Vietnamese phrases not yet measured on Vietnamese typists |
 | Swipe rule (Touchalytics, 41 people) | "Uniform speed" rule flags 0 human strokes and catches 100% of uniform simulated swipes; swipe-based owner matching is near chance (AUC 0.48–0.60) and was dropped |
 | Digraph normalization (Aalto, 1,000 people) | No meaningful gain (EER 0.249 → 0.238), not shipped |
-| **Full system, 97 people, 5-fold by person (E29)** | With learned models: PIN-knowing impostor allowed 22% [20, 24], owner allowed 76% sitting and 49% walking, template-aware bot 72–87%. Rules only: impostor allowed 89% |
+| **Full system, 97 people, 5-fold by person (E29)** | With learned models: PIN-knowing impostor allowed 17% [15, 19], owner allowed 77%, template-aware bot 77–89%. Rules only: impostor allowed 89% |
 | Adaptive bots (E27) | Replay with ±15–30% noise passes 48–72%; template-aware bots 75–82% |
 | **Fine-tuned TypeFormer** (Aalto → StrokePIN; 60 train, 7 validation, 30 unseen test people; 3 enrollments) | Before: EER 0.292, impostor passes 70.6%. **After: EER 0.203, 41.8%.** Sit → walk: EER 0.311, 66.1%. Single run and split, no confidence interval, not directly comparable with the 97-person rows, not in the API |
 | Team-collected data | `TODO` |

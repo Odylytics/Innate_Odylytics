@@ -88,7 +88,7 @@ class CollectionMeta(BaseModel):
     """Nhãn thu dữ liệu. user_id = tài khoản bị thao tác; participant_id = người thật đang cầm máy."""
 
     participant_id: Ident
-    sitting: int = Field(ge=1, le=20)  # lần ngồi thứ mấy (1 = đăng ký, 2+ = kiểm thử theo thời gian)
+    sitting: int = Field(ge=1, le=20)  # lần thu thứ mấy (1 = đăng ký, 2+ = kiểm thử theo thời gian)
     # impostor: biết PIN, cố bấm giống chủ tài khoản; bot: phiên do bộ giả lập hacker sinh ra
     role: Literal["genuine", "impostor", "bot"]
     tactic: int | None = Field(default=None, ge=1, le=4)  # chiến thuật bot 1–4 (chỉ khi role = bot)

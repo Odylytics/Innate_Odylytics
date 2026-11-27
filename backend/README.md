@@ -81,7 +81,7 @@ Chỉ thời gian (ms, tính từ lúc vào màn hình) và toạ độ (px), **
 - `w`, `h` = `PointerEvent.width/height`; `key_cx/cy/w/h` = tâm và kích thước phím (`getBoundingClientRect`).
 - Không gửi `pressure`. Không dựa vào `isTrusted`.
 - Giới hạn: ≤ 30 lần vuốt mỗi phiên, ≤ 200 điểm mỗi lần vuốt (~3 giây ở 60 Hz); dài hơn thì SDK cắt bớt.
-- **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần ngồi thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine`, `impostor` (biết PIN, cố bấm giống chủ) hoặc `bot` (kèm `tactic` 1–4, do [bộ giả lập](../attacker/README.md) gửi). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
+- **Khi thu dữ liệu** thêm `"meta": {"participant_id": "p07", "sitting": 1, "role": "genuine", "note": "..."}`. `sitting` = lần thu thứ mấy (1 đăng ký, 2+ kiểm thử); `role` = `genuine`, `impostor` (biết PIN, cố bấm giống chủ) hoặc `bot` (kèm `tactic` 1–4, do [bộ giả lập](../attacker/README.md) gửi). Lượt đóng giả: `user_id` là tài khoản của chủ, `participant_id` là người đang bấm.
 - Server từ chối (422): `t_up < t_down`, số NaN/âm, `user_id` có ký tự lạ, quá nhiều sự kiện.
 
 **Ô nhập ngoài PIN (`fields`, tuỳ chọn):** số tiền, người nhận, ghi chú. Chỉ gửi **thời gian, loại sự kiện và số ký tự**, không gửi nội dung.

@@ -2,7 +2,7 @@ import warnings; warnings.filterwarnings("ignore")
 import torch, common
 d = torch.device("mps")
 S = common.load_sessions()
-print(len(S), "lượt;", sorted({e["posture"] for e in S}))
+print(len(S), "lượt")
 tr, va, te = common.split_users({e["user"] for e in S})
 print("train/val/test người:", len(tr), len(va), len(te))
 m = common.build_model(d)

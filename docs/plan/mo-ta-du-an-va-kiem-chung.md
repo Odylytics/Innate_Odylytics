@@ -42,7 +42,7 @@ Số liệu baseline hiện có (bắt 100% chiến thuật 1–2, 0% chiến th
 
 | Khẳng định trong kế hoạch | Kết quả đối chiếu |
 |---|---|
-| Zheng 2014: EER 3,65–7,34% khi nhập PIN | **Đúng.** PIN `3-2-4-4` 3,65%, `1-1-1-1` 6,96%, `5-5-5-5` 7,34%, PIN 8 số ~4,5%. 80+ người, một tư thế, 85 lượt huấn luyện/người, và **dùng cả gia tốc, áp lực, kích thước chạm, thời gian**. |
+| Zheng 2014: EER 3,65–7,34% khi nhập PIN | **Đúng.** PIN `3-2-4-4` 3,65%, `1-1-1-1` 6,96%, `5-5-5-5` 7,34%, PIN 8 số ~4,5%. 80+ người, 85 lượt huấn luyện/người, và **dùng cả gia tốc, áp lực, kích thước chạm, thời gian**. |
 | Buschek 2015: thêm vị trí chạm giảm EER 26,4–36,8% | **Đúng.** 28 người, 2 tuần. Đánh giá một phiên cho EER thấp hơn nửa so với khác phiên. |
 | FETA 2022: EER 4,9% → 13,8% | **Đúng.** Rà 30 bài, tất cả mắc ít nhất một lỗi. Đưa dữ liệu kẻ gian vào huấn luyện làm đẹp 2,55 điểm, trộn đời máy 3,2–5,8 điểm. |
 | BioTouchPass2: EER 2,38% | **Đúng.** 217 người, PIN 4 số, mô hình RNN. Với tấn công bắt chước (imitation), EER 10,4–15%. |
@@ -81,7 +81,7 @@ Các điểm khác:
 |---|---|
 | 1 | Đăng ký thi và gửi câu hỏi cho BTC **trước 23:59 27/11** |
 | 2 | Ví demo web + SDK Pointer Events + bàn phím PIN tự vẽ (đang chặn mọi thứ khác) |
-| 3 | Thu dữ liệu thật: ≥ 2 lần ngồi, một điện thoại, có phiếu đồng ý |
+| 3 | Thu dữ liệu thật: ≥ 2 lần thu, một điện thoại, có phiếu đồng ý |
 | 4 | Backend: kiểm tra "trùng phiên cũ" để bắt chiến thuật 3 |
 | 5 | Mô hình 1 (LightGBM/RF), giữ riêng nguồn bot `adb` làm tập kiểm thử độc lập |
 | 6 | Hiệu chỉnh `owner.py` (ánh xạ d=2 → 0,5 đang quá dễ dãi) trên dữ liệu thật |

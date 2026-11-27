@@ -10,8 +10,8 @@ Mã độc dùng quyền Trợ năng bấm thay người dùng, hoặc kẻ gian
 
 | Câu hỏi | Cần đăng ký | Bắt ai | Độ chắc hiện đo được |
 |---|---|---|---|
-| Người hay máy? | Không | Mã độc, script, `adb` | Bot ngây thơ và phát lại nhiễu ≤±10%: giữ lệnh 100% (E24). Bot thích nghi: lọt 48–82%. |
-| Có phải chủ? | Có (3 lượt) | Người quen, kẻ trộm biết PIN | EER 16–20% cùng tư thế, 32–36% khi đổi tư thế (E9). Không đủ làm cổng chặn. |
+| Người hay máy? | Không | Mã độc, script, `adb` | Bot ngây thơ và phát lại nhiễu ≤±10%: giữ lệnh 100% (E24). Bot thích nghi: lọt 44–86%. |
+| Có phải chủ? | Có (3 lượt) | Người quen, kẻ trộm biết PIN | EER 16–20% (E9). Không đủ làm cổng chặn. |
 
 **Định vị trung thực:** phần mạnh là phát hiện điều khiển tự động và phát lại. Nhận chủ là tín hiệu rủi ro bổ sung, hợp nhất bằng trọng số, không phải cổng AND.
 
@@ -94,11 +94,11 @@ Bot ngây thơ bắt 100%; bot giống người thì mô hình dễ học tắt.
 
 | Ngưỡng | ±5% | ±10% | ±15% | ±20% | ±30% |
 |---|---|---|---|---|---|
-| 0,085 | 1,00 | 1,00 | 0,86 | 0,09 | 0,00 |
-| 0,094 (FPR 1%) | 1,00 | 1,00 | 0,98 | 0,30 | 0,00 |
-| 0,117 (FPR 5%) | 1,00 | 1,00 | 1,00 | 0,92 | 0,03 |
+| 0,085 | 1,00 | 1,00 | 0,85 | 0,10 | 0,00 |
+| 0,088 (FPR 1%) | 1,00 | 1,00 | 0,92 | 0,16 | 0,00 |
+| 0,107 (FPR 5%) | 1,00 | 1,00 | 1,00 | 0,73 | 0,01 |
 
-Ngưỡng cao hơn bắt thêm nhưng chặn nhầm chủ: ở E27b, ngưỡng 0,12 làm chủ ngồi bị hold 17%.
+Ngưỡng cao hơn bắt thêm nhưng chặn nhầm chủ: ở E27b, ngưỡng 0,12 làm chủ bị hold 15%.
 
 ### 5.3 Nhận chủ
 
@@ -106,27 +106,24 @@ Ngưỡng cao hơn bắt thêm nhưng chặn nhầm chủ: ở E27b, ngưỡng 0
 
 | Điều kiện | EER | FAR@FRR5% |
 |---|---|---|
-| Cùng tư thế (ngồi), thời gian, backend | 0,201 | 0,710 |
-| Cùng tư thế, thời gian, **co rút về dân số (E2)** | 0,200 | 0,570 |
-| Cùng tư thế, thời gian + lệch tâm + kích thước chạm | 0,157 | 0,740 |
-| Đổi tư thế (đi), thời gian | 0,323 | 0,839 |
+| Thời gian, backend | 0,201 | 0,686 |
+| Thời gian, **co rút về dân số (E2)** | 0,199 | 0,565 |
+| Thời gian + lệch tâm + kích thước chạm | 0,155 | 0,656 |
 
-Đổi tư thế làm mất gần hết tín hiệu. Kích thước chạm có thể mang tín hiệu thiết bị (một máy mỗi người).
+Kích thước chạm có thể mang tín hiệu thiết bị (một máy mỗi người). Số chạy lại 27/11.
 
 **E12b, mô hình học, không dùng kích thước chạm:**
 
-| Tư thế | Mô hình | EER | FAR@FRR5% |
-|---|---|---|---|
-| Ngồi | baseline mean |z| | 0,161 | 0,573 |
-| Ngồi | LightGBM | 0,158 | 0,375 |
-| Đi | baseline | 0,363 | 0,944 |
-| Đi | LightGBM | 0,309 | 0,708 |
+| Mô hình | EER | FAR@FRR5% |
+|---|---|---|
+| baseline mean |z| | 0,160 | 0,549 |
+| LightGBM | 0,140 | 0,316 |
 
-**E1/E2 (CMU, bàn phím máy tính) và E10:** co rút phương sai về dân số giảm FAR@FRR5% 7–11 điểm, EER không đổi; đã đưa vào `owner.py` (`population_prior.json`, nu=5).
+**E1/E2 (CMU, bàn phím máy tính) và E10:** co rút phương sai về dân số giảm FAR@FRR5% 9–16 điểm, EER không đổi; đã đưa vào `owner.py` (`population_prior.json`, nu=5).
 
-**E13, số phím (Aalto, chỉ thời gian):** EER 0,364 → 0,245 và FAR 0,807 → 0,489 khi tăng từ 6 lên 30 phím. Cơ sở cho Innate Challenge. **E14:** chủ khi gõ 6 số mới EER 0,33. **E22:** mô hình học giảm thêm FAR ~7 điểm trên câu gõ; đặc trưng tư thế lạc quan nên bỏ.
+**E13, số phím (Aalto, chỉ thời gian):** EER 0,364 → 0,245 và FAR 0,807 → 0,489 khi tăng từ 6 lên 30 phím. Cơ sở cho Innate Challenge. **E14:** chủ khi gõ 6 số mới EER 0,33. **E22:** mô hình học giảm thêm FAR ~7 điểm trên câu gõ; đặc trưng góc cầm máy lạc quan nên bỏ.
 
-**E23, chuyển động (IMU):** chỉ IMU đạt EER 0,038–0,070 khi cùng tư thế (FAR@FRR5% 0,03–0,10) nhưng là **nhiễu thiết bị** (mỗi người một máy) và vô dụng khi đổi tư thế (EER 0,44–0,48). **Không được tuyên bố nhận chủ bằng IMU.**
+**E23, chuyển động (IMU):** chỉ IMU đạt EER 0,038–0,068 (FAR@FRR5% 0,03–0,09) nhưng là **nhiễu thiết bị** (mỗi người một máy). **Không được tuyên bố nhận chủ bằng IMU.**
 
 **E21/E21b:** chuẩn hoá theo cặp phím gần như không đổi; hồ sơ từng cặp phím làm tệ hơn.
 
@@ -134,38 +131,37 @@ Ngưỡng cao hơn bắt thêm nhưng chặn nhầm chủ: ở E27b, ngưỡng 0
 
 ### 5.4 Toàn hệ thống (E24, E25, E27, E28)
 
-10 người chưa từng thấy bởi cả hai mô hình học, đăng ký 3 lượt ngồi, ngưỡng A=0,25 B=0,55, người nhận quen:
+10 người chưa từng thấy bởi cả hai mô hình học, đăng ký 3 lượt, ngưỡng A=0,25 B=0,55, người nhận quen (chạy lại 27/11):
 
 | Nhóm | giữ lệnh | xác thực thêm | cho qua |
 |---|---|---|---|
-| Chủ, ngồi | 1% | 19% | 80% |
-| Chủ, đi | 0% | 37% | 63% |
-| Kẻ biết PIN (máy khác) | 2% | 70% | 28% |
+| Chủ | 1% | 18% | 81% |
+| Kẻ biết PIN (máy khác) | 1% | 71% | 28% |
 | Bot đều / nhiễu thời gian / phát lại ±5% / ±10% | 100% | 0% | 0% |
-| Bot lấy mẫu dân số (CT4) | 26% | 67% | 7% |
-| Phát lại ±15% | 30% | 13% | 58% |
+| Bot lấy mẫu dân số (CT4) | 23% | 72% | 5% |
+| Phát lại ±15% | 28% | 13% | 60% |
 | Phát lại ±20% | 1% | 26% | 72% |
-| Phát lại ±30% | 4% | 48% | 48% |
-| Bot biết mẫu chuẩn (scale 1,0) | 8% | 17% | 75% |
-| Bot biết mẫu chuẩn (scale 0,5) | 12% | 6% | 82% |
+| Phát lại ±30% | 3% | 53% | 44% |
+| Bot biết mẫu chuẩn (scale 1,0) | 6% | 15% | 79% |
+| Bot biết mẫu chuẩn (scale 0,5) | 9% | 5% | 86% |
 
-Người nhận mới: chủ ngồi chỉ allow 17% (step_up 79%).
+Người nhận mới: chủ chỉ allow 18% (step_up 79%).
 
 **E25, quét ngưỡng A (B=0,55):**
 
-| A | Chủ ngồi allow | Kẻ biết PIN không allow |
+| A | Chủ allow | Kẻ biết PIN không allow |
 |---|---|---|
-| 0,10 | 17% | 99% |
-| 0,20 | 65% | 90% |
-| **0,25 (hiện tại)** | **80%** | **72%** |
-| 0,30 | 91% | 50% |
-| 0,40 | 96% | 14% |
+| 0,10 | 18% | 100% |
+| 0,20 | 64% | 90% |
+| **0,25 (hiện tại)** | **81%** | **72%** |
+| 0,30 | 90% | 54% |
+| 0,40 | 97% | 13% |
 
 Không có điểm tối ưu cho cả hai phía.
 
-**E28, độ dài PIN (mô phỏng bằng cắt 4 lần chạm đầu):** PIN 4 số làm mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%). **Kết luận đã áp dụng: demo web chuyển sang PIN 6 số `159357`.** Với 6 số và AI bật, chủ ngồi mới allow 16/25 lần trong kịch bản demo (`docs/plan/web-demo.md`).
+**E28, độ dài PIN (mô phỏng bằng cắt 4 lần chạm đầu):** PIN 4 số làm mô hình chủ học không chạy, kẻ biết PIN được allow 68% (6 số: 28%). **Kết luận đã áp dụng: demo web chuyển sang PIN 6 số `159357`.** Với 6 số và AI bật, chủ mới allow 16/25 lần trong kịch bản demo (`docs/plan/web-demo.md`).
 
-**E3, hiệu chỉnh điểm chủ:** ánh xạ cũ (d=2→0,5) cho 84% kẻ biết PIN vượt 0,5 (chủ 96%); Platt cân bằng lớp còn 27% (chủ 90%). Ở FRR 5% FAR vẫn ~50%. Nối vào backend (`NHIP_OWNER_MAP=platt`) chỉ đổi đường dự phòng, làm chủ ngồi ở người nhận mới tụt từ 92% xuống 2% allow và chặn cập nhật mẫu chuẩn, nên **để tắt mặc định** (`e24_platt_map.md`).
+**E3, hiệu chỉnh điểm chủ:** ánh xạ cũ (d=2→0,5) cho 84% kẻ biết PIN vượt 0,5 (chủ 96%); Platt cân bằng lớp còn 27% (chủ 90%). Ở FRR 5% FAR vẫn ~50%. Nối vào backend (`NHIP_OWNER_MAP=platt`) chỉ đổi đường dự phòng, làm chủ ở người nhận mới tụt từ 91% xuống 3% allow và chặn cập nhật mẫu chuẩn, nên **để tắt mặc định** (`e24_platt_map.md`).
 
 **E7, đầu độc mẫu chuẩn (dữ liệu giả):** không có trần trôi thì kẻ gian được chấp nhận 100% và chủ bị khoá ngoài (0,58). Đóng băng khi trôi >0,5 sd cho 0,77 (so 0,85 của trần 1 sd), kèm cờ cảnh báo. Đã cài trong `owner.update`; chưa lộ cờ ra API.
 
@@ -175,29 +171,27 @@ Không có điểm tối ưu cho cả hai phía.
 
 | Nhóm | giữ lệnh | xác thực thêm | cho qua |
 |---|---|---|---|
-| Chủ, ngồi | 1% | 23% | 76% [73, 79] |
-| Chủ, đi | 1% | 50% | 49% [45, 53] |
-| Kẻ biết PIN (máy khác) | 1% | 77% | **22% [20, 24]** |
+| Chủ | 1% | 22% | 77% [74, 80] |
+| Kẻ biết PIN (máy khác) | 1% | 82% | **17% [15, 19]** |
 | Bot đều / nhiễu thời gian / phát lại ±5% / ±10% | 100% | 0% | 0% |
-| Bot lấy mẫu dân số (CT4) | 32% | 65% | 3% |
-| Phát lại ±15% | 29% | 20% | 51% [48, 54] |
-| Phát lại ±20% | 3% | 39% | 58% [55, 62] |
-| Phát lại ±30% | 6% | 62% | 32% [28, 35] |
-| Bot biết mẫu chuẩn (scale 1,0) | 4% | 24% | 72% [69, 76] |
-| Bot biết mẫu chuẩn (scale 0,5) | 5% | 9% | 87% [84, 89] |
+| Bot lấy mẫu dân số (CT4) | 34% | 63% | 2% |
+| Phát lại ±15% | 32% | 20% | 49% [45, 52] |
+| Phát lại ±20% | 4% | 39% | 56% [53, 59] |
+| Phát lại ±30% | 8% | 65% | 27% [24, 31] |
+| Bot biết mẫu chuẩn (scale 1,0) | 4% | 19% | 77% [73, 80] |
+| Bot biết mẫu chuẩn (scale 0,5) | 5% | 6% | 89% [87, 91] |
 
-- Kết luận của E24 không đổi, và hẹp hơn: kẻ biết PIN lọt **22% (không phải 28%)**, chủ đang đi chỉ được qua 49% (E24: 63%).
-- Người nhận mới: chủ ngồi chỉ được allow 7%, kẻ biết PIN 0%, bot biết mẫu chuẩn 6% (scale 1,0) đến 22% (scale 0,5).
-- Quét A: A=0,20 chặn kẻ biết PIN 95% nhưng chủ chỉ qua 53%; A=0,30 cho chủ qua 89% nhưng chặn kẻ biết PIN 58%.
-- **Phân bố theo nạn nhân:** trung vị kẻ biết PIN được allow 21%, phân vị 90% là 33%, lớn nhất 58%, Gini 0,28. Không có nạn nhân nào bị allow trên 90%; 1/97 trên 50%. Tức không có người "lọt mãi mãi" ở cấu hình này.
+- Kết luận của E24 không đổi, và hẹp hơn: kẻ biết PIN lọt **17% (không phải 28%)**. Số chạy lại 27/11.
+- Người nhận mới: chủ chỉ được allow 15%, kẻ biết PIN 0%, bot biết mẫu chuẩn 18% (scale 1,0) đến 40% (scale 0,5).
+- Quét A: A=0,20 chặn kẻ biết PIN 96% nhưng chủ chỉ qua 55%; A=0,30 cho chủ qua 89% nhưng chặn kẻ biết PIN 67%.
+- **Phân bố theo nạn nhân:** trung vị kẻ biết PIN được allow 17%, phân vị 90% là 29%, lớn nhất 46%, Gini 0,33. Không có nạn nhân nào bị allow trên 50%. Tức không có người "lọt mãi mãi" ở cấu hình này.
 
 **Cấu hình bản demo online (chỉ luật, mô hình học tắt), cùng 97 người, người nhận quen** (`e29_rules_only.md`):
 
 | Nhóm | giữ lệnh | xác thực thêm | cho qua |
 |---|---|---|---|
-| Chủ, ngồi | 1% | 4% | 95% [94, 96] |
-| Chủ, đi | 0% | 13% | 87% [84, 89] |
-| Kẻ biết PIN (máy khác) | 0% | 10% | **89% [88, 91]** |
+| Chủ | 0% | 3% | 96% [95, 98] |
+| Kẻ biết PIN (máy khác) | 0% | 11% | **89% [88, 91]** |
 | Bot đều / nhiễu thời gian / phát lại ±5% / ±10% | 100% | 0% | 0% |
 | Bot lấy mẫu dân số (CT4) | 0% | 22% | 78% [75, 81] |
 | Phát lại ±15% | 27% | 1% | 72% [70, 74] |
@@ -209,7 +203,7 @@ Không có điểm tối ưu cho cả hai phía.
 - Phần luật vẫn bắt chắc bot ngây thơ và phát lại ≤±10% (100% giữ lệnh).
 - **Hệ quả cho demo:** kịch bản "Bảo biết PIN bị `step_up`" dùng persona tổng hợp có thói quen khác rõ rệt, nên chạy được trên bản luật thuần; với mô hình học bật, kết quả demo thay đổi (số đo cũ: Bảo bị `hold` 14/25 lần) và phải quay thử lại. Trên người thật, luật thuần cho 89% được cho qua và mô hình học cho 22%. Không dùng demo (phiên mô phỏng) làm bằng chứng "chặn được người biết PIN"; dùng số đo E29.
 
-**E30, số lượt đăng ký (nhận chủ bằng khoảng cách, ngồi, 97 người):**
+**E30, số lượt đăng ký (nhận chủ bằng khoảng cách, 97 người):**
 
 | k | EER | FAR@FRR5% |
 |---|---|---|
@@ -217,9 +211,9 @@ Không có điểm tối ưu cho cả hai phía.
 | 3 | 0,146 | 0,503 [0,421, 0,627] |
 | 4 | 0,138 | 0,429 [0,360, 0,534] |
 
-Đăng ký nhiều hơn thì kẻ gian lọt ít hơn, giảm rõ nhất từ 2 lên 3 lượt. k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử vì StrokePIN chỉ có tối đa 5 lượt ngồi mỗi người–PIN, và k=4 chỉ kiểm thử trên 1 lượt. Prior dân số lấy từ file của backend, không loại riêng từng nạn nhân nên có thể lạc quan nhẹ.
+Đăng ký nhiều hơn thì kẻ gian lọt ít hơn, giảm rõ nhất từ 2 lên 3 lượt. k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử vì StrokePIN chỉ có tối đa 5 lượt mỗi người–PIN, và k=4 chỉ kiểm thử trên 1 lượt. Prior dân số lấy từ file của backend, không loại riêng từng nạn nhân nên có thể lạc quan nhẹ.
 
-**E31, chỉnh trọng số fusion và ngưỡng A trên dữ liệu E29** (tune 3 phần, kiểm 2 phần khác người): cấu hình tốt nhất tìm được (wb 0,50, wo 0,30, A 0,26) chỉ tăng tỉ lệ không-allow trung bình của 7 nhóm tấn công thích nghi từ 55% lên 57% trên phần kiểm, đồng thời hạ chặn kẻ biết PIN từ 81% xuống 77%. Cải thiện nhỏ hơn dao động giữa các phần, nên **giữ trọng số và ngưỡng hiện tại**. Bài học: đây không phải vấn đề chỉnh tham số mà là giới hạn của tín hiệu.
+**E31, chỉnh trọng số fusion và ngưỡng A trên dữ liệu E29** (tune 3 phần, kiểm 2 phần khác người): cấu hình tốt nhất tìm được (wb 0,50, wo 0,30, A 0,26) không tăng tỉ lệ không-allow trung bình của 7 nhóm tấn công thích nghi trên phần kiểm (54% → 54%; phần tune 55% → 56%), đồng thời hạ chặn kẻ biết PIN từ 86% xuống 81% (chạy lại 27/11). Cải thiện nhỏ hơn dao động giữa các phần, nên **giữ trọng số và ngưỡng hiện tại**. Bài học: đây không phải vấn đề chỉnh tham số mà là giới hạn của tín hiệu.
 
 ### 5.5 Hiệu năng và hạ tầng
 
@@ -230,9 +224,9 @@ Không có điểm tối ưu cho cả hai phía.
 ## 6. Hạn chế đã biết (nên ghi nguyên văn trên slide)
 
 1. Chưa có dữ liệu của đội và bot thật; train và test bot dùng chung 4 bộ sinh.
-2. **Khi mô hình học tắt (lỗi nạp hoặc công tắc), hệ thống rơi về luật thuần và kẻ biết PIN được cho qua 89% trên người thật (E29 chỉ luật)**; số tốt hơn (22%) chỉ có khi mô hình học bật. Đã có test và script `check_online.py` để canh điều này.
-3. Nhận chủ bằng nhịp chạm yếu (FAR ~50% ở FRR 5%), đổi tư thế mất tín hiệu; kẻ biết PIN trong đo lường dùng máy khác nên số lạc quan.
-4. Bot biết mẫu chuẩn qua mặt 72–87% và phát lại ±15% đến ±20% qua 51–58% (E29, 97 người); chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
+2. **Khi mô hình học tắt (lỗi nạp hoặc công tắc), hệ thống rơi về luật thuần và kẻ biết PIN được cho qua 89% trên người thật (E29 chỉ luật)**; số tốt hơn (17%) chỉ có khi mô hình học bật. Đã có test và script `check_online.py` để canh điều này.
+3. Nhận chủ bằng nhịp chạm yếu (FAR ~50% ở FRR 5%); kẻ biết PIN trong đo lường dùng máy khác nên số lạc quan.
+4. Bot biết mẫu chuẩn qua mặt 77–89% và phát lại ±15% đến ±20% qua 49–56% (E29, 97 người); chưa có biện pháp đối phó (ActReal báo tấn công thích nghi thành công 71–77%).
 5. Mô hình học dùng dữ liệu StrokePIN (CC BY-NC-SA 4.0) nên cả repo theo giấy phép đó; mô hình là tạm thời cho đến khi có dữ liệu đội.
 6. Chưa có đường đăng ký lại có kiểm soát (thiết kế ở `../plan/dang-ky-lai.md`); mẫu bị đóng băng chưa có cách mở.
 7. Kiểu gõ tiếng Việt chưa kiểm chứng trên bàn phím thật; chưa nối `vi_*` vào nhận chủ.

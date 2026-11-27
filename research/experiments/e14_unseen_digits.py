@@ -3,10 +3,10 @@
 Câu hỏi: số tài khoản đổi theo từng giao dịch, nên không so được theo vị trí chữ số như mẫu PIN (pin_hold_0..5).
 Với đặc trưng KHÔNG phụ thuộc nội dung, còn nhận ra chủ được bao nhiêu khi chuỗi số chưa từng thấy lúc đăng ký?
 
-StrokePIN: 97 người, 20 PIN 6 số dùng chung, ngồi/đi. Mỗi người: đăng ký bằng 3 lượt x 3 PIN (9 "giao dịch") khi ngồi.
-Kiểm thử (kẻ gian = người khác gõ CÙNG chuỗi số, cùng tư thế):
+StrokePIN: 97 người, 20 PIN 6 số dùng chung. Mỗi người: đăng ký bằng 3 lượt x 3 PIN (9 "giao dịch").
+Kiểm thử (kẻ gian = người khác gõ CÙNG chuỗi số):
   A. cùng chuỗi số đã đăng ký (lượt chưa dùng)      B. chuỗi số mới
-  C. chuỗi số mới, 12 số (gộp 2 lượt của 2 PIN mới) D. chuỗi số mới, khi đi
+  C. chuỗi số mới, 12 số (gộp 2 lượt của 2 PIN mới)
 Đặc trưng: thời gian giữ/khoảng cách (gộp, và theo khoảng cách hình học giữa hai phím), lệch tâm theo cột/hàng phím.
 BỎ kích thước chạm (mang thông tin thiết bị, như E12b). Bộ phát hiện: khoảng cách mean|z| (như backend) và LightGBM học
 trên |z| từ người huấn luyện (chia theo NGƯỜI, 3 cách chia). CI 95% bootstrap theo người, trung bình giữa các lần chia.
@@ -56,9 +56,9 @@ def feats(entries: list[dict]) -> np.ndarray:
 S = strokepin_loader.load()
 for e in S:
     e["v"] = feats([e])
-grp = defaultdict(list)  # (user, pin, posture) -> lượt
+grp = defaultdict(list)  # (user, pin) -> lượt
 for e in S:
-    grp[(e["user"], e["pin"], e["posture"])].append(e)
+    grp[(e["user"], e["pin"])].append(e)
 USERS = sorted({e["user"] for e in S})
 
 
@@ -66,7 +66,7 @@ def floor_from(train_users) -> np.ndarray:
     """Sàn độ lệch chuẩn = nửa trung vị độ lệch chuẩn trong-người (chỉ từ người huấn luyện, không rò rỉ)."""
     sds = []
     for u in train_users:
-        X = np.array([e["v"] for (uu, _p, po), es in grp.items() if uu == u and po == "sit" for e in es])
+        X = np.array([e["v"] for (uu, _p), es in grp.items() if uu == u for e in es])
         sds.append(np.nanstd(X, axis=0))
     return 0.5 * np.nanmedian(np.array(sds), axis=0)
 
@@ -81,36 +81,34 @@ def rows(users, floor, seed):
         Z.append(np.abs((v - mu) / sd)); y.append(lab); w.append(u)
 
     for u in users:
-        pins = sorted(p for (uu, p, po), es in grp.items() if uu == u and po == "sit" and len(es) >= K_PER_PIN + 1)
+        pins = sorted(p for (uu, p), es in grp.items() if uu == u and len(es) >= K_PER_PIN + 1)
         if len(pins) < N_PIN_ENR + 2:
             continue
         rng.shuffle(pins)
         enr_pins, new_pins = pins[:N_PIN_ENR], pins[N_PIN_ENR:]
         enr, seen_rest = [], []
         for p in enr_pins:
-            es = rng.sample(grp[(u, p, "sit")], len(grp[(u, p, "sit")]))
+            es = rng.sample(grp[(u, p)], len(grp[(u, p)]))
             enr += es[:K_PER_PIN]; seen_rest += es[K_PER_PIN:]
         X = np.array([e["v"] for e in enr])
         mu, sd = np.nanmean(X, axis=0), np.fmax(np.nanstd(X, axis=0), floor)
 
-        def others(p, po):
-            return [e for (v, pp, ppo), es in grp.items() if pp == p and ppo == po and v != u for e in es]
+        def others(p):
+            return [e for (v, pp), es in grp.items() if pp == p and v != u for e in es]
 
-        tests = {"A": [(e, "sit") for e in seen_rest],
-                 "B": [(e, "sit") for p in new_pins for e in grp[(u, p, "sit")]],
-                 "D": [(e, "walk") for p in new_pins for e in grp.get((u, p, "walk"), [])]}
+        tests = {"A": seen_rest, "B": [e for p in new_pins for e in grp[(u, p)]]}
         for cond, items in tests.items():
-            for e, po in rng.sample(items, min(N_GEN, len(items))):
+            for e in rng.sample(items, min(N_GEN, len(items))):
                 add(cond, e["v"], 0, u, mu, sd)
-                for imp in rng.sample(others(e["pin"], po), min(N_IMP, len(others(e["pin"], po)))):
+                for imp in rng.sample(others(e["pin"]), min(N_IMP, len(others(e["pin"])))):
                     add(cond, imp["v"], 1, u, mu, sd)
         # C: 12 số = 2 lượt của 2 PIN mới khác nhau; kẻ gian = MỘT người khác gõ đúng 2 PIN đó
         for _ in range(N_GEN):
             p1, p2 = rng.sample(new_pins, 2)
-            add("C", feats([rng.choice(grp[(u, p1, "sit")]), rng.choice(grp[(u, p2, "sit")])]), 0, u, mu, sd)
-            cand = [v for v in USERS if v != u and grp.get((v, p1, "sit")) and grp.get((v, p2, "sit"))]
+            add("C", feats([rng.choice(grp[(u, p1)]), rng.choice(grp[(u, p2)])]), 0, u, mu, sd)
+            cand = [v for v in USERS if v != u and grp.get((v, p1)) and grp.get((v, p2))]
             for v in rng.sample(cand, min(N_IMP, len(cand))):
-                add("C", feats([rng.choice(grp[(v, p1, "sit")]), rng.choice(grp[(v, p2, "sit")])]), 1, u, mu, sd)
+                add("C", feats([rng.choice(grp[(v, p1)]), rng.choice(grp[(v, p2)])]), 1, u, mu, sd)
     return {c: tuple(np.array(a) for a in t) for c, t in out.items()}
 
 
@@ -145,10 +143,9 @@ for sp in SPLITS:
         for name, s in (("khoảng cách mean|z|", np.nanmean(Z, axis=1)), ("LightGBM học", gb.predict_proba(Z)[:, 1])):
             res[(c, name)].append((metrics(s, y), *boot_ci(s, y, w)))
 
-LABEL = {"A": "cùng chuỗi số đã đăng ký", "B": "**chuỗi số mới** (6 số)", "C": "**chuỗi số mới, 12 số** (gộp 2 lượt)",
-         "D": "chuỗi số mới, khi **đi**"}
+LABEL = {"A": "cùng chuỗi số đã đăng ký", "B": "**chuỗi số mới** (6 số)", "C": "**chuỗi số mới, 12 số** (gộp 2 lượt)"}
 L = ["# E14 — nhận ra chủ khi gõ chuỗi số mới (mô phỏng số tài khoản; StrokePIN, người thật)", "",
-     f"Đăng ký {N_PIN_ENR} PIN x {K_PER_PIN} lượt khi ngồi. Kẻ gian = người khác gõ **cùng chuỗi số**, cùng tư thế. "
+     f"Đăng ký {N_PIN_ENR} PIN x {K_PER_PIN} lượt. Kẻ gian = người khác gõ **cùng chuỗi số**. "
      f"{len(FEATS)} đặc trưng không phụ thuộc nội dung, **không** dùng kích thước chạm. Chia theo người (58 huấn luyện / "
      f"{len(USERS) - 58} kiểm thử), {len(SPLITS)} cách chia; CI 95% bootstrap theo người, trung bình giữa các lần chia. Thấp hơn là tốt hơn.", "",
      "| Kiểm thử | Bộ phát hiện | EER | FAR @ FRR 5% | Phiên chủ / kẻ gian / người (lần chia cuối) |", "|---|---|---|---|---|"]

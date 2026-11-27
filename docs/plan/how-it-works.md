@@ -39,16 +39,15 @@ Vì người dùng cuối chỉ có 3–5 mẫu, đây là bài toán **ít mẫ
 
 | | Vân tay, khuôn mặt | Thói quen nhập PIN |
 |---|---|---|
-| Bản chất | Đặc điểm cơ thể, gần như cố định | Hành vi: đổi theo tư thế, tâm trạng, thời gian |
-| Độ chính xác | Rất cao | **EER ~16%**; ở FRR 5% thì **38–57%** kẻ gian biết PIN vẫn lọt (E9, E12b: 57% với khoảng cách cơ bản, 38% với mô hình học) |
-| Đổi điều kiện | Ổn định | **Ngồi → đi: gần như mất tín hiệu** (EER 32–40%) |
+| Bản chất | Đặc điểm cơ thể, gần như cố định | Hành vi: đổi theo tâm trạng, thời gian |
+| Độ chính xác | Rất cao | **EER ~14–16%**; ở FRR 5% thì **32–55%** kẻ gian biết PIN vẫn lọt (E9, E12b: 55% với khoảng cách cơ bản, 32% với mô hình học) |
 | Mẫu lưu ở đâu | Trong chip bảo mật trên máy | **Trên máy chủ** → phải bảo vệ như dữ liệu sinh trắc nhạy cảm |
 
 Hệ quả: Innate **không thay** mật khẩu hay Face ID. Điểm khớp thấp thì **không chặn cứng**, mà yêu cầu xác thực mạnh hơn. Đó là lý do có `step_up`.
 
 ## Cách đăng ký nên làm (khác Face ID một chút)
 
-- **Nhiều tư thế** (ngồi, đứng, đi) và **nhiều lần ngồi khác nhau**. E9 cho thấy chỉ đăng ký khi ngồi là không đủ; Buschek 2015 cho thấy đăng ký trong một phiên cho số lạc quan gấp đôi.
+- **Nhiều lần thu khác nhau** (nhiều buổi). Buschek 2015 cho thấy đăng ký trong một phiên cho số lạc quan gấp đôi.
 - Mẫu **tự cập nhật chậm** theo thời gian, có **trần độ trôi** để kẻ gian không "dạy dần" được (E7: không có trần thì kẻ gian được chấp nhận 100% và chủ bị khoá ngoài).
 - Chỉ lưu **thời gian, toạ độ, loại sự kiện**, không lưu nội dung PIN, số tiền, nội dung chuyển khoản.
 - Đăng ký cả các **ô nhập ngoài PIN** (số tiền, người nhận, ghi chú) nếu muốn dùng nhịp gõ của chúng làm tín hiệu chủ.

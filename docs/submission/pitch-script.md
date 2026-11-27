@@ -14,7 +14,7 @@
 | 6 | AI | Bảng thành phần. "Học máy cổ điển có kiểm chứng; với ~100 người, thống kê và cây quyết định thắng. Không có LLM trên đường quyết định." | 0:45 |
 | 7 | Bằng chứng | "Đo trên người thật, chia theo người. Bot ngây thơ bị bắt hết; nhận chủ tốt hơn nhưng vẫn là tín hiệu." Nêu rõ: bot do bộ sinh tạo, chưa phải dữ liệu của đội. | 0:50 |
 | 8 | Sản phẩm | API + SDK + demo + dashboard. Mời giám khảo tự thử (link ở PDF hướng dẫn). Kịch bản 4 bước. | 0:30 |
-| 9 | Hạn chế | **Nói trước khi bị hỏi:** bot giống người, nhận chủ yếu, đổi tư thế, web SDK, chưa có bot thật. "Đó là lý do thiết kế `step_up`." | 0:40 |
+| 9 | Hạn chế | **Nói trước khi bị hỏi:** bot giống người, nhận chủ yếu, web SDK, chưa có bot thật. "Đó là lý do thiết kế `step_up`." | 0:40 |
 | 10 | Tác động | Người dùng, đối tác, vận hành; lộ trình; câu chốt "PIN is what you know. Innate is how you are." | 0:30 |
 
 ## Câu hỏi giám khảo có thể hỏi và câu trả lời trung thực
@@ -46,8 +46,8 @@ Chúng tôi không biết chi tiết hệ thống nội bộ của ai. Điểm k
 **9. Độ trễ và chi phí mỗi lần chấm?**
 Đo local (E26, không tính mạng): `/score` p50 3,7 ms, p99 14 ms; mô hình là cây quyết định nhỏ (~180 KB). Chưa đo trên Vercel/Neon: `[TODO: đo lại trên bản nộp]`. Không có lời gọi LLM trên đường chấm điểm.
 
-**10. Đổi điện thoại, đổi tư thế thì sao?**
-Đổi tư thế gần như mất tín hiệu (đo: EER 0,31, kẻ gian lọt 71%). Vì vậy: đăng ký nhiều tư thế, và điểm thấp chỉ dẫn tới `step_up`. Đổi điện thoại cần đăng ký lại có kiểm soát (chưa thiết kế xong).
+**10. Đổi điện thoại thì sao?**
+Điểm thấp chỉ dẫn tới `step_up`, không chặn. Đổi điện thoại cần đăng ký lại có kiểm soát (chưa thiết kế xong).
 
 **11. Xử lý dữ liệu nhạy cảm theo luật mới thế nào?**
 Coi nhịp chạm/gõ là dữ liệu nhạy cảm (Luật BVDLCN 2025, NĐ 356/2025): chỉ thu khi đồng ý, không lưu nội dung PIN/số tiền/ghi chú, ghi rõ trong README. Mẫu nằm trên máy chủ nên phải bảo vệ như dữ liệu sinh trắc.
@@ -62,7 +62,7 @@ Ví demo và SDK web chạy trên trình duyệt điện thoại; SDK native ch�
 Chúng tôi tìm và **không thấy công trình công bố nào** dùng kiểu gõ Telex/VNI làm sinh trắc học (không có nghĩa là chưa ai làm). Ý tưởng: phím biến đổi dấu thanh và vị trí gõ dấu là thói quen cá nhân, không phụ thuộc câu cụ thể, và bot phải giả lập cả bộ gõ. Hiện mới có thiết kế, mô phỏng và mã trích đặc trưng; **chưa đo trên người Việt thật**.
 
 **15. Sao không dùng cảm biến chuyển động (con quay, gia tốc)?**
-Thử trên StrokePIN (E23): chuyển động cho EER 0,04 nhưng đó là nhiễu thiết bị (mỗi người một máy) và mất hết khi đổi tư thế; dữ liệu chỉ 5 Hz nên không kiểm được cú giật khi chạm. Chúng tôi coi đó là ứng viên chống bot ("có tay cầm"), chưa tuyên bố.
+Thử trên StrokePIN (E23): chuyển động cho EER 0,04 nhưng đó là nhiễu thiết bị (mỗi người một máy); dữ liệu chỉ 5 Hz nên không kiểm được cú giật khi chạm. Chúng tôi coi đó là ứng viên chống bot ("có tay cầm"), chưa tuyên bố.
 
 **16. Bản online chạy mô hình học chưa?**
 Rồi: `/health` báo cả hai mô hình đã nạp, mô hình chạy bằng Python thuần nên không phụ thuộc thư viện hệ thống. Mô hình có dự phòng luật nếu lỗi. Trên người thật (E29, 97 người), có mô hình học thì kẻ biết PIN được cho qua 22%, tắt mô hình thì 89%. Số này đo trong `research/`, chưa đo trên bản online; các phiên trong demo là mô phỏng. `[TODO: chạy backend/scripts/check_online.py lúc nộp và trước 11/12]`
