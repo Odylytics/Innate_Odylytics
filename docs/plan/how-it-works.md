@@ -1,63 +1,62 @@
-# Innate hoạt động thế nào (giải thích cho giám khảo và cho đội)
+# How Innate works (explanation for the judges and for the team)
 
-> Chốt ngày 24/11/2026. Dùng làm nền cho slide, video và phần trả lời giám khảo. Số liệu lấy từ E9/E4b (dữ liệu người thật công khai, chưa phải dữ liệu của đội); xem [`../research/ai-research.md`](../research/ai-research.md).
+> Finalized 24/11/2026. Used as the basis for the slides, the video, and answers to the judges. Figures come from E9/E4b (public real-human data, not the team's data yet); see [`../research/ai-research.md`](../research/ai-research.md).
 
-> Innate nằm ở đâu trong chồng bảo mật và không làm gì: [`positioning.md`](positioning.md).
+> Where Innate sits in the security stack and what it does not do: [`positioning.md`](positioning.md).
 
-## Câu chốt
+## The closing line
 
-> **Giống Face ID ở quy trình đăng ký và đối chiếu, nhưng là tín hiệu rủi ro, không phải chìa khoá.**
-> PIN có thể bị đánh cắp, thói quen chạm bẩm sinh thì rất khó. *(Nói "rất khó", không nói "không thể": xem [`pitch-story.md`](pitch-story.md).)*
+> **Like Face ID in how it enrolls and matches, but it is a risk signal, not a key.**
+> A PIN can be stolen, inborn touch habits are very hard to steal. *(Say "very hard", not "impossible": see [`pitch-story.md`](pitch-story.md).)*
 
-## Luồng
+## Flow
 
 ```
-Lần đầu (setup)      nhập PIN / chuyển tiền thử 3–5 lần  →  lưu "mẫu thói quen" của bạn
-Mỗi lần dùng sau     nhập như bình thường  →  so với mẫu  →  điểm khớp
-                                              + kiểm tra "người hay máy"
-                     →  cho qua / yêu cầu xác thực thêm (khuôn mặt, OTP) / giữ lệnh
+First time (setup)   enter the PIN / a trial transfer 3–5 times  →  store your "habit template"
+Each later use       enter as usual  →  compare with the template  →  match score
+                                              + "human or machine" check
+                     →  allow / require extra authentication (face, OTP) / hold the order
 ```
 
-## Hai việc "huấn luyện" khác nhau (hay bị nhầm)
+## Two different kinds of "training" (often confused)
 
-| | Huấn luyện chung | Đăng ký của từng người dùng |
+| | General training | Enrollment of each user |
 |---|---|---|
-| Khi nào | Một lần, trước khi ra sản phẩm | Mỗi người, lần đầu dùng |
-| Dữ liệu | Nhiều người (StrokePIN, rồi dữ liệu của đội) | 3–5 lần nhập của chính người đó |
-| Học gì | "Người nhập thường thế nào", "bot trông thế nào", phân bố dân số (prior) | **Không huấn luyện mô hình riêng**: chỉ lưu trung bình và độ dao động từng đặc trưng |
+| When | Once, before the product ships | Each person, on first use |
+| Data | Many people (StrokePIN, then the team's data) | 3–5 entries by that person |
+| What is learned | "How people usually type", "what bots look like", the population distribution (prior) | **No separate model is trained**: only the mean and the spread of each feature are stored |
 
-Vì người dùng cuối chỉ có 3–5 mẫu, đây là bài toán **ít mẫu (few-shot)**. Kiến thức dân số (prior) giúp bù cho việc ít mẫu: E2 giảm tỷ lệ kẻ gian lọt ở điểm vận hành FRR 5% khoảng 7–16 điểm phần trăm.
+Because the end user has only 3–5 samples, this is a **few-shot** problem. Population knowledge (the prior) makes up for the few samples: E2 reduces the share of impostors who get through at the FRR 5% operating point by about 7–16 percentage points.
 
-## Hai câu hỏi, không phải một
+## Two questions, not one
 
-| Câu hỏi | Cần đăng ký? | Bắt được ai | Độ chắc (số đo hiện có) |
+| Question | Enrollment needed? | Who it catches | Confidence (current measurements) |
 |---|---|---|---|
-| **Người hay máy?** | **Không**: có tác dụng từ lần dùng đầu | Mã độc, script, `adb` (kịch bản A) | Bot ngây thơ: bắt 100% (E4b). Bot giống người: 5–73% |
-| **Có phải chủ?** | **Có**: cần mẫu | Người quen, kẻ trộm biết PIN (kịch bản B) | EER 16–20% (E9) |
+| **Human or machine?** | **No**: works from the first use | Malware, scripts, `adb` (scenario A) | Naive bot: caught 100% (E4b). Human-like bot: 5–73% |
+| **Is it the owner?** | **Yes**: needs a template | Acquaintances, a thief who knows the PIN (scenario B) | EER 16–20% (E9) |
 
-## Không giống vân tay hay khuôn mặt
+## Not like a fingerprint or a face
 
-| | Vân tay, khuôn mặt | Thói quen nhập PIN |
+| | Fingerprint, face | PIN-entry habit |
 |---|---|---|
-| Bản chất | Đặc điểm cơ thể, gần như cố định | Hành vi: đổi theo tư thế, tâm trạng, thời gian |
-| Độ chính xác | Rất cao | **EER ~16%**; ở FRR 5% thì **38–57%** kẻ gian biết PIN vẫn lọt (E9, E12b: 57% với khoảng cách cơ bản, 38% với mô hình học) |
-| Đổi điều kiện | Ổn định | **Ngồi → đi: gần như mất tín hiệu** (EER 32–40%) |
-| Mẫu lưu ở đâu | Trong chip bảo mật trên máy | **Trên máy chủ** → phải bảo vệ như dữ liệu sinh trắc nhạy cảm |
+| Nature | A body characteristic, nearly fixed | Behavior: changes with mood, time |
+| Accuracy | Very high | **EER ~14–16%**; at FRR 5%, **32–55%** of PIN-knowing impostors still get through (E9, E12b: 55% with basic distance, 32% with the learned model) |
+| Where the template is stored | In the device's secure chip | **On the server** → must be protected like sensitive biometric data |
 
-Hệ quả: Innate **không thay** mật khẩu hay Face ID. Điểm khớp thấp thì **không chặn cứng**, mà yêu cầu xác thực mạnh hơn. Đó là lý do có `step_up`.
+Consequence: Innate **does not replace** passwords or Face ID. A low match score **does not hard-block**; it requires stronger authentication. That is why `step_up` exists.
 
-## Cách đăng ký nên làm (khác Face ID một chút)
+## How enrollment should be done (a little different from Face ID)
 
-- **Nhiều tư thế** (ngồi, đứng, đi) và **nhiều lần ngồi khác nhau**. E9 cho thấy chỉ đăng ký khi ngồi là không đủ; Buschek 2015 cho thấy đăng ký trong một phiên cho số lạc quan gấp đôi.
-- Mẫu **tự cập nhật chậm** theo thời gian, có **trần độ trôi** để kẻ gian không "dạy dần" được (E7: không có trần thì kẻ gian được chấp nhận 100% và chủ bị khoá ngoài).
-- Chỉ lưu **thời gian, toạ độ, loại sự kiện**, không lưu nội dung PIN, số tiền, nội dung chuyển khoản.
-- Đăng ký cả các **ô nhập ngoài PIN** (số tiền, người nhận, ghi chú) nếu muốn dùng nhịp gõ của chúng làm tín hiệu chủ.
+- **Several different collection rounds** (several sittings). Buschek 2015 shows that enrolling within a single session gives numbers twice as optimistic.
+- The template **updates itself slowly** over time, with a **drift cap** so that an impostor cannot "teach" it gradually (E7: without the cap the impostor is accepted 100% and the owner is locked out).
+- Store only **timing, coordinates, event type**; do not store the PIN content, the amount, or the transfer note.
+- Also enroll the **input fields other than the PIN** (amount, recipient, note) if their typing rhythm is to be used as an owner signal.
 
-## Cách nói với giám khảo (an toàn)
+## How to put it to the judges (safely)
 
-| Nói | Không nói |
+| Say | Do not say |
 |---|---|
-| "Giống Face ID ở cách đăng ký và đối chiếu, nhưng là **một tín hiệu rủi ro**" | "Thay thế Face ID / PIN", "chính xác như vân tay" |
-| "Bắt chắc bot ngây thơ ngay từ lần đầu; phần nhận chủ cần vài lần đăng ký" | "Bắt mọi mã độc" |
-| "Điểm thấp thì hỏi thêm, không chặn cứng" | "Tự khoá tài khoản" |
-| Số đo thật: EER 16–20%, nói trước khi bị hỏi | Hứa EER vài phần trăm như trong paper |
+| "Like Face ID in how it enrolls and matches, but **a risk signal**" | "Replaces Face ID / PIN", "as accurate as a fingerprint" |
+| "Reliably catches naive bots from the very first use; the owner part needs a few enrollment rounds" | "Catches all malware" |
+| "A low score means ask for more, not a hard block" | "Locks the account by itself" |
+| Real measurements: EER 16–20%, stated before being asked | Promise an EER of a few percent as in papers |

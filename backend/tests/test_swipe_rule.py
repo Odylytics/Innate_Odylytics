@@ -16,12 +16,12 @@ def _f(swipes):
 
 def test_uniform_speed_swipe_is_flagged_human_like_is_not():
     bot = _f([_swipe([2.0] * 8)])
-    human_like = _f([_swipe([0.5, 1.4, 2.6, 3.1, 2.2, 1.1, 0.6, 0.2])])  # thẳng tuyệt đối nhưng tăng-giảm tốc như ngón tay
+    human_like = _f([_swipe([0.5, 1.4, 2.6, 3.1, 2.2, 1.1, 0.6, 0.2])])  # perfectly straight but speeding up and slowing down like a finger
     assert bot["swipe_robotic"] == 1.0 and human_like["swipe_robotic"] == 0.0
 
 
 def test_short_straight_human_stroke_not_flagged_as_before():
-    f = _f([_swipe([0.4, 2.8, 0.9])])  # 4 điểm, thẳng: luật cũ (straight > 0.999) gắn cờ nhầm
+    f = _f([_swipe([0.4, 2.8, 0.9])])  # 4 points, straight: the old rule (straight > 0.999) flagged it wrongly
     assert f["swipe_straight_max"] > 0.999 and f["swipe_robotic"] == 0.0
 
 

@@ -1,6 +1,6 @@
-# Paper nền tảng cho Innate — Model 2 "Có phải chủ tài khoản?" (plan §5.0, §5.2)
+# Foundation papers for Innate — Model 2 "Có phải chủ tài khoản?" ("Is this the account owner?") (plan §5.0, §5.2)
 
-Local PDFs: `C:/TuanNghia/Project/Momo_Odylytics/papers/owner-verification/` (14 files, all checked for a `%PDF` header, all < 11 MB).
+Local PDFs: `papers/owner-verification/` (13 PDFs, git-ignored and not in the submission zip; they match rows 1 to 13 of the table). The table lists 16 papers: rows 14 to 16 (Biggio et al. ICB 2013, Pisani et al. 2016, Pisani et al. 2019) are paywalled, were not downloaded and are marked as such in the last column.
 All numbers below were read from the downloaded PDF text unless marked otherwise. DOIs marked "(from memory, verify)" were not checked against the publisher page.
 
 ## Paper index
@@ -34,7 +34,7 @@ Yes. On a soft PIN keypad, timing (hold time and inter-key latency) combined wit
 ### Cited Findings
 - Zheng et al. collected 11,062 PIN entries from over 80 users. They used four feature sets: time, pressure, touched size and acceleration (a 4-digit PIN gives 7 time features; an 8-digit PIN gives 15). They report average EERs "down to 3.65%" — [Zheng 2014](https://www.eecis.udel.edu/~hnw/paper/tapping.pdf)
 - Per-PIN EERs in Zheng Table 3 range from 3.65% to 7.37%. PINs with repeated digits (1-1-1-1, 5-5-5-5) are less accurate than 3-2-4-4 and the two 8-digit PINs. Combining all four feature sets always beat any single set — [Zheng 2014](https://www.eecis.udel.edu/~hnw/paper/tapping.pdf)
-- Buschek et al. (28 users × 2 sessions × 3 postures × 6 passwords × 20 repetitions) added spatial features to the usual hold/flight times: touch down/up location, offset to the key centre, "jumps" between touches, and drag. Combined spatial and temporal sets gave 26.4–36.8% lower EER than the best temporal-only sets, and 8.5–26.3% lower than spatial-only sets — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
+- Buschek et al. (28 users × 2 sessions × 6 passwords × 20 repetitions per condition) added spatial features to the usual hold/flight times: touch down/up location, offset to the key centre, "jumps" between touches, and drag. Combined spatial and temporal sets gave 26.4–36.8% lower EER than the best temporal-only sets, and 8.5–26.3% lower than spatial-only sets — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 - Buschek: in the best wrapper-selected feature sets, offsets were the most important addition. Down-pressure had low single-feature EER but never appeared in the best sets — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 - Buschek: single-session evaluation gave EERs less than half of those across sessions (classifiers had 51–73% lower EER within a session), so they recommend collecting data in at least 2 sessions — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 - The Buschek related-work section cites prior PIN-unlock work with EERs of 3.65–7.34% using distance-based anomaly detection, which matches Zheng — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
@@ -50,13 +50,13 @@ Yes. On a soft PIN keypad, timing (hold time and inter-key latency) combined wit
 ## Q2. Are swipe/scroll features (velocity, acceleration, curvature) useful for continuous authentication?
 
 ### Takeaway
-They are useful, but much weaker per gesture than PIN features. Touchalytics needs about 11–12 strokes to reach 2–3% EER. HMOG reports 25.7–34.2% EER for tap/hold/swipe features alone. This supports the plan's wording "Người vs máy; bổ sung nhận diện" (supporting signal, not the primary owner signal).
+They are useful, but much weaker per gesture than PIN features. Touchalytics needs about 11–12 strokes to reach 2–3% EER. HMOG reports 25.7–34.2% EER for tap/hold/swipe features alone. This supports the plan's wording "Người vs máy; bổ sung nhận diện" (human vs machine; supplementary identification) (supporting signal, not the primary owner signal).
 
 ### Cited Findings
 - Touchalytics proposes 30 behavioural stroke features. Median EER is 0% intra-session, 2–3% inter-session, and below 4% one week after enrollment — [Frank 2012/2013](https://arxiv.org/abs/1207.6231)
 - Touchalytics ranks features by relative mutual information with user identity. Top features: 20th-percentile pairwise velocity (19.63%), average velocity (8.84%), 80th-percentile velocity (7.85%), median velocity at the last 3 points (7.24%), and largest deviation from the end-to-end line (6.08%, a curvature proxy) — [Frank 2012](https://arxiv.org/abs/1207.6231)
 - Touchalytics: the EER converges to 2–3% at about 11–12 strokes per decision and stays there up to 20 strokes. They used 11 strokes, i.e. 11–43 s per decision — [Frank 2012](https://arxiv.org/abs/1207.6231)
-- HMOG: tap, key-hold and swipe features alone had 25.7–34.2% EER. HMOG (motion) features gave 7.16% (walking) and 10.05% (sitting). Adding tap/keystroke features to HMOG lowered EER from 17.93% to 11.74% (walking) and from 19.11% to 15.25% (sitting) — [Sitová 2015](https://arxiv.org/abs/1501.01199)
+- HMOG: tap, key-hold and swipe features alone had 25.7–34.2% EER. HMOG (motion) features gave 7.16–10.05%. Adding tap/keystroke features to HMOG lowered EER from 17.93–19.11% to 11.74–15.25% — [Sitová 2015](https://arxiv.org/abs/1501.01199)
 
 ### Inferences
 - A wallet session usually has only a few swipes before payment, far fewer than Touchalytics' 11 strokes. Swipe features should be a low-weight signal in Model 2 and mainly a bot/human signal in Model 1.
@@ -67,7 +67,7 @@ They are useful, but much weaker per gesture than PIN features. Touchalytics nee
 ## Q3. Template scoring with per-feature normalized distance (scaled Manhattan, Mahalanobis)
 
 ### Takeaway
-This is strongly supported. In the standard keystroke benchmark, scaled Manhattan (mean template, each feature divided by its spread) was the best of 14 detectors (EER 9.6%). Zheng's PIN system uses the same idea: an L1 distance where each feature is divided by its standard deviation. This is exactly the plan's "Bản 1".
+This is strongly supported. In the standard keystroke benchmark, scaled Manhattan (mean template, each feature divided by its spread) was the best of 14 detectors (EER 9.6%). Zheng's PIN system uses the same idea: an L1 distance where each feature is divided by its standard deviation. This is exactly the plan's "Bản 1" (Version 1).
 
 ### Cited Findings
 - Killourhy & Maxion: 51 subjects typed the same password 400 times each, and 14 anomaly detectors were evaluated. EER ranking: Manhattan (scaled) 0.096; Nearest Neighbor (Mahalanobis) 0.100; Outlier Count (z-score) 0.102; SVM one-class 0.102; Mahalanobis 0.110; Manhattan (filtered) 0.136 — [Killourhy & Maxion 2009](https://www.cs.cmu.edu/~keystroke/KillourhyMaxion09.pdf)
@@ -76,7 +76,7 @@ This is strongly supported. In the standard keystroke benchmark, scaled Manhatta
 - Zheng: dissimilarity d(XQ, Xi) = Σ_j |XQ,j − Xi,j| / σ_j, and the decision uses the nearest enrollment sample. The authors note that dividing by σ_j gives more weight to stable features (z-score idea) — [Zheng 2014](https://www.eecis.udel.edu/~hnw/paper/tapping.pdf)
 
 ### Inferences
-- The explainability claim ("PIN chậm hơn 40%") falls naturally out of per-feature z-score terms in scaled Manhattan; each term is one feature's contribution.
+- The explainability claim ("PIN chậm hơn 40%", PIN 40% slower) falls naturally out of per-feature z-score terms in scaled Manhattan; each term is one feature's contribution.
 - With only 3–5 enrollments, σ_j estimates are very noisy. Use a floor on σ_j (or a population-level prior) to avoid division by near-zero. This is my inference; it is not tested in these papers.
 
 ### Gaps
@@ -85,7 +85,7 @@ This is strongly supported. In the standard keystroke benchmark, scaled Manhatta
 ## Q4. Few-shot / pairwise / Siamese verifiers for behavioural biometrics
 
 ### Takeaway
-This is supported. TypeNet trains one shared embedding with softmax, contrastive (Siamese) or triplet loss, and verifies new users never seen in training by distance to a few gallery samples. Triplet loss was best and contrastive second; it works one-shot (G=1) but improves strongly with G=5–10. This is the academic basis for "Bản 2".
+This is supported. TypeNet trains one shared embedding with softmax, contrastive (Siamese) or triplet loss, and verifies new users never seen in training by distance to a few gallery samples. Triplet loss was best and contrastive second; it works one-shot (G=1) but improves strongly with G=5–10. This is the academic basis for "Bản 2" (Version 2).
 
 ### Cited Findings
 - TypeNet (LSTM, trained on 100k+ subjects): EER 2.2% (physical keyboard) and 9.2% (touchscreen), on test users not seen in training — [Acien 2021](https://arxiv.org/abs/2101.05570)
@@ -132,7 +132,7 @@ More enrollment samples help a lot, and 1 is clearly worse. Deep shared models (
 - Buschek: training and testing in one session gives less than half the EER of cross-session testing, so enrollment should span at least 2 sessions/days — [Buschek 2015](http://www.florian-alt.org/unibw/wp-content/publications/buschek2015chi.pdf)
 
 ### Inferences
-- With 3–5 PIN entries in one sitting, a Zheng-style template will be noisier than the published 3.65–7%. Present demo results honestly, and grow the template over the first weeks using Q5's guarded update.
+- With 3–5 PIN entries in one session, a Zheng-style template will be noisier than the published 3.65–7%. Present demo results honestly, and grow the template over the first weeks using Q5's guarded update.
 
 ### Gaps
 - No paper found reports PIN-tap EER specifically at 3 enrollments.

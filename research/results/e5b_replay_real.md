@@ -1,35 +1,35 @@
-# E5b — hiệu chỉnh kiểm tra phát lại trên người thật (StrokePIN)
+# E5b — calibrating the replay check on real humans (StrokePIN)
 
-1842 cặp (người, PIN), mỗi cặp 4–10 lượt cùng PIN (cả ngồi và đi). Ngưỡng hiện tại trong backend: **0.085** (chọn trên dữ liệu giả ở E5). Khoảng cách = `replay.distance` của backend.
+1817 (person, PIN) pairs, each with ~5 entries of the same PIN. Current threshold in the backend: **0.07** (chosen on synthetic data in E5). Distance = the backend's `replay.distance`.
 
-## Người thật mới có bị coi là phát lại không? (khoảng cách gần nhất tới lịch sử của chính họ)
+## Are new real humans mistaken for replays? (nearest distance to their own history)
 
-| Số phiên cũ đem so | Số lượt thử | Trung vị khoảng cách | FPR tại ngưỡng hiện tại | FPR tại 0.5x ngưỡng |
+| Old sessions compared | Trials | Median distance | FPR at current threshold | FPR at 0.5x threshold |
 |---|---|---|---|---|
-| 3 | 17892 | 0.206 | 0.0028 | 0.0001 |
-| 5 | 17777 | 0.189 | 0.0040 | 0.0001 |
-| 8 | 17071 | 0.176 | 0.0064 | 0.0001 |
+| 2 | 8969 | 0.185 | 0.0008 | 0.0001 |
+| 3 | 8969 | 0.174 | 0.0014 | 0.0001 |
+| 4 | 8505 | 0.167 | 0.0020 | 0.0002 |
 
-Phân vị khoảng cách người thật: 0,1% = 0.071; 0,5% = 0.087; 1% = 0.094; 5% = 0.117. Khoảng cách trung vị của phiên phát lại theo nhiễu: ±2.5% -> 0.019, ±5.0% -> 0.025, ±10.0% -> 0.050, ±15.0% -> 0.075, ±20.0% -> 0.101, ±30.0% -> 0.150.
+Real-human distance percentiles: 0.1% = 0.064; 0.5% = 0.082; 1% = 0.088; 5% = 0.107. Median distance of replayed sessions by noise: ±2.5% -> 0.019, ±5.0% -> 0.025, ±10.0% -> 0.050, ±15.0% -> 0.075, ±20.0% -> 0.100, ±30.0% -> 0.150.
 
-**Ngoại suy tuyến tính** FPR theo số phiên cũ (chỉ có dữ liệu tới 8): ~0.073 điểm phần trăm mỗi phiên cũ thêm, nên với 50 phiên khoảng **3.7%** (không đo được: đây là suy đoán, lịch sử trong dữ liệu chỉ ~9 lượt).
+**Linear extrapolation** of FPR by number of old sessions (data only goes up to 4): ~0.061 percentage points per additional old session, so with 50 sessions about **3.0%** (not measured: this is a guess, the history in the data is only ~4 entries, a very long extrapolation, so for reference only).
 
-Khoảng cách người thật: phân vị 1% = **0.094**, 5% = 0.117, trung vị = 0.189.
+Real-human distance: 1st percentile = **0.088**, 5th percentile = 0.107, median = 0.176.
 
-## Bắt được bao nhiêu phiên phát lại (kẻ tấn công thích nghi: nhiễu thời gian ±n, toạ độ ±max(0.02, 0.4n) bề rộng phím)
+## How many replayed sessions are caught (adaptive attacker: timing noise ±n, coordinates ±max(0.02, 0.4n) key widths)
 
-| Nhiễu ±n | 2.5% | 5.0% | 10.0% | 15.0% | 20.0% | 30.0% |
+| Noise ±n | 2.5% | 5.0% | 10.0% | 15.0% | 20.0% | 30.0% |
 |---|---|---|---|---|---|---|
-| Ngưỡng hiện tại (0.085) | 1.00 | 1.00 | 1.00 | 0.86 | 0.09 | 0.00 |
-| Ngưỡng FPR 1% (0.094) | 1.00 | 1.00 | 1.00 | 0.98 | 0.30 | 0.00 |
-| Ngưỡng FPR 5% (0.117) | 1.00 | 1.00 | 1.00 | 1.00 | 0.92 | 0.03 |
+| Current threshold (0.07) | 1.00 | 1.00 | 1.00 | 0.28 | 0.00 | 0.00 |
+| FPR 1% threshold (0.088) | 1.00 | 1.00 | 1.00 | 0.92 | 0.16 | 0.00 |
+| FPR 5% threshold (0.107) | 1.00 | 1.00 | 1.00 | 1.00 | 0.73 | 0.01 |
 
-## Đánh đổi theo ngưỡng (FPR đo ở 3/5/8 phiên cũ; ngoại suy tuyến tính tới 50; tỷ lệ bắt theo nhiễu)
+## Trade-off by threshold (FPR measured at 2/3/4 old sessions; linear extrapolation to 50; catch rate by noise)
 
-| Ngưỡng | FPR @3 | FPR @8 | FPR @50 (ngoại suy) | bắt ±2.5% | bắt ±5.0% | bắt ±10.0% | bắt ±15.0% | bắt ±20.0% | bắt ±30.0% |
+| Threshold | FPR @2 | FPR @4 | FPR @50 (extrapolated) | catch ±2.5% | catch ±5.0% | catch ±10.0% | catch ±15.0% | catch ±20.0% | catch ±30.0% |
 |---|---|---|---|---|---|---|---|---|---|
-| 0.05 | 0.0001 | 0.0001 | 0.1% | 1.00 | 1.00 | 0.50 | 0.00 | 0.00 | 0.00 |
-| 0.06 | 0.0003 | 0.0005 | 0.3% | 1.00 | 1.00 | 0.95 | 0.05 | 0.00 | 0.00 |
-| 0.07 | 0.0007 | 0.0013 | 0.7% | 1.00 | 1.00 | 1.00 | 0.29 | 0.00 | 0.00 |
-| 0.085 | 0.0028 | 0.0064 | 3.7% | 1.00 | 1.00 | 1.00 | 0.86 | 0.09 | 0.00 |
-| 0.094 | 0.0061 | 0.0138 | 7.8% | 1.00 | 1.00 | 1.00 | 0.98 | 0.29 | 0.00 |
+| 0.05 | 0.0001 | 0.0002 | 0.3% | 1.00 | 1.00 | 0.51 | 0.00 | 0.00 | 0.00 |
+| 0.06 | 0.0003 | 0.0006 | 0.6% | 1.00 | 1.00 | 0.95 | 0.05 | 0.00 | 0.00 |
+| 0.07 | 0.0008 | 0.0020 | 3.0% | 1.00 | 1.00 | 1.00 | 0.28 | 0.00 | 0.00 |
+| 0.085 | 0.0050 | 0.0111 | 15.0% | 1.00 | 1.00 | 1.00 | 0.85 | 0.10 | 0.00 |
+| 0.094 | 0.0126 | 0.0226 | 25.2% | 1.00 | 1.00 | 1.00 | 0.98 | 0.31 | 0.00 |

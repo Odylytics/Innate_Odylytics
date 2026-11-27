@@ -33,18 +33,18 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 .pw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);margin-top:9px}.pw img{height:20px}
 .note{position:absolute;left:15mm;right:15mm;bottom:8mm;font-size:9.6px;color:var(--soft);border-top:1px solid var(--stone);padding-top:6px}
 
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.steps.ph .stp p{margin-top:2px}
 .stp{background:#fff;border:1px solid var(--stone);border-radius:10px;padding:7px 8px 8px;display:flex;flex-direction:column}
 .stp .hd{display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .stp .hd i{font-style:normal;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font:600 10.5px/18px 'Sora';text-align:center;flex:none}
 .stp .hd b{font-family:'Sora',sans-serif;font-weight:600;font-size:11.5px}
-.stp .im{height:20mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
+.stp .im{height:15mm;border-radius:6px;overflow:hidden;background:#0d1b2a;display:flex;align-items:flex-start;justify-content:center}
 .stp .im img{width:100%;height:100%;object-fit:contain;display:block}
 .stp p{font-size:10px;line-height:1.38;margin-top:6px;color:var(--soft)}
-.res{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}.res .dc{display:flex;flex-direction:column;gap:5px}.res .dc div{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:0 10px;font-size:10.4px;line-height:1.35;color:var(--soft)}.res .dc i{flex:none;width:9px;height:9px;border-radius:50%}.res .dc b{color:var(--ink)}
 .res figure{display:flex;flex-direction:column;justify-content:center;margin:0;background:#fff;border:1px solid var(--stone);border-radius:10px;padding:6px}
 .res img{width:100%;display:block;border-radius:5px}
-.res figure:first-child img{width:88%;margin:0 auto}
+.res figure img{width:60%;margin:0 auto}
 .res figcaption{text-align:center;font-size:10.4px;line-height:1.35;color:var(--soft);margin-top:5px}
 .res figcaption b{color:var(--ink)}
 .dotk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
@@ -65,16 +65,23 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 <div class="team">Human verification for wallet transfers · Product guide · Team Odylytics · MoMo Tech Contest 2026</div></div>
 <div class="main">
 <div class="lbl" style="margin-top:0">The idea in 20 seconds</div>
-<div class="idea"><p><b>Everyone taps a PIN, or types a phrase, in their own rhythm:</b> how long the finger stays down, the gap between taps, where it lands. Innate runs silently under the wallet's PIN and confirm screens, learns the owner's pattern, and checks it on every transfer. A bot, or someone who only knows the PIN, does not match, so Innate asks for more or holds the transfer. Model: LightGBM, trained on real people and simulated bots.</p>
+<div class="idea"><p><b>Everyone taps a PIN, or types a phrase, in their own rhythm:</b> how long the finger stays down, the gap between taps, where it lands. Innate runs silently under the wallet's PIN and confirm screens, learns the owner's pattern, and checks it on every transfer. A bot, or someone who only knows the PIN, does not match, so Innate asks for more or holds the transfer. Models: rules + LightGBM, trained on real people and simulated bots.</p>
 <div>@MECH@<div class="cap"><span class="lg" style="background:#0F4F4C;margin-left:0"></span>Person A<span class="lg" style="background:#11B88F"></span>Person B · same PIN, real recordings</div></div></div>
 <div class="lbl">Open the product</div>
 <div class="try"><div class="qr"><a href="@WEB_URL@">@QR@</a></div>
 <table>
-<tr><td>Link</td><td><a href="@WEB_URL@" style="color:inherit"><b class="u">@WEB_URL@</b></a> · any browser</td></tr>
-<tr><td>Phone</td><td><b>Live scoring.</b> Scan the QR, sign up, make up a practice PIN (not a real one), type it 5 to 10 times, send money.</td></tr>
-<tr><td>Computer</td><td><b>Static demo</b>, no sign-up, PIN <code>159357</code> (below). Decisions are illustrative.</td></tr>
-<tr><td>Developers</td><td>API docs <a href="https://nhip-api-taupe.vercel.app/docs" style="color:inherit">https://nhip-api-taupe.vercel.app/docs</a> · status /health</td></tr>
+<tr><td>Link</td><td><a href="@WEB_URL@" style="color:inherit"><b class="u">@WEB_URL@</b></a> · online until 11 Dec 2026</td></tr>
+<tr><td>Phone</td><td><b>Live scoring.</b> Scan the QR, sign up, set a practice PIN, send money.</td></tr>
+<tr><td>Computer</td><td><b>Static demo</b>, no sign-up, PIN <code>159357</code>. Decisions are illustrative.</td></tr>
+<tr><td>Developers</td><td><a href="https://nhip-api-taupe.vercel.app/docs" style="color:inherit"><b class="u">Innate API docs</b></a> (Swagger) · <a href="https://nhip-api-taupe.vercel.app/health" style="color:inherit">status</a></td></tr>
 </table></div>
+<div class="lbl">On a phone, live scoring: 3 minutes</div>
+<div class="steps ph">
+<div class="stp"><div class="hd"><i>1</i><b>Scan and sign up</b></div><p>Scan the QR, sign up with an email and a new password, tick the consent box.</p></div>
+<div class="stp"><div class="hd"><i>2</i><b>Set your rhythm</b></div><p>Make up a 6-digit practice PIN (not a real one), type it 5 to 10 times.</p></div>
+<div class="stp"><div class="hd"><i>3</i><b>Send money</b></div><p>Confirm with your PIN. Innate answers allow, step_up or hold.</p></div>
+<div class="stp"><div class="hd"><i>4</i><b>Hand it over</b></div><p>Give the phone to someone who knows your PIN and send again.</p></div>
+</div>
 <div class="lbl">Demo wallet on a computer, 3 minutes: open <a href="@WEB_URL@/#/demo" style="color:inherit"><code style="font-size:10.5px">@WEB_URL@/#/demo</code></a></div>
 <div class="steps">
 <div class="stp"><div class="hd"><i>1</i><b>Enroll and unlock</b></div><div class="im"><img src="@ASSETS@/shots/wallet-top.png" alt="Wallet PIN pad"></div><p>Type PIN <b>159357</b> three times to enroll, then once more to unlock the wallet.</p></div>
@@ -82,13 +89,15 @@ ul{list-style:none}ul li{position:relative;padding-left:16px;margin-bottom:4px}u
 <div class="stp"><div class="hd"><i>3</i><b>Play a case</b></div><div class="im"><img src="@ASSETS@/shots/cases-zoom.png" alt="Two cases to try"></div><p>Press <b>Malware taps the PIN</b> or <b>Thief who knows the PIN</b> and watch the decision change.</p></div>
 <div class="stp"><div class="hd"><i>4</i><b>Or just watch</b></div><div class="im"><img src="@ASSETS@/shots/story-modal.png" alt="Guided story"></div><p>Open <code>/#/demo?story=1</code>: 8 steps, about 90 seconds, illustrative decisions.</p></div>
 </div>
-<p class="tip">Tap at your normal pace. A perfectly even, scripted tap pattern is exactly what Innate holds.</p>
+<p class="tip">Tap at your normal pace: a perfectly even, scripted tap pattern is exactly what Innate holds.</p>
 <div class="lbl">Read the result: every answer comes with reasons</div>
 <div class="res">
-<figure><img src="@ASSETS@/shots/decision-allow.png" alt="Allow decision"><figcaption><b>allow</b>: the owner's own rhythm.</figcaption></figure>
-<figure><img src="@ASSETS@/shots/decision-hold.png" alt="Hold decision with reasons"><figcaption><b>hold</b>: machine rhythm and exact key centers, with reasons.</figcaption></figure>
+<figure><img src="@ASSETS@/shots/decision-hold.png" alt="Hold decision with reasons"><figcaption>Example answer: <b>hold</b>, with the reasons in plain words.</figcaption></figure>
+<div class="dc">
+<div><i style="background:#11B88F"></i><span><b>allow</b>: the owner's own rhythm. Nothing changes for the user.</span></div>
+<div><i style="background:#F5B941"></i><span><b>step_up</b>: rhythm differs. Asks for face or OTP.</span></div>
+<div><i style="background:#FF7A6B"></i><span><b>hold</b>: machine-like rhythm. Pauses and alerts the user.</span></div>
 </div>
-<div class="legend"><div><i style="background:#11B88F"></i><span><b>allow</b> nothing changes for the user</span></div><div><i style="background:#F5B941"></i><span><b>step_up</b> asks for face or OTP</span></div><div><i style="background:#FF7A6B"></i><span><b>hold</b> pauses and alerts the user</span></div></div>
 </div>
 <p class="note">The wallet UI and characters are fictional, not any wallet's app. The owner score is a risk signal, not a replacement for PIN, OTP or face. Innate stores timing, coordinates and event types, never a real PIN or content. The phone app is a consented research build that also keeps name, email and a practice PIN. License CC BY-NC-SA 4.0.</p>
 </body></html>

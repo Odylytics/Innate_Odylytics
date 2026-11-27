@@ -1,9 +1,9 @@
-"""E22: những cách giảm FAR (kẻ lạ lọt) cho Innate Challenge, đo trên Aalto (1.000 người đánh giá, 30 phím, câu thử khác câu đăng ký, giao thức E13).
+"""E22: ways to reduce FAR (strangers getting through) for Innate Challenge, measured on Aalto (1,000 evaluation people, 30 keys, test sentence differs from enrollment sentence, E13 protocol).
 
-(a) số câu đăng ký K = 1, 3, 5, 8;  (b) thêm tín hiệu tư thế cầm máy (góc nghiêng beta/gamma: trung bình, độ lệch) — LẠC QUAN vì mọi câu của một người
-nằm trong MỘT buổi nên tư thế trùng giữa đăng ký và thử (không tách theo thời gian được); trên điện thoại thật là cảm biến cần xin quyền, iOS Safari cần cấp quyền, và là dữ liệu nhạy cảm;
-(c) thay "trung bình |z|" bằng mô hình học (LightGBM trên vector lệch, huấn luyện ở nhóm người riêng, không trùng nhóm đánh giá).
-Dữ liệu: research/data/aalto_note_orient.jsonl (aalto_note_orient.py; gitignored). Chạy: python experiments/e22_improve_far.py
+(a) number of enrollment sentences K = 1, 3, 5, 8;  (b) add a phone-holding angle signal (tilt angles beta/gamma: mean, std) — OPTIMISTIC because all sentences of one person
+fall in ONE session, so the holding angle matches between enrollment and test (it cannot be separated by time); on a real phone this is a sensor that needs permission, iOS Safari requires a permission grant, and it is sensitive data;
+(c) replace "mean |z|" with a learned model (LightGBM on the deviation vector, trained on a separate group of people, disjoint from the evaluation group).
+Data: research/data/aalto_note_orient.jsonl (aalto_note_orient.py; gitignored). Run: python experiments/e22_improve_far.py
 """
 import json
 import random
@@ -31,7 +31,7 @@ for line in open(ROOT / "research/data/aalto_note_orient.jsonl"):
 people = [p for p, v in by_p.items() if len(v) >= 10]
 rng.shuffle(people)
 prior_p, train_p, eval_p = people[:250], people[250:650], people[650:1650]
-print(f"{len(people)} người đủ điều kiện (>= 10 câu); prior {len(prior_p)}, huấn luyện {len(train_p)}, đánh giá {len(eval_p)}")
+print(f"{len(people)} eligible people (>= 10 sentences); prior {len(prior_p)}, training {len(train_p)}, evaluation {len(eval_p)}")
 
 pair, cls_pair = defaultdict(list), defaultdict(list)
 for p in prior_p:
@@ -65,8 +65,8 @@ def f_orient(s):
     return np.array([b.mean(), b.std(), g.mean(), g.std()])
 
 
-FE = {"thô (6, như E13)": f_time, "thô + chuẩn hoá cặp phím (12)": f_time_z,
-      "12 + tư thế cầm máy (16)": lambda s: np.concatenate([f_time_z(s), f_orient(s)])}
+FE = {"raw (6, as in E13)": f_time, "raw + digraph-normalized (12)": f_time_z,
+      "12 + phone-holding angle (16)": lambda s: np.concatenate([f_time_z(s), f_orient(s)])}
 cache = {}
 
 
@@ -90,7 +90,7 @@ def prior_var(name):
 
 
 def deviations(name, K, pv, people_, n_imp, learned_rows=False):
-    """-> {người: (vector lệch của câu thật [m, d], của câu kẻ gian [n, d])}"""
+    """-> {person: (deviation vectors of genuine sentences [m, d], of impostor sentences [n, d])}"""
     out = {}
     for p in people_:
         ss = by_p[p]; idx = list(range(len(ss))); rng.shuffle(idx)
@@ -116,19 +116,19 @@ def report(label, scores):
     return line
 
 
-L = ["# E22 — các cách giảm FAR ở 30 phím (Aalto, người thật; câu thử khác câu đăng ký)", "",
-     "| Cấu hình | EER | FAR @ FRR 5% |", "|---|---|---|"]
+L = ["# E22 — ways to reduce FAR at 30 keys (Aalto, real people; test sentence differs from enrollment sentence)", "",
+     "| Configuration | EER | FAR @ FRR 5% |", "|---|---|---|"]
 for name in FE:
     pv = prior_var(name)
-    for K in (3,) if "tư thế" not in name and "chuẩn" in name else (1, 3, 5, 8) if name.startswith("thô (6") else (3,):
+    for K in (3,) if "angle" not in name and "normalized" in name else (1, 3, 5, 8) if name.startswith("raw (6") else (3,):
         d = deviations(name, K, pv, eval_p, 12)
-        L.append(report(f"{name}, K={K} câu đăng ký", {p: (g.mean(1), i.mean(1)) for p, (g, i) in d.items()}))
+        L.append(report(f"{name}, K={K} enrollment sentences", {p: (g.mean(1), i.mean(1)) for p, (g, i) in d.items()}))
 
-# (c) mô hình học trên vector lệch, bộ 12 đặc trưng, K=3
-name = "thô + chuẩn hoá cặp phím (12)"; pv = prior_var(name)
+# (c) learned model on the deviation vector, 12-feature set, K=3
+name = "raw + digraph-normalized (12)"; pv = prior_var(name)
 tr = deviations(name, 3, pv, train_p, 20)
 X = np.vstack([np.vstack([g, i]) for g, i in tr.values()]); y = np.concatenate([np.r_[np.ones(len(g)), np.zeros(len(i))] for g, i in tr.values()])
 m = lgb.train({"objective": "binary", "learning_rate": 0.05, "num_leaves": 7, "min_data_in_leaf": 30, "seed": SEED, "verbose": -1}, lgb.Dataset(X, y), 200)
 d = deviations(name, 3, pv, eval_p, 12)
-L.append(report(f"{name}, K=3, mô hình học (LightGBM)", {p: (-m.predict(g), -m.predict(i)) for p, (g, i) in d.items()}))
+L.append(report(f"{name}, K=3, learned model (LightGBM)", {p: (-m.predict(g), -m.predict(i)) for p, (g, i) in d.items()}))
 (ROOT / "research/results/e22_improve_far.md").write_text("\n".join(L) + "\n", encoding="utf-8")

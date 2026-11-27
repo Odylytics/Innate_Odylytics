@@ -1,4 +1,4 @@
-câu                                              phím biến đổi cách đặt thanh  x2 bộ gõ  log2
+phrase                                            transforms   tone options   x2 IMEs  log2
 Hôm nay trời đẹp quá                                         6              4         8   3.0
 Tuần này trời nắng đẹp quá                                  10             48        96   6.6
 Chuyển tiền cho mẹ ở quê                                     8              4         8   3.0

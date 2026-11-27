@@ -1,6 +1,6 @@
-// Ghi ô `challenge` thành InputEvent {t, kind, n, cls} cho điện thoại (Gboard/iOS dùng composition, keydown = 229).
-// Không lưu nội dung: chỉ độ dài đổi, loại sự kiện, lớp ký tự. Phím biến đổi Telex/VNI = key với n = 0 (độ dài không đổi).
-// CHƯA thử trên máy thật: hành vi dưới đây theo đặc tả Input Events/IME, cần kiểm bằng sdk/probe.html (xem docs/plan/innate-challenge-vi.md).
+// Records the `challenge` field as InputEvent {t, kind, n, cls} for phones (Gboard/iOS use composition, keydown = 229).
+// No content is stored: only the length change, event kind, character class. A Telex/VNI transform key = key with n = 0 (length unchanged).
+// NOT yet tried on a real device: the behavior below follows the Input Events/IME spec and must be checked with sdk/probe.html (see docs/plan/innate-challenge-vi.md).
 (function (root) {
   const cls = (c) => (/\d/.test(c) ? "digit" : /\s/.test(c) ? "space" : /\p{L}/u.test(c) ? "letter" : "symbol");
 
@@ -17,13 +17,13 @@
       if (/^insertFromPaste|^insertFromDrop|^insertReplacementText|^insertFromYank/.test(type) || d > 1) push("paste", Math.max(d, 0));
       else if (d < 0 || /^delete/.test(type)) push("delete", Math.abs(d));
       else if (d === 1) push("key", 1, el.value.length ? cls(el.value[el.value.length - 1]) : null);
-      else push("key", 0, keyCls); // d === 0: bộ gõ đổi chữ đã gõ (dấu mũ/móc/dấu thanh). Trên điện thoại không biết phím nào -> cls null
+      else push("key", 0, keyCls); // d === 0: the IME changed text already typed (circumflex/horn/tone mark). On a phone the key is unknown -> cls null
       keyCls = null;
     };
     el.addEventListener("keydown", onKeydown);
     el.addEventListener("input", onInput);
     return {
-      // gọi khi gửi: giá trị đổi mà không có sự kiện input (gán bằng script / ACTION_SET_TEXT) => set_text
+      // called on submit: value changed without an input event (assigned by script / ACTION_SET_TEXT) => set_text
       finish() {
         if (el.value.length !== len) { push("set_text", Math.abs(el.value.length - len)); len = el.value.length; }
         el.removeEventListener("keydown", onKeydown); el.removeEventListener("input", onInput);

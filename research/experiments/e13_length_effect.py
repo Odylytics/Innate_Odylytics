@@ -1,12 +1,12 @@
-"""E13: kiểm tra giả thuyết "Innate Challenge": gõ một câu (chữ + số) cho nhiều tín hiệu hơn nhập PIN 6 số.
+"""E13: tests the "Innate Challenge" hypothesis: typing a sentence (letters + digits) gives more signal than entering a 6-digit PIN.
 
-Dữ liệu: nhịp gõ THẬT của người gõ câu trên điện thoại (Aalto; chỉ thời gian). Mỗi câu cắt ở n phím đầu, n = 6 (như PIN 6 số), 10, 20, 30;
-mọi n dùng CÙNG các câu (>= 30 phím) để so công bằng. Đặc trưng nhịp: trung bình/độ lệch/trung vị/phân vị 10 và 90 của log khoảng cách giữa phím,
-và độ lệch liên tiếp. Chỉ thời gian: không có thời gian giữ phím hay toạ độ (Aalto không có), nên KHÔNG so được số tuyệt đối với PIN StrokePIN.
+Data: REAL typing rhythm of people typing sentences on a phone (Aalto; timing only). Each sentence is cut at the first n keys, n = 6 (like a 6-digit PIN), 10, 20, 30;
+every n uses the SAME sentences (>= 30 keys) for a fair comparison. Rhythm features: mean/std/median/10th and 90th percentile of the log inter-key interval,
+and the successive difference. Timing only: no key hold time or coordinates (Aalto has none), so absolute numbers CANNOT be compared with StrokePIN PINs.
 
-(1) Xác minh chủ: đăng ký 3 câu, kiểm thử các câu còn lại, kẻ gian = câu của người khác; prior dân số từ nhóm người riêng; EER, FAR@FRR 5%, CI bootstrap theo người.
-(2) Phát hiện bot gõ đều (CT2) và lấy mẫu dân số (CT4): AUC của LightGBM theo n (đã thấy loại bot), chia theo người.
-Hạn chế: người CHÉP câu mẫu tiếng Anh, không phải soạn; bot giả; một dòng thời gian không có mã phím.
+(1) Owner verification: enroll 3 sentences, test the remaining sentences, impostor = another person's sentence; population prior from a separate group of people; EER, FAR@FRR 5%, bootstrap CI by person.
+(2) Detecting uniform-typing bots (T2) and population-sampling bots (T4): LightGBM AUC by n (has seen the bot type), split by person.
+Limitations: people COPY English sample sentences rather than composing them; simulated bots; a single timeline without key codes.
 """
 
 import json
@@ -45,7 +45,7 @@ for r in recs:
 people = [p for p, v in by_p.items() if len(v) >= 8]
 rng.shuffle(people)
 prior_p, eval_p = people[:300], people[300:1300]
-print(f"{len(people)} người có >= 8 câu (>= {max(NS)+1} phím); prior {len(prior_p)}, đánh giá {len(eval_p)}")
+print(f"{len(people)} people with >= 8 sentences (>= {max(NS)+1} keys); prior {len(prior_p)}, evaluation {len(eval_p)}")
 
 
 def metrics(gen, imp):
@@ -56,10 +56,10 @@ def metrics(gen, imp):
     return np.array([(frr[i] + far[i]) / 2, (imp <= np.quantile(gen, 0.95)).mean()])
 
 
-L = ["# E13 — giả thuyết \"Innate Challenge\": nhiều ký tự hơn thì nhận chủ và bắt bot tốt hơn?", "",
-     "Người thật gõ câu trên điện thoại (Aalto), chỉ thời gian. Mỗi câu cắt ở n phím đầu (n = 6 tương đương độ dài PIN 6 số). Mọi n dùng cùng các câu. "
-     "**Không so được số tuyệt đối với StrokePIN** (khác dữ liệu, khác phép đo: ở đây không có thời gian giữ phím và toạ độ).", "",
-     "## (1) Xác minh chủ theo số phím", "", "| Số phím n | EER | FAR @ FRR 5% |", "|---|---|---|"]
+L = ["# E13 — the \"Innate Challenge\" hypothesis: do more characters give better owner recognition and bot detection?", "",
+     "Real people typing sentences on a phone (Aalto), timing only. Each sentence is cut at the first n keys (n = 6 is equivalent to the length of a 6-digit PIN). Every n uses the same sentences. "
+     "**Absolute numbers cannot be compared with StrokePIN** (different data, different measurements: here there is no key hold time and no coordinates).", "",
+     "## (1) Owner verification by number of keys", "", "| Number of keys n | EER | FAR @ FRR 5% |", "|---|---|---|"]
 verify = {}
 for n in NS:
     pv = np.mean([np.var(np.array([feats(t, n) for t in by_p[p]]), axis=0, ddof=1) for p in prior_p], axis=0)
@@ -87,9 +87,9 @@ for n in NS:
     verify[n] = est
     L.append(f"| {n} | {est[0]:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {est[1]:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] |")
 
-# (2) bot gõ đều (CT2) và lấy mẫu dân số (CT4), AUC theo n (LightGBM đã thấy loại bot đó)
+# (2) uniform-typing bot (T2) and population-sampling bot (T4), AUC by n (LightGBM has seen that bot type)
 pool_sessions = [{"fields": [{"name": "note", "events": [{"t": t, "kind": "key", "n": 1, "cls": "letter"} for t in by_p[p][0]]}]} for p in prior_p]
-L += ["", "## (2) Phát hiện bot trên câu gõ theo số phím (AUC; LightGBM đã thấy loại bot, chia theo người)", "", "| Số phím n | CT2 gõ đều | CT4 lấy mẫu dân số |", "|---|---|---|"]
+L += ["", "## (2) Bot detection on typed sentences by number of keys (AUC; LightGBM has seen the bot type, split by person)", "", "| Number of keys n | T2 uniform typing | T4 population sampling |", "|---|---|---|"]
 train_p, test_p = eval_p[:600], eval_p[600:]
 for n in NS:
     res = {}

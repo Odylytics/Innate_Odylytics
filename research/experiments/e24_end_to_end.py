@@ -1,10 +1,10 @@
-"""E24 + E25 + E27: ma trận quyết định TOÀN HỆ THỐNG, quét ngưỡng, và bot thích nghi.
+"""E24 + E25 + E27: decision matrix for the WHOLE SYSTEM, threshold sweep, and adaptive bots.
 
-Chạy đúng chuỗi của backend `/score` (human.score + human_model, replay, owner.score + owner_model, fusion.fuse) trong tiến trình, không qua HTTP/DB.
-Dữ liệu: StrokePIN (người thật, PIN 6 số, ngồi/đi). CHỈ dùng người KHÔNG nằm trong tập huấn luyện của mô hình người/máy (train_human_model.py: seed 7,
-us[62:]) VÀ của mô hình chủ (train_owner_model.py: seed 21, us[68:]) để không đo trên dữ liệu đã huấn luyện.
-Kẻ gian "biết PIN" = người khác nhập cùng PIN trên MÁY CỦA HỌ (lẫn nhiễu thiết bị, nhẹ tay với kết quả); bot do bộ sinh của đội; bot thích nghi do script này.
-Chạy: python research/experiments/e24_end_to_end.py   (cần numpy, pandas, lightgbm, fastapi không cần)
+Runs exactly the backend `/score` chain (human.score + human_model, replay, owner.score + owner_model, fusion.fuse) in process, without HTTP/DB.
+Data: StrokePIN (real people, 6-digit PINs). Uses ONLY people who are NOT in the training set of the human/machine model (train_human_model.py: seed 7,
+us[62:]) AND of the owner model (train_owner_model.py: seed 21, us[68:]), so we do not measure on trained data.
+The "PIN-knowing" impostor = another person entering the same PIN on THEIR OWN DEVICE (confounded with device noise; treat the results gently); bots come from the team's generator; adaptive bots come from this script.
+Run: python research/experiments/e24_end_to_end.py   (needs numpy, pandas, lightgbm; fastapi not needed)
 """
 import copy
 import random
@@ -27,19 +27,19 @@ USERS = sorted({e["user"] for e in S})
 a = USERS[:]; random.Random(7).shuffle(a); not_in_human_train = set(a[62:])
 b = USERS[:]; random.Random(21).shuffle(b); not_in_owner_train = set(b[68:])
 EVAL = sorted(not_in_human_train & not_in_owner_train)
-print(f"người chưa từng thấy bởi cả 2 mô hình học: {len(EVAL)}/{len(USERS)}; mô hình người/máy: {human_model.loaded()}, mô hình chủ: {owner_model.loaded()}")
+print(f"people never seen by both learned models: {len(EVAL)}/{len(USERS)}; human/machine model: {human_model.loaded()}, owner model: {owner_model.loaded()}")
 for e in S:
     e["f"] = features.extract(e["session"])
-by = defaultdict(lambda: defaultdict(list))  # (user, pin) -> posture -> entries
+by = defaultdict(list)  # (user, pin) -> entries
 for e in S:
-    by[(e["user"], e["pin"])][e["posture"]].append(e)
+    by[(e["user"], e["pin"])].append(e)
 by_pin = defaultdict(list)
 for e in S:
     by_pin[e["pin"]].append(e)
 
 
 def decide(raw, f, tpl, history, new_recipient, use_models=True):
-    """Bản sao `score_session`. -> (risk, action, human, owner)."""
+    """Copy of `score_session`. -> (risk, action, human, owner)."""
     h, br = human.score(f)
     p = human_model.predict(raw) if use_models else None
     if p is not None:
@@ -59,7 +59,7 @@ def strip(s):
 
 
 def noisy_replay(src, n):
-    """Phát lại phiên của nạn nhân, nhiễu thời gian ±n và toạ độ ±max(0,02; 0,4n) bề rộng phím (như E5b)."""
+    """Replays the victim's session, with timing noise ±n and coordinate noise ±max(0.02, 0.4n) of the key width (as in E5b)."""
     s = copy.deepcopy(src); taps = sorted(s["pin_taps"], key=lambda t: t["t_down"]); t = 0.0
     for i, tap in enumerate(taps):
         hold = (tap["t_up"] - tap["t_down"]) * rng.uniform(1 - n, 1 + n)
@@ -73,7 +73,7 @@ def noisy_replay(src, n):
 
 
 def mimic(victim_sessions, scale):
-    """Kẻ biết MẪU CHUẨN của nạn nhân: lấy mẫu từng giá trị từ Gauss theo (trung bình, độ lệch) của nạn nhân tại từng vị trí phím."""
+    """Impostor who knows the victim's TEMPLATE: samples each value from a Gaussian with the victim's (mean, std) at each key position."""
     ts = [sorted(s["pin_taps"], key=lambda t: t["t_down"]) for s in victim_sessions]
     k = len(ts[0]); out = copy.deepcopy(victim_sessions[0]); taps = out["pin_taps"] = sorted(out["pin_taps"], key=lambda t: t["t_down"])
     t = 0.0
@@ -90,9 +90,9 @@ def mimic(victim_sessions, scale):
     return out
 
 
-GROUPS = ["chủ, cùng tư thế (ngồi)", "chủ, đổi tư thế (đi)", "kẻ biết PIN (người khác, máy khác)", "bot CT1 đều", "bot CT2 nhiễu thời gian",
-          "bot CT3 phát lại ±5%", "bot CT4 lấy mẫu dân số", "phát lại ±10%", "phát lại ±15%", "phát lại ±20%", "phát lại ±30%",
-          "bot biết mẫu chuẩn (scale 1.0)", "bot biết mẫu chuẩn (scale 0.5)"]
+GROUPS = ["owner", "PIN-knowing impostor (other person, other device)", "T1 uniform bot", "T2 timing-noise bot",
+          "T3 replay ±5% bot", "T4 population-sampling bot", "replay ±10%", "replay ±15%", "replay ±20%", "replay ±30%",
+          "template-aware bot (scale 1.0)", "template-aware bot (scale 0.5)"]
 rows = {g: [] for g in GROUPS}  # g -> [(risk_known, risk_new, human, owner, action_known, action_new, models_off: (..))]
 
 
@@ -103,34 +103,32 @@ def record(g, raw, tpl, hist):
         rk, ak, h, o = decide(raw, f, tpl, hist, False, use_models)
         rn, an, _, _ = decide(raw, f, tpl, hist, True, use_models)
         r.append((rk, rn, h, o, ak, an))
-    r.append(replay.nearest(f, hist[-50:]))  # khoảng cách tới phiên cũ gần nhất, để quét ngưỡng phát lại
+    r.append(replay.nearest(f, hist[-50:]))  # distance to the nearest earlier session, for the replay-threshold sweep
     rows[g].append(tuple(r))
 
 
-for (u, pin), post in by.items():
-    if u not in EVAL or len(post["sit"]) < 5:
+for (u, pin), ents in by.items():
+    if u not in EVAL or len(ents) < 5:
         continue
-    es = post["sit"][:]; rng.shuffle(es)
+    es = ents[:]; rng.shuffle(es)
     enr, tests = es[:3], es[3:]
     tpl = owner.build_template([e["f"] for e in enr])
     hist = [e["f"] for e in enr]
     for e in tests:
         record(GROUPS[0], e["session"], tpl, hist); hist = hist + [e["f"]]
-    for e in post["walk"][:4]:
-        record(GROUPS[1], e["session"], tpl, hist)
-    others = [e for e in by_pin[pin] if e["user"] != u and e["posture"] == "sit"]
+    others = [e for e in by_pin[pin] if e["user"] != u]
     for e in rng.sample(others, min(4, len(others))):
-        record(GROUPS[2], {**e["session"], "user_id": u}, tpl, hist)
+        record(GROUPS[1], {**e["session"], "user_id": u}, tpl, hist)
     victim = [e["session"] for e in es]
     pop = [e["session"] for e in rng.sample(by_pin[pin], min(150, len(by_pin[pin])))]
     for _ in range(2):
-        for gi, t in ((3, 1), (4, 2), (5, 3), (6, 4)):
+        for gi, t in ((2, 1), (3, 2), (4, 3), (5, 4)):
             raw = strip(tactics.generate(t, u, pin, victim if t == 3 else pop if t == 4 else victim, rng))
             record(GROUPS[gi], raw, tpl, hist)
         src = rng.choice(victim)
-        for gi, n in ((7, 0.10), (8, 0.15), (9, 0.20), (10, 0.30)):
+        for gi, n in ((6, 0.10), (7, 0.15), (8, 0.20), (9, 0.30)):
             record(GROUPS[gi], strip(noisy_replay(src, n)), tpl, hist)
-        for gi, sc in ((11, 1.0), (12, 0.5)):
+        for gi, sc in ((10, 1.0), (11, 0.5)):
             record(GROUPS[gi], strip(mimic(victim[:6], sc)), tpl, hist)
 
 
@@ -138,11 +136,11 @@ def pct(v):
     return f"{100 * np.mean(v):.0f}%"
 
 
-L = ["# E24 / E25 / E27 — quyết định toàn hệ thống trên StrokePIN (người thật) + bot", "",
-     f"{len(EVAL)} người chưa từng thấy bởi cả hai mô hình học; đăng ký 3 lượt ngồi mỗi (người, PIN); lịch sử phát lại = các lượt trước. Ngưỡng hiện tại A={fusion.THRESHOLD_A}, B={fusion.THRESHOLD_B}. "
-     "Kẻ biết PIN dùng MÁY KHÁC (lẫn nhiễu thiết bị). Bot là bộ sinh/script của đội, không phải bot thật.", ""]
-for ctx, ia in (("người nhận quen, số tiền bình thường", 4), ("người nhận MỚI", 5)):
-    L += [f"## E24 — {ctx}", "", "| Nhóm | n | allow | step_up | hold | (không mô hình học) allow |", "|---|---|---|---|---|---|"]
+L = ["# E24 / E25 / E27 — whole-system decisions on StrokePIN (real people) + bots", "",
+     f"{len(EVAL)} people never seen by either learned model; enrollment 3 sessions per (person, PIN); replay history = the previous sessions. Current thresholds A={fusion.THRESHOLD_A}, B={fusion.THRESHOLD_B}. "
+     "The PIN-knowing impostor uses a DIFFERENT DEVICE (confounded with device noise). Bots are the team's generator/scripts, not real bots.", ""]
+for ctx, ia in (("known recipient, normal amount", 4), ("NEW recipient", 5)):
+    L += [f"## E24 — {ctx}", "", "| Group | n | allow | step_up | hold | (no learned model) allow |", "|---|---|---|---|---|---|"]
     for g in GROUPS:
         rs = rows[g]
         if not rs:
@@ -151,30 +149,30 @@ for ctx, ia in (("người nhận quen, số tiền bình thường", 4), ("ngư
         L.append(f"| {g} | {len(rs)} | {pct([x == 'allow' for x in a_on])} | {pct([x == 'step_up' for x in a_on])} | {pct([x == 'hold' for x in a_on])} | {pct([x == 'allow' for x in a_off])} |")
     L.append("")
 
-# E25: quét ngưỡng
+# E25: threshold sweep
 def act(risk, h, A, B):
     return "hold" if h < fusion.HUMAN_HOLD or risk > B else "step_up" if risk >= A else "allow"
 
 
-L += ["## E25 — quét ngưỡng A (allow < A) và B (hold > B), người nhận quen, có mô hình học", "",
-      "Mục tiêu: chủ cùng tư thế hầu như luôn `allow` (hold ≤ 1%), kẻ biết PIN và bot bị chặn (không `allow`) càng nhiều càng tốt.", "",
-      "| A | B | chủ ngồi: allow / hold | chủ đi: allow | chủ ngồi, người nhận MỚI: allow | kẻ biết PIN: không allow | CT4: không allow | biết mẫu chuẩn 1.0: không allow | phát lại ±15%: không allow |", "|---|---|---|---|---|---|---|---|---|"]
+L += ["## E25 — sweep of threshold A (allow < A) and B (hold > B), known recipient, with learned models", "",
+      "Goal: the owner almost always gets `allow` (hold ≤ 1%), and PIN-knowing impostors and bots are blocked (not `allow`) as often as possible.", "",
+      "| A | B | owner: allow / hold | owner, NEW recipient: allow | PIN-knowing impostor: not allow | T4: not allow | template-aware 1.0: not allow | replay ±15%: not allow |", "|---|---|---|---|---|---|---|---|"]
 def line(A, B):
     d = lambda g: [act(r[0][0], r[0][2], A, B) for r in rows[g]]  # noqa: E731
     na = lambda g: np.mean([x != "allow" for x in d(g)])  # noqa: E731
     s = d(GROUPS[0])
     new = [act(r[0][1], r[0][2], A, B) for r in rows[GROUPS[0]]]
-    return (f"| {A:.2f} | {B:.2f} | {pct([x == 'allow' for x in s])} / {pct([x == 'hold' for x in s])} | {pct([x == 'allow' for x in d(GROUPS[1])])} | {pct([x == 'allow' for x in new])} | "
-            f"{100 * na(GROUPS[2]):.0f}% | {100 * na(GROUPS[6]):.0f}% | {100 * na(GROUPS[11]):.0f}% | {100 * na(GROUPS[8]):.0f}% |")
+    return (f"| {A:.2f} | {B:.2f} | {pct([x == 'allow' for x in s])} / {pct([x == 'hold' for x in s])} | {pct([x == 'allow' for x in new])} | "
+            f"{100 * na(GROUPS[1]):.0f}% | {100 * na(GROUPS[5]):.0f}% | {100 * na(GROUPS[10]):.0f}% | {100 * na(GROUPS[7]):.0f}% |")
 for A, B in [(fusion.THRESHOLD_A, fusion.THRESHOLD_B), (0.10, 0.55), (0.15, 0.55), (0.20, 0.55), (0.30, 0.55), (0.35, 0.55), (0.40, 0.60), (0.45, 0.65), (0.25, 0.40), (0.25, 0.70)]:
-    L.append(line(A, B) + (" ← hiện tại" if (A, B) == (fusion.THRESHOLD_A, fusion.THRESHOLD_B) else ""))
+    L.append(line(A, B) + (" ← current" if (A, B) == (fusion.THRESHOLD_A, fusion.THRESHOLD_B) else ""))
 L.append("")
-L += ["## E27b — quét ngưỡng phát lại (backend hiện dùng 0,07), có mô hình học, người nhận quen", "",
-      "Phiên bị coi là phát lại thì `hold`. Đánh đổi: ngưỡng cao bắt thêm bot phát lại có nhiễu nhưng chặn nhầm chủ.", "",
-      "| Ngưỡng | chủ ngồi: hold | chủ đi: hold | phát lại ±10% | ±15% | ±20% | ±30% | bot biết mẫu chuẩn (1.0): hold |", "|---|---|---|---|---|---|---|---|"]
+L += ["## E27b — sweep of the replay threshold (the backend currently uses 0.07), with learned models, known recipient", "",
+      "A session judged to be a replay gets `hold`. Trade-off: a higher threshold catches more noisy replay bots but wrongly blocks the owner.", "",
+      "| Threshold | owner: hold | replay ±10% | ±15% | ±20% | ±30% | template-aware bot (1.0): hold |", "|---|---|---|---|---|---|---|"]
 for thr in (0.05, 0.07, 0.085, 0.10, 0.12, 0.15):
     h = lambda g: pct([(r[2] < thr) or r[0][4] == "hold" for r in rows[g]])  # noqa: E731
-    L.append(f"| {thr:.3f} | {h(GROUPS[0])} | {h(GROUPS[1])} | {h(GROUPS[7])} | {h(GROUPS[8])} | {h(GROUPS[9])} | {h(GROUPS[10])} | {h(GROUPS[11])} |")
+    L.append(f"| {thr:.3f} | {h(GROUPS[0])} | {h(GROUPS[6])} | {h(GROUPS[7])} | {h(GROUPS[8])} | {h(GROUPS[9])} | {h(GROUPS[10])} |")
 L.append("")
 out = ROOT / "research/results/e24_end_to_end.md"
 out.write_text("\n".join(L) + "\n", encoding="utf-8")

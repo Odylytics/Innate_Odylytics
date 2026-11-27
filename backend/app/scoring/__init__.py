@@ -1,4 +1,4 @@
-"""Lớp chấm điểm. Bản baseline do backend viết; Người 1 thay từng file, giữ nguyên chữ ký hàm.
+"""Scoring layer. The baseline is written by the backend; Member 1 replaces files one by one, keeping function signatures unchanged.
 
 features.extract(raw)                 -> dict[str, float]
 owner.build_template(list[features])  -> template

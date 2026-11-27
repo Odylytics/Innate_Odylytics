@@ -29,8 +29,8 @@ def test_extract_uses_server_phrase_and_flags_no_ime():
     c = challenge.issue(); ph = c["phrase"]
     f = features.extract(_raw(type_phrase(ph, "telex", 1.0), c["token"]))
     assert f["vi_ime_coverage"] == 1.0 and "challenge_no_ime" not in human.score(f)[1]
-    plain = [{"t": 120 * i, "kind": "key", "n": 1, "cls": "letter"} for i in range(len(ph))]  # đặt từng chữ không qua bộ gõ
+    plain = [{"t": 120 * i, "kind": "key", "n": 1, "cls": "letter"} for i in range(len(ph))]  # set letter by letter without an input method
     g = features.extract(_raw(plain, c["token"]))
     assert g["vi_ime_coverage"] == 0.0 and "challenge_no_ime" in human.score(g)[1]
-    assert "vi_ime_coverage" not in features.extract(_raw(plain, "token-gia"))  # token giả: không tin
+    assert "vi_ime_coverage" not in features.extract(_raw(plain, "token-gia"))  # fake token: do not trust
 

@@ -1,9 +1,9 @@
-"""E29: E24 lặp trên CẢ 97 người bằng cross-validation 5 phần CHIA THEO NGƯỜI, kèm khoảng tin cậy và phân bố theo nạn nhân.
+"""E29: E24 repeated on ALL 97 people with 5-fold cross-validation SPLIT BY PERSON, with confidence intervals and a per-victim distribution.
 
-Mỗi phần: huấn luyện LẠI mô hình người/máy (train_human_model.py) và mô hình chủ (train_owner_model.py) chỉ trên người ngoài phần đó
-(prior dân số cũng chỉ từ họ; kho kẻ gian khi huấn luyện chỉ gồm họ), rồi chấm người của phần đó bằng đúng chuỗi /score (như E24).
-Mỗi người dùng tối đa N_PINS PIN ngẫu nhiên. CI 95% bootstrap theo người. Bot vẫn là bộ sinh của đội (bot thích nghi do E24).
-Chạy (từ backend/): uv run --with pandas --with numpy --with scikit-learn --with lightgbm python ../research/experiments/e29_cv_end_to_end.py
+Each fold: RETRAIN the human/bot model (train_human_model.py) and the owner model (train_owner_model.py) only on people outside that fold
+(the population prior also comes only from them; the impostor pool during training consists only of them), then score the people in that fold through the exact /score chain (as in E24).
+Each person uses at most N_PINS random PINs. 95% CI by bootstrap over people. Bots are still the team's generator (adaptive bots from E24).
+Run (from backend/): uv run --with pandas --with numpy --with scikit-learn --with lightgbm python ../research/experiments/e29_cv_end_to_end.py
 """
 import copy, random, sys, time
 from collections import defaultdict
@@ -19,18 +19,18 @@ import strokepin_loader  # noqa: E402
 
 SEED, FOLDS, N_PINS, FRR = 29, 5, 6, 0.05
 import os
-RULES_ONLY = os.environ.get('E29_MODELS') == 'off'  # luật thuần = chế độ dự phòng khi mô hình học tắt (bản online ở chế độ này đến 26/11)
+RULES_ONLY = os.environ.get('E29_MODELS') == 'off'  # rules only = fallback mode when the learned models are off (the online version ran in this mode until 26/11)
 rng = random.Random(SEED)
 S = strokepin_loader.load()
 for e in S:
     e["f"] = features.extract(e["session"])
 USERS = sorted({e["user"] for e in S}); PINS = sorted({e["pin"] for e in S})
-by = defaultdict(lambda: defaultdict(list)); by_pin = defaultdict(list); by_user = defaultdict(list)
+by = defaultdict(list); by_pin = defaultdict(list); by_user = defaultdict(list)
 for e in S:
-    by[(e["user"], e["pin"])][e["posture"]].append(e); by_pin[e["pin"]].append(e); by_user[e["user"]].append(e)
+    by[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e); by_user[e["user"]].append(e)
 grp, bpp = defaultdict(list), defaultdict(lambda: defaultdict(list))
 for e in S:
-    grp[(e["user"], e["pin"], e["posture"])].append(e); bpp[(e["pin"], e["posture"])][e["user"]].append(e)
+    grp[(e["user"], e["pin"])].append(e); bpp[e["pin"]][e["user"]].append(e)
 TK = sorted(k for k in S[0]["f"] if k.startswith(("pin_hold_", "pin_flight_")) or k == "pin_total")
 NAMES = [n for n in bot_features.FEATURE_NAMES if n not in bot_features.CONTACT_FEATURES]
 EXCL = {"tap_w_mean", "tap_h_mean"}
@@ -86,24 +86,24 @@ def train_owner(fit, val):
     owner._PRIOR = {"within_var": dict(zip(TK, np.mean(list(WV.values()), axis=0).tolist())), "n_taps": 6, "nu": 5}
 
     def rows(users, allowed):
-        X, y, post, keys = [], [], [], None
-        for (u, p, po), es in grp.items():
-            if u not in users or po != "sit" or len(es) < 3: continue
+        X, y, keys = [], [], None
+        for (u, p), es in grp.items():
+            if u not in users or len(es) < 3: continue
             for _ in range(3):
                 enr = rng.sample(es, 3); tpl = owner.build_template([e["f"] for e in enr])
                 keys = keys or sorted(k for k in tpl["mu"] if k not in EXCL)
-                for tp, gen in (("sit", [e for e in es if e not in enr]), ("walk", grp.get((u, p, "walk"), []))):
-                    if not gen: continue
-                    pool = [e for v, ves in bpp[(p, tp)].items() if v != u and v in allowed for e in ves]
-                    for lab, ents in ((0, gen), (1, rng.sample(pool, min(15, len(pool))))):
-                        for e in ents:
-                            z = owner.score(e["f"], tpl)[1]; X.append([abs(z[k]) for k in keys]); y.append(lab); post.append(tp)
-        return np.array(X), np.array(y), np.array(post), keys
-    Xt, yt, _, keys = rows(fs, fs); Xv, yv, pv, _ = rows(set(val), fs | set(val))
+                gen = [e for e in es if e not in enr]
+                if not gen: continue
+                pool = [e for v, ves in bpp[p].items() if v != u and v in allowed for e in ves]
+                for lab, ents in ((0, gen), (1, rng.sample(pool, min(15, len(pool))))):
+                    for e in ents:
+                        z = owner.score(e["f"], tpl)[1]; X.append([abs(z[k]) for k in keys]); y.append(lab)
+        return np.array(X), np.array(y), keys
+    Xt, yt, keys = rows(fs, fs); Xv, yv, _ = rows(set(val), fs | set(val))
     m = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05, num_leaves=7, min_child_samples=30, subsample=0.8, subsample_freq=1,
                            colsample_bytree=0.8, random_state=SEED, verbose=-1).fit(Xt, yt)
     p = m.predict_proba(Xv)[:, 1]
-    thr = float(np.quantile(p[(yv == 0) & (pv == "sit")], 1 - FRR))
+    thr = float(np.quantile(p[yv == 0], 1 - FRR))
     owner_model._state["m"] = (m.booster_, {"features": keys, "threshold": thr})
 
 
@@ -118,9 +118,9 @@ def decide(raw, f, tpl, history, new_recipient):
     return risk, action, h, o
 
 
-GROUPS = ["chủ, cùng tư thế (ngồi)", "chủ, đổi tư thế (đi)", "kẻ biết PIN (người khác, máy khác)", "bot CT1 đều", "bot CT2 nhiễu thời gian",
-          "bot CT3 phát lại ±5%", "bot CT4 lấy mẫu dân số", "phát lại ±10%", "phát lại ±15%", "phát lại ±20%", "phát lại ±30%",
-          "bot biết mẫu chuẩn (scale 1.0)", "bot biết mẫu chuẩn (scale 0.5)"]
+GROUPS = ["owner", "PIN-knowing impostor (other person, other device)", "bot T1 uniform", "bot T2 timing noise",
+          "bot T3 replay ±5%", "bot T4 population sampling", "replay ±10%", "replay ±15%", "replay ±20%", "replay ±30%",
+          "template-aware bot (scale 1.0)", "template-aware bot (scale 0.5)"]
 FOLD = [0]
 R = {g: [] for g in GROUPS}  # g -> [(user, risk_known, risk_new, human)]
 
@@ -136,25 +136,24 @@ t0 = time.time()
 for fi in range(FOLDS):
     FOLD[0] = fi; test = set(us[fi::FOLDS]); rest = [u for u in us if u not in test]; val, fit = rest[:12], rest[12:]
     train_human(fit, val); train_owner(fit, val)
-    if RULES_ONLY: human_model._state['m'] = None; owner_model._state['m'] = None  # luật thuần (vẫn huấn luyện để giữ cùng chuỗi ngẫu nhiên)
-    print(f"phần {fi + 1}/{FOLDS}: {len(test)} người kiểm thử, mô hình đã huấn luyện ({time.time() - t0:.0f}s)", flush=True)
+    if RULES_ONLY: human_model._state['m'] = None; owner_model._state['m'] = None  # rules only (still trained to keep the same random sequence)
+    print(f"fold {fi + 1}/{FOLDS}: {len(test)} test people, models trained ({time.time() - t0:.0f}s)", flush=True)
     for u in sorted(test):
-        pins = [p for (uu, p), post in by.items() if uu == u and len(post["sit"]) >= 5]
+        pins = [p for (uu, p), ents in by.items() if uu == u and len(ents) >= 5]
         for pin in rng.sample(pins, min(N_PINS, len(pins))):
-            post = by[(u, pin)]; es = post["sit"][:]; rng.shuffle(es); enr, tests = es[:3], es[3:]
+            es = by[(u, pin)][:]; rng.shuffle(es); enr, tests = es[:3], es[3:]
             tpl = owner.build_template([e["f"] for e in enr]); hist = [e["f"] for e in enr]
             for e in tests:
                 record(GROUPS[0], u, e["session"], tpl, hist); hist = hist + [e["f"]]
-            for e in post["walk"][:4]: record(GROUPS[1], u, e["session"], tpl, hist)
-            others = [e for e in by_pin[pin] if e["user"] != u and e["posture"] == "sit"]
-            for e in rng.sample(others, min(4, len(others))): record(GROUPS[2], u, {**e["session"], "user_id": u}, tpl, hist)
+            others = [e for e in by_pin[pin] if e["user"] != u]
+            for e in rng.sample(others, min(4, len(others))): record(GROUPS[1], u, {**e["session"], "user_id": u}, tpl, hist)
             victim = [e["session"] for e in es]; pop = [e["session"] for e in rng.sample(by_pin[pin], min(150, len(by_pin[pin])))]
             for _ in range(2):
-                for gi, t in ((3, 1), (4, 2), (5, 3), (6, 4)):
+                for gi, t in ((2, 1), (3, 2), (4, 3), (5, 4)):
                     record(GROUPS[gi], u, strip(tactics.generate(t, u, pin, victim if t == 3 else pop if t == 4 else victim, rng)), tpl, hist)
                 src = rng.choice(victim)
-                for gi, n in ((7, 0.10), (8, 0.15), (9, 0.20), (10, 0.30)): record(GROUPS[gi], u, strip(noisy_replay(src, n)), tpl, hist)
-                for gi, sc in ((11, 1.0), (12, 0.5)): record(GROUPS[gi], u, strip(mimic(victim[:6], sc)), tpl, hist)
+                for gi, n in ((6, 0.10), (7, 0.15), (8, 0.20), (9, 0.30)): record(GROUPS[gi], u, strip(noisy_replay(src, n)), tpl, hist)
+                for gi, sc in ((10, 1.0), (11, 0.5)): record(GROUPS[gi], u, strip(mimic(victim[:6], sc)), tpl, hist)
 
 import os, pickle
 if os.environ.get('E29_DUMP'): pickle.dump({g: R[g] for g in GROUPS}, open(os.environ['E29_DUMP'], 'wb'))
@@ -165,7 +164,7 @@ def act(risk, h, A, B): return "hold" if h < fusion.HUMAN_HOLD or risk > B else 
 
 
 def rate(rows, col, A, B, what):
-    """Tỉ lệ theo NGƯỜI rồi bootstrap trên người. what: 'allow' | 'notallow' | 'hold' | 'step_up'."""
+    """Rate per PERSON, then bootstrap over people. what: 'allow' | 'notallow' | 'hold' | 'step_up'."""
     per = defaultdict(list)
     for r in rows:
         a = act(r[col], r[3], A, B)
@@ -179,24 +178,24 @@ def rate(rows, col, A, B, what):
 
 
 fmt = lambda t: f"{100 * t[0]:.0f}% [{100 * t[1]:.0f}, {100 * t[2]:.0f}]"  # noqa: E731
-L = ["# E29 — E24 trên cả 97 người (cross-validation 5 phần theo người)" + (" — CHỈ LUẬT, mô hình học tắt (chế độ dự phòng)" if RULES_ONLY else ""), "",
-     f"Mỗi phần huấn luyện lại hai mô hình học chỉ trên người ngoài phần đó. {len(USERS)} người, tối đa {N_PINS} PIN mỗi người, ngưỡng A={A0}, B={B0}. "
-     "Ô: **tỉ lệ [CI 95% bootstrap theo người]**. Kẻ biết PIN dùng MÁY KHÁC (lẫn nhiễu thiết bị); bot là bộ sinh của đội. Số phiên mỗi nhóm ở cột n.", "",
-     "## Người nhận quen", "", "| Nhóm | n | hold | step_up | allow |", "|---|---|---|---|---|"]
+L = ["# E29 — E24 on all 97 people (5-fold cross-validation by person)" + (" — RULES ONLY, learned models off (fallback mode)" if RULES_ONLY else ""), "",
+     f"Each fold retrains the two learned models only on people outside that fold. {len(USERS)} people, at most {N_PINS} PINs per person, thresholds A={A0}, B={B0}. "
+     "Cells: **rate [95% CI, bootstrap over people]**. The PIN-knowing impostor uses a DIFFERENT DEVICE (confounded with device noise); bots are the team's generator. The number of sessions per group is in column n.", "",
+     "## Known recipient", "", "| Group | n | hold | step_up | allow |", "|---|---|---|---|---|"]
 for g in GROUPS:
     L.append(f"| {g} | {len(R[g])} | " + " | ".join(fmt(rate(R[g], 1, A0, B0, w)) for w in ("hold", "step_up", "allow")) + " |")
-L += ["", "## Người nhận MỚI", "", "| Nhóm | n | hold | step_up | allow |", "|---|---|---|---|---|"]
+L += ["", "## NEW recipient", "", "| Group | n | hold | step_up | allow |", "|---|---|---|---|---|"]
 for g in GROUPS:
     L.append(f"| {g} | {len(R[g])} | " + " | ".join(fmt(rate(R[g], 2, A0, B0, w)) for w in ("hold", "step_up", "allow")) + " |")
-L += ["", "## Quét ngưỡng A (B=0,55, người nhận quen): chủ ngồi được allow / không allow với …", "",
-      "| A | chủ ngồi allow | kẻ biết PIN | bot CT4 | biết mẫu chuẩn 1,0 | phát lại ±15% |", "|---|---|---|---|---|---|"]
+L += ["", "## Sweep of threshold A (B=0.55, known recipient): owner allowed / not allowed for ...", "",
+      "| A | owner allow | PIN-knowing impostor | bot T4 | template-aware 1.0 | replay ±15% |", "|---|---|---|---|---|---|"]
 for A in (0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40):
     L.append(f"| {A:.2f}{' ←' if A == A0 else ''} | {fmt(rate(R[GROUPS[0]], 1, A, 0.55, 'allow'))} | "
-             + " | ".join(fmt(rate(R[g], 1, A, 0.55, "notallow")) for g in (GROUPS[2], GROUPS[6], GROUPS[11], GROUPS[8])) + " |")
-v = rate(R[GROUPS[2]], 1, A0, B0, "allow")[3]
+             + " | ".join(fmt(rate(R[g], 1, A, 0.55, "notallow")) for g in (GROUPS[1], GROUPS[5], GROUPS[10], GROUPS[7])) + " |")
+v = rate(R[GROUPS[1]], 1, A0, B0, "allow")[3]
 srt = np.sort(v); n = len(srt); gini = float((2 * np.arange(1, n + 1) - n - 1).dot(srt) / (n * srt.sum())) if srt.sum() else 0.0
-L += ["", "## Phân bố theo nạn nhân (kẻ biết PIN, người nhận quen, A=0,25)", "",
-      f"Tỉ lệ kẻ biết PIN được allow, tính riêng từng nạn nhân ({n} người): trung vị {100 * np.median(v):.0f}%, phân vị 90% {100 * np.quantile(v, .9):.0f}%, lớn nhất {100 * v.max():.0f}%.",
-      f"Hệ số Gini {gini:.2f} (0 = đều giữa các nạn nhân, 1 = dồn vào vài người). Số nạn nhân bị allow > 50%: {(v > 0.5).sum()}/{n}; > 90%: {(v > 0.9).sum()}/{n}.", ""]
+L += ["", "## Per-victim distribution (PIN-knowing impostor, known recipient, A=0.25)", "",
+      f"Share of PIN-knowing impostor sessions allowed, computed separately for each victim ({n} people): median {100 * np.median(v):.0f}%, 90th percentile {100 * np.quantile(v, .9):.0f}%, maximum {100 * v.max():.0f}%.",
+      f"Gini coefficient {gini:.2f} (0 = even across victims, 1 = concentrated on a few people). Victims allowed > 50%: {(v > 0.5).sum()}/{n}; > 90%: {(v > 0.9).sum()}/{n}.", ""]
 Path(ROOT / "research/results" / ("e29_rules_only.md" if RULES_ONLY else "e29_cv_end_to_end.md")).write_text("\n".join(L), encoding="utf-8")
-print("\n".join(L)); print(f"xong sau {time.time() - t0:.0f}s")
+print("\n".join(L)); print(f"done after {time.time() - t0:.0f}s")

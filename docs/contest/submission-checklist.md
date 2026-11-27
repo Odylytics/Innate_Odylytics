@@ -1,52 +1,52 @@
-# Output phải nộp cho BTC
+# Outputs to submit to the organizers
 
-> Nguồn: thể lệ chính thức ([tóm tắt](the-le-cuoc-thi.md)). Hạn nộp **23:59:59 03/12/2026**. Sau hạn **không được sửa**, kể cả sản phẩm tại link đã nộp. Gửi câu hỏi làm rõ trước **23:59:59 27/11**: techday@mservice.com.vn.
+> Source: the official rules ([summary](the-le-cuoc-thi.md)). Submission deadline **23:59:59 03/12/2026**. No edits after the deadline, including the product at the submitted link. Send clarification questions before **23:59:59 27/11**: techday@mservice.com.vn.
 
-> Phần web/demo và link sản phẩm online do nhóm làm sau; chưa có URL cuối cùng cho PDF (cần chốt trước khi viết).
+> The web/demo part and the online product link are being done by the team later; there is no final URL for the PDF yet (needs to be fixed before writing).
 
-## 4 thành phần
+## 4 components
 
-| # | Thành phần | Định dạng và giới hạn | Nội dung cho Innate | Người phụ trách | Trạng thái |
+| # | Component | Format and limits | Content for Innate | Owner | Status |
 |---|---|---|---|---|---|
-| 1 | **Sản phẩm** | PDF ≤ 1 trang A4. Có link dùng thử online ngay, kèm tài khoản dùng thử nếu cần đăng nhập | Link ví demo (`/`) + Swagger (`/docs`). Ghi user demo, API key demo, PIN demo `159357`, 4 bước dùng | Người 3 | Chưa |
-| 2 | **Mã nguồn** | `.zip` toàn bộ code + `README` | README khai: cách chạy, công nghệ, **tài sản có sẵn, thư viện mã nguồn mở, công cụ AI đã dùng**, nguồn dữ liệu | Người 2 | Chưa |
-| 3 | **Tài liệu mô tả** | Slide PDF ≤ 10 trang. Dùng luôn cho chung kết, **không được sửa** | Vấn đề, giải pháp, kiến trúc, số liệu đánh giá, demo, hạn chế | Người 3 + Người 1 (số liệu) | Chưa |
-| 4 | **Video** | MP4 ≤ 3 phút (phần quá 3 phút không được xem) | Quay sản phẩm chạy thật: đăng ký nhịp → chuyển tiền chủ thật → người lạ → bot bị chặn | Người 3 | Chưa |
+| 1 | **Product** | PDF ≤ 1 A4 page. A link to try it online immediately, with a trial account if login is needed | Link to the demo wallet (`/`) + Swagger (`/docs`). State the demo user, demo API key, demo PIN `159357`, 4 steps of use | Member 3 | Not started |
+| 2 | **Source code** | `.zip` of all code + `README` | README declares: how to run, technologies, **pre-existing assets, open-source libraries, AI tools used**, data sources | Member 2 | Not started |
+| 3 | **Description document** | Slide PDF ≤ 10 pages. Used as-is for the final, **may not be edited** | Problem, solution, architecture, evaluation figures, demo, limitations | Member 3 + Member 1 (figures) | Not started |
+| 4 | **Video** | MP4 ≤ 3 minutes (anything past 3 minutes is not watched) | Film the product actually running: rhythm enrollment → real owner transfer → a stranger → bot blocked | Member 3 | Not started |
 
-## Điều kiện sản phẩm
+## Product conditions
 
-- Dùng thử được **online**, không phụ thuộc máy local của đội.
-- **AI là lõi** tạo ra giá trị, không phải tính năng phụ.
-- Chạy ổn định lúc nộp và **online liên tục đến hết 11/12/2026**.
-- Thuộc ít nhất 1 chủ đề: Trợ lý AI · An ninh mạng · Chống lừa đảo (Innate: An ninh mạng + Chống lừa đảo).
+- Can be tried **online**, not dependent on the team's local machine.
+- **AI is the core** that creates the value, not a side feature.
+- Runs stably at submission and stays **online continuously through 11/12/2026**.
+- Belongs to at least 1 theme: AI assistant · Cybersecurity · Anti-fraud (Innate: Cybersecurity + Anti-fraud).
 
-## Lưu ý khi đóng `.zip`
+## Notes when building the `.zip`
 
-- **Loại bỏ**: `backend/.env.deploy-key` và mọi `.env*`, `*.db`, `.venv`, `__pycache__`, `.vercel`.
-- `papers/` là PDF có bản quyền của người khác: không đưa vào zip, chỉ liệt kê trong README (DOI nằm ở [`../research/paper-report.md`](../research/paper-report.md)).
-- Thương hiệu: không dùng logo hay tên MoMo trong sản phẩm, slide, video.
-- Dữ liệu cá nhân phải ghi nguồn và căn cứ sử dụng (phiếu đồng ý của người tham gia thu dữ liệu).
+- **Exclude**: `backend/.env.deploy-key` and all `.env*`, `*.db`, `.venv`, `__pycache__`, `.vercel`.
+- `papers/` are other people's copyrighted PDFs: do not put them in the zip, only list them in the README (DOIs are in [`../research/paper-report.md`](../research/paper-report.md)).
+- Branding: do not use the MoMo logo or name in the product, slides, or video.
+- Personal data must state the source and basis for use (the consent forms of the data collection participants).
 
-## Bị loại nếu
+## Disqualified if
 
-Nộp sản phẩm có từ trước · người ngoài đội tham gia · chia sẻ code giữa các đội · sửa sau hạn · giấu tài sản có sẵn · dữ liệu cá nhân không nguồn.
+Submitting a pre-existing product · people outside the team take part · sharing code between teams · editing after the deadline · hiding pre-existing assets · personal data without a source.
 
-## Mốc
+## Milestones
 
-| Ngày | Việc |
+| Date | Task |
 |---|---|
-| 27/11 | Đăng ký thi (trưởng nhóm, techday.momo.vn) + gửi câu hỏi BTC |
-| 03/12 | Nộp đủ 4 thành phần |
-| 08/12 | Công bố top 5 |
-| 11/12 | Chung kết tại TP.HCM; sản phẩm phải còn online |
+| 27/11 | Register for the contest (team leader, techday.momo.vn) + send questions to the organizers |
+| 03/12 | Submit all 4 components |
+| 08/12 | Top 5 announced |
+| 11/12 | Final in Ho Chi Minh City; the product must still be online |
 
-## Tiến độ hồ sơ (27/11)
+## Submission progress (27/11)
 
-| Thành phần | Trạng thái |
+| Component | Status |
 |---|---|
-| Slide ≤ 10 trang | **Xong bản đầy đủ** (tiếng Anh, đội Odylytics): `submission/Slide/` (PPTX sửa được + PDF xuất từ PowerPoint + phông). Nguồn `tools/build_pptx.js`, dựng bằng `tools/build_submission.sh`. **Không sửa được sau khi nộp** |
-| Video ≤ 3 phút | Kịch bản có ([`video-script.md`](../submission/video-script.md)); **chưa quay** (URL demo đã có: https://innate.odylytics.com) |
-| PDF hướng dẫn 1 trang | **Xong**: `submission/Product/Innate-product-guide.pdf` (QR, link, PIN demo, ảnh các bước) |
-| README nộp bài | **Xong bản tiếng Anh**: `submission/Document/README.md`; còn `TODO` số liệu dữ liệu đội tự thu |
-| Zip mã nguồn | Dựng bằng `tools/build_submission.sh` → `submission/Document/Innate-source-code.zip` (không đưa vào git) |
-| Đề xuất, kịch bản thuyết trình + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) (tiếng Việt, chưa đồng bộ với slide mới) |
+| Slides ≤ 10 pages | **Full version done** (English, team Odylytics): `submission/Slide/` (editable PPTX + PDF exported from PowerPoint + fonts). Source `tools/build_pptx.js`, built with `tools/build_submission.sh`. **Cannot be edited after submission** |
+| Video ≤ 3 minutes | Script exists ([`video-script.md`](../submission/video-script.md)); **not filmed yet** (demo URL exists: https://innate.odylytics.com) |
+| 1-page guide PDF | **Done**: `submission/Product/Innate-product-guide.pdf` (QR, link, demo PIN, images of the steps) |
+| Submission README | **English version done**: `submission/Document/README.md`; the `TODO` for the team's self-collected data figures remains |
+| Source code zip | Built with `tools/build_submission.sh` → `submission/Document/Innate-source-code.zip` (not put into git) |
+| Proposal, presentation script + Q&A | [`proposal.md`](../submission/proposal.md), [`pitch-script.md`](../submission/pitch-script.md) (English, synced with the final deck on 27/11/2026) |

@@ -7,16 +7,16 @@ Ms = Annotated[float, Field(allow_inf_nan=False, ge=0)]
 
 
 class PinTap(BaseModel):
-    """Một lần chạm phím PIN. Thời gian tính bằng ms, toạ độ bằng px."""
+    """One PIN key tap. Time in ms, coordinates in px."""
 
     key: str = Field(max_length=2)
     t_down: Ms
     t_up: Ms
     x: Num
     y: Num
-    w: Num = 0  # kích thước vùng chạm (PointerEvent.width/height)
+    w: Num = 0  # touch area size (PointerEvent.width/height)
     h: Num = 0
-    key_cx: Num  # tâm phím
+    key_cx: Num  # key center
     key_cy: Num
     key_w: Annotated[float, Field(gt=0, allow_inf_nan=False)]
     key_h: Annotated[float, Field(gt=0, allow_inf_nan=False)]
@@ -24,7 +24,7 @@ class PinTap(BaseModel):
     @model_validator(mode="after")
     def _order(self):
         if self.t_up < self.t_down:
-            raise ValueError("t_up phải >= t_down")
+            raise ValueError("t_up must be >= t_down")
         return self
 
 
@@ -35,7 +35,7 @@ class Point(BaseModel):
 
 
 class Swipe(BaseModel):
-    points: list[Point] = Field(min_length=2, max_length=200)  # ~3 s vuốt ở 60 Hz; dài hơn thì SDK cắt bớt
+    points: list[Point] = Field(min_length=2, max_length=200)  # ~3 s of swiping at 60 Hz; longer ones are truncated by the SDK
 
 
 class ScreenVisit(BaseModel):
@@ -45,23 +45,23 @@ class ScreenVisit(BaseModel):
 
 
 class InputEvent(BaseModel):
-    """Một thay đổi trong ô nhập. KHÔNG chứa nội dung: chỉ thời gian, loại và số ký tự."""
+    """One change in an input field. Carries NO content: only time, kind and character count."""
 
-    t: Ms  # ms từ đầu phiên
-    # key: gõ ký tự; paste: dán; delete: xoá; set_text: văn bản đổi mà KHÔNG có sự kiện phím (vd. Trợ năng ACTION_SET_TEXT)
+    t: Ms  # ms since session start
+    # key: typed character; paste: pasted; delete: deleted; set_text: text changed with NO key event (e.g. Accessibility ACTION_SET_TEXT)
     kind: Literal["key", "paste", "delete", "set_text"]
-    n: int = Field(default=1, ge=0, le=500)  # số ký tự thay đổi
-    cls: Literal["digit", "letter", "space", "symbol"] | None = None  # lớp ký tự (chỉ với key), không gửi ký tự
+    n: int = Field(default=1, ge=0, le=500)  # number of characters changed
+    cls: Literal["digit", "letter", "space", "symbol"] | None = None  # character class (key only), the character itself is not sent
 
 
 class TextField(BaseModel):
-    """Một ô nhập của giao dịch: số tiền, người nhận, nội dung chuyển khoản, tên."""
+    """One input field of the transaction: amount, recipient, transfer note, name."""
 
-    # challenge = câu thử thách do hệ thống sinh và hiển thị, người dùng gõ lại (xem docs/plan/innate-challenge.md)
+    # challenge = phrase generated and shown by the system, retyped by the user (see docs/plan/innate-challenge.md)
     name: Literal["amount", "recipient", "note", "name", "challenge"]
-    expected_len: int | None = Field(default=None, ge=1, le=200)  # độ dài câu thử thách (chỉ để phát hiện dán/đặt thẳng)
-    token: str | None = Field(default=None, max_length=200)  # token từ GET /challenge: máy chủ biết câu mà không cần nội dung gõ
-    token_status: Literal["ok", "reused", "expired", "invalid"] | None = None  # máy chủ tự đặt khi có token; giá trị client gửi bị ghi đè
+    expected_len: int | None = Field(default=None, ge=1, le=200)  # length of the challenge phrase (only to detect paste/direct set)
+    token: str | None = Field(default=None, max_length=200)  # token from GET /challenge: the server knows the phrase without the typed content
+    token_status: Literal["ok", "reused", "expired", "invalid"] | None = None  # set by the server when a token is present; a client-sent value is overwritten
     events: list[InputEvent] = Field(default_factory=list, max_length=600)
 
 
@@ -69,7 +69,7 @@ Ident = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_
 
 
 class ParticipantIn(BaseModel):
-    """Người tình nguyện thu dữ liệu: chỉ email và họ tên. Không bao giờ có PIN."""
+    """Data-collection volunteer: only email and full name. Never a PIN."""
 
     participant_id: Ident
     email: Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
@@ -79,41 +79,41 @@ class ParticipantIn(BaseModel):
     def _clean_name(self):
         self.full_name = " ".join(self.full_name.split())
         if any(c.isdigit() for c in self.full_name):
-            raise ValueError("họ tên không được chứa chữ số")
+            raise ValueError("full name must not contain digits")
         self.email = self.email.strip().lower()
         return self
 
 
 class CollectionMeta(BaseModel):
-    """Nhãn thu dữ liệu. user_id = tài khoản bị thao tác; participant_id = người thật đang cầm máy."""
+    """Data-collection label. user_id = the account being operated; participant_id = the real person holding the device."""
 
     participant_id: Ident
-    sitting: int = Field(ge=1, le=20)  # lần ngồi thứ mấy (1 = đăng ký, 2+ = kiểm thử theo thời gian)
-    # impostor: biết PIN, cố bấm giống chủ tài khoản; bot: phiên do bộ giả lập hacker sinh ra
+    sitting: int = Field(ge=1, le=20)  # which collection round (1 = enrollment, 2+ = tests over time)
+    # impostor: knows the PIN, tries to tap like the account owner; bot: session produced by the attacker simulator
     role: Literal["genuine", "impostor", "bot"]
-    tactic: int | None = Field(default=None, ge=1, le=4)  # chiến thuật bot 1–4 (chỉ khi role = bot)
+    tactic: int | None = Field(default=None, ge=1, le=4)  # bot tactic 1–4 (only when role = bot)
     note: str | None = Field(default=None, max_length=200)
-    # trang thu (#/collect) ghi họ tên + email người tham gia thẳng vào phiên (có đồng ý); /v1/export trả cả hai
+    # the collection page (#/collect) writes the participant's full name + email straight into the session (with consent); /v1/export returns both
     full_name: str | None = Field(default=None, min_length=1, max_length=100)
     email: str | None = Field(default=None, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
     @model_validator(mode="after")
     def _tactic_only_for_bot(self):
         if (self.role == "bot") != (self.tactic is not None):
-            raise ValueError("tactic bắt buộc khi role = bot và chỉ dùng cho bot")
+            raise ValueError("tactic is required when role = bot and is only allowed for bots")
         return self
 
 
 class SessionIn(BaseModel):
-    """Phiên thao tác do SDK gửi lên. Chỉ thời gian + toạ độ, không có nội dung PIN."""
+    """Interaction session sent by the SDK. Only time + coordinates, no PIN content."""
 
     user_id: Ident
     device_id: str = Field(default="unknown", max_length=64)
     pin_taps: list[PinTap] = Field(default_factory=list, max_length=12)
     swipes: list[Swipe] = Field(default_factory=list, max_length=30)
     screens: list[ScreenVisit] = Field(default_factory=list, max_length=50)
-    fields: list[TextField] = Field(default_factory=list, max_length=10)  # ô nhập ngoài PIN
-    meta: CollectionMeta | None = None  # chỉ gửi khi thu dữ liệu
+    fields: list[TextField] = Field(default_factory=list, max_length=10)  # input fields other than the PIN
+    meta: CollectionMeta | None = None  # sent only during data collection
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -147,7 +147,7 @@ class SessionCreated(BaseModel):
 
 class EnrollIn(BaseModel):
     session_id: str
-    keep_open: bool = False  # true: không khoá ở lượt thứ 3, chờ /enroll/finish (tối đa MAX_ENROLL lượt)
+    keep_open: bool = False  # true: do not lock at the 3rd attempt, wait for /enroll/finish (up to MAX_ENROLL attempts)
 
 
 class EnrollOut(BaseModel):
@@ -155,12 +155,12 @@ class EnrollOut(BaseModel):
     enrolled_sessions: int
     template_ready: bool
     enroll_open: bool = True
-    consistency: float | None = None  # trung bình điểm khớp của mỗi lượt so với mẫu dựng từ các lượt còn lại
+    consistency: float | None = None  # mean match score of each attempt against the template built from the other attempts
 
 
 class SignupIn(BaseModel):
     email: str = Field(max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    password: str = Field(min_length=6, max_length=128)  # giữ nguyên, kể cả khoảng trắng (login so đúng như gõ)
+    password: str = Field(min_length=6, max_length=128)  # kept as is, including whitespace (login compares exactly as typed)
     full_name: str | None = Field(default=None, max_length=100)
 
     @field_validator("email", mode="before")
@@ -200,7 +200,7 @@ Action = Literal["allow", "step_up", "hold"]
 class ScoreOut(BaseModel):
     session_id: str
     human_score: float
-    owner_match: float | None  # None khi người dùng chưa đăng ký đủ lượt
+    owner_match: float | None  # None when the user has not completed enough enrollment attempts
     risk: Literal["low", "medium", "high"]
     risk_score: float
     action: Action

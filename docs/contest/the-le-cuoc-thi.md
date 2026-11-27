@@ -1,69 +1,69 @@
-# MoMo Tech Contest 2026 — Luật chung
+# MoMo Tech Contest 2026 — General rules
 
-> Tóm tắt từ đề bài và thể lệ chính thức. Bản gốc: https://techday.momo.vn/topic.html · https://techday.momo.vn/assets/docs/the-le-cuoc-thi.pdf
+> Summary of the official brief and rules. Originals: https://techday.momo.vn/topic.html · https://techday.momo.vn/assets/docs/the-le-cuoc-thi.pdf
 
-## Đề bài
+## The brief
 
 **Imagine the Future Workspace — Human Centered. AI Powered.**
-Hãy tưởng tượng AI sẽ thay đổi cách đội ngũ fintech làm việc, và qua đó thay đổi cách con người mua sắm, thanh toán, quản lý tài chính và tự bảo vệ mình trên không gian số. Sau đó biến ý tưởng thành **sản phẩm dùng được ngay hôm nay**.
+Imagine how AI will change the way fintech teams work, and through that change how people shop, pay, manage their finances, and protect themselves in the digital space. Then turn the idea into a **product usable today**.
 
-- **Người dùng:** không giới hạn. Đội tự chọn đối tượng (cá nhân, người bán, doanh nghiệp, đội vận hành…) và nêu rõ trong tài liệu mô tả.
-- **Chủ đề:** sản phẩm phải thuộc **ít nhất 1** trong 3 chủ đề sau, và có thể thuộc nhiều chủ đề cùng lúc:
+- **Users:** unrestricted. The team chooses the audience (individuals, sellers, businesses, operations teams…) and states it clearly in the description document.
+- **Themes:** the product must belong to **at least 1** of the following 3 themes, and may belong to several at once:
 
-| Chủ đề | Mô tả |
+| Theme | Description |
 |---|---|
-| Trợ lý AI | Hiểu nhu cầu và hành động thay người dùng, giúp họ tiết kiệm thời gian, sống tiện lợi, an toàn, thoải mái hơn. Gồm trợ lý mua sắm, cá nhân, thanh toán, bán hàng, tài chính |
-| An ninh mạng | Phát hiện, ngăn chặn và phản ứng với mối đe doạ an ninh. Ví dụ: phát hiện lỗ hổng, cảnh báo bất thường, truy vết xâm nhập |
-| Chống lừa đảo | Giúp người dùng nhận diện và được cảnh báo trước các hình thức lừa đảo trực tuyến, trước khi mất tiền hoặc thông tin. Ví dụ: phát hiện tin giả, cảnh báo cuộc gọi lừa đảo |
+| AI assistant | Understands needs and acts on behalf of the user, helping them save time and live more conveniently, safely, and comfortably. Includes shopping, personal, payment, sales, and finance assistants |
+| Cybersecurity | Detects, prevents, and responds to security threats. Examples: finding vulnerabilities, flagging anomalies, tracing intrusions |
+| Anti-fraud | Helps users recognize and be warned in advance about online scams, before losing money or information. Examples: detecting fake news, warning about scam calls |
 
-## Yêu cầu sản phẩm
+## Product requirements
 
-- Là **sản phẩm cụ thể, dùng được trực tuyến**, không chỉ là bản trình diễn hay bản mẫu thử.
-- Hình thức: ứng dụng, dịch vụ API, công cụ…
-- **Giám khảo tự truy cập và dùng thử được**, không phụ thuộc máy local của đội.
-- **AI là thành phần cốt lõi** tạo ra giá trị, không phải tính năng phụ.
-- Sản phẩm phải chạy ổn định lúc nộp và **online liên tục đến hết 11/12/2026**.
+- A **concrete product, usable online**, not just a demonstration or a prototype.
+- Form: an app, an API service, a tool…
+- **Judges can access and try it themselves**, without depending on the team's local machine.
+- **AI is a core component** that creates the value, not a side feature.
+- The product must run stably at submission and stay **online continuously through 11/12/2026**.
 
-## Thành phần bài nộp
+## Submission components
 
-| Thành phần | Yêu cầu |
+| Component | Requirement |
 |---|---|
-| Sản phẩm | PDF hướng dẫn sử dụng **≤ 1 trang A4**, có link dùng thử online ngay + tài khoản dùng thử nếu cần đăng nhập |
-| Mã nguồn | File **.zip** toàn bộ mã nguồn. README khai báo: cách chạy, công nghệ, **tài sản có sẵn, thư viện mã nguồn mở, công cụ AI đã dùng** |
-| Tài liệu mô tả | Slide **≤ 10 trang PDF**, nêu rõ vấn đề và giải pháp. **Dùng luôn cho chung kết, không được sửa sau khi nộp** |
-| Video giới thiệu | **≤ 3 phút MP4**, quay sản phẩm chạy thật. Phần quá 3 phút không được xem |
+| Product | A user-guide PDF of **≤ 1 A4 page**, with a link to try it online immediately + a trial account if login is needed |
+| Source code | A **.zip** file of all source code. The README declares: how to run, technologies, **pre-existing assets, open-source libraries, AI tools used** |
+| Description document | Slides of **≤ 10 PDF pages**, clearly stating the problem and solution. **Used as-is for the final, may not be edited after submission** |
+| Intro video | **≤ 3 minutes MP4**, showing the product actually running. Anything past 3 minutes is not watched |
 
-## Ai được thi
+## Who may enter
 
-- Sinh viên ĐH/CĐ tại Việt Nam, quốc tịch Việt Nam, 18–23 tuổi.
-- Thi theo đội 2–3 người, không thi cá nhân.
-- Người đang làm việc/thực tập tại MoMo không được thi.
+- University/college students in Vietnam, Vietnamese nationality, aged 18–23.
+- Teams of 2–3 people, no individual entries.
+- People working/interning at MoMo may not enter.
 
-## Mốc thời gian (2026)
+## Timeline (2026)
 
-| Mốc | Thời gian |
+| Milestone | Time |
 |---|---|
-| Đăng ký (trưởng nhóm, tại techday.momo.vn) | 10:00 13/11 → **23:59:59 27/11** |
-| Hạn gửi câu hỏi làm rõ | **23:59:59 27/11** |
-| Hạn nộp bài | **23:59:59 03/12**. Sau hạn không được sửa bài, kể cả sản phẩm tại link đã nộp |
-| Công bố top 5 | 08/12 |
-| Chung kết | 11/12, trực tiếp tại TP.HCM. 5 đội thuyết trình + trả lời giám khảo; đủ thành viên có mặt; tự túc chi phí |
+| Registration (team leader, at techday.momo.vn) | 10:00 13/11 → **23:59:59 27/11** |
+| Deadline for clarification questions | **23:59:59 27/11** |
+| Submission deadline | **23:59:59 03/12**. No edits after the deadline, including the product at the submitted link |
+| Top 5 announced | 08/12 |
+| Final | 11/12, in person in Ho Chi Minh City. 5 teams present + answer the judges; all members present; at own expense |
 
-## Chấm điểm & giải thưởng
+## Scoring & prizes
 
-- **Tiêu chí:** Sáng tạo · Chất lượng & mức độ hoàn thiện · Tiềm năng tác động. Không công bố trọng số.
-- Mỗi bài có **≥ 3 giám khảo** chấm độc lập.
-- **Giải:** Nhất 50 triệu · Nhì 30 triệu · Ba 20 triệu (đã gồm thuế). Top 3 vào thẳng vòng Leadership Interview của MoMo Talent 2027.
+- **Criteria:** Creativity · Quality & completeness · Impact potential. Weights not published.
+- Each entry is scored independently by **≥ 3 judges**.
+- **Prizes:** First 50 million · Second 30 million · Third 20 million (tax included). The top 3 go straight into the Leadership Interview round of MoMo Talent 2027.
 
-## Bị loại nếu
+## Disqualified if
 
-- Nộp sản phẩm đã có từ trước cho chính bài toán này, hoặc sao chép.
-- Người ngoài đội tham gia xây dựng.
-- Chia sẻ code giữa các đội.
-- Sửa sản phẩm sau hạn nộp.
-- Che giấu việc dùng tài sản có sẵn (phải liệt kê trong README).
-- Dùng dữ liệu cá nhân/doanh nghiệp không ghi nguồn và căn cứ sử dụng.
+- Submitting a pre-existing product for this very problem, or copying.
+- People outside the team take part in building.
+- Sharing code between teams.
+- Editing the product after the deadline.
+- Hiding the use of pre-existing assets (must be listed in the README).
+- Using personal/business data without stating the source and basis for use.
 
-## Liên hệ BTC
+## Contact the organizers
 
 techday@mservice.com.vn

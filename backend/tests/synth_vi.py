@@ -1,10 +1,10 @@
-"""Giả lập người gõ câu tiếng Việt bằng Telex/VNI (dữ liệu GIẢ, chỉ để test trích đặc trưng)."""
+"""Simulates a person typing a Vietnamese phrase in Telex/VNI (FAKE data, only to test feature extraction)."""
 
 from app.scoring.vi_ime import syllable_units
 
 
 def type_phrase(phrase: str, system: str = "telex", tone_late: float = 1.0, gap: int = 150, unikey_backspace: bool = False) -> list[dict]:
-    """tone_late: 0 = gõ dấu thanh ngay sau nguyên âm, 1 = để cuối âm tiết. unikey_backspace: biến đổi lộ ra dạng delete + key sát nhau."""
+    """tone_late: 0 = type the tone mark right after the vowel, 1 = leave it to the end of the syllable. unikey_backspace: the transform shows up as a delete + key in close succession."""
     si = 0 if system == "telex" else 1
     ev, t = [], 0
 
@@ -27,7 +27,7 @@ def type_phrase(phrase: str, system: str = "telex", tone_late: float = 1.0, gap:
             add("key", 1, "space")
         units = syllable_units(word)
         ti = next((i for i, u in enumerate(units) if u["tone"]), None)
-        place = None if ti is None else ti + round((len(units) - 1 - ti) * tone_late)  # gõ dấu thanh sau đơn vị này
+        place = None if ti is None else ti + round((len(units) - 1 - ti) * tone_late)  # type the tone mark after this unit
         for i, u in enumerate(units):
             add("key", 1, "letter")
             if u["mark"]:

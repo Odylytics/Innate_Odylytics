@@ -5,8 +5,8 @@ P = "Hôm nay trời đẹp quá"
 
 
 def test_tone_choices_and_expected_transforms():
-    assert [tone_choices(w) for w in P.split()] == [0, 0, 2, 2, 1]  # trời: sau ơ hoặc sau i; đẹp: sau ẹ hoặc sau p; quá: chỉ cuối
-    assert expected_transforms(P) == 6  # ô, ơ+huyền, đ, ẹ, á => 1+2+1+1+1
+    assert [tone_choices(w) for w in P.split()] == [0, 0, 2, 2, 1]  # trời: after ơ or after i; đẹp: after ẹ or after p; quá: end only
+    assert expected_transforms(P) == 6  # ô, ơ+huyền (grave), đ, ẹ, á => 1+2+1+1+1
 
 
 def test_telex_late_vs_early_and_vni():

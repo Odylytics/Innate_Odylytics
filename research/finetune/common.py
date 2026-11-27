@@ -1,7 +1,7 @@
-"""Dùng chung cho fine-tune TypeFormer trên StrokePIN: nạp mô hình (vá CUDA cứng), dựng đặc trưng, đánh giá kiểu E9.
+"""Shared code for fine-tuning TypeFormer on StrokePIN: load the model (patch the hard-coded CUDA), build features, E9-style evaluation.
 
-Đặc trưng mỗi phím đúng như TypeFormer/Aalto: [hold, press-press, release-release, release(prev)-press, mã phím/255]
-(thời gian đổi ra giây), đệm 0 tới 50 phím. PIN 6 số = 6 hàng thật + 44 hàng đệm.
+Per-key features exactly as in TypeFormer/Aalto: [hold, press-press, release-release, release(prev)-press, key code/255]
+(times converted to seconds), padded with 0 to 50 keys. A 6-digit PIN = 6 real rows + 44 padding rows.
 """
 
 import random
@@ -20,13 +20,13 @@ sys.path[:0] = [str(HERE.parent / "experiments")]
 SEQ, DIM = 50, 5
 
 
-class Cfg:  # = utils/train_config.py của TypeFormer
+class Cfg:  # = TypeFormer's utils/train_config.py
     sequence_length, dimensionality, output_dim = SEQ, DIM, 64
     K, hlayers, hlayers_rec, hlayers_pos, hheads, vlayers, vheads = 20, 9, 2, 1, 10, 1, 5
 
 
 def build_model(device, pretrained=True):
-    """TypeFormer (HARTrans) float32. Mã gốc gắn cứng .to('cuda'): vá trên bản sao ở finetune/_tf (external/ không đụng)."""
+    """TypeFormer (HARTrans) float32. The original code hard-codes .to('cuda'): patched on a copy in finetune/_tf (external/ is untouched)."""
     import torch
 
     patched = HERE / "_tf"
@@ -90,7 +90,7 @@ def embed(model, X, device, bs=256):
 
 
 def eer_far(gen, imp, frr=0.05):
-    """Khoảng cách thấp = giống chủ. Trả (EER, FAR@FRR=frr)."""
+    """Low distance = similar to the owner. Returns (EER, FAR@FRR=frr)."""
     gen, imp = np.asarray(gen), np.asarray(imp)
     ths = np.sort(np.unique(np.concatenate([gen, imp])))
     frrs = np.array([(gen > t).mean() for t in ths]); fars = np.array([(imp <= t).mean() for t in ths])
@@ -100,22 +100,19 @@ def eer_far(gen, imp, frr=0.05):
 
 
 def evaluate(model, S, users, device, ks=(3,), n_draw=5, n_imp=20, seed=0):
-    """Kiểu E9: mỗi (người, PIN) đăng ký k lượt NGỒI; chủ kiểm thử cùng tư thế (ngồi) hoặc đổi tư thế (đi);
-    kẻ gian BIẾT PIN = người khác nhập cùng PIN, cùng tư thế. Điểm = khoảng cách Euclid trung bình tới embedding đăng ký."""
+    """E9 style: each (person, PIN) enrolls k sessions; the owner is tested on the remaining sessions;
+    the PIN-knowing impostor = another person entering the same PIN. Score = mean Euclidean distance to the enrollment embeddings."""
     rng = random.Random(seed)
     uset = set(users)
     E = embed(model, [e["x"] for e in S], device)
     grp = defaultdict(list)
     for i, e in enumerate(S):
-        grp[(e["user"], e["pin"], e["posture"])].append(i)
-    postures = sorted({e["posture"] for e in S})
-    sit = next(p for p in postures if "it" in p.lower() or "sit" in p.lower()) if any("it" in p.lower() for p in postures) else postures[0]
-    walk = [p for p in postures if p != sit][0]
+        grp[(e["user"], e["pin"])].append(i)
     res = {}
     for k in ks:
-        gs, gw, imp = [], [], []
-        for (u, pin, ps), idx in grp.items():
-            if u not in uset or ps != sit or len(idx) <= k:
+        gs, imp = [], []
+        for (u, pin), idx in grp.items():
+            if u not in uset or len(idx) <= k:
                 continue
             for _ in range(n_draw):
                 enr = rng.sample(idx, k)
@@ -123,8 +120,7 @@ def evaluate(model, S, users, device, ks=(3,), n_draw=5, n_imp=20, seed=0):
                 en = E[enr]
                 d = lambda j: float(np.linalg.norm(en - E[j], axis=1).mean())
                 gs += [d(j) for j in te]
-                gw += [d(j) for j in grp.get((u, pin, walk), [])]
-                others = [j for (u2, p2, q2), js in grp.items() if p2 == pin and u2 != u and u2 in uset and q2 == sit for j in js]
+                others = [j for (u2, p2), js in grp.items() if p2 == pin and u2 != u and u2 in uset for j in js]
                 imp += [d(j) for j in rng.sample(others, min(n_imp, len(others)))]
-        res[k] = {"same_posture": eer_far(gs, imp), "walk": eer_far(gw, imp) if gw else None, "n": (len(gs), len(gw), len(imp))}
+        res[k] = {"owner": eer_far(gs, imp), "n": (len(gs), len(imp))}
     return res

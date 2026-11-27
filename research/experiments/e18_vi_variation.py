@@ -1,9 +1,9 @@
-"""E18: một câu tiếng Việt có bao nhiêu cách gõ hợp lệ bằng Telex/VNI? (đếm lý thuyết, KHÔNG phải đo người thật)
+"""E18: how many valid ways are there to type one Vietnamese sentence with Telex/VNI? (theoretical count, NOT measured on real people)
 
-Chỉ đếm biến thể CHẮC CHẮN: vị trí phím dấu thanh (ngay sau nguyên âm hoặc sau mỗi chữ còn lại tới cuối âm tiết, Unikey/Gboard cho phép)
-nhân với 2 bộ gõ (Telex/VNI). Chưa đếm: thứ tự dấu mũ/móc và dấu thanh, gõ w trễ (ươ), sửa lỗi, tắt/bật kiểu đặt dấu cũ/mới (cần thử trên bộ gõ thật).
-Log2 của số biến thể là TRẦN của thông tin: người thật dồn vào vài thói quen phổ biến nên entropy thật thấp hơn, chưa đo.
-Dùng: python research/experiments/e18_vi_variation.py
+Counts only CERTAIN variants: the position of the tone key (right after the vowel or after each remaining letter up to the end of the syllable, which Unikey/Gboard allow)
+times 2 input methods (Telex/VNI). Not counted: the order of the circumflex/horn marks and the tone mark, late w (ươ), corrections, toggling the old/new tone-placement style (needs testing on a real IME).
+Log2 of the number of variants is a CEILING on the information: real people concentrate on a few common habits, so the real entropy is lower (not measured).
+Usage: python research/experiments/e18_vi_variation.py
 """
 import math
 import sys
@@ -17,7 +17,7 @@ PHRASES = [
     "Tuần này trời nắng đẹp quá",
     "Chuyển tiền cho mẹ ở quê",
     "Hôm nay trời đẹp quá mình đi uống cà phê nhé",
-    "mua 4 ca phe 27",  # câu không dấu (thiết kế cũ): đối chứng
+    "mua 4 ca phe 27",  # sentence without diacritics (old design): control
 ]
 
 
@@ -29,7 +29,7 @@ def variants(phrase: str) -> int:
 
 
 if __name__ == "__main__":
-    print(f"{'câu':48} {'phím biến đổi':>13} {'cách đặt thanh':>14} {'x2 bộ gõ':>9} {'log2':>5}")
+    print(f"{'phrase':48} {'transforms':>13} {'tone options':>14} {'x2 IMEs':>9} {'log2':>5}")
     for p in PHRASES:
         v = variants(p)
         print(f"{p:48} {expected_transforms(p):>13} {v:>14} {2 * v:>9} {math.log2(2 * v):>5.1f}")

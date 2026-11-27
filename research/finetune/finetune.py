@@ -1,6 +1,6 @@
-"""Fine-tune TypeFormer (pretrained Aalto) lên StrokePIN, triplet loss, tách theo NGƯỜI (60 train / 7 val / 30 test).
-Anchor/positive: cùng người, cùng PIN (cả hai tư thế: học bất biến tư thế). Negative: người khác nhập CÙNG PIN (đúng kịch bản kẻ biết PIN).
-Chọn checkpoint theo EER trên 7 người val (k=3), báo cáo cuối trên 30 người test."""
+"""Fine-tune TypeFormer (pretrained on Aalto) on StrokePIN, triplet loss, split by PERSON (60 train / 7 val / 30 test).
+Anchor/positive: same person, same PIN. Negative: another person entering the SAME PIN (exactly the PIN-knowing impostor scenario).
+Pick the checkpoint by EER on the 7 val people (k=3), final report on the 30 test people."""
 import argparse, json, random, time, warnings
 from collections import defaultdict
 warnings.filterwarnings("ignore")
@@ -34,16 +34,16 @@ opt = torch.optim.AdamW(m.parameters(), lr=a.lr, weight_decay=1e-4)
 tl = lambda a_, p_, n_: torch.relu((a_ - p_).pow(2).sum(1) - (a_ - n_).pow(2).sum(1) + 1.0).mean()  # = TripletLoss(margin=1)
 import os; os.makedirs(a.out, exist_ok=True)
 best, log = 9, []
-r0 = common.evaluate(m, S, va, d, ks=(3,))[3]["same_posture"][0]; print(f"epoch 0 (zero-shot) val EER {r0:.3f}")
+r0 = common.evaluate(m, S, va, d, ks=(3,))[3]["owner"][0]; print(f"epoch 0 (zero-shot) val EER {r0:.3f}")
 for ep in range(1, a.epochs + 1):
     m.train(); t0 = time.time(); L = 0
     for _ in range(a.steps):
         x = batch(); opt.zero_grad(); loss = tl(*[m(t) for t in x]); loss.backward(); opt.step(); L += loss.item()
-    r = common.evaluate(m, S, va, d, ks=(3,))[3]; v = (r["same_posture"][0] + r["walk"][0]) / 2
-    log.append({"epoch": ep, "loss": L / a.steps, "val_eer_same": r["same_posture"][0], "val_eer_walk": r["walk"][0]})
+    r = common.evaluate(m, S, va, d, ks=(3,))[3]; v = r["owner"][0]
+    log.append({"epoch": ep, "loss": L / a.steps, "val_eer": r["owner"][0]})
     star = v < best
     if star: best = v; torch.save(m.state_dict(), f"{a.out}/best.pt")
-    print(f"epoch {ep} loss {L/a.steps:.3f} val EER same {r['same_posture'][0]:.3f} walk {r['walk'][0]:.3f} {'*' if star else ''} ({time.time()-t0:.0f}s)", flush=True)
+    print(f"epoch {ep} loss {L/a.steps:.3f} val EER {r['owner'][0]:.3f} {'*' if star else ''} ({time.time()-t0:.0f}s)", flush=True)
 m.load_state_dict(torch.load(f"{a.out}/best.pt")); res = common.evaluate(m, S, te, d, ks=(2, 3, 4))
 json.dump({"args": vars(a), "log": log, "test": {str(k): v for k, v in res.items()}, "split": {"train": tr, "val": va, "test": te}}, open(f"{a.out}/result.json", "w"), indent=1)
-for k, r in res.items(): print("TEST k=%d same EER %.3f FAR@FRR5%% %.3f | walk EER %.3f FAR %.3f" % (k, *r["same_posture"], *r["walk"]))
+for k, r in res.items(): print("TEST k=%d EER %.3f FAR@FRR5%% %.3f" % (k, *r["owner"]))

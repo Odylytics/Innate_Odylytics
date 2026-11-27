@@ -1,8 +1,8 @@
-"""THỬ ĐƯỜNG ỐNG THU DỮ LIỆU bằng dữ liệu GIẢ (không có ý nghĩa khoa học): backend local -> phiên có `meta` -> /v1/export -> team_analysis.py -> train_human_model.py.
+"""TEST THE DATA-COLLECTION PIPELINE with FAKE data (no scientific meaning): local backend -> sessions with `meta` -> /v1/export -> team_analysis.py -> train_human_model.py.
 
-Mục đích: bắt lỗi của đường ống TRƯỚC khi có dữ liệu thật. KHÔNG dùng số in ra làm kết quả.
-Cần: fastapi, uvicorn, sqlalchemy, httpx, lightgbm, scikit-learn, numpy (research/ dùng sklearn; không có trong nhóm `ml` của backend). Ví dụ môi trường backend + `uv pip install scikit-learn`; (vd. môi trường của backend: `uv run --extra ml python ../research/experiments/team_data_dryrun.py` trong backend/).
-Tạo ở thư mục tạm; không đụng backend/app/models.
+Purpose: catch pipeline bugs BEFORE real data exists. Do NOT use the printed numbers as results.
+Needs: fastapi, uvicorn, sqlalchemy, httpx, lightgbm, scikit-learn, numpy (research/ uses sklearn; it is not in the backend's `ml` group). For example the backend environment + `uv pip install scikit-learn`; (e.g. the backend's environment: `uv run --extra ml python ../research/experiments/team_data_dryrun.py` in backend/).
+Creates files in a temp directory; does not touch backend/app/models.
 """
 import json
 import os
@@ -35,11 +35,11 @@ try:
         except httpx.HTTPError:
             time.sleep(0.5)
     else:
-        sys.exit("backend không lên")
+        sys.exit("backend did not start")
     c = httpx.Client(base_url=base, headers=H, timeout=20)
     rng = random.Random(1)
     persona = {f"p{i:02d}": Persona(rng.gauss(95, 20), rng.gauss(200, 50), rng.gauss(0, .15), rng.gauss(0, .15), rng.gauss(2, .5), rng.gauss(15, 10)) for i in range(N_P)}
-    late = {p: rng.random() for p in persona}  # thói quen đặt dấu thanh GIẢ
+    late = {p: rng.random() for p in persona}  # FAKE tone-mark placement habit
 
     def post(user, who, sitting, role, enrol=False, tactic=None, session=None):
         s = session or human_session(user, persona[who], rng)
@@ -77,12 +77,12 @@ try:
         off = int(r.headers["x-next-offset"])
     exp = tmp / "export.jsonl"
     exp.write_text("\n".join(json.dumps(x) for x in out), encoding="utf-8")
-    print(f"export: {len(out)} phiên -> {exp}")
+    print(f"export: {len(out)} sessions -> {exp}")
 finally:
     srv.terminate()
 py = sys.executable
 print("== team_analysis.py ==")
 subprocess.run([py, str(ROOT / "research/experiments/team_analysis.py"), str(exp), "--out", str(tmp / "report.md"), "--boot", "50"], check=True)
-print("== train_human_model.py (đầu ra vào thư mục tạm, KHÔNG đụng backend/app/models) ==")
+print("== train_human_model.py (output goes to a temp directory, does NOT touch backend/app/models) ==")
 subprocess.run([py, str(ROOT / "research/experiments/train_human_model.py"), "--export", str(exp), "--out", str(tmp / "models"), "--no-strokepin", "--no-generated"], check=True)
-print("\nXONG. Thư mục tạm:", tmp, "(số liệu trên là GIẢ)")
+print("\nDONE. Temp directory:", tmp, "(the numbers above are FAKE)")

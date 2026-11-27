@@ -1,4 +1,4 @@
-"""Lớp giải thích: mã lý do + câu tiếng Việt theo mẫu (không dùng LLM trên đường quyết định)."""
+"""Explanation layer: reason codes + templated Vietnamese sentences (no LLM on the decision path)."""
 
 from statistics import fmean
 
@@ -20,11 +20,11 @@ _ACTION_VI = {
     "step_up": "Đề nghị gõ một câu ngắn để xác nhận trước khi chuyển.",
     "hold": "Đề nghị tạm giữ lệnh và báo cho người dùng.",
 }
-Z_MIN = 1.5  # nhóm đặc trưng lệch ít hơn mức này không được nêu làm lý do
+Z_MIN = 1.5  # feature groups deviating less than this are not given as a reason
 
 
 def _owner_reasons(features: dict, tpl: dict, z: dict) -> list[tuple[float, str, str]]:
-    """-> [(độ lệch, mã, câu tiếng Việt)] theo nhóm đặc trưng."""
+    """-> [(deviation, code, Vietnamese sentence)] per feature group."""
     out = []
 
     def keys(*prefixes):

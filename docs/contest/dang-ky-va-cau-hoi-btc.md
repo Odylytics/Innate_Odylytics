@@ -1,40 +1,40 @@
-# Đăng ký thi, câu hỏi gửi BTC, và các quyết định đội cần chốt
+# Contest registration, questions to the organizers, and decisions the team must make
 
-> Soạn 25/11/2026. **Hạn đăng ký và gửi câu hỏi: 23:59:59 27/11/2026.** Email BTC: techday@mservice.com.vn. Mình (Claude) chưa gửi gì; việc đăng ký và gửi email do trưởng nhóm làm.
+> Drafted 25/11/2026. **Deadline for registration and sending questions: 23:59:59 27/11/2026.** Organizers' email: techday@mservice.com.vn. I (Claude) have not sent anything; registration and sending the email are done by the team leader.
 
-## 1. Đăng ký (trưởng nhóm, tại https://techday.momo.vn)
-- [ ] Đội 2–3 người; thành viên sinh viên ĐH/CĐ Việt Nam, quốc tịch Việt Nam, **18–23 tuổi**; không ai đang làm hoặc thực tập tại MoMo.
-- [ ] Chốt **tên đội** và danh sách thành viên (điền vào README nộp bài, slide, PDF sản phẩm).
-- [ ] Chụp màn hình xác nhận đăng ký, lưu lại.
-- [ ] Người ngoài đội không được tham gia xây dựng sản phẩm: kiểm lại ai đã đóng góp vào repo (xem `git log`).
+## 1. Registration (team leader, at https://techday.momo.vn)
+- [ ] A team of 2–3 people; members are Vietnamese university/college students, Vietnamese nationality, **aged 18–23**; nobody currently works or interns at MoMo.
+- [ ] Decide the **team name** and the member list (fill in the submission README, slides, product PDF).
+- [ ] Take a screenshot of the registration confirmation and keep it.
+- [ ] People outside the team may not take part in building the product: check who has contributed to the repo (see `git log`).
 
-## 2. Câu hỏi làm rõ (bản nháp để gửi trước 27/11)
+## 2. Clarification questions (draft to send before 27/11)
 
-> **Tiêu đề:** [MoMo Tech Contest 2026] Câu hỏi làm rõ thể lệ — đội <TÊN ĐỘI>
+> **Subject:** [MoMo Tech Contest 2026] Clarification questions on the rules — team <TEAM NAME>
 >
-> Kính gửi Ban tổ chức, đội <TÊN ĐỘI> xin hỏi một số điểm để nộp bài đúng thể lệ:
+> Dear Organizers, team <TEAM NAME> would like to ask a few points so that we submit in line with the rules:
 >
-> 1. **Dữ liệu công khai có giấy phép chia sẻ cùng điều kiện.** Chúng tôi huấn luyện mô hình phát hiện bot và nhận chủ trên bộ dữ liệu công khai CC BY-NC-SA 4.0 (StrokePIN, DOI 10.21227/thft-4721), đã khai báo nguồn và giấy phép trong README. Mô hình phái sinh phải phát hành cùng giấy phép đó. Việc này có được chấp nhận trong bài nộp không, và Ban tổ chức có yêu cầu gì thêm về nguồn dữ liệu không?
-> 2. **Hình thức sản phẩm.** Sản phẩm của chúng tôi là một dịch vụ API chấm điểm rủi ro hành vi (có Swagger) kèm một web demo mô phỏng luồng chuyển tiền, không phải ứng dụng di động. Hình thức này có đáp ứng yêu cầu "sản phẩm dùng được trực tuyến" không?
-> 3. **Mã nguồn.** Mã nguồn của đội hiện lưu trên GitHub. Nếu để chế độ công khai trước hạn nộp thì có bị xem là chia sẻ mã giữa các đội không? Chúng tôi dự định chuyển sang riêng tư cho đến khi nộp.
-> 4. **Dữ liệu do đội thu.** Chúng tôi thu nhịp chạm/gõ (chỉ thời gian, toạ độ, loại sự kiện, không lưu nội dung) từ bạn bè tự nguyện, có phiếu đồng ý bằng văn bản. Như vậy có đủ "căn cứ sử dụng dữ liệu" theo thể lệ không, và Ban tổ chức có yêu cầu mẫu phiếu cụ thể không?
-> 5. **Công cụ AI hỗ trợ lập trình.** Chúng tôi dùng trợ lý lập trình AI (Claude Code) để viết mã, thí nghiệm và tài liệu, và sẽ khai trong README mục "công cụ AI đã dùng". Có giới hạn nào về mức độ sử dụng không?
-> 6. **Số liệu trong slide.** Slide nộp ngày 03/12 không sửa được. Nếu có thêm kết quả đo sau hạn thì có được trình bày bổ sung ở vòng chung kết không?
+> 1. **Public data under a share-alike license.** We train the bot-detection and owner-recognition models on a public dataset licensed CC BY-NC-SA 4.0 (StrokePIN, DOI 10.21227/thft-4721), and have declared the source and license in the README. Derived models must be released under the same license. Is this acceptable in the submission, and do the Organizers require anything further about data sources?
+> 2. **Product form.** Our product is a behavioral risk-scoring API service (with Swagger) plus a web demo simulating the money transfer flow, not a mobile app. Does this form meet the requirement of a "product usable online"?
+> 3. **Source code.** Our source code is currently stored on GitHub. If we leave it public before the submission deadline, would that be considered sharing code between teams? We plan to make it private until submission.
+> 4. **Data collected by the team.** We collect touch/typing rhythm (only timing, coordinates, event type, no content stored) from volunteer friends, with a written consent form. Is that a sufficient "basis for using data" under the rules, and do the Organizers require a specific form template?
+> 5. **AI coding tools.** We use an AI coding assistant (Claude Code) to write code, experiments, and documents, and will declare it in the README under "AI tools used". Is there any limit on the degree of use?
+> 6. **Figures in the slides.** The slides submitted on 03/12 cannot be edited. If we obtain further measurements after the deadline, may we present them as a supplement at the final?
 >
-> 7. **Tài sản có sẵn.** Giao diện web của chúng tôi dùng lại hệ thiết kế (màu, thành phần, hoạt ảnh) từ một dự án demo web trước đây của một thành viên; toàn bộ nội dung, mô hình, API, SDK và các trang của Innate là mới. Chúng tôi đã khai trong README. Cách làm này có hợp lệ không? Ngoài ra, nếu toàn bộ gói được phát hành theo CC BY-NC-SA 4.0 (do mô hình phái sinh từ dữ liệu cùng giấy phép), điều đó có ảnh hưởng gì tới việc MoMo đánh giá hay sử dụng sau cuộc thi?
+> 7. **Pre-existing assets.** Our web interface reuses a design system (colors, components, animations) from an earlier web demo project of one member; all content, models, API, SDK, and Innate pages are new. We have declared this in the README. Is this approach valid? Also, if the whole package is released under CC BY-NC-SA 4.0 (because the models are derived from data under the same license), does that affect how MoMo evaluates or uses it after the contest?
 >
-> Xin cảm ơn Ban tổ chức. Trưởng nhóm: <TÊN>, <SĐT>.
+> Thank you, Organizers. Team leader: <NAME>, <PHONE>.
 
-## 3. Quyết định đội cần chốt (mình không quyết thay)
+## 3. Decisions the team must make (I do not decide for you)
 
-| Quyết định | Gợi ý | Lý do |
+| Decision | Suggestion | Reason |
 |---|---|---|
-| **Giấy phép bài nộp** | **ĐÃ CHỐT 25/11: toàn bộ gói CC BY-NC-SA 4.0** (`LICENSE`); thư viện bên thứ ba giữ giấy phép riêng (`THIRD_PARTY_NOTICES.md`) | Mô hình huấn luyện trên StrokePIN là phái sinh. Lưu ý: CC không khuyến nghị dùng cho mã phần mềm, và "phi thương mại" có thể vướng nếu MoMo muốn dùng thật: hỏi BTC (câu 1, 7). Không phải tư vấn pháp lý. |
-| **Repo GitHub đang công khai** | Chuyển sang **private** trước khi nộp, mở lại sau chung kết nếu muốn | Thể lệ loại bài "chia sẻ code giữa các đội". Chủ repo (`tuannghia2457`) đổi được trong Settings; mình chỉ có quyền ghi. |
-| **Dữ liệu đội thu** | Thu 10–20 bạn tự nguyện, 2 buổi, có phiếu đồng ý, không lưu nội dung; hoặc ghi rõ trong README "chưa có dữ liệu đội, chỉ dùng dữ liệu công khai" | Thể lệ loại bài dùng dữ liệu cá nhân không rõ nguồn. |
-| **Bộ ảnh đại diện DiceBear (web)** | **Đã kiểm 25/11:** kiểu Notionists (Zoish) là CC0 1.0; thư viện DiceBear MIT | Đã khai ở `THIRD_PARTY_NOTICES.md`. |
-| **Aalto và Touchalytics không nêu giấy phép dữ liệu** | Chỉ dùng cho nghiên cứu, không đưa dữ liệu hay mô hình phái sinh vào gói; cân nhắc email xin xác nhận (Antti Oulasvirta, Mario Frank) | Chưa gửi; cần người trong đội gửi nếu muốn có văn bản. |
-| **Tái dùng khung giao diện Movago (dự án web trước của một thành viên)** | Đã khai ở `web/README.md` và `THIRD_PARTY_NOTICES.md`; hỏi BTC có bị coi là "sản phẩm đã có từ trước" không (câu 7) | Thể lệ loại bài nộp sản phẩm có từ trước cho chính bài toán này; khung giao diện khác với sản phẩm. |
+| **Submission license** | **DECIDED 25/11: the whole package CC BY-NC-SA 4.0** (`LICENSE`); third-party libraries keep their own licenses (`THIRD_PARTY_NOTICES.md`) | A model trained on StrokePIN is a derivative. Note: CC does not recommend use for software code, and "non-commercial" may be a problem if MoMo wants to use it for real: ask the organizers (questions 1, 7). Not legal advice. |
+| **The GitHub repo is currently public** | Switch to **private** before submitting, reopen after the final if wanted | The rules disqualify "sharing code between teams". The repo owner (`tuannghia2457`) can change it in Settings; I only have write access. |
+| **Team-collected data** | Collect from 10–20 volunteer friends, 2 sessions, with consent forms, no content stored; or state in the README "no team data yet, only public data" | The rules disqualify entries using personal data of unclear source. |
+| **DiceBear avatar set (web)** | **Checked 25/11:** the Notionists style (Zoish) is CC0 1.0; the DiceBear library is MIT | Declared in `THIRD_PARTY_NOTICES.md`. |
+| **Aalto and Touchalytics do not state a data license** | Use only for research, do not put the data or derived models in the package; consider emailing to ask for confirmation (Antti Oulasvirta, Mario Frank) | Not sent yet; someone on the team must send it if a written answer is wanted. |
+| **Reusing the Movago interface framework (a member's earlier web project)** | Declared in `web/README.md` and `THIRD_PARTY_NOTICES.md`; ask the organizers whether it counts as a "pre-existing product" (question 7) | The rules disqualify entries submitting a pre-existing product for this very problem; an interface framework is different from a product. |
 
-## 4. Đã làm giúp
-- README nộp bài (`docs/submission/README.submission.md`) đã điền: URL API và Swagger (`/health` và `/docs` trả 200 ngày 25/11), thư viện web, công cụ AI, dữ liệu Touchalytics và Aalto dùng ở đâu, số liệu E19 và các kết quả âm tính. **Còn `TODO`:** tên đội, thành viên, URL web, key demo, giấy phép Touchalytics/Aalto, giấy phép gói DiceBear, dữ liệu đội, mẫu phiếu đồng ý.
+## 4. Already done for you
+- The submission README (`docs/submission/README.submission.md`) is filled in: API URL and Swagger (`/health` and `/docs` returned 200 on 25/11), web libraries, AI tools, where Touchalytics and Aalto data are used, E19 figures and the negative results. **Still `TODO`:** team name, members, web URL, demo key, Touchalytics/Aalto licenses, DiceBear package license, team data, consent form template.

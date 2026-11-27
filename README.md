@@ -5,7 +5,7 @@
 1. **Human or machine?** (accessibility-service malware, `adb`, scripts)
 2. **If human, the account owner?** (someone who watched the PIN)
 
-> *A PIN can be stolen. Touch habits are very hard to steal.* ("innate" = *bẩm sinh*) · Built for the **MoMo Tech Contest 2026** by **Team Odylytics** (Powered by Odylytics). Project documents are mostly in Vietnamese; this README is the English entry point.
+> *A PIN can be stolen. Touch habits are very hard to steal.* ("innate" = *bẩm sinh*) · Built for the **MoMo Tech Contest 2026** by **Team Odylytics** (Powered by Odylytics). All project documents are in English. The decision reasons and explanations that wallet users see, and the Vietnamese version of the website, stay in Vietnamese by design.
 
 **Live demo: https://innate.odylytics.com** (no login; guided story at `/#/demo?story=1`) · API docs: https://nhip-api-taupe.vercel.app/docs
 
@@ -49,14 +49,13 @@ All from **public data of other people** (StrokePIN, Aalto, CMU DSL); **none yet
 
 | Question | Result |
 |---|---|
-| Owner match: 97 users, 6-digit PINs, attacker **knows the PIN**, 3 enrolment entries, person-disjoint, contact size excluded | distance baseline: EER 0.161, false-accept **0.573** at FRR 5% → learned model: EER 0.158, false-accept **0.375** (paired CI excludes 0). After a posture change (sit→walk): EER 0.31, false-accept 0.71 |
+| Owner match: 97 users, 6-digit PINs, attacker **knows the PIN**, 3 enrolment entries, person-disjoint, contact size excluded | distance baseline: EER 0.160, false-accept **0.549** at FRR 5% → learned model: EER 0.140, false-accept **0.316** (paired CI excludes 0) |
 | Human vs machine: real humans, generator bots | naive bots (even rhythm, exact key centres, timing noise): **100%** caught; population-sampling bot 20–73%; unseen bot families are weak |
-| Replay check (threshold calibrated on real humans) | catches 100% of replays with ≤ ±10% added noise, 29% at ±15%, 0% from ±20%; human false-positive ≈ 0.1% |
-
-| **Whole system** (E24: `/score` chain on 10 people unseen by both learned models, known recipient) | owner: 80% allow / 19% step_up / 1% hold; PIN-knowing stranger (other phone): 28% / 70% / 2%; naive bots and replay ≤ ±10%: **100% hold**; population-sampling bot: 7% allow; with a new recipient the owner is allowed only 17% of the time |
-| **Adaptive attackers** (E27) | replay with ±15–30% noise: 48–72% **allowed**; a bot that knows the victim's template: 75–82% allowed. Raising the replay threshold to 0.085 catches ±15% (86%) at a few % false holds on short histories |
+| Replay check (threshold calibrated on real humans) | catches 100% of replays with ≤ ±10% added noise, 28% at ±15%, 0% from ±20%; human false-positive ≈ 0.2% (4 past sessions) |
+| **Whole system** (E29: `/score` chain on 97 people, 5-fold cross-validation by person, models retrained per fold, known recipient) | owner: 77% allow / 22% step_up / 1% hold; PIN-knowing stranger (other phone): 17% / 82% / 1%; naive bots and replay ≤ ±10%: **100% hold**; population-sampling bot: 2% allow; with learned models off (rules only) the PIN-knowing stranger is allowed 89% of the time |
+| **Adaptive attackers** (E29) | replay with ±15–30% noise: 27–56% **allowed**; a bot that knows the victim's template: 77–89% allowed. The replay threshold is 0.07 (E5b, real humans): raising it to 0.085 would catch ±15% replay (85% instead of 28%) but its false-hold rate on long histories extrapolates to about 15% at 50 sessions (about 3% at 0.07) |
 | Swipe rule (E19: Touchalytics, 41 people, 20,896 strokes) | uniform-speed rule: 0 human strokes flagged, 100% of uniform bots caught; the old "straightness" rule flagged 13% of human sessions (replaced). Swipes do **not** identify the owner (AUC ≈ 0.5) |
-| Fine-tuned TypeFormer (E32: Aalto-pretrained Transformer fine-tuned on StrokePIN, 30 unseen people, 3 enrolments) | EER 0.292 → **0.203**, false-accept at FRR 5% 0.706 → **0.418** (walking: 0.848 → 0.661). One run, no CI, not the 97-person protocol, **not in the API** |
+| Fine-tuned TypeFormer (E32: Aalto-pretrained Transformer fine-tuned on StrokePIN, 30 unseen people, 3 enrolments) | EER 0.292 → **0.203**, false-accept at FRR 5% 0.706 → **0.418**. One run, no CI, not the 97-person protocol, **not in the API** |
 | Latency (E26, local) | `/score` p50 3.7 ms, p99 14 ms (no network, Vercel cold start or Neon) |
 
 So the owner signal is **weaker than papers suggest** (EER 16%, not "a few percent"): use it to trigger step-up, never as a gate.
@@ -64,9 +63,9 @@ So the owner signal is **weaker than papers suggest** (EER 16%, not "a few perce
 ## Limitations
 
 - Habits are *hard*, not *impossible*, to imitate; adaptive system-level agents were reported to beat touch+IMU detectors 71–77% of the time (ActReal 2026).
-- Enrolment must cover several postures; a sit-only template barely works while walking. The enrolment lock (409 once a template exists) conflicts with that need; a controlled re-enrolment path is not designed yet.
+- The enrolment lock (409 once a template is locked) has no controlled re-enrolment path yet (e.g. after a step-up).
 - Web SDKs cannot see text set without keystrokes and get no coordinates on the system keyboard; a native SDK is needed.
-- Bots that replay with ≥ 15% noise or know the owner's template **pass**; four evidence channels (motion, PIN, typed phrase, touch/swipe) raise the bar but are not proven against adaptive attackers ([`docs/plan/bon-cong-pipeline.md`](docs/plan/bon-cong-pipeline.md)). Phone motion sensors looked excellent for owner matching (EER 0.04) only because each person used a different phone and they fail after a posture change (E23): not claimed.
+- Bots that replay with ≥ 15% noise or know the owner's template **pass**; four evidence channels (motion, PIN, typed phrase, touch/swipe) raise the bar but are not proven against adaptive attackers ([`docs/plan/bon-cong-pipeline.md`](docs/plan/bon-cong-pipeline.md)). Phone motion sensors looked excellent for owner matching (EER 0.04) only because each person used a different phone (E23): not claimed.
 - Models are **interim**: public people + generated bots. Retrain on team data with `research/experiments/train_human_model.py --export …`.
 - Out of scope: detecting the malware itself, content-based scam detection, replacing authentication.
 

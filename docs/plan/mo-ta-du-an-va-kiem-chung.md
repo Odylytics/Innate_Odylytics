@@ -1,89 +1,89 @@
-# Innate — Mô tả dự án và kiểm chứng bằng paper
+# Innate — Project description and paper verification
 
-> **Innate** (bẩm sinh) — câu chuyện pitch: [`pitch-story.md`](pitch-story.md).
+> **Innate** (bẩm sinh, "innate") — pitch story: [`pitch-story.md`](pitch-story.md).
 
-> Cập nhật 24/11/2026. Tài liệu này tóm tắt ý tưởng, hiện trạng mã nguồn, và kết quả đối chiếu các con số trong kế hoạch với paper gốc trong [`papers/`](../../papers/).
-> Kế hoạch đầy đủ: [`innate-momo-tech-contest.md`](innate-momo-tech-contest.md). Tổng hợp paper: [`../research/paper-report.md`](../research/paper-report.md).
+> Updated 24/11/2026. This document summarizes the idea, the state of the source code, and the results of checking the figures in the plan against the original papers in [`papers/`](../../papers/).
+> Full plan: [`innate-momo-tech-contest.md`](innate-momo-tech-contest.md). Paper synthesis: [`../research/paper-report.md`](../research/paper-report.md).
 
-## 1. Ý tưởng
+## 1. Idea
 
-**Innate** là lớp chấm điểm rủi ro hành vi (B2B SDK + API) cho ví điện tử và ngân hàng. Khi điện thoại bị chiếm quyền, tiền vẫn đi ra bằng đúng app, đúng PIN, đúng thiết bị của nạn nhân, nên xác thực truyền thống coi đó là chính chủ. Innate trả lời hai câu hỏi tại bước xác nhận giao dịch:
+**Innate** is a behavioral risk scoring layer (B2B SDK + API) for e-wallets and banks. When a phone is taken over, money still leaves through the victim's own app, PIN and device, so traditional authentication treats it as the legitimate owner. Innate answers two questions at the transaction confirmation step:
 
-1. Thao tác này do **ngón tay người** hay do **máy** (mã độc Trợ năng, `adb`, script)?
-2. Nếu là người, có **khớp thói quen chủ tài khoản** không?
+1. Is this interaction by a **human finger** or by a **machine** (Accessibility malware, `adb`, a script)?
+2. If a human, does it **match the account owner's habits**?
 
-Hai kịch bản: **A** mã độc điều khiển từ xa (RedHook, Gigabud, SpyNote…), **B** người quen/kẻ trộm biết PIN.
+Two scenarios: **A** remote-control malware (RedHook, Gigabud, SpyNote...), **B** an acquaintance/thief who knows the PIN.
 
-Đầu vào chỉ gồm thời gian và toạ độ chạm (giữ phím, khoảng cách giữa phím, lệch tâm phím, kích thước chạm, vuốt), không lưu nội dung PIN. Đầu ra: điểm người/máy, điểm khớp chủ, rủi ro, hành động `allow | step_up | hold`, lý do và câu giải thích tiếng Việt. Hệ thống **chỉ đề xuất**, không tự khoá tài khoản. LLM không nằm trên đường ra quyết định.
+The input consists only of touch timing and coordinates (key hold, interval between keys, offset from key center, contact size, swipes); the PIN content is not stored. The output: a human/machine score, an owner-match score, risk, an action `allow | step_up | hold`, reasons and an explanation sentence in Vietnamese. The system **only recommends** and never locks an account. An LLM is not on the decision path.
 
-### Ba tầng chấm điểm
+### Three scoring layers
 
-| Tầng | Cách làm | Nền tảng |
+| Layer | Method | Basis |
 |---|---|---|
-| Người hay máy | Luật "độ tự nhiên" (baseline) → LightGBM/RF | BeCAPTCHA, Iliou 2021, Serwadda & Phoha 2013 |
-| Có phải chủ | Mẫu chuẩn 3–5 lượt, scaled Manhattan, cập nhật có trần độ trôi | Killourhy & Maxion 2009, Zheng 2014, Buschek 2015 |
-| Hợp nhất | Tổng có trọng số sau chuẩn hoá, 3 vùng theo ngưỡng A/B | Freeman 2016, Wiefling 2020–2022 |
+| Human or machine | "Naturalness" rules (baseline) → LightGBM/RF | BeCAPTCHA, Iliou 2021, Serwadda & Phoha 2013 |
+| Is it the owner | Template from 3–5 entries, scaled Manhattan, update with a drift cap | Killourhy & Maxion 2009, Zheng 2014, Buschek 2015 |
+| Fusion | Weighted sum after normalization, 3 zones by thresholds A/B | Freeman 2016, Wiefling 2020–2022 |
 
-## 2. Hiện trạng (24/11/2026)
+## 2. Current state (24/11/2026)
 
-| Có | Chưa có |
+| Have | Not yet |
 |---|---|
-| Backend FastAPI + SQLAlchemy, đã deploy Vercel + Neon; endpoint `/v1/sessions`, `/enroll`, `/score`, `/export`, `/label` | SDK JavaScript, bàn phím PIN tự vẽ |
-| Chấm điểm baseline: `human.py` (luật), `owner.py` (Manhattan + drift cap), `fusion.py`, `explain.py` | Ví demo, dashboard vận hành |
-| Bộ giả lập hacker 4 chiến thuật + `adb` | Dữ liệu người thật, mô hình LightGBM/RF |
-| 7 + 7 bài test | Số liệu đánh giá thật (FAR@FRR 5%, EER, DET) |
-| 52 PDF paper + báo cáo tổng hợp | Slide, video, PDF 1 trang, README nộp bài |
+| FastAPI + SQLAlchemy backend, deployed on Vercel + Neon; endpoints `/v1/sessions`, `/enroll`, `/score`, `/export`, `/label` | JavaScript SDK, custom-drawn PIN keypad |
+| Baseline scoring: `human.py` (rules), `owner.py` (Manhattan + drift cap), `fusion.py`, `explain.py` | Demo wallet, operations dashboard |
+| Hacker simulator with 4 tactics + `adb` | Real-human data, LightGBM/RF models |
+| 7 + 7 tests | Real evaluation figures (FAR@FRR 5%, EER, DET) |
+| 52 paper PDFs + synthesis report | Slides, video, 1-page PDF, submission README |
 
-Số liệu baseline hiện có (bắt 100% chiến thuật 1–2, 0% chiến thuật 3, 5–30% chiến thuật 4) đo trên người **giả**, không dùng cho slide.
+The existing baseline figures (catches 100% of tactics 1–2, 0% of tactic 3, 5–30% of tactic 4) were measured on **fake** people and are not for slides.
 
-## 3. Kiểm chứng con số bằng paper gốc
+## 3. Verifying the figures against the original papers
 
-Đã trích text PDF và đối chiếu.
+PDF text was extracted and compared.
 
-| Khẳng định trong kế hoạch | Kết quả đối chiếu |
+| Claim in the plan | Result of the check |
 |---|---|
-| Zheng 2014: EER 3,65–7,34% khi nhập PIN | **Đúng.** PIN `3-2-4-4` 3,65%, `1-1-1-1` 6,96%, `5-5-5-5` 7,34%, PIN 8 số ~4,5%. 80+ người, một tư thế, 85 lượt huấn luyện/người, và **dùng cả gia tốc, áp lực, kích thước chạm, thời gian**. |
-| Buschek 2015: thêm vị trí chạm giảm EER 26,4–36,8% | **Đúng.** 28 người, 2 tuần. Đánh giá một phiên cho EER thấp hơn nửa so với khác phiên. |
-| FETA 2022: EER 4,9% → 13,8% | **Đúng.** Rà 30 bài, tất cả mắc ít nhất một lỗi. Đưa dữ liệu kẻ gian vào huấn luyện làm đẹp 2,55 điểm, trộn đời máy 3,2–5,8 điểm. |
-| BioTouchPass2: EER 2,38% | **Đúng.** 217 người, PIN 4 số, mô hình RNN. Với tấn công bắt chước (imitation), EER 10,4–15%. |
-| Lovisotto 2020: đầu độc mẫu >70% với <10 lần tiêm | **Đúng.** Phát hiện bắt >99% sau 2 lần tiêm. |
-| Touchalytics 2012 | Median EER 0% cùng phiên, 2–3% khác phiên, <4% sau một tuần. Chính tác giả kết luận **không đủ làm xác thực độc lập**, chỉ hợp làm một phần của hệ đa tín hiệu. |
-| TypeNet 2021 | EER 9,2% trên bàn phím cảm ứng (văn bản tự do, >100k người). Stragapede 2022 (Transformer): 3,84% trên Aalto với 5 phiên đăng ký. |
-| Freeman 2016 (LinkedIn) | Kết hợp tín hiệu có trọng số, AUC 0,913 → 0,955. Dùng ngữ cảnh đăng nhập, không dùng sinh trắc chạm. |
-| BeCAPTCHA 2021 | Thêm gia tốc kế cải thiện rõ, giữ tỷ lệ bắt bot >90% khi huấn luyện đa dạng. Chế độ "agnostic" (bot chưa thấy) kém hơn hẳn. Con số "~60% → 80–90%" trong kế hoạch **không tìm thấy nguyên văn**. |
-| Killourhy 2009: Manhattan scaled tốt nhất | Abstract ghi hai bộ tốt nhất EER 9,6% và 10,2%. Chưa xác nhận bộ nào đạt 9,6%. |
-| Kịch bản A: mã độc Trợ năng có quyền cao | **Đúng.** Cloak & Dagger (2017): Trợ năng + overlay điều khiển trọn vòng phản hồi UI, lấy PIN, cài app. Diao 2019: lỗi thiết kế khung Trợ năng. AccessiLeaks 2019: 72% app tài chính top lộ thông tin. |
+| Zheng 2014: EER 3.65–7.34% when entering a PIN | **Correct.** PIN `3-2-4-4` 3.65%, `1-1-1-1` 6.96%, `5-5-5-5` 7.34%, 8-digit PIN ~4.5%. 80+ people, 85 training entries per person, and **uses acceleration, pressure, contact size and timing together**. |
+| Buschek 2015: adding touch position cuts EER by 26.4–36.8% | **Correct.** 28 people, 2 weeks. Evaluating within a single session gives EER less than half that of across sessions. |
+| FETA 2022: EER 4.9% → 13.8% | **Correct.** Reviewed 30 papers, all made at least one error. Putting impostor data into training flatters results by 2.55 points, mixing device generations by 3.2–5.8 points. |
+| BioTouchPass2: EER 2.38% | **Correct.** 217 people, 4-digit PIN, RNN model. Under imitation attacks, EER is 10.4–15%. |
+| Lovisotto 2020: template poisoning >70% with <10 injections | **Correct.** Detection catches >99% after 2 injections. |
+| Touchalytics 2012 | Median EER 0% same session, 2–3% across sessions, <4% after one week. The authors themselves conclude it is **not sufficient as standalone authentication**, only suitable as part of a multi-signal system. |
+| TypeNet 2021 | EER 9.2% on touchscreen keyboards (free text, >100k people). Stragapede 2022 (Transformer): 3.84% on Aalto with 5 enrollment sessions. |
+| Freeman 2016 (LinkedIn) | Weighted signal combination, AUC 0.913 → 0.955. Uses login context, not touch biometrics. |
+| BeCAPTCHA 2021 | Adding the accelerometer clearly improves results, keeping the bot catch rate >90% when training is diverse. The "agnostic" mode (unseen bots) is much worse. The "~60% → 80–90%" figure in the plan was **not found verbatim**. |
+| Killourhy 2009: scaled Manhattan is best | The abstract gives the two best sets as EER 9.6% and 10.2%. Not confirmed which set reaches 9.6%. |
+| Scenario A: Accessibility malware has high privileges | **Correct.** Cloak & Dagger (2017): Accessibility + overlay control the whole UI feedback loop, capture the PIN, install apps. Diao 2019: design flaws in the Accessibility framework. AccessiLeaks 2019: 72% of top financial apps leak information. |
 
-Không tải được (paywalled hoặc nguồn chặn tải tự động): Tey 2013 (NDSS), Serwadda & Phoha 2013, Biggio 2013, Pisani 2016, Jain 2005, ISO 19795-1, Patel 2016, Stylios 2021, Vijayanand 2025. DOI có trong `docs/research/paper-report.md`.
+Could not be downloaded (paywalled or the source blocks automated download): Tey 2013 (NDSS), Serwadda & Phoha 2013, Biggio 2013, Pisani 2016, Jain 2005, ISO 19795-1, Patel 2016, Stylios 2021, Vijayanand 2025. DOIs are in `docs/research/paper-report.md`.
 
-## 4. Phát hiện quan trọng nhất
+## 4. Most important finding
 
-**ActReal (Wang 2026, preprint)**: tác nhân cấp hệ thống có đặc quyền có thể sinh đồng thời chạm và cảm biến IMU khớp thời gian. Tỷ lệ tấn công thành công trung bình 77,5% trên các bộ phát hiện dựa vào quỹ đạo chạm/thời gian, và **vẫn 71,1% khi bộ phát hiện dùng cả chạm lẫn IMU**. Nghĩa là mã độc đủ tinh vi sẽ qua mặt được lớp "người hay máy". Đây là rào cản lớn hơn mọi con số EER.
+**ActReal (Wang 2026, preprint)**: a privileged system-level agent can generate touch and IMU sensor data that match in time. The average attack success rate is 77.5% against detectors based on touch trajectory/timing, and **still 71.1% when the detector uses both touch and IMU**. This means sufficiently sophisticated malware can fool the "human or machine" layer. This is a bigger obstacle than any EER figure.
 
-Các điểm khác:
-- Các con số tốt nhất đến từ điều kiện thuận lợi (Zheng: 85 lượt đăng ký, nhiều cảm biến; BioTouchPass2: 217 người, RNN). Innate có ~25 người, một điện thoại, 3–5 lượt, **không có áp lực** (Pointer Events trả 0.5). Kỳ vọng thực tế **10–15% EER**.
-- Tấn công bắt chước (kịch bản B) có số liệu cụ thể (10–15% EER) và nên nằm trong slide.
-- Với bot chưa từng thấy, bộ phân loại học trên bot sinh sẵn giảm mạnh (BeCAPTCHA, BeCAPTCHA-Type: few-shot là thách thức). Huấn luyện và kiểm thử cùng 4 bộ sinh bot của đội sẽ cho số quá đẹp.
-- Eberz 2017: EER trung bình che lỗi có hệ thống, cần báo phân bố theo từng người.
-- Ahmed 2026: báo cáo sai số tại điểm vận hành (FAR@FRR) kèm khoảng tin cậy, không báo ROC-AUC đơn lẻ.
+Other points:
+- The best figures come from favorable conditions (Zheng: 85 enrollment entries, many sensors; BioTouchPass2: 217 people, RNN). Innate has ~25 people, one phone, 3–5 entries, **no pressure** (Pointer Events returns 0.5). A realistic expectation is **10–15% EER**.
+- Imitation attacks (scenario B) have concrete figures (10–15% EER) and belong in the slides.
+- For unseen bots, a classifier trained on pre-generated bots drops sharply (BeCAPTCHA, BeCAPTCHA-Type: few-shot is a challenge). Training and testing on the team's own 4 bot generators gives figures that look too good.
+- Eberz 2017: mean EER hides systematic errors, so the per-person distribution should be reported.
+- Ahmed 2026: report error at the operating point (FAR@FRR) with confidence intervals, not a standalone ROC-AUC.
 
-## 5. Kết luận
+## 5. Conclusions
 
-1. **Hướng đi có nền học thuật thật.** Nhịp gõ, vị trí chạm khi nhập PIN và vuốt phân biệt được người với người (EER vài % đến ~10%) và người với bot ngây thơ. Các con số trong kế hoạch phần lớn khớp paper.
-2. **Chỉ nên là một tín hiệu rủi ro, không phải cổng xác thực.** Chính Touchalytics, Zheng và FETA đều nói vậy. Thiết kế `step_up` thay vì chặn cứng là đúng.
-3. **Phần chắc nhất khi demo là bắt bot ngây thơ** (chiến thuật 1–2, `adb`, mã độc cơ bản). Đây là thao tác thực tế nhất của mã độc Trợ năng hiện nay.
-4. **Phần yếu nhất là bot thích nghi** (chiến thuật 3–4, ActReal). Cần nói thẳng trong pitch, thêm kiểm tra phát lại, và đo bằng nguồn bot độc lập, không phải bộ sinh dùng để huấn luyện.
-5. **Giá trị khác biệt**: minh bạch lý do, `step_up`, API mở dùng cho bất kỳ ví nào, và đánh giá trung thực theo FETA. Pitch theo hướng đó, không hứa hẹn con số.
+1. **The direction has a real academic basis.** Typing rhythm, touch position during PIN entry and swipes distinguish person from person (EER a few % to ~10%) and person from naive bot. Most figures in the plan match the papers.
+2. **It should only be a risk signal, not an authentication gate.** Touchalytics, Zheng and FETA all say so. The design of `step_up` rather than hard blocking is right.
+3. **The strongest part for the demo is catching naive bots** (tactics 1–2, `adb`, basic malware). This is the most realistic behavior of today's Accessibility malware.
+4. **The weakest part is adaptive bots** (tactics 3–4, ActReal). This must be said plainly in the pitch, a replay check added, and measurement done with an independent bot source, not the generator used for training.
+5. **Differentiating value**: transparent reasons, `step_up`, an open API usable for any wallet, and honest evaluation following FETA. Pitch it that way and do not promise figures.
 
-## 6. Việc cần làm
+## 6. To do
 
-| Ưu tiên | Việc |
+| Priority | Task |
 |---|---|
-| 1 | Đăng ký thi và gửi câu hỏi cho BTC **trước 23:59 27/11** |
-| 2 | Ví demo web + SDK Pointer Events + bàn phím PIN tự vẽ (đang chặn mọi thứ khác) |
-| 3 | Thu dữ liệu thật: ≥ 2 lần ngồi, một điện thoại, có phiếu đồng ý |
-| 4 | Backend: kiểm tra "trùng phiên cũ" để bắt chiến thuật 3 |
-| 5 | Mô hình 1 (LightGBM/RF), giữ riêng nguồn bot `adb` làm tập kiểm thử độc lập |
-| 6 | Hiệu chỉnh `owner.py` (ánh xạ d=2 → 0,5 đang quá dễ dãi) trên dữ liệu thật |
-| 7 | Đánh giá: FAR@FRR 5%, DET, khoảng tin cậy, phân bố lỗi theo người, bắt bot theo chiến thuật |
-| 8 | Slide ≤10 trang, video ≤3 phút, PDF 1 trang, README khai báo tài sản/OSS/công cụ AI. Nộp trước **23:59 03/12** |
+| 1 | Register for the contest and send questions to the organizers **before 23:59 on 27/11** |
+| 2 | Web demo wallet + Pointer Events SDK + custom-drawn PIN keypad (currently blocking everything else) |
+| 3 | Collect real data: ≥ 2 collection rounds, one phone, with consent forms |
+| 4 | Backend: "duplicate of an old session" check to catch tactic 3 |
+| 5 | Model 1 (LightGBM/RF), keeping the `adb` bot source separate as an independent test set |
+| 6 | Calibrate `owner.py` (the mapping d=2 → 0.5 is too lenient) on real data |
+| 7 | Evaluation: FAR@FRR 5%, DET, confidence intervals, per-person error distribution, bot catch rate by tactic |
+| 8 | Slides ≤10 pages, video ≤3 minutes, 1-page PDF, README declaring assets/OSS/AI tools. Submit before **23:59 on 03/12** |

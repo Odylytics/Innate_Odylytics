@@ -1,41 +1,41 @@
-# Dữ liệu để thử nghiệm
+# Datasets for experiments
 
-> Kiểm tra link ngày 24/11/2026 (gọi HTTP thật từ máy làm việc). **Giấy phép phải đọc lại ở trang gốc trước khi dùng cho bài nộp**, và mọi bộ dùng đều phải ghi vào README nộp bài (nguồn + giấy phép + trích dẫn).
-> Dữ liệu tải về đặt ở `research/data/` (gitignored, không commit).
+> Links checked on 24/11/2026 (real HTTP requests from the work machine). **Licenses must be re-read on the original page before use in the submission**, and every dataset used must be listed in the submission README (source + license + citation).
+> Downloaded data goes in `research/data/` (gitignored, not committed).
 
-## Dùng được ngay, không cần xin phép
+## Usable now, no permission needed
 
-| Bộ dữ liệu | Nội dung | Kích thước | Link tải trực tiếp | Giấy phép |
+| Dataset | Content | Size | Direct download link | License |
 |---|---|---|---|---|
-| **StrokePIN** (Nankai, 2026) ⭐ | **PIN 6 số trên điện thoại**: 97 người, 18.935 lượt nhập, 20 PIN chung cho mọi người, ngồi/đi; toạ độ chạm X/Y, kích thước, áp lực, cảm biến chuyển động | repo ~68 MB | `git clone https://github.com/Litraveler/StrokePIN.git` · trang: https://ieee-dataport.org/documents/strokepin-0 (DOI 10.21227/thft-4721) | **CC BY-NC-SA 4.0** theo README repo và mô tả trang (phi thương mại, ghi nguồn, **chia sẻ phái sinh cùng giấy phép**). Trang IEEE DataPort ghi tiêu đề "Creative Commons Attribution", mâu thuẫn nhẹ: dùng điều khoản chặt hơn |
-| **CMU DSL-StrongPassword** | 51 người × 400 lần gõ một mật khẩu, 31 đặc trưng thời gian (máy tính) | 4,6 MB | https://www.cs.cmu.edu/~keystroke/DSL-StrongPasswordData.csv | Kiểm 25/11: trang không nêu giấy phép; yêu cầu trích dẫn Killourhy & Maxion 2009 |
-| **Touchalytics** (Frank 2013) | 41 người, vuốt/cuộn: toạ độ, áp lực, vùng chạm | **dữ liệu thô 5,2 MB** · đặc trưng 1,6 MB | http://www.mariofrank.net/touchalytics/data.zip · http://www.mariofrank.net/touchalytics/features.zip · [readme](http://www.mariofrank.net/touchalytics/readme_data.txt) | **Kiểm 25/11: trang và readme không nêu giấy phép**; trích dẫn bài TIFS 2013. Đã dùng ở E19 |
-| **MOBIKEY** (Sapientia) | 54 người, 3 mật khẩu văn bản trên máy tính bảng Nexus 7, có áp lực và diện tích ngón tay | nhỏ | https://www.ms.sapientia.ro/~manyi/mobikey/data/rawdata.zip · trang: https://www.ms.sapientia.ro/~manyi/mobikey.html | Chưa kiểm |
+| **StrokePIN** (Nankai, 2026) ⭐ | **6-digit PINs on a phone**: 97 people, 18,935 entries, 20 PINs shared by everyone; touch X/Y coordinates, size, pressure, motion sensors | repo ~68 MB | `git clone https://github.com/Litraveler/StrokePIN.git` · page: https://ieee-dataport.org/documents/strokepin-0 (DOI 10.21227/thft-4721) | **CC BY-NC-SA 4.0** per the repo README and the page description (non-commercial, attribution, **derivatives shared under the same license**). The IEEE DataPort page lists the title as "Creative Commons Attribution", a slight contradiction: use the stricter terms |
+| **CMU DSL-StrongPassword** | 51 people × 400 typings of one password, 31 timing features (computer) | 4.6 MB | https://www.cs.cmu.edu/~keystroke/DSL-StrongPasswordData.csv | Checked 25/11: the page states no license; asks for a citation of Killourhy & Maxion 2009 |
+| **Touchalytics** (Frank 2013) | 41 people, swipe/scroll: coordinates, pressure, contact area | **raw data 5.2 MB** · features 1.6 MB | http://www.mariofrank.net/touchalytics/data.zip · http://www.mariofrank.net/touchalytics/features.zip · [readme](http://www.mariofrank.net/touchalytics/readme_data.txt) | **Checked 25/11: neither the page nor the readme states a license**; cite the TIFS 2013 paper. Already used in E19 |
+| **MOBIKEY** (Sapientia) | 54 people, 3 text passwords on a Nexus 7 tablet, with pressure and finger area | small | https://www.ms.sapientia.ro/~manyi/mobikey/data/rawdata.zip · page: https://www.ms.sapientia.ro/~manyi/mobikey.html | Not checked |
 
-## Nặng, link tải trực tiếp
+## Large, direct download links
 
-| Bộ dữ liệu | Nội dung | Kích thước | Link tải trực tiếp (đã kiểm tra: HTTP 200) |
+| Dataset | Content | Size | Direct download link (checked: HTTP 200) |
 |---|---|---|---|
-| **Aalto typing37k, bản đã xử lý** | 37.370 người gõ trên điện thoại (dạng SQL) | **0,84 GB** | https://userinterfaces.aalto.fi/typing37k/data/processed_typing_data.zip |
-| **Aalto typing37k, CSV thô + đã xử lý** | Như trên, dạng CSV (dễ dùng với Python) | **5,63 GB** | https://userinterfaces.aalto.fi/typing37k/data/csv_raw_and_processed.zip |
-| **Aalto typing37k, SQL thô** | Dữ liệu gốc | **4,89 GB** (giải nén 43,4 GB) | https://userinterfaces.aalto.fi/typing37k/data/raw_typing_data.zip |
-| Mã thu dữ liệu của Aalto | Công cụ thu keystroke trên web | nhỏ | https://userinterfaces.aalto.fi/typing37k/resources/source_code.zip |
+| **Aalto typing37k, processed version** | 37,370 people typing on a phone (SQL format) | **0.84 GB** | https://userinterfaces.aalto.fi/typing37k/data/processed_typing_data.zip |
+| **Aalto typing37k, raw + processed CSV** | Same as above, in CSV (easy to use with Python) | **5.63 GB** | https://userinterfaces.aalto.fi/typing37k/data/csv_raw_and_processed.zip |
+| **Aalto typing37k, raw SQL** | Original data | **4.89 GB** (43.4 GB unzipped) | https://userinterfaces.aalto.fi/typing37k/data/raw_typing_data.zip |
+| Aalto data-collection code | Web keystroke collection tool | small | https://userinterfaces.aalto.fi/typing37k/resources/source_code.zip |
 
-Trang gốc: https://userinterfaces.aalto.fi/typing37k/. **Kiểm 25/11:** trang và bài báo nói "openly available" nhưng không nêu giấy phép dữ liệu (chỉ phần mềm thu dữ liệu là MIT); trích dẫn MobileHCI 2019, hỏi tác giả nếu phát hành lại dữ liệu phái sinh. Máy làm việc hiện còn ~70 GB trống. **Bản CSV đã xử lý 0,84 GB là điểm bắt đầu hợp lý** trước khi lấy bản 5,6 GB.
+Original page: https://userinterfaces.aalto.fi/typing37k/. **Checked 25/11:** the page and the paper say "openly available" but state no data license (only the collection software is MIT); cite MobileHCI 2019, and ask the authors if redistributing derived data. The work machine currently has ~70 GB free. **The 0.84 GB processed CSV version is a reasonable starting point** before taking the 5.6 GB version.
 
-## Cần thỏa thuận cấp phép (email cho nhóm tác giả)
+## Need a license agreement (email the authors)
 
-| Bộ dữ liệu | Nội dung | Quy trình |
+| Dataset | Content | Process |
 |---|---|---|
-| **HuMIdb** | 600 người, 14 cảm biến, benchmark bot BeCAPTCHA (phục vụ bài người/máy) | https://github.com/BiDAlab/HuMIdb: ký thỏa thuận, gửi email cho `atvs@uam.es`, nhận tài khoản tải |
-| **MobileTouchDB** | 217 người, 94 mẫu điện thoại, chữ số/PIN vẽ bằng tay | https://github.com/BiDAlab/MobileTouchDB: cùng quy trình, cùng email |
-| **TypeNet benchmark** | Embedding keystroke | https://github.com/BiDAlab/TypeNet: cùng quy trình |
-| **BB-MAS** | 117 người, nhiều thiết bị | DOI https://doi.org/10.21227/rpaz-0h66 (IEEE DataPort, cần tài khoản miễn phí; curl bị 403) |
+| **HuMIdb** | 600 people, 14 sensors, BeCAPTCHA bot benchmark (for the human/machine task) | https://github.com/BiDAlab/HuMIdb: sign the agreement, email `atvs@uam.es`, receive a download account |
+| **MobileTouchDB** | 217 people, 94 phone models, digits/PINs drawn by hand | https://github.com/BiDAlab/MobileTouchDB: same process, same email |
+| **TypeNet benchmark** | Keystroke embeddings | https://github.com/BiDAlab/TypeNet: same process |
+| **BB-MAS** | 117 people, multiple devices | DOI https://doi.org/10.21227/rpaz-0h66 (IEEE DataPort, free account needed; curl gets 403) |
 
-## Không tìm được link xác nhận
+## No confirmed link found
 
-HMOG, BehavePassDB, KVC, FETA: các địa chỉ tôi thử đều 404 hoặc không truy cập được, nên không liệt kê. Tìm trên trang bài báo gốc trong `papers/`.
+HMOG, BehavePassDB, KVC, FETA: the addresses I tried were all 404 or unreachable, so they are not listed. Look on the original paper pages in `papers/`.
 
-## Ghi chú về dữ liệu bot
+## Note on bot data
 
-Không có bộ dữ liệu công khai nào chứa **mã độc điều khiển chạm thật** trên PIN. Bot phải tự sinh bằng công cụ thật (`adb input`, app `dispatchGesture`), xem R1 trong [`research-plan.md`](research-plan.md).
+No public dataset contains **real touch-controlling malware** on a PIN. Bots have to be generated with real tools (`adb input`, a `dispatchGesture` app); see R1 in [`research-plan.md`](research-plan.md).

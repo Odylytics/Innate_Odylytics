@@ -1,14 +1,14 @@
-"""E23 (từ E9): thêm CHUYỂN ĐỘNG điện thoại (cảm biến StrokePIN) vào nhận chủ. Cùng giao thức E9; đặc trưng imu_* = trọng lực trung bình/độ lệch (cách cầm), độ rung gia tốc và con quay (độ vững tay). StrokePIN lấy mẫu gia tốc/con quay chỉ ~5 Hz, trọng lực ~50 Hz: KHÔNG đủ để đo cú giật tại thời điểm chạm.
+"""E23 (from E9): adds phone MOTION (StrokePIN sensors) to owner recognition. Same protocol as E9; imu_* features = mean/std of gravity (how the phone is held), accelerometer and gyroscope jitter (hand steadiness). StrokePIN samples the accelerometer/gyroscope at only ~5 Hz and gravity at ~50 Hz: NOT enough to measure the jolt at the moment of the tap.
 
-E9: xác minh chủ trên PIN điện thoại THẬT (StrokePIN), dùng chính features.py / owner.py của backend.
+E9: owner verification on REAL phone PINs (StrokePIN), using the backend's own features.py / owner.py.
 
-Mỗi cặp (người, PIN): đăng ký bằng k lượt NGỒI ngẫu nhiên. Kiểm thử:
-  - chủ, cùng tư thế (các lượt ngồi còn lại) hoặc đổi tư thế (các lượt ĐI)
-  - kẻ gian BIẾT PIN: lượt của người khác nhập cùng PIN, cùng tư thế với phiên kiểm thử (kịch bản B)
-Điểm = khoảng cách chuẩn hoá (thấp = giống chủ). Gộp điểm mọi cặp rồi tính EER và FAR@FRR 5%; CI bootstrap theo người.
-Ba bộ đặc trưng (thời gian / + lệch tâm / + kích thước chạm) x ba bộ phát hiện:
-  backend (owner.py hiện tại: sd có sàn), Manhattan scaled (Killourhy & Maxion), E2 (co rút phương sai về dân số).
-Không có bot ở đây: đây là bài "có phải chủ", dữ liệu người thật nhưng một máy mỗi người (thiết bị khác nhau giữa người).
+Each (person, PIN) pair: enroll with k random sessions. Test:
+  - owner: the remaining sessions
+  - PIN-KNOWING impostor: another person's sessions entering the same PIN (scenario B)
+Score = normalized distance (low = looks like the owner). Pool the scores of all pairs, then compute EER and FAR@FRR 5%; bootstrap CI by person.
+Three feature sets (timing / + offset / + touch size) x three detectors:
+  backend (current owner.py: floored sd), Manhattan scaled (Killourhy & Maxion), E2 (variance shrinkage toward the population).
+No bots here: this is the "is it the owner" task, real-person data but one device per person (devices differ between people).
 """
 
 import random
@@ -25,8 +25,8 @@ import strokepin_loader  # noqa: E402
 
 KS, SEED, N_DRAW, N_IMP, BOOT, NU = (3, 5), 0, 5, 20, 100, 5
 PIN_SET = lambda k: k.startswith(("pin_hold_", "pin_flight_", "pin_dx_", "pin_dy_")) or k == "pin_total"  # noqa: E731
-SETS = {"PIN (thời gian + lệch tâm)": PIN_SET, "chỉ chuyển động (IMU)": lambda k: k.startswith("imu_"),
-        "PIN + chuyển động (IMU)": lambda k: PIN_SET(k) or k.startswith("imu_")}
+SETS = {"PIN (timing + offset)": PIN_SET, "motion only (IMU)": lambda k: k.startswith("imu_"),
+        "PIN + motion (IMU)": lambda k: PIN_SET(k) or k.startswith("imu_")}
 rng = random.Random(SEED)
 S = strokepin_loader.load()
 import pandas as pd  # noqa: E402
@@ -59,22 +59,20 @@ print({n: len(v) for n, v in KEYS.items()})
 for e in S:
     e["v"] = {n: np.array([e["f"][k] for k in ks]) for n, ks in KEYS.items()}
 
-grp = defaultdict(list)  # (user, pin, posture) -> entries
+grp = defaultdict(list)  # (user, pin) -> entries
 for e in S:
-    grp[(e["user"], e["pin"], e["posture"])].append(e)
-by_pin_post = defaultdict(lambda: defaultdict(list))  # (pin, posture) -> user -> entries
-for (u, p, po), es in grp.items():
-    by_pin_post[(p, po)][u] += es
+    grp[(e["user"], e["pin"])].append(e)
+by_pin = defaultdict(lambda: defaultdict(list))  # pin -> user -> entries
+for (u, p), es in grp.items():
+    by_pin[p][u] += es
 users = sorted({e["user"] for e in S})
-print(f"{len(S)} lượt, {len(users)} người; lượt ngồi/PIN/người trung vị:",
-      int(np.median([len(v) for (u, p, po), v in grp.items() if po == "sit"])), "; đi:",
-      int(np.median([len(v) for (u, p, po), v in grp.items() if po == "walk"])))
+print(f"{len(S)} sessions, {len(users)} people; median sessions/PIN/person:", int(np.median([len(v) for v in grp.values()])))
 
 
-def within_var(pin, posture, exclude, name):
-    """Phương sai trong-người trung bình của người KHÁC (leave-user-out), theo (PIN, tư thế)."""
+def within_var(pin, exclude, name):
+    """Mean within-person variance of OTHER people (leave-user-out), by PIN."""
     vs = [np.var(np.array([e["v"][name] for e in es]), axis=0, ddof=1)
-          for u, es in by_pin_post[(pin, posture)].items() if u != exclude and len(es) >= 2]
+          for u, es in by_pin[pin].items() if u != exclude and len(es) >= 2]
     return np.mean(vs, axis=0)
 
 
@@ -84,35 +82,31 @@ def detectors(name, X, prior_var):
     sd_backend = np.maximum(X.std(0, ddof=1), floor)
     mad = np.abs(X - mu).mean(0) + 1e-9
     var_eb = ((len(X) - 1) * X.var(0, ddof=1) + NU * prior_var) / (len(X) - 1 + NU)
-    return {"backend (owner.py: sd có sàn)": lambda x: (np.abs(x - mu) / sd_backend).mean(-1),
+    return {"backend (owner.py: floored sd)": lambda x: (np.abs(x - mu) / sd_backend).mean(-1),
             "Manhattan scaled": lambda x: (np.abs(x - mu) / mad).mean(-1),
-            f"E2 co rút về dân số (nu={NU})": lambda x: (np.abs(x - mu) / np.sqrt(var_eb)).mean(-1)}
+            f"E2 shrinkage toward population (nu={NU})": lambda x: (np.abs(x - mu) / np.sqrt(var_eb)).mean(-1)}
 
 
-# scores[(k, test_posture, set, detector)][user] = (gen[], imp[])
+# scores[(k, set, detector)][user] = (gen[], imp[])
 scores = defaultdict(lambda: defaultdict(lambda: ([], [])))
-for (u, p, po), es in grp.items():
-    if po != "sit":
-        continue
+for (u, p), es in grp.items():
     for k in KS:
         if len(es) < k:
             continue
         for _ in range(N_DRAW):
             enr = rng.sample(es, k)
-            rest_sit = [e for e in es if e not in enr]
-            walk = grp.get((u, p, "walk"), [])
-            for tpost, gen_es in (("cùng tư thế (ngồi)", rest_sit), ("đổi tư thế (đi)", walk)):
-                if not gen_es:
-                    continue
-                imp_pool = [e for v, ves in by_pin_post[(p, "sit" if tpost.startswith("cùng") else "walk")].items() if v != u for e in ves]
-                imp = rng.sample(imp_pool, min(N_IMP, len(imp_pool)))
-                for name in SETS:
-                    X = np.array([e["v"][name] for e in enr])
-                    pv = within_var(p, "sit", u, name)
-                    for dn, f in detectors(name, X, pv).items():
-                        g, i = scores[(k, tpost, name, dn)][u]
-                        g += list(f(np.array([e["v"][name] for e in gen_es])))
-                        i += list(f(np.array([e["v"][name] for e in imp])))
+            gen_es = [e for e in es if e not in enr]
+            if not gen_es:
+                continue
+            imp_pool = [e for v, ves in by_pin[p].items() if v != u for e in ves]
+            imp = rng.sample(imp_pool, min(N_IMP, len(imp_pool)))
+            for name in SETS:
+                X = np.array([e["v"][name] for e in enr])
+                pv = within_var(p, u, name)
+                for dn, f in detectors(name, X, pv).items():
+                    g, i = scores[(k, name, dn)][u]
+                    g += list(f(np.array([e["v"][name] for e in gen_es])))
+                    i += list(f(np.array([e["v"][name] for e in imp])))
 
 
 def metrics(gen, imp):
@@ -136,35 +130,33 @@ def ci(per_user):
     return est, lo, hi
 
 
-lines = ["# E23 — PIN + chuyển động. Xác minh chủ trên PIN điện thoại thật (StrokePIN, 97 người, PIN 6 số)", "",
-         f"Dùng `features.py` + `owner.py` của backend. Kẻ gian **biết PIN** (người khác nhập cùng PIN). Đăng ký k lượt ngồi; "
-         f"điểm gộp mọi cặp (người, PIN), CI 95% bootstrap theo người ({BOOT} lần). Thấp hơn là tốt hơn. "
-         "Dữ liệu người thật; mỗi người một điện thoại, nên khác thiết bị giữa người cũng góp vào độ tách.", ""]
+lines = ["# E23 — PIN + motion. Owner verification on real phone PINs (StrokePIN, 97 people, 6-digit PINs)", "",
+         f"Uses the backend's `features.py` + `owner.py`. The impostor **knows the PIN** (another person entering the same PIN). Enrollment k sessions; "
+         f"scores pooled over all (person, PIN) pairs, 95% bootstrap CI by person ({BOOT} resamples). Lower is better. "
+         "Real-person data; each person has one phone, so device differences between people also contribute to the separation.", ""]
 for k in KS:
-    for tpost in ("cùng tư thế (ngồi)", "đổi tư thế (đi)"):
-        lines += [f"## k = {k} lượt đăng ký, kiểm thử {tpost}", "", "| Bộ đặc trưng | Bộ phát hiện | EER | FAR @ FRR 5% |", "|---|---|---|---|"]
-        for (k2, t2, name, dn), per_user in scores.items():
-            if (k2, t2) != (k, tpost):
-                continue
-            (e, f), lo, hi = ci(per_user)
-            lines.append(f"| {name} | {dn} | {e:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {f:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] |")
-        lines.append("")
-# so sánh GHÉP CẶP (cùng mẫu bootstrap theo người): E2 trừ backend, âm = E2 tốt hơn
-lines += ["## So sánh ghép cặp: E2 (co rút về dân số) trừ backend hiện tại, âm = E2 tốt hơn", "",
-          "| k | Kiểm thử | Bộ đặc trưng | dEER | dFAR @ FRR 5% |", "|---|---|---|---|---|"]
+    lines += [f"## k = {k} enrollment sessions", "", "| Feature set | Detector | EER | FAR @ FRR 5% |", "|---|---|---|---|"]
+    for (k2, name, dn), per_user in scores.items():
+        if k2 != k:
+            continue
+        (e, f), lo, hi = ci(per_user)
+        lines.append(f"| {name} | {dn} | {e:.3f} [{lo[0]:.3f}, {hi[0]:.3f}] | {f:.3f} [{lo[1]:.3f}, {hi[1]:.3f}] |")
+    lines.append("")
+# PAIRED comparison (same bootstrap sample by person): E2 minus backend, negative = E2 better
+lines += ["## Paired comparison: E2 (shrinkage toward the population) minus the current backend, negative = E2 better", "",
+          "| k | Feature set | dEER | dFAR @ FRR 5% |", "|---|---|---|---|"]
 for k in KS:
-    for tpost in ("cùng tư thế (ngồi)", "đổi tư thế (đi)"):
-        for name in SETS:
-            a = scores.get((k, tpost, name, "backend (owner.py: sd có sàn)"))
-            b = scores.get((k, tpost, name, f"E2 co rút về dân số (nu={NU})"))
-            if not a or not b:
-                continue
-            us = sorted(a)
-            d = np.array([np.subtract(metrics(*pooled(b, r)), metrics(*pooled(a, r)))
-                          for r in (rng.choices(us, k=len(us)) for _ in range(BOOT))])
-            m = np.subtract(metrics(*pooled(b, us)), metrics(*pooled(a, us)))
-            lo, hi = np.quantile(d, 0.025, axis=0), np.quantile(d, 0.975, axis=0)
-            lines.append(f"| {k} | {tpost} | {name} | {m[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {m[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |")
+    for name in SETS:
+        a = scores.get((k, name, "backend (owner.py: floored sd)"))
+        b = scores.get((k, name, f"E2 shrinkage toward population (nu={NU})"))
+        if not a or not b:
+            continue
+        us = sorted(a)
+        d = np.array([np.subtract(metrics(*pooled(b, r)), metrics(*pooled(a, r)))
+                      for r in (rng.choices(us, k=len(us)) for _ in range(BOOT))])
+        m = np.subtract(metrics(*pooled(b, us)), metrics(*pooled(a, us)))
+        lo, hi = np.quantile(d, 0.025, axis=0), np.quantile(d, 0.975, axis=0)
+        lines.append(f"| {k} | {name} | {m[0]:+.3f} [{lo[0]:+.3f}, {hi[0]:+.3f}] | {m[1]:+.3f} [{lo[1]:+.3f}, {hi[1]:+.3f}] |")
 lines.append("")
 out = ROOT / "research/results/e23_imu_fusion.md"
 out.write_text("\n".join(lines), encoding="utf-8")

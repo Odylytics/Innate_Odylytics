@@ -1,18 +1,18 @@
-"""E7: tấn công đầu độc mẫu chuẩn ("dạy dần") và các cách phòng thủ.
+"""E7: template poisoning attack ("gradual teaching") and defenses.
 
-Kẻ tấn công (kiểu Lovisotto 2020, mạnh: tạo được vector đặc trưng tuỳ ý) mỗi bước gửi một phiên nằm
-SÁT RANH GIỚI cập nhật (owner >= 0.8): x = mu + d*(x_kẻ_gian - mu) với d lớn nhất vẫn được chấp nhận,
-nên mẫu chuẩn bị kéo dần về phía kẻ gian. Sau n lần tiêm, đo:
-  - impostor_accept: tỷ lệ phiên THẬT của kẻ gian (persona khác) có owner >= 0.5
-  - genuine_accept : tỷ lệ phiên mới của chủ có owner >= 0.5
-Thêm kịch bản "chủ trôi chậm": thói quen chủ đổi +15% thời gian trong 100 phiên, kiểm cái giá của việc chặn cập nhật.
+The attacker (Lovisotto 2020 style, strong: can craft arbitrary feature vectors) sends at each step a session lying
+RIGHT AT THE UPDATE BOUNDARY (owner >= 0.8): x = mu + d*(x_impostor - mu) with the largest d still accepted,
+so the template is gradually pulled toward the impostor. After n injections, measure:
+  - impostor_accept: share of the impostor's REAL sessions (different persona) with owner >= 0.5
+  - genuine_accept : share of the owner's new sessions with owner >= 0.5
+Plus a "slowly drifting owner" scenario: the owner's habit changes by +15% in timing over 100 sessions, to test the cost of blocking updates.
 
-Phòng thủ (đều dùng cùng quy tắc chấp nhận, khác quy tắc cập nhật):
-  none      : không trần
-  cap1.0sd  : bản hiện tại của owner.py (mỗi đặc trưng trôi tối đa 1 sd so với lúc đăng ký)
-  cap0.5sd, cap0.25sd : trần chặt hơn
-  freeze    : dừng cập nhật khi trôi trung bình > 0.5 sd (trôi có hướng), đồng thời cờ cảnh báo
-Persona GIẢ (attacker/tactics.py): kiểm chứng phương pháp, không phải số liệu cho slide.
+Defenses (all use the same acceptance rule, differing in the update rule):
+  none      : no cap
+  cap1.0sd  : the current version of owner.py (each feature drifts at most 1 sd from enrollment)
+  cap0.5sd, cap0.25sd : tighter caps
+  freeze    : stop updating when the mean drift > 0.5 sd (directional drift), and raise a warning flag
+SYNTHETIC personas (attacker/tactics.py): this checks the method, it is not a number for slides.
 """
 
 import random
@@ -29,7 +29,7 @@ from nhip_attacker import tactics  # noqa: E402
 
 PIN, N_PAIRS, SEED = "159357", 100, 0
 CHECKPOINTS = [0, 10, 25, 50, 100, 200]
-ACCEPT, UPDATE_MIN = 0.5, 0.8  # UPDATE_MIN = ngưỡng cập nhật trong main.py
+ACCEPT, UPDATE_MIN = 0.5, 0.8  # UPDATE_MIN = the update threshold in main.py
 
 
 def mean_drift_sd(tpl):
@@ -56,7 +56,7 @@ def _raw_update(tpl, f, cap):
 
 
 def craft(tpl, target):
-    """Điểm gần kẻ gian nhất trên đoạn mu -> target mà owner vẫn >= UPDATE_MIN (chia đôi)."""
+    """The point closest to the impostor on the segment mu -> target where owner is still >= UPDATE_MIN (bisection)."""
     mu = tpl["mu"]
     lo, hi = 0.0, 1.0
     for _ in range(25):
@@ -97,7 +97,7 @@ for i in range(N_PAIRS):
                 poison[d][n]["gen"].append(rate(tpl, f_gen))
                 poison[d][n]["drift"].append(mean_drift_sd(tpl))
             tpl = upd(tpl, craft(tpl, target))
-    # chủ trôi chậm: persona đổi thói quen +g thời gian trong 100 phiên, mỗi phiên đủ điểm thì cập nhật
+    # slowly drifting owner: the persona changes habit by +g in timing over 100 sessions, updating on each session that scores high enough
     p0 = tactics._persona(random.Random(2 * i))
     for g in DRIFTS:
         for d in DEFS:
@@ -112,27 +112,27 @@ for i in range(N_PAIRS):
             drift_gen[(d, g)].append(rate(tpl, fresh))
             drift_gen80[(d, g)].append(rate(tpl, fresh, UPDATE_MIN))
 
-lines = ["# E7 — tấn công đầu độc mẫu chuẩn (dữ liệu giả)", "",
-         f"{N_PAIRS} cặp (chủ, kẻ gian), kẻ tấn công tiêm phiên sát ngưỡng cập nhật (owner >= {UPDATE_MIN}). "
-         f"'Chấp nhận' = owner >= {ACCEPT}. Persona giả, chỉ kiểm chứng phương pháp.", "",
-         "## Tỷ lệ phiên THẬT của kẻ gian được chấp nhận sau n lần tiêm (càng thấp càng tốt)", "",
-         "| Phòng thủ | " + " | ".join(f"n={c}" for c in CHECKPOINTS) + " |", "|---|" + "---|" * len(CHECKPOINTS)]
+lines = ["# E7 — template poisoning attack (synthetic data)", "",
+         f"{N_PAIRS} (owner, impostor) pairs; the attacker injects sessions right at the update threshold (owner >= {UPDATE_MIN}). "
+         f"'Accepted' = owner >= {ACCEPT}. Synthetic personas, this only checks the method.", "",
+         "## Share of the impostor's REAL sessions accepted after n injections (lower is better)", "",
+         "| Defense | " + " | ".join(f"n={c}" for c in CHECKPOINTS) + " |", "|---|" + "---|" * len(CHECKPOINTS)]
 for d in DEFS:
     lines.append(f"| {d} | " + " | ".join(f"{np.mean(poison[d][c]['imp']):.2f}" for c in CHECKPOINTS) + " |")
-lines += ["", "## Tỷ lệ phiên mới của chủ được chấp nhận sau n lần tiêm (càng cao càng tốt)", "",
-          "| Phòng thủ | " + " | ".join(f"n={c}" for c in CHECKPOINTS) + " |", "|---|" + "---|" * len(CHECKPOINTS)]
+lines += ["", "## Share of the owner's new sessions accepted after n injections (higher is better)", "",
+          "| Defense | " + " | ".join(f"n={c}" for c in CHECKPOINTS) + " |", "|---|" + "---|" * len(CHECKPOINTS)]
 for d in DEFS:
     lines.append(f"| {d} | " + " | ".join(f"{np.mean(poison[d][c]['gen']):.2f}" for c in CHECKPOINTS) + " |")
-lines += ["", "## Trôi trung bình của mẫu chuẩn (đơn vị sd) sau n lần tiêm", "",
-          "| Phòng thủ | " + " | ".join(f"n={c}" for c in CHECKPOINTS) + " |", "|---|" + "---|" * len(CHECKPOINTS)]
+lines += ["", "## Mean drift of the template (in sd units) after n injections", "",
+          "| Defense | " + " | ".join(f"n={c}" for c in CHECKPOINTS) + " |", "|---|" + "---|" * len(CHECKPOINTS)]
 for d in DEFS:
     lines.append(f"| {d} | " + " | ".join(f"{np.mean(poison[d][c]['drift']):.2f}" for c in CHECKPOINTS) + " |")
-lines += ["", "## Cái giá: chủ thật trôi chậm (thời gian giữ/cách phím tăng dần trong 100 phiên) — tỷ lệ phiên mới của chủ được chấp nhận", "",
-          "| Phòng thủ | " + " | ".join(f"+{int(g*100)}%" for g in DRIFTS) + " |", "|---|" + "---|" * len(DRIFTS)]
+lines += ["", "## The cost: a real owner who drifts slowly (hold/flight times grow gradually over 100 sessions) — share of the owner's new sessions accepted", "",
+          "| Defense | " + " | ".join(f"+{int(g*100)}%" for g in DRIFTS) + " |", "|---|" + "---|" * len(DRIFTS)]
 for d in DEFS:
     lines.append(f"| {d} | " + " | ".join(f"{np.mean(drift_gen[(d, g)]):.2f}" for g in DRIFTS) + " |")
-lines += ["", f"Cùng kịch bản, nhưng đếm là chấp nhận khi owner >= {UPDATE_MIN} (ngưỡng cập nhật; nhạy hơn với việc mẫu không theo kịp chủ):", "",
-          "| Phòng thủ | " + " | ".join(f"+{int(g*100)}%" for g in DRIFTS) + " |", "|---|" + "---|" * len(DRIFTS)]
+lines += ["", f"Same scenario, but counting acceptance as owner >= {UPDATE_MIN} (the update threshold; more sensitive to the template failing to keep up with the owner):", "",
+          "| Defense | " + " | ".join(f"+{int(g*100)}%" for g in DRIFTS) + " |", "|---|" + "---|" * len(DRIFTS)]
 for d in DEFS:
     lines.append(f"| {d} | " + " | ".join(f"{np.mean(drift_gen80[(d, g)]):.2f}" for g in DRIFTS) + " |")
 lines.append("")

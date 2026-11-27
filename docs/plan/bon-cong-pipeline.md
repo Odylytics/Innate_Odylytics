@@ -1,117 +1,117 @@
-# Innate với 4 kênh bằng chứng: chuyển động, PIN, câu gõ, vùng chạm/vuốt
+# Innate with 4 evidence channels: motion, PIN, typed phrase, touch area/swipe
 
-> 25/11/2026. Trả lời ý "tổng hợp 4 cổng thì AI có bắt được bot không". Số liệu: [`../research/ai-research.md`](../research/ai-research.md) (E19, E22, E23).
-> **26/11/2026: thêm mục 7 "Flow mới" ở cuối file** (hai tầng: người/máy rồi người/người; 4 kịch bản iPhone/Android × chiếm từ xa/trộm máy; nghiêng máy khi bấm; PIN nhập trước, chấm điểm ở bước chuyển tiền). Mục 7 là **thiết kế, chưa cài và chưa đo**; các mục 1–6 là bản 25/11.
+> 25/11/2026. Answers the question "if we combine 4 gates, will the AI catch bots?". Numbers: [`../research/ai-research.md`](../research/ai-research.md) (E19, E22, E23).
+> **26/11/2026: added section 7 "New flow" at the end of the file** (two layers: human/machine, then person/person; 4 scenarios iPhone/Android × remote takeover/stolen phone; phone tilt while tapping; PIN entered first, scoring at the transfer step). Section 7 is a **design, not implemented and not measured**; sections 1–6 are the 25/11 version.
 
-## Trả lời ngắn
-**Có, nên làm, nhưng là hợp nhất 4 kênh bằng chứng, không phải 4 cổng nối tiếp phải qua hết.** Nếu mỗi cổng chặn nhầm chủ 5% mà bắt buộc qua cả 4, chủ bị chặn nhầm ~18,5% (1 − 0,95⁴). Cách đúng: cả 4 kênh cho điểm vào `fusion.py`; chỉ khi chưa chắc mới yêu cầu gõ câu (kênh 3); kết quả vẫn là `allow | step_up | hold`.
+## Short answer
+**Yes, worth doing, but as fusion of 4 evidence channels, not 4 sequential gates that must all be passed.** If each gate wrongly blocks the owner 5% of the time and all 4 must be passed, the owner is wrongly blocked ~18.5% of the time (1 − 0.95⁴). The right way: all 4 channels feed scores into `fusion.py`; only when unsure is a typed phrase requested (channel 3); the result is still `allow | step_up | hold`.
 
 ```
-Chạy ngầm:   (1) chuyển động  +  (2) nhập PIN  +  (4) chạm/vuốt   ->  hợp nhất rủi ro
-                                          chắc chắn là chủ/người ──► allow
-                                          rõ ràng là máy ─────────► hold
-                                          chưa chắc ─► (3) gõ câu ─► hợp nhất lại ─► allow | step_up | hold
+Runs in background:   (1) motion  +  (2) PIN entry  +  (4) touch/swipe   ->  risk fusion
+                                          sure it is the owner/a human ──► allow
+                                          clearly a machine ───────────► hold
+                                          unsure ─► (3) type phrase ─► fuse again ─► allow | step_up | hold
 ```
-Điểm mạnh của ý tưởng: kẻ tấn công phải giả **đồng thời** chạm, rung lắc, nhịp PIN, nhịp gõ, kiểu gõ dấu và các tín hiệu đó phải **khớp thời điểm với nhau**. Mỗi kênh riêng lẻ giả được (bài báo ActReal giả cả cảm biến chuyển động); khớp chéo giữa các kênh khó hơn. Chưa có thí nghiệm nào của đội đo sự khó đó.
+The strength of the idea: an attacker must fake touch, shaking, PIN rhythm, typing rhythm and tone mark typing style **at the same time**, and these signals must **line up in time with each other**. Each channel alone can be faked (the ActReal paper fakes even the motion sensors); cross-matching between channels is harder. None of the team's experiments has measured that difficulty.
 
-## Từng kênh: đã có gì, bằng chứng, hạn chế
-| Kênh | Dùng để | Bằng chứng của đội | Hạn chế nói thẳng |
+## Each channel: what exists, evidence, limits
+| Channel | Used for | Team's evidence | Limits, stated plainly |
 |---|---|---|---|
-| **1. Chuyển động** (gia tốc, con quay, trọng lực) | Bot: máy nằm yên trên bàn, không có tay cầm; nhận chủ: cách cầm | **E23 (StrokePIN):** chỉ chuyển động cho EER 0,04–0,07 và FAR 3–10% khi cùng tư thế (PIN thời gian + lệch tâm: EER 0,17–0,20, FAR 69–75%). **Đổi tư thế (ngồi → đi): EER 0,44–0,48, ngang đoán mò.** | **Số E23 lạc quan do thiết bị:** mỗi người một điện thoại, cảm biến lệch khác nhau, nên một phần là nhận máy chứ không nhận người. Kẻ cầm chính điện thoại của nạn nhân sẽ không bị bắt như vậy. StrokePIN chỉ lấy gia tốc/con quay ~5 Hz nên **không đo được cú giật khi chạm**. Tài liệu: HMOG 25,7–34,2% (chỉ chạm) → 7–10% (thêm chuyển động); BeCAPTCHA ~60% → 80–90%; **ActReal: tác tử cấp hệ thống giả được cả cảm biến, thành công 71,1% trước bộ dò chạm + chuyển động.** Web: `DeviceMotion` cần HTTPS và hỏi quyền trên iOS Safari, tối đa ~60 Hz. |
-| **2. Nhập PIN** | Nhận chủ, người/máy, phát lại | Đã có: EER 0,16, FAR 37,5% (học máy), bot ngây thơ 100%, phát lại ≤ ±10% 100% | Đổi tư thế mất tín hiệu; kẻ biết PIN lọt nhiều. |
-| **3. Gõ câu** | Thêm tín hiệu khi chưa chắc; kiểu gõ dấu tiếng Việt | **E22:** FAR 43–52% ở 30 phím (mô hình học 43%); bot gõ đều AUC 0,996 | Kiểu gõ tiếng Việt chưa đo trên người thật (chờ thử trên điện thoại). |
-| **4. Vùng chạm / vuốt** | Bot (vuốt vận tốc đều) | **E19:** luật vận tốc đều bắt 100% bot vuốt đều, 0/20.896 nét người thật bị chặn nhầm | Vuốt **không** nhận chủ được (AUC ~0,5); kích thước vùng chạm là nhiễu thiết bị (E12b). Kênh 4 là cổng chống bot, không phải cổng nhận chủ. |
+| **1. Motion** (accelerometer, gyroscope, gravity) | Bot: phone lying still on a table, no hand holding it; owner recognition: how it is held | **E23 (StrokePIN):** motion alone gives EER 0.04–0.07 and FAR 3–10% (PIN timing + offsets: EER 0.17–0.20, FAR 66–67%). | **The E23 numbers are optimistic because of the device:** each person has one phone with a different sensor bias, so part of it is recognizing the device, not the person. Someone holding the victim's own phone would not be caught this way. StrokePIN only has accelerometer/gyroscope at ~5 Hz, so it **cannot measure the jolt of a tap**. Literature: HMOG 25.7–34.2% (touch only) → 7–10% (with motion added); BeCAPTCHA ~60% → 80–90%; **ActReal: a system-level agent can fake even the sensors, with 71.1% success against a touch + motion detector.** Web: `DeviceMotion` needs HTTPS and asks for permission on iOS Safari, at most ~60 Hz. |
+| **2. PIN entry** | Owner recognition, human/machine, replay | Already built: EER 0.14, FAR 31.6% (machine learning), naive bot 100%, replay ≤ ±10% 100% | A PIN-knowing impostor gets through often. |
+| **3. Typed phrase** | Extra signal when unsure; Vietnamese tone mark typing style | **E22:** FAR 43–52% at 30 keys (learned model 43%); even-typing bot AUC 0.996 | Vietnamese typing style not yet measured on real people (waiting for tests on phones). |
+| **4. Touch area / swipe** | Bot (constant-velocity swipe) | **E19:** the constant-velocity rule catches 100% of constant-swipe bots, 0/20,896 real human strokes wrongly blocked | Swipe **cannot** recognize the owner (AUC ~0.5); touch area size is device noise (E12b). Channel 4 is an anti-bot gate, not an owner-recognition gate. |
 
-## Câu "tôi tên là nguyễn minh quân" hay câu ngẫu nhiên?
-| | Câu cố định của người dùng | Câu ngẫu nhiên do máy chủ cấp (đang làm) |
+## The phrase "tôi tên là nguyễn minh quân" ("my name is Nguyen Minh Quan") or a random phrase?
+| | User's fixed phrase | Random phrase issued by the server (being built) |
 |---|---|---|
-| Ưu | Đăng ký và thử cùng câu: so cùng nội dung, tín hiệu tốt hơn; nhiều dấu (ô, ê, ễ, â) cho kênh kiểu gõ tiếng Việt | Chống phát lại **nội dung**; máy chủ biết câu mà không lưu nội dung; không phải dữ liệu cá nhân |
-| Nhược | **Là tên người dùng: dữ liệu cá nhân**; kẻ nhìn trộm biết câu; kẻ ghi lại nhịp gõ phát lại nguyên văn; máy chủ không biết câu để kiểm "gõ đúng" (chỉ so băm có muối) | Câu đổi mỗi lần nên nhịp theo cặp phím khó so (E21b) |
-Gợi ý: giữ câu ngẫu nhiên làm cổng chống bot/phát lại; câu cố định chỉ là phương án bổ sung về sau (người dùng tự chọn, có đồng ý riêng), chưa làm.
+| Pros | Enrollment and trial use the same phrase: same content compared, better signal; many diacritics (ô, ê, ễ, â) for the Vietnamese typing style channel | Prevents **content** replay; the server knows the phrase without storing content; not personal data |
+| Cons | **It is the user's name: personal data**; a shoulder surfer knows the phrase; someone who records the typing rhythm replays it verbatim; the server does not know the phrase so it cannot check "typed correctly" (only a salted hash comparison) | The phrase changes each time, so per-key-pair rhythm is hard to compare (E21b) |
+Suggestion: keep the random phrase as the anti-bot/anti-replay gate; a fixed phrase is only a later add-on option (user chooses it, with separate consent), not built.
 
-## Bot có bị bắt không?
-- **Bot ngây thơ** (script, `adb`, mã độc cơ bản): có, kênh chạm/vuốt và PIN đã bắt ~100%; kênh chuyển động thêm "không có tay cầm".
-- **Bot khôn** (lấy mẫu từ dân số, giả cảm biến): **không đảm bảo**. Đây là giới hạn đã biết (E4b: 20–73%; ActReal). Lợi thế duy nhất của hợp nhất là buộc kẻ tấn công giả nhất quán nhiều kênh.
-- **Độc lập thì nhân, tương quan thì không:** nếu 4 kênh độc lập, FAR có thể nhân (vd. 37,5% × 43% ≈ 16%), nhưng cùng một tư thế, cùng một máy, cùng một phiên thì chúng **tương quan**, đừng nhân khi chưa đo.
+## Is the bot caught?
+- **Naive bot** (script, `adb`, basic malware): yes, the touch/swipe and PIN channels already catch ~100%; the motion channel adds "no hand holding it".
+- **Smart bot** (samples from the population, fakes sensors): **not guaranteed**. This is a known limit (E4b: 20–73%; ActReal). The only advantage of fusion is that it forces the attacker to fake several channels consistently.
+- **Independent multiplies, correlated does not:** if the 4 channels were independent, FAR could multiply (e.g. 31.6% × 43% ≈ 14%), but with the same device and the same session they are **correlated**; do not multiply before measuring.
 
-## Việc nên làm tiếp (theo giá trị)
-1. **Thử bot `adb` trên điện thoại nằm yên trên bàn vs người cầm máy:** đo độ rung chuyển động. Rẻ, quyết định xem kênh 1 có thật sự là cổng chống bot. Cần ≥ 100 Hz (gốc Android) hoặc ≥ 50 Hz (web, nếu máy cho).
-2. **Thu dữ liệu đội có chuyển động**, mỗi người nhập PIN + gõ câu, cùng máy cho cả chủ và "kẻ gian" (người thứ hai cầm máy của chủ) để tách nhiễu thiết bị.
-3. **Kiểm tra khớp thời điểm chạm và cú giật IMU** (cần tốc độ lấy mẫu cao).
-4. Đặc trưng `imu_*` trong `features.py`: **chưa viết**; viết khi có dữ liệu cùng máy.
+## Next work (by value)
+1. **Test an `adb` bot on a phone lying still on a table vs a person holding the phone:** measure motion vibration. Cheap, and decides whether channel 1 is really an anti-bot gate. Needs ≥ 100 Hz (native Android) or ≥ 50 Hz (web, if the device allows).
+2. **Collect team data with motion**, each person entering the PIN + typing a phrase, the same device for both the owner and the "impostor" (a second person holding the owner's phone) to separate out device noise.
+3. **Check alignment between touch time and IMU jolt** (needs a high sampling rate).
+4. `imu_*` features in `features.py`: **not written**; write them once there is same-device data.
 
-## 7. Flow mới (26/11/2026, thiết kế, chưa cài, chưa đo)
+## 7. New flow (26/11/2026, design, not implemented, not measured)
 
-### 7.1 Hai tầng chấm điểm
-1. **Tầng 1, người hay máy** (không cần đăng ký): luật + LightGBM tuỳ chọn + kiểm tra phát lại (`human.py`, `human_model.py`, `replay.py`). Đã có. Bản online có mô hình học bật từ 26/11 (`/health`: `human:true, owner:true`; trước đó rơi về luật vì lightgbm không nạp được trên Vercel).
-2. **Tầng 2, người với người** (cần đăng ký): so thao tác với mẫu của chủ (`owner.py`, `owner_model.py` tuỳ chọn). Đã có; chỉ là **tín hiệu rủi ro, không phải cổng** (kẻ biết PIN lọt 38–57% ở FRR 5%).
-3. Hợp nhất trong `fusion.py` rồi `allow | step_up | hold`. Tầng 2 chỉ dẫn tới `step_up`, không bao giờ tự chặn.
+### 7.1 Two scoring layers
+1. **Layer 1, human or machine** (no enrollment needed): rules + optional LightGBM + replay check (`human.py`, `human_model.py`, `replay.py`). Already built. The online version has had the learned models on since 26/11 (`/health`: `human:true, owner:true`; before that it fell back to rules because lightgbm could not load on Vercel).
+2. **Layer 2, person vs person** (needs enrollment): compare the action with the owner's template (`owner.py`, optional `owner_model.py`). Already built; it is only a **risk signal, not a gate** (a PIN-knowing impostor gets through 32–55% at FRR 5%).
+3. Fusion in `fusion.py`, then `allow | step_up | hold`. Layer 2 only leads to `step_up`, never blocks on its own.
 
-### 7.2 Bốn kịch bản
-| | Chiếm từ xa | Trộm điện thoại |
+### 7.2 Four scenarios
+| | Remote takeover | Stolen phone |
 |---|---|---|
-| **Android** | Mã độc Trợ năng tiêm cú chạm. **Tầng 1 là lớp chính**; thêm kênh nghiêng máy (7.3). | Kẻ trộm là người, có thể biết PIN. **Tầng 2 là lớp chính**; kẻ gian dùng đúng máy của chủ (không còn nhiễu thiết bị như dữ liệu StrokePIN). |
-| **iPhone** | **Ngoài phạm vi.** Nhận định của đội: iOS không có tương đương Trợ năng để tiêm cú chạm; kiểu "nạn nhân tự gõ theo lời kẻ lừa" thì người gõ là chủ thật, Innate không bắt được, chỉ còn ngữ cảnh (người nhận mới, số tiền). Chưa kiểm chứng bằng tài liệu. | Như Android; web SDK chưa kiểm kích thước chạm trên iOS. |
+| **Android** | Accessibility malware injects taps. **Layer 1 is the main layer**; add the phone tilt channel (7.3). | The thief is a person who may know the PIN. **Layer 2 is the main layer**; the impostor uses the owner's own device (no device noise as in the StrokePIN data). |
+| **iPhone** | **Out of scope.** The team's assessment: iOS has no Accessibility equivalent for injecting taps; in the "victim types by following the scammer's instructions" case the person typing is the real owner, Innate cannot catch it, and only context remains (new recipient, amount). Not verified against documentation. | Same as Android; the web SDK has not checked touch size on iOS. |
 
-Mẫu chủ gắn theo từng máy: đổi máy hoặc đổi tư thế phải đăng ký lại có kiểm soát (`dang-ky-lai.md`, chưa cài). Chưa có số đo nào tách theo iPhone/Android.
+The owner template is tied to each device: changing device requires a controlled re-enrollment (`dang-ky-lai.md`, not implemented). There are no measurements split by iPhone/Android yet.
 
-### 7.3 Nghiêng máy khi bấm (bảo vệ Android bị chiếm từ xa)
-- **Ý:** mã độc tiêm cú chạm bằng phần mềm, máy thường nằm yên (vd. 2 giờ sáng trên bàn); người cầm máy thì góc nghiêng nằm trong khoảng quen thuộc và có rung nhẹ trùng thời điểm mỗi cú chạm.
-- **Đặc trưng đề xuất:** góc nghiêng trung bình lúc nhập PIN (vector trọng lực), độ lệch của góc trong lúc nhập, biên độ gia tốc quanh mỗi `t_down`/`t_up`, tương quan giữa đỉnh gia tốc và thời điểm chạm.
-- **Đặt vào tầng 1 (chống bot), không đưa vào nhận chủ.** E23 cho EER 0,04 nhưng là nhiễu thiết bị và mất hết khi đổi tư thế; quy ước repo: không tuyên bố IMU nhận chủ.
-- **Giới hạn nói trước:** nạn nhân đang cầm máy lúc mã độc bấm thì tín hiệu yếu đi; mã độc có Trợ năng đọc và phát lại được cảm biến (ActReal 71–77%), nên chỉ là bằng chứng cộng thêm; web `DeviceMotion` hạn chế tần số và quyền, bản chính thức cần SDK native Android; dữ liệu cảm biến cần thêm đồng ý (Luật BVDLCN 2025); StrokePIN chỉ ~5 Hz nên **chưa có dữ liệu nào để đo ý này**.
-- **Việc làm:** (1) thêm đọc cảm biến ≥ 50 Hz vào `#/collect` trên Android, hai điều kiện cầm máy và đặt trên bàn, cập nhật phiếu đồng ý; (2) chạy bot `adb`/`dispatchGesture` trên máy Android thật để có mẫu "máy đứng yên bị tiêm cú chạm"; (3) đo hai nhóm có tách được không rồi mới viết `imu_*` vào `features.py`.
+### 7.3 Phone tilt while tapping (protects remotely taken over Android)
+- **Idea:** malware injects taps through software, and the phone is usually lying still (e.g. 2 a.m. on a table); a person holding the phone has a tilt angle within a familiar range and a slight shake coinciding with each tap.
+- **Proposed features:** mean tilt angle during PIN entry (gravity vector), deviation of the angle during entry, acceleration amplitude around each `t_down`/`t_up`, correlation between acceleration peaks and tap times.
+- **Put in layer 1 (anti-bot), not used for owner recognition.** E23 gives EER 0.04 but that is device noise; repo convention: do not claim IMU owner recognition.
+- **Limits stated up front:** if the victim is holding the phone when the malware taps, the signal weakens; malware with Accessibility can read and replay sensors (ActReal 71–77%), so it is only additional evidence; web `DeviceMotion` limits frequency and permissions, so the official version needs a native Android SDK; sensor data needs additional consent (Personal Data Protection Law (Luật BVDLCN) 2025); StrokePIN is only ~5 Hz so there is **no data yet to measure this idea**.
+- **Work:** (1) add sensor reading at ≥ 50 Hz to `#/collect` on Android, with two conditions (held in hand and lying on a table), and update the consent form; (2) run an `adb`/`dispatchGesture` bot on a real Android phone to get "still phone with injected taps" samples; (3) measure whether the two groups separate, and only then write `imu_*` into `features.py`.
 
-### 7.4 Nhập PIN trước, chấm điểm ở bước chuyển tiền
-**Ý của đội:** PIN nhập lúc mở ví/đăng nhập, **không chặn ở đó**; kẻ trộm cứ nhập PIN, và chỉ đến bước chuyển tiền Innate mới bắt đầu phân biệt bot, kẻ trộm, người thật. Hợp với quy tắc "không tự khoá tài khoản".
+### 7.4 PIN entered first, scoring at the transfer step
+**The team's idea:** the PIN is entered when opening the wallet/logging in, **with no blocking there**; a thief can just enter the PIN, and only at the transfer step does Innate start to tell bots, thieves and real people apart. Fits the rule "never lock accounts on its own".
 
-Thiết kế đề xuất:
-- **Vẫn ghi PIN lúc đăng nhập, nhưng ở chế độ thụ động** (chỉ thời gian, toạ độ, nhãn phím như hiện nay), gắn với phiên giao dịch sau đó. Không chấm điểm để chặn ở bước này.
-- **Chấm điểm một lần ở xác nhận chuyển tiền**, gộp: nhịp PIN đã ghi + thao tác ở bước chuyển (gõ số tài khoản, chọn ngân hàng, nhập số tiền, vuốt xác nhận) + chuyển động (7.3) + ngữ cảnh (người nhận mới, số tiền bất thường). Khi chưa chắc mới yêu cầu gõ câu (kênh 3).
+Proposed design:
+- **Still record the PIN at login, but in passive mode** (only time, coordinates, key label as now), attached to the later transaction session. No scoring to block at this step.
+- **Score once at transfer confirmation**, combining: the recorded PIN rhythm + actions at the transfer step (typing the account number, choosing the bank, entering the amount, swiping to confirm) + motion (7.3) + context (new recipient, unusual amount). Only when unsure is a typed phrase requested (channel 3).
 
-Điều phải tính trước, vì đổi chỗ nhập PIN làm đổi bằng chứng:
-1. **Mất bằng chứng mạnh nhất tại điểm quyết định.** Nhận chủ hiện dựa gần hết vào nhịp PIN (lặp đúng 6 số mỗi lần). Số tài khoản đổi theo từng người nhận nên yếu (E14: chỉ là bằng chứng cộng thêm), vuốt không nhận chủ được (AUC ~0,5). Vì vậy bằng chứng người/người ở bước chuyển chủ yếu vẫn là PIN đã ghi trước đó.
-2. **Kẽ hở "chủ mở khoá rồi đưa máy" (hoặc bị giật máy sau khi mở khoá):** PIN đúng nhịp chủ, nhưng người chuyển tiền là kẻ khác. Cần kiểm tra **cùng một người xuyên suốt phiên**, so nhịp bấm ở bước chuyển với nhịp PIN trong cùng phiên. Đây là giả thuyết, chưa có thí nghiệm.
-3. **Mã độc có thể không cần nhập PIN** nếu chiếm phiên đang mở; khi đó phần bằng chứng PIN trống và chỉ còn bước chuyển tiền + chuyển động, nên cần luật `missing_pin_evidence` được cân nhắc lại (hiện chỉ là lý do, xem `api.ts`).
-4. **Số liệu cũ (E24–E28) đo với PIN nằm ngay lúc xác nhận.** Khi tách PIN ra khỏi bước xác nhận, các số này không còn áp dụng nguyên vẹn và phải đo lại.
-5. **Tác động lên code và demo:** schema `SessionIn` hiện gom `pin_taps`, `fields`, `swipes` vào một phiên; cần liên kết hai phiên (đăng nhập và chuyển tiền) hoặc thêm trường. **Cập nhật 26/11: ví demo (`Wallet.tsx`) đã đổi sang PIN-trước** (mở ví bằng PIN chỉ ghi, chấm điểm ở xác nhận chuyển tiền, một phiên mang cả hai); video script và PDF hướng dẫn cần khớp thứ tự này. Phần chưa làm là đo lại E24–E29 theo thứ tự mới và liên kết hai phiên ở API.
+Things to account for in advance, because moving the PIN entry changes the evidence:
+1. **The strongest evidence is lost at the decision point.** Owner recognition now relies almost entirely on PIN rhythm (the same 6 digits repeated every time). The account number changes with each recipient so it is weak (E14: only additional evidence), and swipe cannot recognize the owner (AUC ~0.5). So person/person evidence at the transfer step is mostly still the PIN recorded earlier.
+2. **The gap "owner unlocks then hands over the phone" (or the phone is snatched after unlocking):** the PIN has the owner's rhythm, but the person transferring is someone else. This needs a check for the **same person throughout the session**, comparing tap rhythm at the transfer step with the PIN rhythm in the same session. This is a hypothesis, with no experiment yet.
+3. **Malware may not need to enter the PIN** if it hijacks an already open session; then the PIN evidence is empty and only the transfer step + motion remain, so the `missing_pin_evidence` rule needs to be reconsidered (currently only a reason, see `api.ts`).
+4. **Old numbers (E24–E28) were measured with the PIN right at confirmation.** When the PIN is separated from the confirmation step, these numbers no longer apply as is and must be re-measured.
+5. **Impact on code and demo:** the `SessionIn` schema currently groups `pin_taps`, `fields`, `swipes` into one session; two sessions (login and transfer) need to be linked, or a field added. **Update 26/11: the demo wallet (`Wallet.tsx`) has switched to PIN-first** (opening the wallet with a PIN that is only recorded, scoring at transfer confirmation, one session carrying both); the video script and the PDF guide need to match this order. Not yet done: re-measuring E24–E29 under the new order and linking the two sessions in the API.
 
-### 7.5 Việc nên làm tiếp (theo giá trị)
-1. Chốt với đội: PIN-trước có thay flow demo và video hay chỉ là mô tả thiết kế (tác động ở 7.4 mục 5).
-2. Thu dữ liệu Android có chuyển động (7.3), người thứ hai cầm máy của chủ làm "kẻ gian".
-3. Thí nghiệm kiểm tra cùng một người xuyên suốt phiên (7.4 mục 2) trên dữ liệu đội khi có.
+### 7.5 Next work (by value)
+1. Settle with the team: does PIN-first replace the demo and video flow, or is it only a design description (impact in 7.4 item 5).
+2. Collect Android data with motion (7.3), with a second person holding the owner's phone as the "impostor".
+3. An experiment checking the same person throughout the session (7.4 item 2) on team data when available.
 
-### 7.6 Quyết định sau khi chấm điểm (đề xuất cho ví; ngưỡng do ví quyết định)
-Innate chỉ **đề xuất**, không bao giờ tự khoá tài khoản.
+### 7.6 Decision after scoring (proposal for the wallet; thresholds are the wallet's decision)
+Innate only **recommends**, and never locks accounts on its own.
 
-| Mức | Khi nào | Hành động gợi ý |
+| Level | When | Suggested action |
 |---|---|---|
-| **allow** | Chắc là người, khớp chủ, ngữ cảnh bình thường | Cho qua, không thêm bước. Cập nhật mẫu chủ chỉ khi chắc chắn (giữ giới hạn trôi). |
-| **step_up** | Là người nhưng không khớp chủ, hoặc ngữ cảnh lạ (người nhận mới, số tiền lớn) | **Gõ một câu** (Innate Challenge, ~10 giây); chưa chắc nữa thì khuôn mặt hoặc OTP. Có thể thêm trì hoãn ngắn kèm thông báo cho chủ. |
-| **hold** | Rõ ràng là máy, hoặc rủi ro rất cao | **Tạm hoãn lệnh**, báo chủ qua kênh khác, chủ có thể giải phóng lệnh, có **thời hạn giữ** để lệnh không treo mãi, đẩy sang đội vận hành xem lý do. Tài khoản không bị khoá. |
+| **allow** | Sure it is a human, matches the owner, normal context | Let it through, no extra step. Update the owner template only when sure (keep the drift cap). |
+| **step_up** | A human but does not match the owner, or unusual context (new recipient, large amount) | **Type one phrase** (Innate Challenge, ~10 seconds); if still unsure, face or OTP. A short delay with a notification to the owner can be added. |
+| **hold** | Clearly a machine, or very high risk | **Suspend the order**, notify the owner through another channel, the owner can release the order, with a **hold deadline** so the order does not hang forever, and pass it to the operations team to review the reasons. The account is not locked. |
 
-Hành động đi kèm (người dùng không thấy): đóng băng mẫu chủ khi nghi ngờ (`owner.update`, chưa hiện ra API); đội vận hành gắn nhãn fraud/legit làm dữ liệu huấn luyện.
+Accompanying actions (not visible to the user): freeze the owner template when suspicious (`owner.update`, not yet exposed in the API); the operations team labels fraud/legit as training data.
 
-Theo kịch bản: Android bị chiếm từ xa nghiêng về `hold` (tầng người/máy bắt được); trộm máy nghiêng về `step_up` (tầng người/người chỉ là tín hiệu rủi ro, đừng `hold` chỉ vì điểm chủ thấp). Ngưỡng `NHIP_THRESHOLD_A/B` chưa hiệu chỉnh trên dữ liệu thật; đánh đổi giữa làm phiền chủ và chặn kẻ gian không có điểm tối ưu miễn phí (E24).
+By scenario: remotely taken over Android leans toward `hold` (the human/machine layer catches it); a stolen phone leans toward `step_up` (the person/person layer is only a risk signal, do not `hold` just because the owner score is low). The thresholds `NHIP_THRESHOLD_A/B` are not yet calibrated on real data; the trade-off between bothering the owner and blocking the impostor has no free optimum (E24).
 
-**Câu ở bước `step_up`:**
+**The phrase at the `step_up` step:**
 
-| | Câu cố định (vd. "tôi là Nghĩa") | Câu ngẫu nhiên do máy chủ cấp |
+| | Fixed phrase (e.g. "tôi là Nghĩa", "I am Nghia") | Random phrase issued by the server |
 |---|---|---|
-| So người với người | Tốt hơn: đăng ký và thử cùng câu | Khó so hơn: câu đổi mỗi lần (E21b) |
-| Chống phát lại | Yếu: kẻ ghi nhịp gõ phát lại nguyên văn | Tốt |
-| Dữ liệu cá nhân | Có nếu dùng tên thật | Không |
-| Kẻ trộm đoán được câu | Có thể (biết tên chủ) | Không |
+| Person vs person comparison | Better: enrollment and trial use the same phrase | Harder to compare: the phrase changes each time (E21b) |
+| Replay resistance | Weak: someone who records the typing rhythm replays it verbatim | Good |
+| Personal data | Yes if the real name is used | No |
+| Thief can guess the phrase | Possibly (knows the owner's name) | No |
 
-Quyết định: **mặc định câu ngẫu nhiên** (cổng chống bot và phát lại). **Câu cố định chỉ là bổ sung về sau**, người dùng tự chọn một cụm bất kỳ (không phải tên) và có đồng ý riêng; chưa làm. Gõ câu **không phải cổng**: ở 30 phím kẻ gian vẫn lọt 43–52% (E22); kết quả quay lại `fusion` làm thêm bằng chứng, chỉ khi gõ sai hoặc không có thao tác gõ dấu mới leo lên khuôn mặt/OTP. Chưa đo câu cố định.
+Decision: **random phrase by default** (anti-bot and anti-replay gate). **A fixed phrase is only a later add-on**, where the user chooses any phrase (not a name) with separate consent; not built. Typing a phrase is **not a gate**: at 30 keys an impostor still gets through 43–52% (E22); the result goes back to `fusion` as additional evidence, and only when the typing is wrong or there is no tone mark typing action does it escalate to face/OTP. A fixed phrase has not been measured.
 
-### 7.7 Dùng cho pitch: thu gì để phân tích người với người
-**Thu** (chỉ siêu dữ liệu hành vi): thời điểm nhấn/nhả từng phím (thời gian giữ, khoảng nghỉ); vị trí chạm và độ lệch so với tâm phím; nhịp nhập số tài khoản và câu thử thách (chỉ thời gian, loại phím, độ dài); ngữ cảnh (người nhận mới, số tiền). Dự kiến, chưa làm: góc nghiêng và rung máy lúc bấm (cần đồng ý riêng).
+### 7.7 For the pitch: what is collected to analyze person vs person
+**Collected** (behavioral metadata only): press/release time of each key (hold time, gap); touch position and offset from the key center; rhythm of entering the account number and the challenge phrase (only time, key type, length); context (new recipient, amount). Planned, not done: tilt angle and phone shake while tapping (needs separate consent).
 
-**Không thu:** nội dung PIN thật, số tiền, số tài khoản, nội dung câu gõ, danh bạ, ảnh, giọng nói, vị trí. Ngoại lệ: trang thu dữ liệu nghiên cứu `#/collect` lưu PIN thử do tình nguyện viên tự đặt (kèm cảnh báo không dùng PIN thật), không đưa vào SDK sản phẩm.
+**Not collected:** the content of the real PIN, amount, account number, content of the typed phrase, contacts, photos, voice, location. Exception: the research data collection page `#/collect` stores the trial PIN that the volunteer sets themselves (with a warning not to use a real PIN), and it is not put into the product SDK.
 
-**Cố ý không dùng:** kích thước vùng chạm (nhiễu thiết bị, E12b) và vuốt để nhận chủ (AUC ~0,5, E19). Nên nói chủ động như một điểm trung thực.
+**Deliberately not used:** touch area size (device noise, E12b) and swipe for owner recognition (AUC ~0.5, E19). Worth saying proactively as a point of honesty.
 
-**Cách kể:** mỗi người có nhịp bấm và thói quen chạm riêng; đăng ký 3 lần, so thao tác hiện tại với mẫu đó; kết quả là tín hiệu rủi ro, không phải chìa khoá.
+**How to tell it:** each person has their own tapping rhythm and touch habits; enroll 3 times, compare the current action with that template; the result is a risk signal, not a key.
 
-**Giới hạn nói trước** (số trên StrokePIN, 97 người, chưa phải dữ liệu của đội): kẻ biết PIN lọt 38–57% ở FRR 5%; đổi tư thế gần như mất tín hiệu; dữ liệu chạm là dữ liệu nhạy cảm (Luật BVDLCN 2025), chỉ thu khi có đồng ý. Chưa có số đo riêng iPhone/Android, chưa có bot thật; PIN-trước, nghiêng máy và câu cố định chưa được đo.
+**Limits stated up front** (numbers on StrokePIN, 97 people, not the team's own data): a PIN-knowing impostor gets through 32–55% at FRR 5%; touch data is sensitive data (Personal Data Protection Law (Luật BVDLCN) 2025), collected only with consent. No separate iPhone/Android measurements, no real bots yet; PIN-first, phone tilt and the fixed phrase have not been measured.

@@ -5,7 +5,7 @@ from . import challenge, vi_ime
 
 
 def _swipe_stats(points: list[dict]) -> tuple[float, float, float, float, float]:
-    """(thời gian, độ dài đường đi, độ thẳng, vận tốc TB, vận tốc đỉnh)."""
+    """(time, path length, straightness, mean velocity, peak velocity)."""
     seg = [
         (math.hypot(b["x"] - a["x"], b["y"] - a["y"]), b["t"] - a["t"])
         for a, b in zip(points, points[1:])
@@ -20,12 +20,12 @@ def _swipe_stats(points: list[dict]) -> tuple[float, float, float, float, float]
 
 
 def _speed_cv(points: list[dict]) -> float | None:
-    """Độ biến thiên (độ lệch chuẩn / trung bình) vận tốc giữa các điểm của nét; None nếu < 2 đoạn."""
+    """Variation (standard deviation / mean) of velocity between the points of a stroke; None if < 2 segments."""
     sp = [math.hypot(b["x"] - a["x"], b["y"] - a["y"]) / (b["t"] - a["t"]) for a, b in zip(points, points[1:]) if b["t"] > a["t"]]
     return pstdev(sp) / fmean(sp) if len(sp) >= 2 and fmean(sp) > 0 else None
 
 
-ROBOTIC_SPEED_CV = 0.3  # E19: 0/20.896 nét người thật (Touchalytics) dưới ngưỡng này; bot vuốt đều/nhiễu thời gian ±30% đều dưới
+ROBOTIC_SPEED_CV = 0.3  # E19: 0/20,896 real-person strokes (Touchalytics) below this threshold; bots swiping evenly/with ±30% timing noise are all below
 
 
 def _key_gaps(events: list[dict]) -> list[float]:
@@ -34,7 +34,7 @@ def _key_gaps(events: list[dict]) -> list[float]:
 
 
 def extract(raw: dict) -> dict[str, float]:
-    """Phiên thô (SessionIn.model_dump()) -> đặc trưng. Thời gian ms, vị trí chạm chuẩn hoá theo kích thước phím."""
+    """Raw session (SessionIn.model_dump()) -> features. Time in ms, tap position normalized by key size."""
     f: dict[str, float] = {}
 
     taps = sorted(raw.get("pin_taps", []), key=lambda t: t["t_down"])
@@ -58,13 +58,13 @@ def extract(raw: dict) -> dict[str, float]:
         f["swipe_straight_max"] = max(s[2] for s in stats)
         cvs = [c for c in (_speed_cv(s["points"]) for s in raw["swipes"]) if c is not None]
         if cvs:
-            f["swipe_robotic"] = sum(c < ROBOTIC_SPEED_CV for c in cvs) / len(cvs)  # tỉ lệ nét có vận tốc đều bất thường
+            f["swipe_robotic"] = sum(c < ROBOTIC_SPEED_CV for c in cvs) / len(cvs)  # fraction of strokes with abnormally uniform velocity
 
     waits = [s["t_first_touch"] - s["t_enter"] for s in raw.get("screens", []) if s.get("t_first_touch") is not None]
     if waits:
         f["screen_first_touch_mean"] = fmean(waits)
 
-    # tóm tắt cách văn bản vào ô (không phải thói quen nên owner.py loại khỏi đặc trưng nhận dạng)
+    # summary of how text enters the field (not a habit, so owner.py drops it from the identification features)
     chars = {k: sum(e["n"] for fl in raw.get("fields", []) for e in fl["events"] if e["kind"] == k) for k in ("key", "paste", "set_text")}
     if sum(chars.values()):
         f["fld_set_text_frac"] = chars["set_text"] / sum(chars.values())
@@ -73,7 +73,7 @@ def extract(raw: dict) -> dict[str, float]:
         f["fld_amount_set_text"] = float(any(e["kind"] == "set_text" for fl in amount for e in fl["events"]))
 
     chal = [fl for fl in raw.get("fields", []) if fl["name"] == "challenge"]
-    if chal:  # câu thử thách ngẫu nhiên không thể dán/đặt sẵn bởi người thật; tín hiệu mạnh hơn các ô khác
+    if chal:  # a random challenge phrase cannot be pasted/preset by a real person; a stronger signal than the other fields
         f["fld_challenge_set_text"] = float(any(e["kind"] == "set_text" for fl in chal for e in fl["events"]))
         expected = max((fl.get("expected_len") or 0) for fl in chal)
         pasted = sum(e["n"] for fl in chal for e in fl["events"] if e["kind"] == "paste")
@@ -84,13 +84,13 @@ def extract(raw: dict) -> dict[str, float]:
             continue
         phrase = challenge.verify(fl["token"])
         if not phrase or fl.get("token_status", "ok") != "ok":
-            f["fld_challenge_token_bad"] = 1.0  # giả chữ ký, hết hạn hoặc dùng lại: dấu hiệu phát lại phiên ghi sẵn
+            f["fld_challenge_token_bad"] = 1.0  # forged signature, expired or reused: a sign of replaying a recorded session
         else:
             f.update(vi_ime.style_features(fl["events"], phrase))
 
     for fld in raw.get("fields", []):
         gaps = _key_gaps(fld["events"])
-        if len(gaps) >= 3:  # nhịp gõ trong ô; cần >= 3 khoảng cách mới ổn định
+        if len(gaps) >= 3:  # typing rhythm within the field; needs >= 3 intervals to be stable
             f[f"fld_{fld['name']}_gap_mean"] = fmean(gaps)
             f[f"fld_{fld['name']}_gap_std"] = pstdev(gaps)
 

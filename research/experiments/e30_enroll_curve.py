@@ -1,10 +1,10 @@
-"""E30: số lượt đăng ký k (2, 3, 4) và phân bố lỗi theo nạn nhân, nhận chủ bằng khoảng cách của backend (owner.py), StrokePIN, cùng tư thế (ngồi).
+"""E30: number of enrollment sessions k (2, 3, 4) and error distribution by victim, owner recognition by the backend distance (owner.py), StrokePIN.
 
-StrokePIN chỉ có tối đa 5 lượt ngồi mỗi (người, PIN): k=4 để lại 1 lượt kiểm thử; k=1 không có độ lệch chuẩn (bỏ); k=5 không còn lượt kiểm thử.
-Prior dân số: file population_prior.json của backend (tính từ một phần người, không loại riêng từng nạn nhân: có thể lạc quan nhẹ).
-Kẻ gian = người khác nhập cùng PIN trên máy của họ (lẫn nhiễu thiết bị). Điểm = trung bình |z|; ngưỡng chung chọn để FRR 5%.
-Gini theo nạn nhân: FAR của từng nạn nhân tại ngưỡng chung (Eberz 2017: trung bình che người "lọt mãi mãi").
-Chạy (từ backend/): uv run --with pandas --with numpy --with scikit-learn --with lightgbm python ../research/experiments/e30_enroll_curve.py
+StrokePIN has at most 5 sessions per (person, PIN): k=4 leaves 1 test session; k=1 has no standard deviation (dropped); k=5 leaves no test session.
+Population prior: the backend's population_prior.json file (computed from a subset of people, without excluding each victim individually: may be slightly optimistic).
+Impostor = another person entering the same PIN on their own device (confounded with device noise). Score = mean |z|; a common threshold is chosen for FRR 5%.
+Gini by victim: FAR of each victim at the common threshold (Eberz 2017: the average hides people who are "always let through").
+Run (from backend/): uv run --with pandas --with numpy --with scikit-learn --with lightgbm python ../research/experiments/e30_enroll_curve.py
 """
 import random, sys
 from collections import defaultdict
@@ -22,8 +22,7 @@ for e in S:
     e["f"] = features.extract(e["session"])
 grp = defaultdict(list); by_pin = defaultdict(list)
 for e in S:
-    if e["posture"] == "sit":
-        grp[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
+    grp[(e["user"], e["pin"])].append(e); by_pin[e["pin"]].append(e)
 USERS = sorted({u for u, _ in grp})
 
 
@@ -43,10 +42,10 @@ def gini(x):
     return float((2 * np.arange(1, n + 1) - n - 1).dot(x) / (n * x.sum())) if x.sum() else 0.0
 
 
-L = ["# E30 — số lượt đăng ký và phân bố lỗi theo nạn nhân (StrokePIN, ngồi, khoảng cách của backend)", "",
-     "k=1 không tính được độ lệch chuẩn; k=5 không còn lượt kiểm thử (tối đa 5 lượt ngồi mỗi người–PIN). CI 95% bootstrap theo người. "
-     "FAR@FRR5% dùng ngưỡng chung; cột Gini và 'nạn nhân FAR>90%' là theo từng nạn nhân (người chủ tài khoản).", "",
-     "| k | EER | FAR@FRR5% | Gini FAR theo nạn nhân | nạn nhân FAR > 90% | trung vị FAR nạn nhân |", "|---|---|---|---|---|---|"]
+L = ["# E30 — number of enrollment sessions and error distribution by victim (StrokePIN, backend distance)", "",
+     "k=1 has no standard deviation; k=5 leaves no test session (at most 5 sessions per person-PIN). 95% CI by bootstrap over people. "
+     "FAR@FRR5% uses a common threshold; the Gini and 'victims with FAR>90%' columns are per victim (the account owner).", "",
+     "| k | EER | FAR@FRR5% | Gini of FAR by victim | victims with FAR > 90% | median victim FAR |", "|---|---|---|---|---|---|"]
 for k in (2, 3, 4):
     G, I = defaultdict(list), defaultdict(list)
     for (u, p), es in grp.items():

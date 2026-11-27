@@ -8,7 +8,7 @@
 
 /* Navy ink for text/CTA, a cool pale-blue canvas, white surfaces; jade + mint for the living signal (24/11 palette). */
 @theme {
-  --color-ink: #0d1b2a; /* Navy đậm: text, phone frame, CTA, dark panels */
+  --color-ink: #0d1b2a; /* Deep navy: text, phone frame, CTA, dark panels */
   --color-navy: #1b263b; /* Navy: final CTA block */
   --color-canvas: #eef4fa; /* cool pale blue-white page canvas */
   --color-teal: #0f4f4c; /* secondary text */

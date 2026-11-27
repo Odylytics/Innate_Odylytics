@@ -1,11 +1,11 @@
-"""E21: chuẩn hoá nhịp theo CẶP PHÍM (digraph) có giúp nhận chủ khi câu thử khác câu đăng ký không?
+"""E21: does normalizing rhythm by KEY PAIR (digraph) help recognize the owner when the test sentence differs from the enrollment sentence?
 
-Lý do: Innate Challenge đổi câu mỗi lần, mà thời gian giữa hai phím phụ thuộc cặp phím ("th" nhanh, "qx" chậm). E13 dùng log khoảng cách thô nên một phần
-khác biệt là do NỘI DUNG câu. Ở đây trừ trung bình dân số của từng cặp phím (prior từ nhóm người riêng, không trùng nhóm đánh giá) rồi chia độ lệch chuẩn
-(z = (log gap - mu_ab) / sd_ab), dự phòng theo lớp ký tự khi cặp hiếm. Cùng giao thức E13: đăng ký 3 câu, thử câu khác, cắt ở n phím đầu, co rút phương sai về dân số.
-Ý tưởng cùng họ với phép đo tương đối của Gunetti & Picardi (TISSEC 2005) và việc TypeNet/TypeFormer học theo cặp phím.
-Chỉ người thật, không có bot (dữ liệu bot của đội không có ký tự). Dữ liệu cần: research/data/aalto_note_keys.jsonl (aalto_note_chars.py; gitignored, có chữ cái câu mẫu).
-Chạy: python experiments/e21_digraph_norm.py
+Reason: Innate Challenge changes the sentence every time, and the time between two keys depends on the key pair ("th" fast, "qx" slow). E13 used the raw log interval, so part of the
+difference is due to the sentence CONTENT. Here we subtract the population mean of each key pair (prior from a separate group of people, disjoint from the evaluation group) and divide by the std
+(z = (log gap - mu_ab) / sd_ab), with a fallback by character class when the pair is rare. Same protocol as E13: enroll 3 sentences, test other sentences, cut at the first n keys, shrink the variance toward the population.
+The idea is in the same family as the relative measure of Gunetti & Picardi (TISSEC 2005) and TypeNet/TypeFormer learning per key pair.
+Real people only, no bots (the team's bot data has no characters). Data needed: research/data/aalto_note_keys.jsonl (aalto_note_chars.py; gitignored, contains the letters of the sample sentences).
+Run: python experiments/e21_digraph_norm.py
 """
 import json
 import random
@@ -19,11 +19,11 @@ NS, SEED, K, NU, BOOT, MINC = (10, 20, 30), 0, 3, 5, 80, 30
 rng = random.Random(SEED)
 
 
-def kc(ch):  # lớp ký tự dự phòng
+def kc(ch):  # fallback character class
     return "_" if ch.isspace() else "a" if ch.isalpha() else "o"
 
 
-by_p = defaultdict(list)  # người -> [list (t, ch)]
+by_p = defaultdict(list)  # person -> [list (t, ch)]
 for line in open(ROOT / "research/data/aalto_note_keys.jsonl"):
     r = json.loads(line)
     ks = [(e[0], e[3]) for e in r["events"] if e[1] == "key"]
@@ -32,9 +32,9 @@ for line in open(ROOT / "research/data/aalto_note_keys.jsonl"):
 people = [p for p, v in by_p.items() if len(v) >= 8]
 rng.shuffle(people)
 prior_p, eval_p = people[:300], people[300:1300]
-print(f"{len(people)} người; prior {len(prior_p)}, đánh giá {len(eval_p)}")
+print(f"{len(people)} people; prior {len(prior_p)}, evaluation {len(eval_p)}")
 
-# thống kê cặp phím từ nhóm prior (khoảng cách tính trên các phím kề nhau, 20 ms .. 2 s)
+# key-pair statistics from the prior group (interval measured on adjacent keys, 20 ms .. 2 s)
 pair, cls_pair = defaultdict(list), defaultdict(list)
 for p in prior_p:
     for s in by_p[p]:
@@ -44,7 +44,7 @@ for p in prior_p:
                 pair[(a, b)].append(np.log(g)); cls_pair[(kc(a), kc(b))].append(np.log(g))
 stat = {k: (np.mean(v), np.std(v) + 1e-6) for k, v in pair.items() if len(v) >= MINC}
 cstat = {k: (np.mean(v), np.std(v) + 1e-6) for k, v in cls_pair.items()}
-print(f"{len(stat)} cặp phím đủ mẫu (>= {MINC}); phủ {np.mean([ (a,b) in stat for s in by_p[prior_p[0]] for (_,a),(_,b) in zip(s,s[1:])]):.0%} cặp của một người prior")
+print(f"{len(stat)} key pairs with enough samples (>= {MINC}); covers {np.mean([ (a,b) in stat for s in by_p[prior_p[0]] for (_,a),(_,b) in zip(s,s[1:])]):.0%} of the pairs of one prior person")
 
 
 def logs(s, n):
@@ -64,10 +64,10 @@ def six(x):
 
 
 FE = {
-    "E13 thô (6 đặc trưng log khoảng cách)": lambda s, n: np.array(six(logs(s, n))),
-    "chuẩn hoá theo cặp phím (6 đặc trưng z)": lambda s, n: np.array(six(zs(s, n))),
-    "chỉ tốc độ chung (mean z, 1 đặc trưng)": lambda s, n: np.array([zs(s, n).mean()]),
-    "thô + chuẩn hoá (12 đặc trưng)": lambda s, n: np.concatenate([six(logs(s, n)), six(zs(s, n))]),
+    "E13 raw (6 log-interval features)": lambda s, n: np.array(six(logs(s, n))),
+    "digraph-normalized (6 z features)": lambda s, n: np.array(six(zs(s, n))),
+    "overall speed only (mean z, 1 feature)": lambda s, n: np.array([zs(s, n).mean()]),
+    "raw + normalized (12 features)": lambda s, n: np.concatenate([six(logs(s, n)), six(zs(s, n))]),
 }
 
 
@@ -79,9 +79,9 @@ def metrics(gen, imp):
     return np.array([(frr[i] + far[i]) / 2, (imp <= np.quantile(gen, 0.95)).mean()])
 
 
-L = ["# E21 — chuẩn hoá nhịp gõ theo cặp phím, nhận chủ khi câu thử khác câu đăng ký (Aalto, người thật)", "",
-     "Giao thức E13: đăng ký 3 câu, thử các câu khác, kẻ gian = câu của người khác; prior cặp phím và phương sai từ nhóm người riêng. EER và FAR@FRR5%, khoảng tin cậy bootstrap theo người.", "",
-     "| Đặc trưng | n phím | EER | FAR @ FRR 5% |", "|---|---|---|---|"]
+L = ["# E21 — digraph-normalized typing rhythm, recognizing the owner when the test sentence differs from the enrollment sentence (Aalto, real people)", "",
+     "E13 protocol: enroll 3 sentences, test other sentences, impostor = another person's sentence; key-pair prior and variance from a separate group of people. EER and FAR@FRR5%, bootstrap confidence intervals by person.", "",
+     "| Features | n keys | EER | FAR @ FRR 5% |", "|---|---|---|---|"]
 for name, fe in FE.items():
     for n in NS:
         pv = np.mean([np.var(np.array([fe(s, n) for s in by_p[p]]), axis=0, ddof=1) for p in prior_p], axis=0)
