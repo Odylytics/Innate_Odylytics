@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, api, type AccountStatus, explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { simEnroll, simScore, type SimWho } from './demoSim'
 import { store } from './App'
 import BehindScenes from './BehindScenes'
 import type { Recorder } from './capture'
@@ -10,7 +11,6 @@ import { StoryBar, StoryStart } from './StoryBar'
 import { FRIEND, OWNER, botSession, humanSession, rng, withAccount, type Layout } from './synth'
 import { T, Tx } from './ui'
 import Wallet, { DEMO_PIN, type Account, type Ghost, type PayCtx } from './Wallet'
-import { MAX_ENROLL, MIN_JUDGE_ENROLL, impostorStopped } from './enrollCurve'
 
 type L = { en: string; vi: string }
 interface Attempt { id: string; who: L; ctx: PayCtx; score: Score; at: Date }
@@ -19,12 +19,9 @@ interface Attempt { id: string; who: L; ctx: PayCtx; score: Score; at: Date }
 const DEFAULT_LAYOUT: Layout = Object.fromEntries(
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((k, i) => [k, { cx: 70 + (i % 3) * 96, cy: 420 + Math.floor(i / 3) * 64, w: 88, h: 56 }]),
 )
-const STORY_SEED = 2 // checked against the live API: owner allow, Bảo step_up, bot hold
+const STORY_SEED = 2 // fixed seed so the synthetic taps replay the same way every run
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms))
 const newId = (p: string) => `${p}_${Math.random().toString(36).slice(2, 10)}`
-// one account per person on a shared demo phone: the name is the login (anyone may type another judge's name to play the thief)
-const nameId = (name: string) => `judge_${name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd')
-  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50)}`
 
 const WHO: Record<'you' | 'owner' | 'friend' | 'bot', L> = {
   you: { en: 'You', vi: 'Bạn' },
@@ -33,8 +30,7 @@ const WHO: Record<'you' | 'owner' | 'friend' | 'bot', L> = {
   bot: { en: 'Malware', vi: 'Mã độc' },
 }
 
-/** account: the phone app (#/app) signed in with email + password; without it the name login of the web demo is used. */
-export default function Demo({ storyCase, account, onLogout }: { storyCase: StoryCase | null; account?: AccountStatus; onLogout?: () => void }) {
+export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
   const story = storyCase !== null
   const STEPS = storyCase ? stepsOf(storyCase) : []
   const { t, lang, money, pct } = useT()
@@ -42,12 +38,10 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
 
   const [userId, setUserId] = useState(() => {
     if (story) return newId('story')
-    if (account) return account.user_id
     const saved = store.get('innate.user')
     if (saved) return saved
     const id = newId('web'); store.set('innate.user', id); return id
   })
-  const [name, setName] = useState(() => (story ? '' : account ? (account.full_name || account.email) : store.get('innate.name') ?? ''))
   const [status, setStatus] = useState<UserStatus>({ user_id: userId, enrolled_sessions: 0, template_ready: false })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<L | null>(null)
@@ -59,32 +53,23 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
   const statusRef = useRef(status)
   statusRef.current = status
 
-  useEffect(() => {
-    api.user(userId).then(setStatus).catch((e) => {
-      if (e instanceof ApiError && e.status === 404) setStatus({ user_id: userId, enrolled_sessions: 0, template_ready: false })
-      else fail(e)
-    })
-  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
-
   function fail(e: unknown) {
-    const st = e instanceof ApiError ? e.status : -1
-    setError(st === 0 ? { en: 'Cannot reach the Innate API. Check your connection and try again.', vi: 'Không kết nối được API Innate. Kiểm tra mạng rồi thử lại.' }
-      : st === 401 || st === 403 ? { en: 'This build has no valid SDK key (VITE_SDK_KEY).', vi: 'Bản build này chưa có SDK key hợp lệ (VITE_SDK_KEY).' }
-      : { en: `API error ${st}: ${(e as Error).message}`, vi: `Lỗi API ${st}: ${(e as Error).message}` })
+    setError({ en: `Demo error: ${(e as Error).message}`, vi: `Lỗi demo: ${(e as Error).message}` })
   }
 
-  async function enrollWith(s: SessionIn) {
-    const { session_id } = await api.createSession(s)
-    try { setStatus(await api.enroll(s.user_id, session_id, !story)) } catch (e) {
-      if (!(e instanceof ApiError && e.status === 409)) throw e
-      setStatus(await api.user(s.user_id)) // already enrolled and locked (e.g. a story step replayed)
-    }
+  // static demo: nothing leaves the browser (demoSim.ts); the live scoring is on #/collect
+  async function enrollWith(_s: SessionIn) {
+    await sleep(350)
+    const next = simEnroll(statusRef.current)
+    statusRef.current = next
+    setStatus(next)
   }
-  async function scoreWith(s: SessionIn, ctx: PayCtx, who: L) {
-    const { session_id } = await api.createSession(s)
-    const sc = await api.score(session_id, { recipient_is_new: ctx.recipient_is_new, amount: ctx.amount })
+  async function scoreWith(_s: SessionIn, ctx: PayCtx, who: L) {
+    await sleep(500)
+    const key = (Object.keys(WHO) as SimWho[]).find((k) => WHO[k] === who) ?? 'you'
+    const sc = simScore(key, ctx.recipient_is_new)
     setOutcome(sc)
-    setAttempts((a) => [{ id: session_id, who, ctx, score: sc, at: new Date() }, ...a].slice(0, 12))
+    setAttempts((a) => [{ id: sc.session_id, who, ctx, score: sc, at: new Date() }, ...a].slice(0, 12))
     play(sc.action === 'allow' ? 'focus' : 'duplicate')
     return sc
   }
@@ -96,7 +81,7 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
   // your own taps on the wallet
   const onPin = (rec: Recorder, ctx: PayCtx) => guarded(async () => {
     const s = rec.payload(userId)
-    if (statusRef.current.template_ready && !enrollingNow(statusRef.current)) await scoreWith(s, ctx, WHO.you)
+    if (statusRef.current.template_ready) await scoreWith(s, ctx, WHO.you)
     else await enrollWith(s)
   })
 
@@ -131,15 +116,10 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
     await scoreWith(s, ctx, WHO.friend)
     setGhost(null)
   })
-  const switchUser = (id: string, who: string) => {
-    store.set('innate.user', id); store.set('innate.name', who); setName(who)
+  const resetUser = () => {
+    const id = newId('web'); store.set('innate.user', id)
     setUserId(id); setStatus({ user_id: id, enrolled_sessions: 0, template_ready: false }); setOutcome(null); setAttempts([]); setError(null)
   }
-  const resetUser = () => switchUser(newId('web'), '')
-  const login = (who: string) => { const n = who.trim(); if (nameId(n) !== 'judge_') switchUser(nameId(n), n) }
-  const finishEnroll = () => guarded(async () => { setStatus(await api.finishEnroll(userId)) })
-  // story enrolls 3 and locks; your own account stays open until you press Done (5-10 entries)
-  const enrollingNow = (st: UserStatus) => !st.template_ready || (!story && st.enroll_open === true)
 
   // ===== story =====
   const [autostart] = useState(() => { try { return story && sessionStorage.getItem('innate.autostart') === '1' } catch { return false } })
@@ -191,19 +171,17 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
   }, [step, started]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const act = story && started ? STEPS[step].act : null
-  const mode = enrollingNow(status) ? 'enroll' : 'pay'
-  const enrollOf = story ? 3 : MAX_ENROLL
+  const mode = status.template_ready ? 'pay' : 'enroll'
 
   return (
     <div className={`ws wrap demo ${story ? 'is-story' : ''}`} lang={lang}>
       <div className="ws-head">
         <div>
-          <span className="chip sim"><T k="live" /></span>
+          <span className="chip sim"><T k="simulated" /></span>
           <h1>{storyCase ? tx(STORIES[storyCase].title) : tx({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}</h1>
           <p className="muted">{story
-            ? tx({ en: 'Every score below comes from the live Innate API.', vi: 'Mọi điểm số dưới đây lấy từ API Innate thật.' })
-            : account ? tx({ en: `Set up your rhythm: type the PIN ${DEMO_PIN} ${MIN_JUDGE_ENROLL} to ${MAX_ENROLL} times and watch the accuracy check rise, then press Done. After that every transfer is checked against your rhythm.`, vi: `Thiết lập nhịp: gõ PIN ${DEMO_PIN} từ ${MIN_JUDGE_ENROLL} đến ${MAX_ENROLL} lần, xem thanh accuracy check tăng, rồi bấm Xong. Sau đó mỗi lần chuyển tiền đều được so với nhịp của bạn.` })
-            : tx({ en: `Log in with your name, enroll your rhythm with ${MIN_JUDGE_ENROLL} to ${MAX_ENROLL} PIN entries (${DEMO_PIN}), then make a transfer. Another person can log in with your name and try.`, vi: `Đăng nhập bằng tên, đăng ký nhịp bằng ${MIN_JUDGE_ENROLL} đến ${MAX_ENROLL} lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền. Người khác có thể đăng nhập bằng tên bạn để thử.` })}</p>
+            ? tx({ en: 'A static walkthrough: the decisions below are illustrative and nothing is sent anywhere. The live scoring runs on the phone app.', vi: 'Bản minh hoạ tĩnh: các quyết định dưới đây là ví dụ, không gửi dữ liệu đi đâu. Chấm điểm thật chạy trên app điện thoại.' })
+            : tx({ en: `Enroll your rhythm with three PIN entries (${DEMO_PIN}), then make a transfer, hand the phone to a friend, or let the malware try.`, vi: `Đăng ký nhịp bằng ba lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền, đưa máy cho người khác thử, hoặc để mã độc thử.` })}</p>
         </div>
         <div className="row">
           {storyCase ? <>
@@ -216,13 +194,11 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
         </div>
       </div>
 
-      {!api.hasSdkKey() && <p className="callout strong" role="alert">{tx({ en: 'This build has no SDK key (VITE_SDK_KEY), so API calls will fail.', vi: 'Bản build này chưa có SDK key (VITE_SDK_KEY) nên các lệnh gọi API sẽ lỗi.' })}</p>}
 
       <div className="demo-grid">
         <div className="demo-phone">
-          <Wallet mode={mode} enrollStep={Math.min(status.enrolled_sessions + 1, enrollOf)} enrollOf={enrollOf} busy={busy || (acting && !ghost)} outcome={outcome} ghost={ghost}
+          <Wallet mode={mode} enrollStep={Math.min(status.enrolled_sessions + 1, 3)} busy={busy || (acting && !ghost)} outcome={outcome} ghost={ghost}
             onLayout={onLayout} onPin={onPin} onDone={() => setOutcome(null)} />
-          {!story && mode === 'enroll' && <AccuracyCheck status={status} busy={busy} onFinish={finishEnroll} />}
         </div>
 
         <div className="demo-side">
@@ -248,14 +224,14 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
             ) : (
               <p className="muted">{status.template_ready
                 ? tx({ en: 'Make a transfer to see how Innate scores it.', vi: 'Chuyển tiền để xem Innate chấm điểm thế nào.' })
-                : tx({ en: `Enrollment ${status.enrolled_sessions}/${enrollOf}. Type the PIN on the wallet as you normally would.`, vi: `Đăng ký ${status.enrolled_sessions}/${enrollOf}. Gõ PIN trên ví như bình thường.` })}</p>
+                : tx({ en: `Enrollment ${status.enrolled_sessions}/3. Type the PIN on the wallet as you normally would.`, vi: `Đăng ký ${status.enrolled_sessions}/3. Gõ PIN trên ví như bình thường.` })}</p>
             )}
           </section>
 
           {!story && (
             <section className="box">
               <div className="box-head"><h2>{tx({ en: 'Two cases to try', vi: 'Hai trường hợp để thử' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
-              <p className="muted">{tx({ en: 'The PIN is recorded when the wallet unlocks and never blocks; Innate scores at the transfer confirmation. Synthetic sessions on the same keys, scored by the live API. Real attacks run from attacker/ (adb).', vi: 'PIN được ghi lúc mở ví và không chặn; Innate chấm điểm ở bước xác nhận chuyển tiền. Phiên tổng hợp trên chính các phím này, chấm bởi API thật. Tấn công thật chạy bằng attacker/ (adb).' })}</p>
+              <p className="muted">{tx({ en: 'The PIN is recorded when the wallet unlocks and never blocks; Innate scores at the transfer confirmation. Static demo: the decisions are illustrative, not scored. Real attacks run from attacker/ (adb) against the API.', vi: 'PIN được ghi lúc mở ví và không chặn; Innate chấm điểm ở bước xác nhận chuyển tiền. Bản demo tĩnh: quyết định là ví dụ minh hoạ, không chấm thật. Tấn công thật chạy bằng attacker/ (adb) vào API.' })}</p>
               <p style={{ marginTop: 12 }}><b>{tx({ en: 'Case 1 · Android hijacked remotely', vi: 'Trường hợp 1 · Android bị chiếm từ xa' })}</b></p>
               <p className="muted mini">{tx({ en: 'Accessibility malware fills the account and taps the PIN by itself. Expected: machine, hold.', vi: 'Mã độc Trợ năng tự điền số tài khoản và bấm PIN. Kỳ vọng: máy, tạm hoãn.' })}</p>
               <div className="row" style={{ marginTop: 8 }}>
@@ -264,7 +240,7 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
               <p style={{ marginTop: 16 }}><b>{tx({ en: 'Case 2 · Phone stolen', vi: 'Trường hợp 2 · Bị trộm điện thoại' })}</b></p>
               <p className="muted mini">{tx({ en: 'A thief who knows the PIN types it, then transfers by hand. Expected: a human but not the owner, type a sentence.', vi: 'Kẻ trộm biết PIN gõ PIN rồi tự chuyển tiền. Kỳ vọng: người thật nhưng không phải chủ, gõ một câu.' })}</p>
               <div className="row" style={{ marginTop: 8 }}>
-                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || enrollingNow(status)}>{tx({ en: 'Thief who knows the PIN', vi: 'Kẻ trộm biết PIN thử' })}</button>
+                <button className="btn ghost small" onClick={friendTry} disabled={busy || !!ghost || !status.template_ready}>{tx({ en: 'Thief who knows the PIN', vi: 'Kẻ trộm biết PIN thử' })}</button>
               </div>
             </section>
           )}
@@ -272,14 +248,12 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
           <section className="box">
             <div className="box-head">
               <h2>{tx({ en: 'Account', vi: 'Tài khoản' })}</h2>
-              {!story && <button className="btn ghost small" onClick={account ? onLogout : resetUser} disabled={busy}>{name ? tx({ en: 'Log out', vi: 'Đăng xuất' }) : tx({ en: 'Start over', vi: 'Làm lại từ đầu' })}</button>}
+              {!story && <button className="btn ghost small" onClick={resetUser} disabled={busy}>{tx({ en: 'Start over', vi: 'Làm lại từ đầu' })}</button>}
             </div>
-            {account ? <p>{tx({ en: 'Signed in as ', vi: 'Đang đăng nhập: ' })}<b>{name}</b>{account.full_name && <span className="muted"> · {account.email}</span>}</p>
-              : !story && <NameLogin name={name} busy={busy} onLogin={login} />}
             <p className="muted mono mini">{userId}</p>
-            <p className="muted">{!enrollingNow(status)
-              ? tx({ en: `Rhythm enrolled (${status.enrolled_sessions} entries) and locked.`, vi: `Đã đăng ký nhịp (${status.enrolled_sessions} lần) và khoá mẫu chuẩn.` })
-              : tx({ en: `Enrolled ${status.enrolled_sessions}/${enrollOf}`, vi: `Đã đăng ký ${status.enrolled_sessions}/${enrollOf}` })}</p>
+            <p className="muted">{status.template_ready
+              ? tx({ en: 'Rhythm enrolled and locked.', vi: 'Đã đăng ký nhịp và khoá mẫu chuẩn.' })
+              : tx({ en: `Enrolled ${status.enrolled_sessions}/3`, vi: `Đã đăng ký ${status.enrolled_sessions}/3` })}</p>
             {attempts.length > 0 && (
               <div className="table-scroll" style={{ marginTop: 12 }}>
                 <table className="mini">
@@ -309,48 +283,6 @@ export default function Demo({ storyCase, account, onLogout }: { storyCase: Stor
         </>
       )}
     </div>
-  )
-}
-
-/** Under the wallet while enrolling: how many PIN-knowing impostors this many entries stops (E30), plus the person's own steadiness. */
-function AccuracyCheck({ status, busy, onFinish }: { status: UserStatus; busy: boolean; onFinish: () => void }) {
-  const { lang } = useT()
-  const tx = (x: L) => x[lang]
-  const k = status.enrolled_sessions
-  const { value, measured } = impostorStopped(k)
-  const c = status.consistency
-  return (
-    <section className="box accuracy-check" aria-live="polite" style={{ marginTop: 16 }}>
-      <div className="box-head">
-        <h2>Accuracy check</h2>
-        <b className="mono">{Math.round(value * 100)}%</b>
-      </div>
-      <span className="meter-track" style={{ display: 'block', margin: '8px 0' }}><i style={{ width: `${value * 100}%` }} /></span>
-      <p className="muted mini">{tx({
-        en: `After ${k} entries, about ${Math.round(value * 100)}% of people who know your PIN would be stopped (with 5% of your own transfers asked to confirm). ${measured ? 'Measured on real phone PINs (E30).' : 'Above 4 entries this is extrapolated, not yet measured.'}`,
-        vi: `Sau ${k} lần nhập, khoảng ${Math.round(value * 100)}% người biết PIN của bạn sẽ bị chặn (chấp nhận 5% lần chuyển của chính bạn phải xác nhận thêm). ${measured ? 'Đo trên PIN điện thoại thật (E30).' : 'Trên 4 lần là ngoại suy, chưa đo.'}`,
-      })}</p>
-      {c != null && <p className="mini" style={{ marginTop: 6 }}>{tx({ en: 'Your rhythm steadiness', vi: 'Độ ổn định nhịp của bạn' })}: <b className="mono">{Math.round(c * 100)}%</b>
-        {c < 0.5 && <span className="muted"> · {tx({ en: 'your entries differ a lot; type a few more', vi: 'các lần nhập khác nhau nhiều, nhập thêm vài lần' })}</span>}</p>}
-      <div className="row" style={{ marginTop: 10 }}>
-        <button className="btn small" onClick={onFinish} disabled={busy || k < MIN_JUDGE_ENROLL}>
-          {k < MIN_JUDGE_ENROLL ? tx({ en: `Done (at least ${MIN_JUDGE_ENROLL})`, vi: `Xong (ít nhất ${MIN_JUDGE_ENROLL} lần)` }) : tx({ en: 'Done, save my rhythm', vi: 'Xong, lưu nhịp của tôi' })}
-        </button>
-      </div>
-    </section>
-  )
-}
-
-function NameLogin({ name, busy, onLogin }: { name: string; busy: boolean; onLogin: (n: string) => void }) {
-  const { lang } = useT()
-  const [v, setV] = useState('')
-  if (name) return <p>{lang === 'en' ? 'Logged in as ' : 'Đang đăng nhập: '}<b>{name}</b></p>
-  return (
-    <form className="row" style={{ gap: 8, margin: '8px 0' }} onSubmit={(e) => { e.preventDefault(); onLogin(v); setV('') }}>
-      <input aria-label={lang === 'en' ? 'Your name' : 'Tên của bạn'} placeholder={lang === 'en' ? 'Your name' : 'Tên của bạn'} value={v}
-        onChange={(e) => setV(e.target.value)} maxLength={40} style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 8 }} />
-      <button className="btn small" type="submit" disabled={busy || !v.trim()}>{lang === 'en' ? 'Log in' : 'Đăng nhập'}</button>
-    </form>
   )
 }
 
