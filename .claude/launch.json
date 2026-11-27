@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-local",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "--directory", "backend", "uvicorn", "app.main:app", "--port", "8000"],
+      "env": { "DATABASE_URL": "sqlite:///./collect_test.db", "NHIP_API_KEYS": "demo-key", "NHIP_ML_KEYS": "ml-key", "NHIP_CORS_ORIGINS": "http://localhost:5173,http://localhost:5174,http://localhost:5175" },
+      "port": 8000
+    },
+    {
+      "name": "web-local-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "web", "run", "dev", "--", "--port", "5173", "--strictPort"],
+      "env": { "VITE_API_URL": "http://localhost:8000", "VITE_SDK_KEY": "demo-key" },
+      "port": 5173
+    }
+  ]
+}
