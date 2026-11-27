@@ -127,8 +127,8 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 3, 'How it works')
   s.addText('One transfer, and the owner notices nothing', { placeholder: 'title' })
-  s.addImage({ path: S + 'wallet-pad.png', x: 0.75, y: 1.7, w: 2.95, h: 2.95 * 610 / 400, altText: 'Demo wallet with the Innate SDK on the PIN pad' })
-  T(s, 'Static demo wallet: the SDK on the PIN pad', { x: 0.75, y: 6.3, w: 2.95, h: 0.25, fontSize: 10, color: MUTED, align: 'center' })
+  s.addImage({ path: S + 'wallet-transfer.png', x: 1.12, y: 1.7, w: 2.2, h: 2.2 * 785 / 390, altText: 'Demo wallet send-money screen, where Innate scores the transfer' })
+  T(s, 'Static demo wallet: the transfer form', { x: 0.75, y: 6.3, w: 2.95, h: 0.25, fontSize: 10, color: MUTED, align: 'center' })
   const X0 = 4.35, CW = 2.08
   const steps = [['1', 'Enter amount', 'The normal\ntransfer form.'], ['2', 'Tap the PIN', 'Timing and touch only.\nNever the digits.'], ['3', 'Confirm', 'The wallet calls\nInnate once.'], ['4', 'Innate scores', 'About 4 ms in tests,\nwith reasons.']]
   steps.forEach(([n, h, d], i) => {
@@ -157,7 +157,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 // ---- 5 What changes for the wallet
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 4, 'What changes for the wallet')
-  s.addText('Stolen credentials stop being enough, and the owner still sees nothing', { placeholder: 'title' })
+  s.addText('Stolen credentials stop being enough', { placeholder: 'title' })
   const X = [0.75, 4.15, 7.95], W = [3.25, 3.5, 4.63]
   ;[['Case', 0], ['Today: PIN, OTP, device', 1], ['With Innate underneath', 2]].forEach(([t, i]) => cap(s, t, X[i], 1.95, W[i]))
   hair(s, 0.75, 2.3, 11.83, INK)
@@ -241,7 +241,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
 // ---- 8 Evidence (doughnuts)
 {
   const s = pres.addSlide({ masterName: 'LIGHT' }); head(s, 7, 'Evidence')
-  s.addText('On 97 real people, the right outcome wins in every group', { placeholder: 'title' })
+  s.addText('On 97 real people, owners pass; impostors get challenged', { placeholder: 'title' })
   const D = [
     ['Genuine owner\nsitting, n = 1,164', [76, 23, 1], '76%', 'passes silently', 'Walking instead of sitting: 49% allowed'],
     ['PIN-knowing impostor\nn = 2,328', [22, 77, 1], '78%', 'held or asked', 'Rules only: 89% allowed'],
