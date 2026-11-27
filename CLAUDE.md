@@ -67,6 +67,7 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 - ML/rules decide; an LLM may only explain, never sit on the decision path.
 - System recommends `allow | step_up | hold`; it never locks accounts.
 - Store only timings + coordinates (+ key label). Never the PIN of a real account. Exception: the `#/collect` research page stores the digits of a throwaway PIN the volunteer creates (with name + email, consent, and a warning not to reuse any real password/PIN); never ship this into the product SDK. Touch data is sensitive under VN law (Luật BVDLCN 2025) — consent required.
+- Accounts live only on `#/collect` (phone entry): sign-up/sign-in (one account per email, hashed password), rhythm set-up (PIN 5-10x + Accuracy check bar), live-scored transfers. The wallet demo (`#/demo`, story, landing demos) is ALWAYS a static frontend: no API calls, nothing stored (`demoSim.ts`); never wire it back to the backend.
 - Don't rely on `pressure` or `isTrusted`.
 - Evaluation per FETA: time-split enroll/test, one device, no impostor data in owner-model training, leave-users-out for pairwise models. Headline metric FAR@FRR=5%.
 - Owner template updates only after confident `allow` + correct PIN; keep the drift cap.
@@ -74,6 +75,7 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 - Synthetic-human results (attacker README table) must not go on slides; re-measure on real data.
 
 ## Known gaps
+- **Open enrollment (27/11):** `/enroll` with `keep_open=true` keeps enrolling up to 10 entries until `/enroll/finish`. The phone app `#/collect` uses it after email + password sign-up (`/v1/accounts/*`, scrypt, no session token yet), with an "Accuracy check" bar (E30 measured k<=4, extrapolated above); then transfers are scored live. The wallet demo `#/demo` is static (no API, `demoSim.ts`). See `docs/research/person-vs-person.md`.
 - **Enrollment lock vs multi-posture enrolment:** `/enroll` now returns 409 once a template exists (security fix by tuannghia2457, prevents injecting someone else's rhythm). But E9 shows enrolment must cover several postures/sittings (sit->walk breaks the signal), so a controlled re-enrol path (e.g. after a step-up authentication) is still needed. Not designed yet.
 - API keys are scoped by role: SDK `NHIP_API_KEYS`, dashboard `NHIP_OPS_KEYS`, ML export `NHIP_ML_KEYS` (ops/ml closed when unset).
 - Replay (tactic 3): threshold 0.07, calibrated on REAL humans (E5b): catches 100% up to ±10% attacker noise, 29% at ±15%, 0% from ±20%. Human FPR grows with history size (~0.1% at 8 sessions, extrapolated ~0.7% at 50); recalibrate on team data with long histories.

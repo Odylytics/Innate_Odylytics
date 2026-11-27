@@ -24,7 +24,8 @@ export interface Score {
   session_id: string; human_score: number; owner_match: number | null; risk: 'low' | 'medium' | 'high'
   risk_score: number; action: Action; reasons: string[]; explanation_vi: string
 }
-export interface UserStatus { user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number }
+export interface AccountStatus extends UserStatus { email: string; full_name?: string | null }
+export interface UserStatus { user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number; enroll_open?: boolean; consistency?: number | null }
 export interface Flagged {
   session_id: string; user_id: string; created_at: string; action: Action | null; risk_score: number | null
   reasons: string[]; explanation_vi: string | null; label: string | null
@@ -59,8 +60,14 @@ export const api = {
     call<{ participant_id: string }>('/v1/participants', { method: 'POST', body: p }),
   challenge: () => call<Challenge>('/v1/challenge'),
   createSession: (s: SessionIn) => call<{ session_id: string; n_features: number }>('/v1/sessions', { method: 'POST', body: s }),
-  enroll: (userId: string, sessionId: string) =>
-    call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll`, { method: 'POST', body: { session_id: sessionId } }),
+  enroll: (userId: string, sessionId: string, keepOpen = false) =>
+    call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll`, { method: 'POST', body: { session_id: sessionId, keep_open: keepOpen } }),
+  signup: (b: { email: string; password: string; full_name?: string }) =>
+    call<AccountStatus>('/v1/accounts/signup', { method: 'POST', body: b }),
+  login: (b: { email: string; password: string }) =>
+    call<AccountStatus>('/v1/accounts/login', { method: 'POST', body: b }),
+  finishEnroll: (userId: string) =>
+    call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}/enroll/finish`, { method: 'POST' }),
   user: (userId: string) => call<UserStatus>(`/v1/users/${encodeURIComponent(userId)}`),
   score: (sessionId: string, ctx: { recipient_is_new: boolean; amount: number }) =>
     call<Score>(`/v1/sessions/${sessionId}/score`, { method: 'POST', body: ctx }),

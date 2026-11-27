@@ -100,3 +100,24 @@ html[data-page='collect'], html[data-page='collect'] body { overscroll-behavior:
 .cl-qr { width: 220px; height: 220px; margin: 14px 0 6px; border-radius: 16px; box-shadow: 0 1px 3px rgba(22, 32, 44, .12); }
 .cl-url { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .78rem; word-break: break-all; }
 .cl-gate .cl-note { text-align: left; }
+
+/* sign up / sign in tabs, password field */
+.cl-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 12px; background: #e6eef4; margin: 4px 0 6px; }
+.cl-tabs button { border: 0; padding: 10px; border-radius: 9px; background: none; font-weight: 700; color: #5b6878; }
+.cl-tabs button.on { background: #fff; color: #0b6e99; box-shadow: 0 1px 2px rgba(22,32,44,.1); }
+.cl-field input[type=password] { font: inherit; font-size: 1rem; padding: 12px; border: 1px solid #c5ced9; border-radius: 10px; background: #fff; color: #16202c; }
+.cl-out { color: #cfd8e3; font-size: inherit; }
+.cl-back { display: block; margin: 14px auto; }
+/* accuracy check under the keypad */
+.cl-acc { margin: 14px auto 18px; padding: 14px 16px; max-width: 340px; width: calc(100% - 28px); background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(22,32,44,.08); }
+.cl-acc-head { display: flex; justify-content: space-between; align-items: baseline; }
+.cl-acc-val { font-variant-numeric: tabular-nums; color: #0b6e99; font-size: 1.15rem; }
+.cl-acc-bar { height: 10px; margin: 8px 0; border-radius: 999px; background: #e6eef4; overflow: hidden; }
+.cl-acc-bar i { display: block; height: 100%; border-radius: inherit; background: #0b6e99; transition: width .5s ease; }
+.cl-acc p { margin: 0; font-size: .8rem; color: #5b6878; line-height: 1.4; }
+.cl-acc .cl-btn { margin-top: 12px; padding: 12px; }
+/* transfer result */
+.cl-tick.step_up { background: #c77700; } .cl-tick.hold { background: #b3261e; }
+.cl-scores { font-size: .9rem; }
+.cl-reasons { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.cl-reasons li { padding: 4px 10px; border-radius: 999px; background: #e6eef4; font-size: .8rem; }

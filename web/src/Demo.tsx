@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, api, explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { explanationText, reasonText, type Score, type SessionIn, type UserStatus } from './api'
+import { simEnroll, simScore, type SimWho } from './demoSim'
 import { store } from './App'
 import BehindScenes from './BehindScenes'
 import type { Recorder } from './capture'
@@ -18,7 +19,7 @@ interface Attempt { id: string; who: L; ctx: PayCtx; score: Score; at: Date }
 const DEFAULT_LAYOUT: Layout = Object.fromEntries(
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((k, i) => [k, { cx: 70 + (i % 3) * 96, cy: 420 + Math.floor(i / 3) * 64, w: 88, h: 56 }]),
 )
-const STORY_SEED = 2 // checked against the live API: owner allow, Bảo step_up, bot hold
+const STORY_SEED = 2 // fixed seed so the synthetic taps replay the same way every run
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms))
 const newId = (p: string) => `${p}_${Math.random().toString(36).slice(2, 10)}`
 
@@ -52,29 +53,23 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
   const statusRef = useRef(status)
   statusRef.current = status
 
-  useEffect(() => {
-    api.user(userId).then(setStatus).catch((e) => { if (!(e instanceof ApiError && e.status === 404)) fail(e) })
-  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
-
   function fail(e: unknown) {
-    const st = e instanceof ApiError ? e.status : -1
-    setError(st === 0 ? { en: 'Cannot reach the Innate API. Check your connection and try again.', vi: 'Không kết nối được API Innate. Kiểm tra mạng rồi thử lại.' }
-      : st === 401 || st === 403 ? { en: 'This build has no valid SDK key (VITE_SDK_KEY).', vi: 'Bản build này chưa có SDK key hợp lệ (VITE_SDK_KEY).' }
-      : { en: `API error ${st}: ${(e as Error).message}`, vi: `Lỗi API ${st}: ${(e as Error).message}` })
+    setError({ en: `Demo error: ${(e as Error).message}`, vi: `Lỗi demo: ${(e as Error).message}` })
   }
 
-  async function enrollWith(s: SessionIn) {
-    const { session_id } = await api.createSession(s)
-    try { setStatus(await api.enroll(s.user_id, session_id)) } catch (e) {
-      if (!(e instanceof ApiError && e.status === 409)) throw e
-      setStatus(await api.user(s.user_id)) // already enrolled and locked (e.g. a story step replayed)
-    }
+  // static demo: nothing leaves the browser (demoSim.ts); the live scoring is on #/collect
+  async function enrollWith(_s: SessionIn) {
+    await sleep(350)
+    const next = simEnroll(statusRef.current)
+    statusRef.current = next
+    setStatus(next)
   }
-  async function scoreWith(s: SessionIn, ctx: PayCtx, who: L) {
-    const { session_id } = await api.createSession(s)
-    const sc = await api.score(session_id, { recipient_is_new: ctx.recipient_is_new, amount: ctx.amount })
+  async function scoreWith(_s: SessionIn, ctx: PayCtx, who: L) {
+    await sleep(500)
+    const key = (Object.keys(WHO) as SimWho[]).find((k) => WHO[k] === who) ?? 'you'
+    const sc = simScore(key, ctx.recipient_is_new)
     setOutcome(sc)
-    setAttempts((a) => [{ id: session_id, who, ctx, score: sc, at: new Date() }, ...a].slice(0, 12))
+    setAttempts((a) => [{ id: sc.session_id, who, ctx, score: sc, at: new Date() }, ...a].slice(0, 12))
     play(sc.action === 'allow' ? 'focus' : 'duplicate')
     return sc
   }
@@ -182,10 +177,10 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
     <div className={`ws wrap demo ${story ? 'is-story' : ''}`} lang={lang}>
       <div className="ws-head">
         <div>
-          <span className="chip sim"><T k="live" /></span>
+          <span className="chip sim"><T k="simulated" /></span>
           <h1>{storyCase ? tx(STORIES[storyCase].title) : tx({ en: 'Try the demo wallet', vi: 'Tự thử ví demo' })}</h1>
           <p className="muted">{story
-            ? tx({ en: 'Every score below comes from the live Innate API.', vi: 'Mọi điểm số dưới đây lấy từ API Innate thật.' })
+            ? tx({ en: 'A static walkthrough: the decisions below are illustrative and nothing is sent anywhere. The live scoring runs on the phone app.', vi: 'Bản minh hoạ tĩnh: các quyết định dưới đây là ví dụ, không gửi dữ liệu đi đâu. Chấm điểm thật chạy trên app điện thoại.' })
             : tx({ en: `Enroll your rhythm with three PIN entries (${DEMO_PIN}), then make a transfer, hand the phone to a friend, or let the malware try.`, vi: `Đăng ký nhịp bằng ba lần nhập PIN (${DEMO_PIN}), rồi chuyển tiền, đưa máy cho người khác thử, hoặc để mã độc thử.` })}</p>
         </div>
         <div className="row">
@@ -199,7 +194,6 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
         </div>
       </div>
 
-      {!api.hasSdkKey() && <p className="callout strong" role="alert">{tx({ en: 'This build has no SDK key (VITE_SDK_KEY), so API calls will fail.', vi: 'Bản build này chưa có SDK key (VITE_SDK_KEY) nên các lệnh gọi API sẽ lỗi.' })}</p>}
 
       <div className="demo-grid">
         <div className="demo-phone">
@@ -237,7 +231,7 @@ export default function Demo({ storyCase }: { storyCase: StoryCase | null }) {
           {!story && (
             <section className="box">
               <div className="box-head"><h2>{tx({ en: 'Two cases to try', vi: 'Hai trường hợp để thử' })}</h2><span className="chip sim"><T k="simulated" /></span></div>
-              <p className="muted">{tx({ en: 'The PIN is recorded when the wallet unlocks and never blocks; Innate scores at the transfer confirmation. Synthetic sessions on the same keys, scored by the live API. Real attacks run from attacker/ (adb).', vi: 'PIN được ghi lúc mở ví và không chặn; Innate chấm điểm ở bước xác nhận chuyển tiền. Phiên tổng hợp trên chính các phím này, chấm bởi API thật. Tấn công thật chạy bằng attacker/ (adb).' })}</p>
+              <p className="muted">{tx({ en: 'The PIN is recorded when the wallet unlocks and never blocks; Innate scores at the transfer confirmation. Static demo: the decisions are illustrative, not scored. Real attacks run from attacker/ (adb) against the API.', vi: 'PIN được ghi lúc mở ví và không chặn; Innate chấm điểm ở bước xác nhận chuyển tiền. Bản demo tĩnh: quyết định là ví dụ minh hoạ, không chấm thật. Tấn công thật chạy bằng attacker/ (adb) vào API.' })}</p>
               <p style={{ marginTop: 12 }}><b>{tx({ en: 'Case 1 · Android hijacked remotely', vi: 'Trường hợp 1 · Android bị chiếm từ xa' })}</b></p>
               <p className="muted mini">{tx({ en: 'Accessibility malware fills the account and taps the PIN by itself. Expected: machine, hold.', vi: 'Mã độc Trợ năng tự điền số tài khoản và bấm PIN. Kỳ vọng: máy, tạm hoãn.' })}</p>
               <div className="row" style={{ marginTop: 8 }}>
