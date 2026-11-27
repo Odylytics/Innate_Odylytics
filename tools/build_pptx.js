@@ -92,7 +92,7 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   dl(s, 9.8, 4.27, 0.3, CORAL, 0.14, 'Money leaves', { w: 2.4, fontFace: H, fontSize: 14, bold: true, color: 'FFFFFF' })
   link(s, 8.95, 9.55, 2.55, JADE, 0.06); link(s, 8.95, 9.55, 4.15, JADE, 0.06)
   s.addShape(pres.shapes.RECTANGLE, { x: 0.75, y: 5.4, w: 11.83, h: 0.8, fill: { color: MIST }, line: { color: MIST, width: 0 } })
-  T(s, 'Every check passes. None of them asks who is touching the screen.', { x: 0.75, y: 5.4, w: 11.83, h: 0.8, fontFace: H, fontSize: 19, bold: true, color: INK, valign: 'middle', align: 'center' })
+  T(s, 'Face, fingerprint and retina scans fall back to the PIN.\nEvery check passes. None asks who is touching the screen.', { x: 0.75, y: 5.4, w: 11.83, h: 0.8, fontFace: H, fontSize: 17, bold: true, color: INK, valign: 'middle', align: 'center' })
   src(s, 'Fratantonio et al., Cloak and Dagger, IEEE S&P 2017; Naseri et al., AccessiLeaks, PoPETs 2019 (72% of top finance apps leak); Diao et al., RAID 2019; Malwarebytes, ToxicPanda 2.0 (Aug 2026).')
   s.addNotes('Two ways in, one blind spot. A: malware with Accessibility permission taps the transfer by itself. B: a person who knows the PIN. In both cases every credential check passes, so the wallet cannot tell who is touching the screen.')
 }
@@ -291,29 +291,29 @@ const cap = (s, text, x, y, w, dark) => T(s, text.toUpperCase(), { x, y, w, h: 0
   s.addNotes('Be direct about the weak spots; they explain why the design steps up instead of blocking. The web SDK cannot see text that is set directly, only a native SDK can; this is the Native SDK item.')
 }
 
-// ---- 10 Impact (dark): the PIN is the last gate. No logo or sources line here, by design.
+// ---- 10 Business impact (dark): expected loss vs friction. No footer logo or sources line; each figure carries its source in the caption.
 {
   const s = pres.addSlide({ masterName: 'DARKCLOSE' }); head(s, 9, 'Impact', true)
-  s.addText('The PIN is the last gate. Innate guards it.', { placeholder: 'title' })
-  const K = [['scan-face', 'Scans can fail', 'Face, fingerprint and retina fall back to the PIN.'], ['lock', 'The PIN is the gate', 'Anyone who knows it gets in.'], ['touch', 'Innate checks the touch', 'The owner does nothing new.']]
+  s.addText('What it is worth: less loss, priced against friction', { placeholder: 'title' })
+  T(s, 'Expected loss = transfers \u00D7 fraud rate \u00D7 loss per case \u00D7 share that gets through', { x: 0.75, y: 1.5, w: 11.83, h: 0.3, fontSize: 15, color: MUTED_D })
+  const K = [
+    ['banknote', 'THE PRIZE', [{ text: '8 trillion+', options: { color: 'FFFFFF' } }], 'VND lost to online scams in Vietnam in 2025. Source: Ministry of Public Security.'],
+    ['shield-check', 'WHAT INNATE CHANGES', [{ text: '100%', options: { color: CORAL } }, { text: ' to ', options: { color: MUTED_D, fontSize: 20 } }, { text: '22%', options: { color: MINT } }], 'of people who know the PIN get through: PIN alone vs Innate (97 people, a different phone, so an upper bound).'],
+    ['clock', 'WHAT IT COSTS', [{ text: '24%', options: { color: 'FFFFFF' } }], 'of normal owner transfers are asked for more when sitting, 51% when walking (97 people).'],
+  ]
   const KW = 3.75, KG = (11.83 - 3 * KW) / 2
-  K.forEach(([ic, h, d], i) => {
-    const x = 0.75 + i * (KW + KG), y = 1.95
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: KW, h: 2.0, rectRadius: 0.12, fill: { color: '0E2527' }, line: { color: '1F3C3E', width: 0.75 } })
-    s.addImage({ path: A + 'icons/' + ic + '.png', x: x + 0.3, y: y + 0.3, w: 0.6, h: 0.6, altText: h })
-    T(s, h, { x: x + 0.3, y: y + 1.02, w: KW - 0.6, h: 0.36, fontFace: H, fontSize: 18, bold: true, color: 'FFFFFF' })
-    T(s, d, { x: x + 0.3, y: y + 1.42, w: KW - 0.6, h: 0.5, fontSize: 14, color: MUTED_D })
-    if (i < 2) link(s, x + KW, x + KW + KG, y + 1.0, MINT, 0.04)
+  K.forEach(([ic, lab, big, cap_], i) => {
+    const x = 0.75 + i * (KW + KG), y = 2.05
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: KW, h: 2.85, rectRadius: 0.12, fill: { color: '0E2527' }, line: { color: '1F3C3E', width: 0.75 } })
+    s.addImage({ path: A + 'icons/' + ic + '.png', x: x + 0.3, y: y + 0.28, w: 0.5, h: 0.5, altText: lab.toLowerCase() })
+    T(s, lab, { x: x + 0.95, y: y + 0.28, w: KW - 1.2, h: 0.5, fontSize: 11, bold: true, charSpacing: 2, color: MINT, valign: 'middle' })
+    T(s, big.map((r) => Object.assign({}, r, { options: Object.assign({ fontFace: H, bold: true, fontSize: 34 }, r.options) })), { x: x + 0.3, y: y + 0.95, w: KW - 0.6, h: 0.8, valign: 'middle' })
+    T(s, cap_, { x: x + 0.3, y: y + 1.85, w: KW - 0.6, h: 1.05, fontSize: 13, color: 'DCE7E6' })
   })
-  // the number: a PIN check alone stops nobody who knows the PIN; with Innate 78% (E29, slide 8)
-  T(s, '0%', { x: 2.3, y: 4.2, w: 3.0, h: 1.0, fontFace: H, fontSize: 64, bold: true, color: CORAL, align: 'center', valign: 'middle' })
-  T(s, 'PIN check alone', { x: 2.3, y: 5.2, w: 3.0, h: 0.3, fontSize: 14, color: MUTED_D, align: 'center' })
-  link(s, 5.5, 7.8, 4.7, MINT, 0.1)
-  T(s, '78%', { x: 8.0, y: 4.2, w: 3.0, h: 1.0, fontFace: H, fontSize: 64, bold: true, color: MINT, align: 'center', valign: 'middle' })
-  T(s, 'with Innate', { x: 8.0, y: 5.2, w: 3.0, h: 0.3, fontSize: 14, color: MUTED_D, align: 'center' })
-  T(s, 'of people who know the PIN are challenged or held (97 people, slide 8)', { x: 0.75, y: 5.6, w: 11.83, h: 0.3, fontSize: 13, color: MUTED_D, align: 'center' })
-  s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.1, w: 11.83, h: 0.6, fontFace: H, fontSize: 26, bold: true, align: 'center', margin: 0, valign: 'middle' })
-  s.addNotes('Face, fingerprint and retina scans fail sometimes, and the wallet falls back to the PIN. So the PIN is the last gate, and today anyone who knows it passes. Innate adds the touch as a second signature with nothing new for the owner. On 97 real people it challenged or held 78% of people who know the PIN (slide 8). Close on the line, then point to the QR on slide 6.')
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.75, y: 5.15, w: 11.83, h: 0.75, rectRadius: 0.12, fill: { color: '0E2527' }, line: { color: '1F3C3E', width: 0.75 } })
+  T(s, 'Start in shadow mode, tune on the wallet\u2019s own data, spend friction where loss per case is highest.', { x: 1.05, y: 5.15, w: 11.23, h: 0.75, fontSize: 16, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' })
+  s.addText([{ text: 'PIN is what you know. ', options: { color: 'FFFFFF' } }, { text: 'Innate is how you are.', options: { color: MINT } }], { x: 0.75, y: 6.15, w: 11.83, h: 0.5, fontFace: H, fontSize: 20, bold: true, align: 'center', margin: 0, valign: 'middle' })
+  s.addNotes('Business case in one line: expected loss is transfers times fraud rate times loss per case times the share that gets through. Innate attacks the last factor: a PIN check alone lets every person who knows the PIN through, Innate lets 22 percent through in our test on 97 people (E29, slide 8). That test used a different phone for the impostor, so treat 78 percent as an upper bound, and a step-up is a challenge, not a guaranteed stop. The cost is friction: about 24 percent of normal owner transfers are asked for more when sitting, 51 percent when walking. We have no wallet fraud rate or loss per case, so we do not state a revenue figure; the wallet can plug its own numbers into the formula. The VND 8 trillion figure is national losses from all online scams (Ministry of Public Security, press reports), not only PIN theft. Strategy: shadow mode first, tune the threshold on real data, then spend step-ups where loss per case is highest. Close on the line, then point to the QR on slide 6.')
 }
 
 ;(async () => { await pres.writeFile({ fileName: OUT }); await applyTheme(OUT, THEME); console.log('wrote', OUT) })()
