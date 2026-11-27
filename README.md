@@ -5,7 +5,9 @@
 1. **Human or machine?** (accessibility-service malware, `adb`, scripts)
 2. **If human, the account owner?** (someone who watched the PIN)
 
-> *A PIN can be stolen. Touch habits are very hard to steal.* ("innate" = *bẩm sinh*) · Built for the **MoMo Tech Contest 2026**. Project documents are mostly in Vietnamese; this README is the English entry point.
+> *A PIN can be stolen. Touch habits are very hard to steal.* ("innate" = *bẩm sinh*) · Built for the **MoMo Tech Contest 2026** by **Team Odylytics** (Powered by Odylytics). Project documents are mostly in Vietnamese; this README is the English entry point.
+
+**Live demo: https://innate.odylytics.com** (no login; guided story at `/#/demo?story=1`) · API docs: https://nhip-api-taupe.vercel.app/docs
 
 **Innate is a risk signal, not a lock.** It never replaces the PIN, OTP or face check and never freezes an account by itself; when unsure it recommends `step_up` (a stronger factor). [Honest numbers and limits below.](#measured-results)
 
@@ -36,7 +38,8 @@ All are 1:1 verification. Outputs are fused with context (new recipient, unusual
 | Bot simulator | 4 tactics (even taps → timing noise → replay → sampling human distributions), text-field bots, real-phone `adb` attack | `attacker/` |
 | Phone SDK + probe | text-input recorder for phones (IME "transform" keys), keyboard probe page | `sdk/` |
 | Web | landing page, demo wallet, attacker console, data-collection page, ops view | `web/` |
-| Research | every experiment (E1–E27) with code and result tables; team-data pipeline | `research/` ([`EXPERIMENTS.md`](research/EXPERIMENTS.md)), `docs/research/ai-research.md` |
+| Submission pack | 1-page product guide, editable PPTX deck + PDF, source README; rebuilt with one command | `submission/` (generated), `tools/` |
+| Research | every experiment (E1–E32) with code and result tables; team-data pipeline | `research/` ([`EXPERIMENTS.md`](research/EXPERIMENTS.md)), `docs/research/ai-research.md` |
 
 Endpoints (key scopes SDK / ops / ml): `POST /v1/sessions`, `POST /v1/users/{id}/enroll`, `GET /v1/users/{id}`, `POST /v1/sessions/{id}/score`, `GET /v1/sessions` and `POST …/label` (ops), `GET /v1/export` (ml), `GET /v1/challenge` (random Vietnamese phrase + single-use token), Swagger at `/docs`. Data contract: [`backend/README.md`](backend/README.md).
 
@@ -53,6 +56,7 @@ All from **public data of other people** (StrokePIN, Aalto, CMU DSL); **none yet
 | **Whole system** (E24: `/score` chain on 10 people unseen by both learned models, known recipient) | owner: 80% allow / 19% step_up / 1% hold; PIN-knowing stranger (other phone): 28% / 70% / 2%; naive bots and replay ≤ ±10%: **100% hold**; population-sampling bot: 7% allow; with a new recipient the owner is allowed only 17% of the time |
 | **Adaptive attackers** (E27) | replay with ±15–30% noise: 48–72% **allowed**; a bot that knows the victim's template: 75–82% allowed. Raising the replay threshold to 0.085 catches ±15% (86%) at a few % false holds on short histories |
 | Swipe rule (E19: Touchalytics, 41 people, 20,896 strokes) | uniform-speed rule: 0 human strokes flagged, 100% of uniform bots caught; the old "straightness" rule flagged 13% of human sessions (replaced). Swipes do **not** identify the owner (AUC ≈ 0.5) |
+| Fine-tuned TypeFormer (E32: Aalto-pretrained Transformer fine-tuned on StrokePIN, 30 unseen people, 3 enrolments) | EER 0.292 → **0.203**, false-accept at FRR 5% 0.706 → **0.418** (walking: 0.848 → 0.661). One run, no CI, not the 97-person protocol, **not in the API** |
 | Latency (E26, local) | `/score` p50 3.7 ms, p99 14 ms (no network, Vercel cold start or Neon) |
 
 So the owner signal is **weaker than papers suggest** (EER 16%, not "a few percent"): use it to trigger step-up, never as a gate.
@@ -68,9 +72,9 @@ So the owner signal is **weaker than papers suggest** (EER 16%, not "a few perce
 
 ## Repository layout
 
-Start at **[`docs/INDEX.md`](docs/INDEX.md)** (map of every folder and document) and **[`research/EXPERIMENTS.md`](research/EXPERIMENTS.md)** (index of experiments E1–E27 with code, result tables and one-line conclusions).
+Start at **[`docs/INDEX.md`](docs/INDEX.md)** (map of every folder and document) and **[`research/EXPERIMENTS.md`](research/EXPERIMENTS.md)** (index of experiments E1–E32 with code, result tables and one-line conclusions).
 
-`backend/` service, scoring core (`app/scoring/`), models, tests · `attacker/` bot simulator · `sdk/` phone text-input SDK + keyboard probe · `web/` landing, demo, data-collection page · `research/` experiments, results, git-ignored `data/` and `external/` · `docs/` (`contest/` rules + checklist + BTC questions, `plan/` positioning / how-it-works / challenge / data collection, `research/` logs and related work, `submission/` proposal, slides, scripts, README skeleton) · `papers/` reference PDFs (not submitted) · `LICENSE`, `THIRD_PARTY_NOTICES.md` · `CLAUDE.md` conventions and known gaps.
+`backend/` service, scoring core (`app/scoring/`), models, tests · `attacker/` bot simulator · `sdk/` phone text-input SDK + keyboard probe · `web/` landing, demo, data-collection page · `research/` experiments, results, `finetune/` (TypeFormer, E32), git-ignored `data/` and `external/` · `tools/` builds the submission files (`build_submission.sh`, editable deck `build_pptx.js`) · `submission/` generated hand-in pack · `docs/brand/` brand kit and asset pack · `docs/` (`contest/` rules + checklist + BTC questions, `plan/` positioning / how-it-works / challenge / data collection, `research/` logs and related work, `submission/` proposal, slides, scripts, README skeleton) · `papers/` reference PDFs (not submitted) · `LICENSE`, `THIRD_PARTY_NOTICES.md` · `CLAUDE.md` conventions and known gaps.
 
 ## Quick start
 
@@ -81,6 +85,13 @@ cd backend && uv sync --extra ml        # ml = LightGBM + NumPy (optional)
 uv run uvicorn app.main:app --reload --port 8000    # Swagger at /docs (local default key: demo-key)
 uv run pytest -q                        # 43 tests
 cd ../attacker && uv sync && uv run pytest -q       # 8 tests
+cd ../web && npm install && npm run dev            # website + demo wallet (needs VITE_SDK_KEY for live scoring)
+```
+
+Build the submission files (macOS with PowerPoint; the PDF is exported from the PPTX; Sora + Manrope fonts in `tools/fonts/`):
+
+```bash
+npm --prefix tools i pptxgenjs && tools/build_submission.sh   # -> submission/{Product,Slide,Document}
 ```
 
 Reproduce an experiment (needs `numpy pandas scikit-learn lightgbm`; data is downloaded separately, see [`docs/research/datasets.md`](docs/research/datasets.md)):
@@ -101,6 +112,11 @@ Config (env): `DATABASE_URL`, `NHIP_API_KEYS` / `NHIP_OPS_KEYS` / `NHIP_ML_KEYS`
 
 ## Status
 
-Contest deadline **2026-12-03 23:59** (registration and questions to the organisers by **2026-11-27 23:59**; product online until 2026-12-11). Both Vercel projects (`nhip-api`, `innate-web`) deploy from `main`; `/health` and `/docs` answer 200. The backend passes 43 tests, the attacker 8, the phone SDK 4.
+*Updated 2026-11-27.* Contest deadline **2026-12-03 23:59** (product online until 2026-12-11).
 
-Next, in order: register the team and send the questions in [`docs/contest/dang-ky-va-cau-hoi-btc.md`](docs/contest/dang-ky-va-cau-hoi-btc.md); collect real sessions from consenting participants ([`docs/plan/thu-du-lieu-doi.md`](docs/plan/thu-du-lieu-doi.md)) and run `research/experiments/team_analysis.py`; test the phone keyboard probe on real Gboard / iOS; add the typed-phrase step to the collection page; real bots via `adb`; recalibrate thresholds; fill the `TODO`s in [`docs/submission/`](docs/submission/). Map of all folders and documents: [`docs/INDEX.md`](docs/INDEX.md). Licence: CC BY-NC-SA 4.0 ([`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)).
+- **Online:** website https://innate.odylytics.com and API https://nhip-api-taupe.vercel.app (`/health` 200, learned models on). Tests: backend 43, attacker 8, phone SDK 4.
+- **Submission pack built** (`submission/`): 1-page product guide (PDF), 10-slide deck (editable PPTX + PDF, English), source zip + README. Remaining placeholder: team-collected data counts in the README (`TODO`). The video is not recorded yet.
+- **Research:** E1-E32. Newest: E31 fusion tuning (marginal), E32 TypeFormer fine-tune (EER 0.29 to 0.20 on 30 unseen people; research only, not in the API).
+- **Open:** real consented data and real `adb` bots; retrain and recalibrate; native SDK (text set directly, device motion); controlled re-enrolment; ship the fine-tuned model behind the API (needs a numpy/ONNX path, Vercel has no torch).
+
+Map of all folders and documents: [`docs/INDEX.md`](docs/INDEX.md). Licence: CC BY-NC-SA 4.0 ([`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)).
