@@ -1,5 +1,5 @@
 // Fictional cast and two stories (remote hijack, stolen phone). Every name and company here is invented for the demo.
-// The owner, bot and friend steps call the live Innate API with seeded synthetic sessions (synth.ts), so the scores are real.
+// The owner, bot and friend steps replay seeded synthetic sessions (synth.ts) with fixed, illustrative decisions (demoSim.ts): no API calls.
 type L = { en: string; vi: string }
 
 export type PersonaId = 'vy' | 'ha' | 'bao' | 'khoa' | 'lananh' | 'an'

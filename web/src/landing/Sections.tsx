@@ -178,15 +178,15 @@ export function DemoPaths() {
       tag: { en: '~2 min · with sound', vi: '~2 phút · có âm thanh' },
       title: { en: 'Watch the story', vi: 'Xem tình huống' },
       body: {
-        en: 'Hà enrolls, pays her mum, then malware types her PIN at 2 a.m. and a colleague tries with the PIN he saw. Seeded sessions, scored live.',
-        vi: 'Hà đăng ký nhịp, chuyển tiền cho mẹ, rồi mã độc gõ PIN lúc 2 giờ sáng và đồng nghiệp thử bằng mã PIN đã nhìn lén. Phiên dựng sẵn, chấm thật trên API.',
+        en: 'Hà enrolls, pays her mum, then malware types her PIN at 2 a.m. and a colleague tries with the PIN he saw. Static walkthrough, illustrative decisions.',
+        vi: 'Hà đăng ký nhịp, chuyển tiền cho mẹ, rồi mã độc gõ PIN lúc 2 giờ sáng và đồng nghiệp thử bằng mã PIN đã nhìn lén. Bản minh hoạ tĩnh, quyết định là ví dụ.',
       },
       cta: { en: 'Play the story', vi: 'Xem tình huống' },
       dark: true,
     },
     {
       href: '#/demo',
-      tag: { en: 'PIN 159357 · live API', vi: 'PIN 159357 · API thật' },
+      tag: { en: 'PIN 159357 · static demo', vi: 'PIN 159357 · demo tĩnh' },
       title: { en: 'Try the wallet yourself', vi: 'Tự thử ví demo' },
       body: {
         en: 'Enroll your rhythm with three PIN entries, send money, then let the attacker console replay malware or another person on the same screens.',
@@ -212,8 +212,8 @@ export function DemoPaths() {
           eyebrow={l({ en: '03 · The full demo', vi: '03 · Demo đầy đủ' })}
           title={l({ en: 'One wallet, three people, one PIN.', vi: 'Một ví, ba người, một mã PIN.' })}
           lead={l({
-            en: 'The box above is the signal. The demo is the product: a wallet with the Innate SDK inside, every score coming from the live API.',
-            vi: 'Ô phía trên là tín hiệu. Demo là sản phẩm: một ví có SDK Innate bên trong, mọi điểm số lấy từ API thật.',
+            en: 'The box above is the signal. The demo is the product: a wallet walkthrough; the live scoring runs on the phone app.',
+            vi: 'Ô phía trên là tín hiệu. Demo là sản phẩm: một ví minh hoạ; chấm điểm thật chạy trên app điện thoại.',
           })}
         />
         <div className="mt-10 grid gap-5 md:mt-14 lg:grid-cols-3">
