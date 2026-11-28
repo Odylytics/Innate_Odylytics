@@ -1,0 +1,434 @@
+diff --git a/backend/app/main.py b/backend/app/main.py
+index f9c3a93..d4204c5 100644
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -1,3 +1,4 @@
++import datetime as dt
+ import hashlib
+ import json
+ import os
+@@ -15,7 +16,7 @@ from sqlalchemy.orm import Session
+ 
+ from . import schemas
+ from .db import DATABASE_URL, Account, Base, ChallengeNonce, Participant, SessionLocal, TouchSession, User, engine
+-from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
++from .scoring import challenge, dl_adapter, explain, features, fusion, history, human, human_model, owner, owner_model, replay
+ 
+ # preload both learned models at startup: avoids ~1 s on the first /score call (E26); if the library or file is missing, _load() falls back to the rules
+ human_model.loaded()
+@@ -39,6 +40,7 @@ MAX_ENROLL = 10  # open enrollment (keep_open) locks itself at this attempt
+ EXPORT_BYTE_BUDGET = 3 * 1024 * 1024  # each export page stops at ~3 MB of raw data: under Vercel's 4.5 MB response limit
+ UPDATE_MIN_OWNER = 0.8  # update the template only after a session that was allowed through with a high match score
+ UPDATE_MIN_HUMAN = 0.8
++HISTORY_LIMIT = 200  # earlier sessions read per new session for HistoryContext
+ REPLAY_HISTORY = 50  # number of most recent sessions used for matching; FPR grows with the session count (E5: 4-digit PIN; E5b: real people, extrapolated ~3.0% at 50 with threshold 0.07)
+ 
+ 
+@@ -103,6 +105,10 @@ def _enrolled(db: Session, user_id: str) -> list[TouchSession]:
+         TouchSession.user_id == user_id, TouchSession.is_enrollment).order_by(TouchSession.created_at)).all()
+ 
+ 
++def _utc(t: dt.datetime) -> dt.datetime:
++    return t.replace(tzinfo=dt.timezone.utc) if t.tzinfo is None else t  # SQLite returns naive datetimes
++
++
+ def _enroll_closed(user: User) -> bool:
+     # an old template without the "open" flag => treat as locked (keeps the 409 security fix)
+     return user.template is not None and not user.template.get("open", False)
+@@ -110,8 +116,11 @@ def _enroll_closed(user: User) -> bool:
+ 
+ def _enroll_status(db: Session, user: User) -> dict:
+     enrolled = _enrolled(db, user.id)
++    hs = history.summary([history.Prior(e.created_at, e.device_id, True, e.action) for e in enrolled],
++                         [((e.raw or {}).get("attempt_meta") or {}).get("client_dt_prev_ms") for e in enrolled])
+     return {"user_id": user.id, "enrolled_sessions": len(enrolled), "template_ready": user.template is not None,
+-            "enroll_open": not _enroll_closed(user), "consistency": owner.consistency([e.features for e in enrolled])}
++            "enroll_open": not _enroll_closed(user), "history_summary": hs,
++            "consistency": owner.consistency([e.features for e in enrolled])}
+ 
+ 
+ @app.get("/", include_in_schema=False)
+@@ -123,7 +132,8 @@ def root():
+ @app.get("/health", tags=["system"])
+ def health():
+     # models: whether the learned models loaded (false = running on rules/distance only, e.g. lightgbm or libgomp missing on the server)
+-    return {"status": "ok", "models": {"human": human_model.loaded(), "owner": owner_model.loaded()}}
++    # "models" keeps its {human, owner} shape; the DL bundle state is reported under its own key
++    return {"status": "ok", "models": {"human": human_model.loaded(), "owner": owner_model.loaded()}, "dl_pipeline": dl_adapter.status()}
+ 
+ 
+ v1 = APIRouter(prefix="/v1")
+@@ -178,6 +188,11 @@ def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
+                 db.add(User(id=body.user_id))
+         except IntegrityError:
+             pass  # another request just created the same user
++    # HistoryContext goes into raw["_history"], NOT into features: owner.py builds its template from features
++    prior = [history.Prior(*r) for r in db.execute(
++        select(TouchSession.created_at, TouchSession.device_id, TouchSession.is_enrollment, TouchSession.action)
++        .where(TouchSession.user_id == body.user_id).order_by(TouchSession.created_at.desc()).limit(HISTORY_LIMIT))]
++    raw["_history"] = history.compute(prior, body.device_id, dt.datetime.now(dt.timezone.utc), raw.get("attempt_meta"))
+     sid = "s_" + secrets.token_hex(6)
+     db.add(TouchSession(id=sid, user_id=body.user_id, device_id=body.device_id, raw=raw, features=feats))
+     db.commit()
+@@ -279,8 +294,15 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
+     feats = s.features
+ 
+     h, bot_reasons = human.score(feats)
++    # optional DL bundle (NumPy runtime): used when NHIP_*_BACKEND=dl, only logged when NHIP_DL_SHADOW=1; None = keep the lgbm/rule path
++    dl = None
++    if dl_adapter.wanted() and dl_adapter.load() is not None:
++        gallery = [(e.raw, e.created_at) for e in _enrolled(db, s.user_id) if e.id != s.id]
++        dl = dl_adapter.predict(s.raw, s.raw.get("_history"), [(g, _utc(t)) for g, t in gallery], _utc(s.created_at))
++    use_dl_h = dl is not None and dl_adapter.human_backend() == "dl" and dl["human"] is not None
++    use_dl_o = dl is not None and dl_adapter.owner_backend() == "dl" and dl["owner"] is not None
+     # learned model (optional): replaces the rule only when the rule lacks data, otherwise take the more pessimistic score
+-    p = human_model.predict(s.raw)
++    p = dl["human"] if use_dl_h else human_model.predict(s.raw)
+     if p is not None:
+         h = p if bot_reasons == ["insufficient_data"] else min(h, p)
+         if p < 0.5 and not [r for r in bot_reasons if r in explain._BOT_VI]:
+@@ -293,12 +315,12 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
+         h, bot_reasons = min(h, 0.1), [*bot_reasons, "replayed_session"]
+     o, z = owner.score(feats, tpl) if tpl else (None, {})
+     if o:  # learned model (optional) replaces the distance score when applicable; o == 0 means missing PIN evidence: keep it as is
+-        m = owner_model.predict(z)
++        m = dl["owner"] if use_dl_o else owner_model.predict(z)
+         o = o if m is None else m
+-    history = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
++    amounts = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
+         TouchSession.user_id == s.user_id, TouchSession.action == "allow",
+         TouchSession.id != s.id)).all() if c]
+-    amt = fusion.amount_anomaly(ctx.amount, history)
++    amt = fusion.amount_anomaly(ctx.amount, amounts)
+     risk, action, _ = fusion.fuse(h, o, ctx.recipient_is_new, amt)
+     reasons, text = explain.explain(h, bot_reasons, o, feats, tpl, z, ctx.recipient_is_new, amt, action)
+ 
+@@ -313,6 +335,8 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
+         "explanation_vi": text,
+     }
+ 
++    if dl is not None and dl_adapter.shadow():
++        result["shadow"] = {"dl": {k: v for k, v in dl.items()}, "bundle": dl_adapter.status()["version"]}
+     first_score = s.result is None
+     s.context, s.result, s.risk, s.action = ctx.model_dump(), result, risk, action
+     if (first_score and tpl and not s.is_enrollment and action == "allow"
+@@ -361,7 +385,7 @@ def export_sessions(response: Response, participant_id: str | None = None, colle
+         if participant_id and (meta or {}).get("participant_id") != participant_id:
+             continue
+         out.append({"session_id": r.id, "user_id": r.user_id, "device_id": r.device_id,
+-                    "created_at": r.created_at.isoformat(), "meta": meta, "raw": r.raw,
++                    "created_at": r.created_at.isoformat(), "meta": meta, "history": r.raw.get("_history"), "raw": r.raw,
+                     "features": r.features, "is_enrollment": r.is_enrollment, "result": r.result,
+                     "label": r.label})
+         size += len(json.dumps(r.raw)) + len(json.dumps(r.features))
+diff --git a/backend/app/schemas.py b/backend/app/schemas.py
+index ae72bb1..3528a9f 100644
+--- a/backend/app/schemas.py
++++ b/backend/app/schemas.py
+@@ -104,6 +104,14 @@ class CollectionMeta(BaseModel):
+         return self
+ 
+ 
++class AttemptMeta(BaseModel):
++    """Client-side attempt telemetry (no content): which flow, wrong/aborted tries before this entry, gap to the previous entry."""
++
++    flow_stage: Literal["signup_enroll", "login_enroll", "transfer"] | None = None
++    retries: int = Field(default=0, ge=0, le=50)
++    client_dt_prev_ms: Annotated[float, Field(allow_inf_nan=False, ge=0, le=7 * 24 * 3600 * 1000)] | None = None
++
++
+ class SessionIn(BaseModel):
+     """Interaction session sent by the SDK. Only time + coordinates, no PIN content."""
+ 
+@@ -114,6 +122,7 @@ class SessionIn(BaseModel):
+     screens: list[ScreenVisit] = Field(default_factory=list, max_length=50)
+     fields: list[TextField] = Field(default_factory=list, max_length=10)  # input fields other than the PIN
+     meta: CollectionMeta | None = None  # sent only during data collection
++    attempt_meta: AttemptMeta | None = None
+ 
+     model_config = ConfigDict(
+         json_schema_extra={
+@@ -155,6 +164,7 @@ class EnrollOut(BaseModel):
+     enrolled_sessions: int
+     template_ready: bool
+     enroll_open: bool = True
++    history_summary: dict | None = None  # enrolment telemetry: n_entries, dt_mean_sec, dt_cv, span_sec, client_dt_mean_ms
+     consistency: float | None = None  # mean match score of each attempt against the template built from the other attempts
+ 
+ 
+diff --git a/backend/pyproject.toml b/backend/pyproject.toml
+index 4bdca32..2cdf9e6 100644
+--- a/backend/pyproject.toml
++++ b/backend/pyproject.toml
+@@ -8,6 +8,7 @@ dependencies = [
+     "uvicorn>=0.30",
+     "sqlalchemy>=2.0",
+     "psycopg[binary]>=3.2",
++    "numpy>=1.26",
+ ]
+ 
+ [project.optional-dependencies]
+diff --git a/web/src/Collect.tsx b/web/src/Collect.tsx
+index 864219c..f6f0e42 100644
+--- a/web/src/Collect.tsx
++++ b/web/src/Collect.tsx
+@@ -1,7 +1,8 @@
+ import { useContext, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
+-import { ApiError, api, explanationText, reasonText, type AccountStatus, type CollectionMeta, type Score, type SessionIn, type UserStatus } from './api'
++import { ApiError, api, explanationText, reasonText, type AccountStatus, type CollectionMeta, type HistorySummary, type Score, type SessionIn, type UserStatus } from './api'
+ import { MAX_ENROLL, MIN_JUDGE_ENROLL, impostorStopped } from './enrollCurve'
+ import { Recorder } from './capture'
++import { AttemptTracker } from './attempt'
+ import { LangContext } from './i18n'
+ import { canPromptInstall, isIOS, isInstalled, isPhone, onInstallChange, promptInstall } from './device'
+ import { AppIcon } from './landing/ui'
+@@ -70,18 +71,19 @@ export default function Collect() {
+   }, [dev])
+   const [account, setAccountState] = useState<AccountStatus | null>(loadAccount)
+   const setAccount = (a: AccountStatus | null) => { saveAccount(a); setAccountState(a) }
++  const [signedUp, setSignedUp] = useState(false) // true when the account was created in this visit (flow_stage of the set-up entries)
+ 
+   if (!phone) return <PhoneGate />
+-  if (!account) return <Start onDone={setAccount} />
++  if (!account) return <Start onDone={(a, created) => { setSignedUp(created); setAccount(a) }} />
+   const strip = (right: string) => (
+     <div className="cl-strip"><span>{account.full_name || account.email}</span>
+       <span><b>{right}</b> · <button className="cl-link cl-out" onClick={() => setAccount(null)}>{tx('Sign out', 'Đăng xuất')}</button></span></div>
+   )
+-  if (enrolling(account)) return <EnrollRounds account={account} onStatus={(st) => setAccount({ ...account, ...st })} strip={strip} />
++  if (enrolling(account)) return <EnrollRounds account={account} stage={signedUp ? 'signup_enroll' : 'login_enroll'} onStatus={(st) => setAccount({ ...account, ...st })} strip={strip} />
+   return <Transfer account={account} strip={strip} />
+ }
+ 
+-function Start({ onDone }: { onDone: (a: AccountStatus) => void }) {
++function Start({ onDone }: { onDone: (a: AccountStatus, created: boolean) => void }) {
+   const tx = useTx()
+   const [mode, setMode] = useState<'signup' | 'login'>('signup')
+   const [name, setName] = useState('')
+@@ -101,8 +103,8 @@ function Start({ onDone }: { onDone: (a: AccountStatus) => void }) {
+         const a = await api.signup({ email: m, password, full_name: n })
+         // research link (participants table), as before; the account works even if this fails
+         await api.registerParticipant({ participant_id: idOf(m), email: m, full_name: n }).catch(() => undefined)
+-        onDone(a)
+-      } else onDone(await api.login({ email: m, password }))
++        onDone(a, true)
++      } else onDone(await api.login({ email: m, password }), false)
+     } catch (e) {
+       const st = e instanceof ApiError ? e.status : -1
+       setErr(st === 409 ? tx('This email already has an account. Sign in instead.', 'Email này đã có tài khoản. Hãy đăng nhập.')
+@@ -160,9 +162,9 @@ function Start({ onDone }: { onDone: (a: AccountStatus) => void }) {
+ }
+ 
+ /** One PIN pad: 6 dots, a 10-digit pad (+ delete). Calls onEntry with the digits once 6 are typed with a finger on each key. */
+-function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
++function PinPad({ title, sub, busy, onEntry, onRetry, recRef, msg }: {
+   title: string; sub: string; busy: boolean; msg?: string | null
+-  onEntry: (digits: string) => void; recRef: React.MutableRefObject<Recorder>
++  onEntry: (digits: string) => void; onRetry?: () => void; recRef: React.MutableRefObject<Recorder>
+ }) {
+   const tx = useTx()
+   const [digits, setDigits] = useState('')
+@@ -170,14 +172,14 @@ function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
+   const press = (k: string) => {
+     if (busy) return
+     // delete one digit and its tap (taps are pushed on key-up, so the last tap is the last digit)
+-    if (k === '⌫') { if (digits) { setDigits(digits.slice(0, -1)); recRef.current.taps.pop() }; return }
++    if (k === '⌫') { if (digits) { setDigits(digits.slice(0, -1)); recRef.current.taps.pop(); onRetry?.() }; return }
+     if (digits.length >= PIN_LEN) return
+     const next = digits + k
+     setDigits(next)
+     if (next.length < PIN_LEN) return
+     window.setTimeout(() => {
+       setDigits('')
+-      if (recRef.current.taps.length < PIN_LEN) { recRef.current.clearTaps(); return } // a digit came without a finger on the key
++      if (recRef.current.taps.length < PIN_LEN) { recRef.current.clearTaps(); onRetry?.(); return } // a digit came without a finger on the key: counted as a retry
+       onEntry(next)
+     }, 120)
+   }
+@@ -208,24 +210,28 @@ function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
+ }
+ 
+ /** Rhythm set-up: the PIN typed 5 to 10 times, each entry sent and enrolled at once; the accuracy bar sits under the keypad. */
+-function EnrollRounds({ account, onStatus, strip }: {
+-  account: AccountStatus; onStatus: (st: UserStatus) => void; strip: (right: string) => JSX.Element
++function EnrollRounds({ account, stage, onStatus, strip }: {
++  account: AccountStatus; stage: 'signup_enroll' | 'login_enroll'; onStatus: (st: UserStatus) => void; strip: (right: string) => JSX.Element
+ }) {
+   const tx = useTx()
+   const k = account.enrolled_sessions
+   const pin = useRef('') // the PIN made on the first entry of this visit; later entries must match it
+   const rec = useRef(new Recorder())
++  const attempts = useRef(new AttemptTracker())
++  const [retries, setRetries] = useState(0) // wrong or aborted tries in this visit, shown in the Accuracy check
++  const retry = () => { attempts.current.bump(); setRetries((n) => n + 1) }
+   const [busy, setBusy] = useState(false)
+   const [msg, setMsg] = useState<string | null>(null)
+   useEffect(() => { rec.current.screen('pin') }, [])
+ 
+   async function onEntry(digits: string) {
+     if (pin.current && digits !== pin.current) {
++      retry()
+       setMsg(tx('Does not match the PIN you made. Try again.', 'Không khớp mã đã tạo. Nhập lại.'))
+       rec.current = new Recorder(); rec.current.screen('pin'); return
+     }
+     const meta: CollectionMeta = { participant_id: idOf(account.email), sitting: 1, role: 'genuine', email: account.email, ...(account.full_name ? { full_name: account.full_name } : {}) }
+-    const s: SessionIn = { ...rec.current.payload(account.user_id), meta }
++    const s: SessionIn = { ...rec.current.payload(account.user_id), meta, attempt_meta: attempts.current.take(stage) }
+     setBusy(true); setMsg(null)
+     try {
+       const { session_id } = await api.createSession(s)
+@@ -248,7 +254,7 @@ function EnrollRounds({ account, onStatus, strip }: {
+   return (
+     <div className="cl cl-app">
+       {strip(`${k}/${MAX_ENROLL}`)}
+-      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={(d) => void onEntry(d)}
++      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={(d) => void onEntry(d)} onRetry={retry}
+         title={k === 0 && !pin.current ? tx('Create a 6-digit PIN', 'Tạo mã PIN 6 số') : tx('Enter your PIN again', 'Nhập lại mã PIN')}
+         sub={k === 0 && !pin.current ? tx('A new PIN, not one you really use.', 'Mã mới, không trùng PIN/mật khẩu thật.')
+           : tx(`Entry ${k + 1}: the same PIN, as you normally type`, `Lần ${k + 1}: đúng mã đó, gõ như bình thường`)} />
+@@ -258,6 +264,7 @@ function EnrollRounds({ account, onStatus, strip }: {
+         <p>{tx(`After ${k} entries about ${Math.round(value * 100)}% of people who know your PIN are stopped.`, `Sau ${k} lần nhập, khoảng ${Math.round(value * 100)}% người biết PIN của bạn bị chặn.`)}{' '}
+           {measured ? tx('Measured on real phone PINs.', 'Đo trên PIN điện thoại thật.') : tx('Above 4 entries: estimated, not yet measured.', 'Trên 4 lần: ước lượng, chưa đo.')}
+           {c != null && <> {tx('Your steadiness', 'Độ ổn định nhịp của bạn')}: <b>{Math.round(c * 100)}%</b>.</>}</p>
++        <Telemetry h={account.history_summary} retries={retries} />
+         <button className="cl-btn" disabled={busy || k < MIN_JUDGE_ENROLL} onClick={() => void finish()}>
+           {k < MIN_JUDGE_ENROLL ? tx(`Done (at least ${MIN_JUDGE_ENROLL} entries)`, `Xong (ít nhất ${MIN_JUDGE_ENROLL} lần)`) : tx('Done, save my rhythm', 'Xong, lưu nhịp của tôi')}</button>
+       </section>
+@@ -265,6 +272,19 @@ function EnrollRounds({ account, onStatus, strip }: {
+   )
+ }
+ 
++/** Enrolment history under the Accuracy check: entries so far, mean gap between entries, steadiness of the gaps, wrong tries. */
++function Telemetry({ h, retries }: { h?: HistorySummary | null; retries: number }) {
++  const tx = useTx()
++  if (!h || h.n_entries === 0) return null
++  const gap = h.dt_mean_sec == null ? '—' : h.dt_mean_sec < 90 ? `${Math.round(h.dt_mean_sec)} s` : `${(h.dt_mean_sec / 60).toFixed(1)} ${tx('min', 'phút')}`
++  const steady = h.dt_cv == null ? '—' : `${Math.round(Math.max(0, 1 - h.dt_cv) * 100)}%`
++  return (
++    <p className="cl-tele">
++      {tx('Entries', 'Số lượt')} <b>{h.n_entries}</b> · {tx('average gap', 'khoảng cách TB')} <b>{gap}</b> · {tx('gap steadiness', 'độ đều nhịp giữa các lần')} <b>{steady}</b> · {tx('retries', 'nhập lại')} <b>{retries}</b>
++    </p>
++  )
++}
++
+ const RECIPIENTS = [
+   { id: 'mum', name: ['Mum', 'Mẹ'], sub: ['Saved contact', 'Người quen'], isNew: false },
+   { id: 'new', name: ['New recipient', 'Người nhận mới'], sub: ['First transfer', 'Lần đầu chuyển'], isNew: true },
+@@ -282,13 +302,15 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
+   const [busy, setBusy] = useState(false)
+   const [msg, setMsg] = useState<string | null>(null)
+   const rec = useRef(new Recorder())
++  const attempts = useRef(new AttemptTracker())
+   const money = (v: number) => v.toLocaleString('vi-VN') + ' ₫'
+   const r = RECIPIENTS.find((x) => x.id === to)!
+ 
+   async function onEntry() {
+     setBusy(true); setMsg(null)
+     try {
+-      const { session_id } = await api.createSession(rec.current.payload(account.user_id))
++      // attempt_meta only: no CollectionMeta, so /v1/export (collected_only) still skips live transfers
++      const { session_id } = await api.createSession({ ...rec.current.payload(account.user_id), attempt_meta: attempts.current.take('transfer') })
+       setScore(await api.score(session_id, { recipient_is_new: r.isNew, amount }))
+       setStep('result')
+     } catch (e) {
+@@ -299,7 +321,7 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
+   if (step === 'pin') return (
+     <div className="cl cl-app">
+       {strip(money(amount))}
+-      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={() => void onEntry()}
++      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={() => void onEntry()} onRetry={() => attempts.current.bump()}
+         title={tx('Enter your PIN to confirm', 'Nhập mã PIN để xác nhận')} sub={`${money(amount)} → ${r.name[lang === 'en' ? 0 : 1]}`} />
+       <button className="cl-link cl-back" onClick={() => setStep('form')}>{tx('Back', 'Quay lại')}</button>
+     </div>
+diff --git a/web/src/api.ts b/web/src/api.ts
+index 36d5de9..f2dcc51 100644
+--- a/web/src/api.ts
++++ b/web/src/api.ts
+@@ -17,7 +17,9 @@ export interface TextField { name: 'recipient' | 'amount' | 'challenge'; events:
+ export interface Challenge { token: string; phrase: string; expected_len: number; ttl_s: number }
+ // Collection label (backend CollectionMeta): who really held the phone, which sitting, genuine owner or someone who saw the PIN.
+ export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; note?: string; full_name?: string; email?: string }
+-export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta }
++// Attempt telemetry (backend AttemptMeta): which flow, wrong/aborted tries before this entry, ms since the previous entry. No content.
++export interface AttemptMeta { flow_stage?: 'signup_enroll' | 'login_enroll' | 'transfer'; retries?: number; client_dt_prev_ms?: number }
++export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta; attempt_meta?: AttemptMeta }
+ 
+ export type Action = 'allow' | 'step_up' | 'hold'
+ export interface Score {
+@@ -25,7 +27,9 @@ export interface Score {
+   risk_score: number; action: Action; reasons: string[]; explanation_vi: string
+ }
+ export interface AccountStatus extends UserStatus { email: string; full_name?: string | null }
+-export interface UserStatus { user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number; enroll_open?: boolean; consistency?: number | null }
++// Enrolment telemetry from the server (history.summary): entries so far, mean gap between entries (s), variation of the gaps, span, mean client-side gap (ms)
++export interface HistorySummary { n_entries: number; dt_mean_sec: number | null; dt_cv: number | null; span_sec: number; client_dt_mean_ms: number | null }
++export interface UserStatus { history_summary?: HistorySummary | null; user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number; enroll_open?: boolean; consistency?: number | null }
+ export interface Flagged {
+   session_id: string; user_id: string; created_at: string; action: Action | null; risk_score: number | null
+   reasons: string[]; explanation_vi: string | null; label: string | null
+diff --git a/web/src/attempt.test.ts b/web/src/attempt.test.ts
+new file mode 100644
+index 0000000..4235abc
+--- /dev/null
++++ b/web/src/attempt.test.ts
+@@ -0,0 +1,21 @@
++import { describe, expect, it } from 'vitest'
++import { AttemptTracker } from './attempt'
++
++describe('AttemptTracker', () => {
++  it('first entry has no gap, later ones do, retries reset after each entry', () => {
++    let t = 1000
++    const a = new AttemptTracker(() => t)
++    a.bump(); a.bump()
++    expect(a.take('signup_enroll')).toEqual({ flow_stage: 'signup_enroll', retries: 2 })
++    t = 5200
++    a.bump()
++    expect(a.take('signup_enroll')).toEqual({ flow_stage: 'signup_enroll', retries: 1, client_dt_prev_ms: 4200 })
++    t = 6000
++    expect(a.take('transfer').retries).toBe(0)
++  })
++  it('caps retries at the backend limit', () => {
++    const a = new AttemptTracker(() => 0)
++    for (let i = 0; i < 80; i++) a.bump()
++    expect(a.take('transfer').retries).toBe(50)
++  })
++})
+diff --git a/web/src/attempt.ts b/web/src/attempt.ts
+new file mode 100644
+index 0000000..9d72ca8
+--- /dev/null
++++ b/web/src/attempt.ts
+@@ -0,0 +1,21 @@
++import type { AttemptMeta } from './api'
++
++/** Counts the wrong or aborted tries of a PIN entry and the time since the previous entry (backend AttemptMeta). Content-free. */
++export class AttemptTracker {
++  private retries = 0
++  private last: number | null = null
++  constructor(private now: () => number = () => performance.now()) {}
++
++  /** a wrong PIN, a deleted digit or a tap that failed */
++  bump() { this.retries++ }
++
++  /** Meta for the entry being sent now; then resets the retry count and stamps this entry as the previous one.
++   *  client_dt_prev_ms = from the previous entry being sent to this one being sent (absent for the first). */
++  take(stage: NonNullable<AttemptMeta['flow_stage']>): AttemptMeta {
++    const t = this.now()
++    const meta: AttemptMeta = { flow_stage: stage, retries: Math.min(this.retries, 50), ...(this.last != null ? { client_dt_prev_ms: Math.round(t - this.last) } : {}) }
++    this.retries = 0
++    this.last = t
++    return meta
++  }
++}
+diff --git a/web/src/collect.css b/web/src/collect.css
+index 62f1a95..9a06708 100644
+--- a/web/src/collect.css
++++ b/web/src/collect.css
+@@ -115,6 +115,7 @@ html[data-page='collect'], html[data-page='collect'] body { overscroll-behavior:
+ .cl-acc-bar { height: 10px; margin: 8px 0; border-radius: 999px; background: #e6eef4; overflow: hidden; }
+ .cl-acc-bar i { display: block; height: 100%; border-radius: inherit; background: #0b6e99; transition: width .5s ease; }
+ .cl-acc p { margin: 0; font-size: .8rem; color: #5b6878; line-height: 1.4; }
++.cl-acc .cl-tele { margin-top: 6px; font-size: .75rem; font-variant-numeric: tabular-nums; }
+ .cl-acc .cl-btn { margin-top: 12px; padding: 12px; }
+ /* transfer result */
+ .cl-tick.step_up { background: #c77700; } .cl-tick.hold { background: #b3261e; }

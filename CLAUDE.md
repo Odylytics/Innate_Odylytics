@@ -53,6 +53,8 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 
 - Learned models (human/owner LightGBM) are evaluated by `backend/app/scoring/lgbm_text.py` (pure Python parser of the `.txt` model, no lightgbm/numpy/libgomp; equals lightgbm within 1e-9, `tests/test_lgbm_text.py`). Why: on Vercel lightgbm failed to import (no libgomp) so the online API ran rules only (`/health` models false). lightgbm is now a dev/research dependency only. `/health` showed models true on the live API on 26/11 after the fix; `tests/test_api.py::test_learned_models_load_by_default` guards the default install.
 
+- `dl/` (28/11): research-only 4-layer deep model (PyTorch, synthetic dry run). NOT in the product, NOT in the submission (`tools/build_submission.sh` excludes it); parked `/score` shadow-mode patch in `dl/integration/`. See `dl/README.md`.
+
 ## Commands (PowerShell-style in READMEs; uses `uv`)
 - Backend: `cd backend; uv sync; uv run uvicorn app.main:app --reload --port 8000` (Swagger at /docs, key `demo-key`)
 - Backend tests: `cd backend; uv run pytest -q`
