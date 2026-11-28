@@ -1,7 +1,8 @@
 import { useContext, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
-import { ApiError, api, explanationText, reasonText, type AccountStatus, type CollectionMeta, type Score, type SessionIn, type UserStatus } from './api'
+import { ApiError, api, explanationText, reasonText, type AccountStatus, type CollectionMeta, type HistorySummary, type Score, type SessionIn, type UserStatus } from './api'
 import { MAX_ENROLL, MIN_JUDGE_ENROLL, impostorStopped } from './enrollCurve'
 import { Recorder } from './capture'
+import { AttemptTracker } from './attempt'
 import { LangContext } from './i18n'
 import { canPromptInstall, isIOS, isInstalled, isPhone, onInstallChange, promptInstall } from './device'
 import { AppIcon } from './landing/ui'
@@ -70,18 +71,19 @@ export default function Collect() {
   }, [dev])
   const [account, setAccountState] = useState<AccountStatus | null>(loadAccount)
   const setAccount = (a: AccountStatus | null) => { saveAccount(a); setAccountState(a) }
+  const [signedUp, setSignedUp] = useState(false) // true when the account was created in this visit (flow_stage of the set-up entries)
 
   if (!phone) return <PhoneGate />
-  if (!account) return <Start onDone={setAccount} />
+  if (!account) return <Start onDone={(a, created) => { setSignedUp(created); setAccount(a) }} />
   const strip = (right: string) => (
     <div className="cl-strip"><span>{account.full_name || account.email}</span>
       <span><b>{right}</b> · <button className="cl-link cl-out" onClick={() => setAccount(null)}>{tx('Sign out', 'Đăng xuất')}</button></span></div>
   )
-  if (enrolling(account)) return <EnrollRounds account={account} onStatus={(st) => setAccount({ ...account, ...st })} strip={strip} />
+  if (enrolling(account)) return <EnrollRounds account={account} stage={signedUp ? 'signup_enroll' : 'login_enroll'} onStatus={(st) => setAccount({ ...account, ...st })} strip={strip} />
   return <Transfer account={account} strip={strip} />
 }
 
-function Start({ onDone }: { onDone: (a: AccountStatus) => void }) {
+function Start({ onDone }: { onDone: (a: AccountStatus, created: boolean) => void }) {
   const tx = useTx()
   const [mode, setMode] = useState<'signup' | 'login'>('signup')
   const [name, setName] = useState('')
@@ -101,8 +103,8 @@ function Start({ onDone }: { onDone: (a: AccountStatus) => void }) {
         const a = await api.signup({ email: m, password, full_name: n })
         // research link (participants table), as before; the account works even if this fails
         await api.registerParticipant({ participant_id: idOf(m), email: m, full_name: n }).catch(() => undefined)
-        onDone(a)
-      } else onDone(await api.login({ email: m, password }))
+        onDone(a, true)
+      } else onDone(await api.login({ email: m, password }), false)
     } catch (e) {
       const st = e instanceof ApiError ? e.status : -1
       setErr(st === 409 ? tx('This email already has an account. Sign in instead.', 'Email này đã có tài khoản. Hãy đăng nhập.')
@@ -160,9 +162,9 @@ function Start({ onDone }: { onDone: (a: AccountStatus) => void }) {
 }
 
 /** One PIN pad: 6 dots, a 10-digit pad (+ delete). Calls onEntry with the digits once 6 are typed with a finger on each key. */
-function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
+function PinPad({ title, sub, busy, onEntry, onRetry, recRef, msg }: {
   title: string; sub: string; busy: boolean; msg?: string | null
-  onEntry: (digits: string) => void; recRef: React.MutableRefObject<Recorder>
+  onEntry: (digits: string) => void; onRetry?: () => void; recRef: React.MutableRefObject<Recorder>
 }) {
   const tx = useTx()
   const [digits, setDigits] = useState('')
@@ -170,14 +172,14 @@ function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
   const press = (k: string) => {
     if (busy) return
     // delete one digit and its tap (taps are pushed on key-up, so the last tap is the last digit)
-    if (k === '⌫') { if (digits) { setDigits(digits.slice(0, -1)); recRef.current.taps.pop() }; return }
+    if (k === '⌫') { if (digits) { setDigits(digits.slice(0, -1)); recRef.current.taps.pop(); onRetry?.() }; return }
     if (digits.length >= PIN_LEN) return
     const next = digits + k
     setDigits(next)
     if (next.length < PIN_LEN) return
     window.setTimeout(() => {
       setDigits('')
-      if (recRef.current.taps.length < PIN_LEN) { recRef.current.clearTaps(); return } // a digit came without a finger on the key
+      if (recRef.current.taps.length < PIN_LEN) { recRef.current.clearTaps(); onRetry?.(); return } // a digit came without a finger on the key: counted as a retry
       onEntry(next)
     }, 120)
   }
@@ -208,24 +210,28 @@ function PinPad({ title, sub, busy, onEntry, recRef, msg }: {
 }
 
 /** Rhythm set-up: the PIN typed 5 to 10 times, each entry sent and enrolled at once; the accuracy bar sits under the keypad. */
-function EnrollRounds({ account, onStatus, strip }: {
-  account: AccountStatus; onStatus: (st: UserStatus) => void; strip: (right: string) => JSX.Element
+function EnrollRounds({ account, stage, onStatus, strip }: {
+  account: AccountStatus; stage: 'signup_enroll' | 'login_enroll'; onStatus: (st: UserStatus) => void; strip: (right: string) => JSX.Element
 }) {
   const tx = useTx()
   const k = account.enrolled_sessions
   const pin = useRef('') // the PIN made on the first entry of this visit; later entries must match it
   const rec = useRef(new Recorder())
+  const attempts = useRef(new AttemptTracker())
+  const [retries, setRetries] = useState(0) // wrong or aborted tries in this visit, shown in the Accuracy check
+  const retry = () => { attempts.current.bump(); setRetries((n) => n + 1) }
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   useEffect(() => { rec.current.screen('pin') }, [])
 
   async function onEntry(digits: string) {
     if (pin.current && digits !== pin.current) {
+      retry()
       setMsg(tx('Does not match the PIN you made. Try again.', 'Không khớp mã đã tạo. Nhập lại.'))
       rec.current = new Recorder(); rec.current.screen('pin'); return
     }
     const meta: CollectionMeta = { participant_id: idOf(account.email), sitting: 1, role: 'genuine', email: account.email, ...(account.full_name ? { full_name: account.full_name } : {}) }
-    const s: SessionIn = { ...rec.current.payload(account.user_id), meta }
+    const s: SessionIn = { ...rec.current.payload(account.user_id), meta, attempt_meta: attempts.current.take(stage) }
     setBusy(true); setMsg(null)
     try {
       const { session_id } = await api.createSession(s)
@@ -248,7 +254,7 @@ function EnrollRounds({ account, onStatus, strip }: {
   return (
     <div className="cl cl-app">
       {strip(`${k}/${MAX_ENROLL}`)}
-      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={(d) => void onEntry(d)}
+      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={(d) => void onEntry(d)} onRetry={retry}
         title={k === 0 && !pin.current ? tx('Create a 6-digit PIN', 'Tạo mã PIN 6 số') : tx('Enter your PIN again', 'Nhập lại mã PIN')}
         sub={k === 0 && !pin.current ? tx('A new PIN, not one you really use.', 'Mã mới, không trùng PIN/mật khẩu thật.')
           : tx(`Entry ${k + 1}: the same PIN, as you normally type`, `Lần ${k + 1}: đúng mã đó, gõ như bình thường`)} />
@@ -258,10 +264,24 @@ function EnrollRounds({ account, onStatus, strip }: {
         <p>{tx(`After ${k} entries about ${Math.round(value * 100)}% of people who know your PIN are stopped.`, `Sau ${k} lần nhập, khoảng ${Math.round(value * 100)}% người biết PIN của bạn bị chặn.`)}{' '}
           {measured ? tx('Measured on real phone PINs.', 'Đo trên PIN điện thoại thật.') : tx('Above 4 entries: estimated, not yet measured.', 'Trên 4 lần: ước lượng, chưa đo.')}
           {c != null && <> {tx('Your steadiness', 'Độ ổn định nhịp của bạn')}: <b>{Math.round(c * 100)}%</b>.</>}</p>
+        <Telemetry h={account.history_summary} retries={retries} />
         <button className="cl-btn" disabled={busy || k < MIN_JUDGE_ENROLL} onClick={() => void finish()}>
           {k < MIN_JUDGE_ENROLL ? tx(`Done (at least ${MIN_JUDGE_ENROLL} entries)`, `Xong (ít nhất ${MIN_JUDGE_ENROLL} lần)`) : tx('Done, save my rhythm', 'Xong, lưu nhịp của tôi')}</button>
       </section>
     </div>
+  )
+}
+
+/** Enrolment history under the Accuracy check: entries so far, mean gap between entries, steadiness of the gaps, wrong tries. */
+function Telemetry({ h, retries }: { h?: HistorySummary | null; retries: number }) {
+  const tx = useTx()
+  if (!h || h.n_entries === 0) return null
+  const gap = h.dt_mean_sec == null ? '—' : h.dt_mean_sec < 90 ? `${Math.round(h.dt_mean_sec)} s` : `${(h.dt_mean_sec / 60).toFixed(1)} ${tx('min', 'phút')}`
+  const steady = h.dt_cv == null ? '—' : `${Math.round(Math.max(0, 1 - h.dt_cv) * 100)}%`
+  return (
+    <p className="cl-tele">
+      {tx('Entries', 'Số lượt')} <b>{h.n_entries}</b> · {tx('average gap', 'khoảng cách TB')} <b>{gap}</b> · {tx('gap steadiness', 'độ đều nhịp giữa các lần')} <b>{steady}</b> · {tx('retries', 'nhập lại')} <b>{retries}</b>
+    </p>
   )
 }
 
@@ -282,13 +302,15 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const rec = useRef(new Recorder())
+  const attempts = useRef(new AttemptTracker())
   const money = (v: number) => v.toLocaleString('vi-VN') + ' ₫'
   const r = RECIPIENTS.find((x) => x.id === to)!
 
   async function onEntry() {
     setBusy(true); setMsg(null)
     try {
-      const { session_id } = await api.createSession(rec.current.payload(account.user_id))
+      // attempt_meta only: no CollectionMeta, so /v1/export (collected_only) still skips live transfers
+      const { session_id } = await api.createSession({ ...rec.current.payload(account.user_id), attempt_meta: attempts.current.take('transfer') })
       setScore(await api.score(session_id, { recipient_is_new: r.isNew, amount }))
       setStep('result')
     } catch (e) {
@@ -299,7 +321,7 @@ function Transfer({ account, strip }: { account: AccountStatus; strip: (right: s
   if (step === 'pin') return (
     <div className="cl cl-app">
       {strip(money(amount))}
-      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={() => void onEntry()}
+      <PinPad recRef={rec} busy={busy} msg={msg} onEntry={() => void onEntry()} onRetry={() => attempts.current.bump()}
         title={tx('Enter your PIN to confirm', 'Nhập mã PIN để xác nhận')} sub={`${money(amount)} → ${r.name[lang === 'en' ? 0 : 1]}`} />
       <button className="cl-link cl-back" onClick={() => setStep('form')}>{tx('Back', 'Quay lại')}</button>
     </div>
