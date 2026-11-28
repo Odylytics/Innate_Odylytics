@@ -17,9 +17,7 @@ export interface TextField { name: 'recipient' | 'amount' | 'challenge'; events:
 export interface Challenge { token: string; phrase: string; expected_len: number; ttl_s: number }
 // Collection label (backend CollectionMeta): who really held the phone, which sitting, genuine owner or someone who saw the PIN.
 export interface CollectionMeta { participant_id: string; sitting: number; role: 'genuine' | 'impostor' | 'bot'; note?: string; full_name?: string; email?: string }
-// Attempt telemetry (backend AttemptMeta): which flow, wrong/aborted tries before this entry, ms since the previous entry. No content.
-export interface AttemptMeta { flow_stage?: 'signup_enroll' | 'login_enroll' | 'transfer'; retries?: number; client_dt_prev_ms?: number }
-export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta; attempt_meta?: AttemptMeta }
+export interface SessionIn { user_id: string; device_id: string; pin_taps: Tap[]; swipes: Swipe[]; screens: ScreenVisit[]; fields?: TextField[]; meta?: CollectionMeta }
 
 export type Action = 'allow' | 'step_up' | 'hold'
 export interface Score {
@@ -27,9 +25,7 @@ export interface Score {
   risk_score: number; action: Action; reasons: string[]; explanation_vi: string
 }
 export interface AccountStatus extends UserStatus { email: string; full_name?: string | null }
-// Enrolment telemetry from the server (history.summary): entries so far, mean gap between entries (s), variation of the gaps, span, mean client-side gap (ms)
-export interface HistorySummary { n_entries: number; dt_mean_sec: number | null; dt_cv: number | null; span_sec: number; client_dt_mean_ms: number | null }
-export interface UserStatus { history_summary?: HistorySummary | null; user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number; enroll_open?: boolean; consistency?: number | null }
+export interface UserStatus { user_id: string; enrolled_sessions: number; template_ready: boolean; template_updates?: number; enroll_open?: boolean; consistency?: number | null }
 export interface Flagged {
   session_id: string; user_id: string; created_at: string; action: Action | null; risk_score: number | null
   reasons: string[]; explanation_vi: string | null; label: string | null

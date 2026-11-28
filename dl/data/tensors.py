@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from app.scoring.dl_adapter import F_NAMES, K_MAX, L_MAX, N_CTX, ctx_vector, seq_tensor, tab_vector  # noqa: F401
+from innate_dl.dl_adapter import F_NAMES, K_MAX, L_MAX, N_CTX, ctx_vector, seq_tensor, tab_vector  # noqa: F401
 from app.scoring import bot_features
 
 from .ingest import Record

@@ -1,10 +1,10 @@
 # Innate4LayerNet: 4-layer deep-learning architecture
 
-Status 28/11/2026: implemented (`training/models/innate4.py`, NumPy twin in `backend/app/scoring/dl_adapter.py`), trained only on SYNTHETIC data. The design below was written down from the architecture sketch of 28/11; the paper-to-layer mapping cites the papers in `papers/` and `docs/research/related-work.md` and was NOT re-verified paper by paper here.
+Status 28/11/2026: implemented in `dl/` (`models/innate4.py`, NumPy twin in `innate_dl/dl_adapter.py`), research only, trained only on SYNTHETIC data, not part of the product or the submission. The design below was written down from the architecture sketch of 28/11; the paper-to-layer mapping cites the papers in `papers/` and `docs/research/related-work.md` and was NOT re-verified paper by paper here.
 
 ## Inputs
 - `x_seq` (L<=12 taps x 10 channels): hold_s, pp_s (press-press), rr_s (release-release), rp_s (release-press), pp2_s, rp2_s (lag 2), dx_norm, dy_norm (offset in key units), jump_dist (distance between consecutive key centres, key units), mask. Time in seconds. Contact size `w,h` and pressure are dropped (device confound, CLAUDE.md).
-- `h_ctx` (14): log1p of n_enroll, n_sessions_total, attempt_index_in_sitting, n_attempts_10m/1h/24h, n_recent_flagged, client_retries, dt_prev_session, dt_last_enroll, dt_mean_recent; dt_cv_recent; same_device_as_enroll (0/0.5/1); log1p n_distinct_devices. `enroll_span_sec` and `client_dt_prev_ms` are stored in `raw["_history"]` but not fed to the net (client-measured / redundant).
+- `h_ctx` (14): log1p of n_enroll, n_sessions_total, attempt_index_in_sitting, n_attempts_10m/1h/24h, n_recent_flagged, client_retries, dt_prev_session, dt_last_enroll, dt_mean_recent; dt_cv_recent; same_device_as_enroll (0/0.5/1); log1p n_distinct_devices. `enroll_span_sec` and `client_dt_prev_ms` are computed but not fed to the net (client-measured / redundant).
 - `f_tab`: `bot_features.extract` minus the contact-size group, standardised with train statistics.
 
 ## Layers
@@ -17,6 +17,6 @@ Status 28/11/2026: implemented (`training/models/innate4.py`, NumPy twin in `bac
 Stage A: batch-hard Triplet on `e_q`, negatives preferably the same PIN. Stage B: layers 3-4 on episodes (gallery = first k entries, query = later entry or another person), embeddings frozen. Human head: trunk and `e_head` frozen, `u_head` + human head trained (tactics 1-4 / adb bots vs people). Owner models never see impostor data of the same person (FETA).
 
 ## Limits (honest)
-- Dry run on synthetic data only (`training/dryrun.py`); the numbers have no scientific meaning. StrokePIN has no timestamps between entries: `from_strokepin` assumes 1 h per entry.
-- Not wired as default: `NHIP_OWNER_BACKEND` / `NHIP_HUMAN_BACKEND` default to `lgbm`; `NHIP_DL_SHADOW=1` only logs.
+- Dry run on synthetic data only (`dl/dryrun.py`); the numbers have no scientific meaning. StrokePIN has no timestamps between entries: `from_strokepin` assumes 1 h per entry.
+- Not wired into the product: the `/score` shadow-mode patch is parked in `dl/integration/`.
 - Bot and owner tests share generators with training (CLAUDE.md known gap): keep real/adb bots as the independent test.

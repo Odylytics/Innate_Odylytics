@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from app.scoring.dl_adapter import (ANCHOR_M, BURST_IDX, E_DIM, F_NAMES, G, L_MAX, N_CONT, N_HEADS, N_BURST, N_CTX, RANGES, U_DIM)
+from innate_dl.dl_adapter import (ANCHOR_M, BURST_IDX, E_DIM, F_NAMES, G, L_MAX, N_CONT, N_HEADS, N_BURST, N_CTX, RANGES, U_DIM)
 
 D_GRU = 48  # per direction
 D = 2 * D_GRU

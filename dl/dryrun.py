@@ -1,8 +1,8 @@
 """END-TO-END DRY RUN on SYNTHETIC data (no scientific meaning): synth sessions with time gaps -> train Innate4LayerNet ->
-eval by k and dt -> export .npz -> parity <= 1e-5 -> load the bundle into the backend and score through
-POST /v1/sessions/{id}/score in shadow mode. Writes only to a temp dir; never touches backend/app/models.
+eval by k and dt -> export .npz -> parity <= 1e-5 -> load the bundle with the NumPy runtime and score sessions.
+Writes only to a temp dir; touches nothing in backend/ or the product.
 
-    cd training && uv run python dryrun.py [--people 24] [--epochs 20]
+    cd dl && uv run python dryrun.py [--people 24] [--epochs 20]
 """
 
 import argparse
@@ -26,7 +26,7 @@ from models.innate4 import Innate4LayerNet  # noqa: E402
 from trainers import common, train_human, train_owner  # noqa: E402
 
 
-def run(people=24, epochs=20, seed=0, out: Path | None = None, backend_check=True, log=print) -> dict:
+def run(people=24, epochs=20, seed=0, out: Path | None = None, runtime_check=True, log=print) -> dict:
     out = out or Path(tempfile.mkdtemp(prefix="innate_dl_dryrun_"))
     torch.manual_seed(seed)
     recs = synth.make(n_people=people, n_per=12, n_bots=40 * 4, seed=seed)
@@ -83,37 +83,27 @@ def run(people=24, epochs=20, seed=0, out: Path | None = None, backend_check=Tru
         log(f"ONNX export skipped: {onnx}")
 
     res = {"owner": rep, "human": human_rep, "fusion": sim, "parity": par, "onnx": onnx, "bundle": str(bundle)}
-    if backend_check:
-        res["backend"] = backend_shadow_check(bundle, log)
+    if runtime_check:
+        res["runtime"] = adapter_check(bundle, recs, te, log)
     return res
 
 
-def backend_shadow_check(bundle: Path, log=print) -> dict:
-    """Load the bundle in the backend and score live sessions through the API in shadow mode (temp SQLite DB)."""
-    os.environ.update(DATABASE_URL=f"sqlite:///{tempfile.mkdtemp()}/dry.db", NHIP_API_KEYS="k", NHIP_ML_KEYS="m", NHIP_DL_BUNDLE=str(bundle), NHIP_DL_SHADOW="1")
-    from fastapi.testclient import TestClient
-
-    from app.main import app
-    from app.scoring import dl_adapter
+def adapter_check(bundle: Path, recs, te, log=print) -> dict:
+    """Load the bundle with the NumPy runtime (innate_dl/dl_adapter.py, what a backend would run) and score real-format sessions:
+    gallery = first 5 entries of a test person, queries = a later genuine entry and a bot entry. The product /score is NOT involved."""
+    os.environ["NHIP_DL_BUNDLE"] = str(bundle)
+    from innate_dl import dl_adapter
 
     dl_adapter.reset()
-    from nhip_attacker import tactics
-
-    H = {"X-API-Key": "k"}
-    own = tactics.synth_owner("dry", 8, seed=5)
-    with TestClient(app) as c:
-        for i, s in enumerate(own[:5]):
-            sid = c.post("/v1/sessions", json=s, headers=H).json()["session_id"]
-            c.post("/v1/users/dry/enroll", json={"session_id": sid, "keep_open": True}, headers=H).raise_for_status()
-        c.post("/v1/users/dry/enroll/finish", headers=H).raise_for_status()
-        sid = c.post("/v1/sessions", json=own[6], headers=H).json()["session_id"]
-        r = c.post(f"/v1/sessions/{sid}/score", json={}, headers=H)
-        r.raise_for_status()
-        rows = c.get("/v1/export", headers={"X-API-Key": "m"}, params={"collected_only": False}).json()
-        shadow = next(x for x in rows if x["session_id"] == sid)["result"].get("shadow")
-        health = c.get("/health").json()
-    log(f"\nBACKEND shadow result: {json.dumps(shadow)}\n/health dl_pipeline: {json.dumps(health.get('dl_pipeline'))}")
-    return {"shadow": shadow, "health": health.get("dl_pipeline"), "action": r.json()["action"]}
+    person = sorted(te)[0]
+    mine = sorted((r for r in recs if r.person == person), key=lambda r: r.t)
+    gal, q = mine[:5], mine[5]
+    bot = next(r for r in recs if r.role == "bot")
+    out = {}
+    for name, r in (("genuine", q), ("bot", bot)):
+        out[name] = dl_adapter.predict(r.raw, r.hist, [(g.raw, g.t) for g in gal], r.t)
+    log("\nNUMPY RUNTIME scores: " + json.dumps(out))
+    return out
 
 
 if __name__ == "__main__":
@@ -123,4 +113,4 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
     r = run(a.people, a.epochs, a.seed)
-    sys.exit(0 if r["parity"]["ok"] and r["backend"]["shadow"] else 1)
+    sys.exit(0 if r["parity"]["ok"] and r["runtime"]["genuine"] else 1)

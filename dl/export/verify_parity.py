@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from app.scoring import dl_adapter as A
+from innate_dl import dl_adapter as A
 
 TOL = 1e-5
 

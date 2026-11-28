@@ -1,7 +1,7 @@
-"""Runtime of the 4-layer DL model (Innate4LayerNet) in pure NumPy: no torch, no libgomp (Vercel).
+"""Runtime of the 4-layer DL model (Innate4LayerNet) in pure NumPy: no torch, no libgomp. RESEARCH CODE (dl/), not used by the product.
 
-Bundle = `manifest.json` + `weights.npz`, produced by `training/export/to_numpy.py` (the PyTorch model lives in
-`training/models/innate4.py`; `training/export/verify_parity.py` checks both agree within 1e-5).
+Bundle = `manifest.json` + `weights.npz`, produced by `dl/export/to_numpy.py` (the PyTorch model lives in
+`dl/models/innate4.py`; `dl/export/verify_parity.py` checks both agree within 1e-5).
 This file is the SINGLE SOURCE of the input preprocessing (`seq_tensor`, `ctx_vector`, `tab_vector`): training imports it.
 
 Env vars: NHIP_DL_BUNDLE (bundle dir), NHIP_OWNER_BACKEND / NHIP_HUMAN_BACKEND (`lgbm` default | `dl`),
@@ -21,7 +21,7 @@ try:
 except ImportError:  # numpy is optional at import time: the lgbm/rule path must keep working without it
     np = None
 
-from . import bot_features
+from app.scoring import bot_features  # the product module (read only); the backend must be on sys.path
 
 # ---- architecture constants (must match training/models/innate4.py) ----
 L_MAX, N_CHAN, N_CONT, G = 12, 10, 9, 20

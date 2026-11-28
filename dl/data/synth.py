@@ -38,7 +38,7 @@ def make(n_people: int = 24, n_per: int = 12, n_bots: int = 150, seed: int = 0, 
         r = Record(person="bot", account=victim.account, t=victim.t + rng.uniform(0, 7 * DAY), raw=raw, role="bot", tactic=tac, device="bot",
                    attempt_meta=raw["attempt_meta"])
         # a bot's history is computed against the victim account's earlier sessions
-        from app.scoring import history
+        from innate_dl import history
         import datetime as dt
         prior = [history.Prior(dt.datetime.fromtimestamp(x.t, dt.timezone.utc), x.device, x.is_enrollment, x.action) for x in out if x.account == r.account]
         r.hist = history.compute([p for p in prior if p.created_at.timestamp() < r.t], "bot", dt.datetime.fromtimestamp(r.t, dt.timezone.utc), r.attempt_meta)

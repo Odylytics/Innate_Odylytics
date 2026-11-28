@@ -46,6 +46,16 @@ def from_export(path: str | Path) -> list[Record]:
                           raw=raw, role=m["role"], tactic=m.get("tactic"), device=r.get("device_id", "unknown"),
                           is_enrollment=r.get("is_enrollment", False), action=(r.get("result") or {}).get("action"),
                           attempt_meta=raw.get("attempt_meta"), hist=r.get("history") or r["raw"].get("_history")))
+    # the product does not store HistoryContext: rebuild it offline from created_at/device/is_enrollment/action (only over the
+    # exported, i.e. collected, sessions of each account; live transfers are not in the export, so counts are lower bounds)
+    from .history_features import build
+
+    by_acct: dict[str, list[Record]] = {}
+    for r in out:
+        by_acct.setdefault(r.account, []).append(r)
+    for recs in by_acct.values():
+        if any(r.hist is None for r in recs):
+            build(recs)
     return out
 
 

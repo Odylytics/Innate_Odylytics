@@ -1,8 +1,7 @@
 """HistoryContext: per-session history parameters (counts, inter-attempt gaps, device continuity).
 
-Computed from the user's earlier TouchSession rows plus the client's `attempt_meta`. The result is stored in
-`TouchSession.raw["_history"]` (never in `features`, so owner templates are unaffected) and feeds layer 3/4 of the
-DL pipeline. `training/data/history_features.py` MUST keep the same formulas (a parity test guards it).
+Computed from a user's earlier sessions (+ optional client `attempt_meta`); feeds layers 3/4 of the DL model.
+Research code: the product does not store it (a parked design would put it in `raw["_history"]`, never in `features`).
 Pure Python on purpose: no numpy on the request path.
 """
 

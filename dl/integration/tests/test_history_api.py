@@ -1,8 +1,8 @@
 import datetime as dt
 import random
 
-from app.scoring import history, owner
-from app.scoring.history import Prior
+from innate_dl import history, owner
+from innate_dl.history import Prior
 from tests.synth import OWNER, human_session
 from tests.test_api import H, _post_session, client  # noqa: F401  (client fixture)
 

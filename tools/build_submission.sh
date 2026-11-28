@@ -18,8 +18,8 @@ osascript tools/lib/export_pdf.applescript "$PWD/$OUT/Slide/Innate-slides.pptx" 
 mkdir -p $OUT/Slide/fonts && cp tools/fonts/*.ttf $OUT/Slide/fonts/   # Sora + Manrope (SIL OFL): install before editing the PPTX
 # 3) Document: source .zip (committed files only, excluding papers/, .env, db) + README
 S=$T/src/Innate_Odylytics; mkdir -p $S
-git ls-files -co --exclude-standard -z | grep -z -v -E '^(papers/|submission/|docs/brand/Brand-identity-kit.pdf|\.claude/)|\.env' | xargs -0 -I{} cp --parents "{}" $S 2>/dev/null || \
-  git ls-files -co --exclude-standard | grep -v -E '^(papers/|submission/|docs/brand/Brand-identity-kit.pdf|\.claude/)|\.env' | rsync -a --files-from=- . $S
+git ls-files -co --exclude-standard -z | grep -z -v -E '^(papers/|dl/|submission/|docs/brand/Brand-identity-kit.pdf|\.claude/)|\.env' | xargs -0 -I{} cp --parents "{}" $S 2>/dev/null || \
+  git ls-files -co --exclude-standard | grep -v -E '^(papers/|dl/|submission/|docs/brand/Brand-identity-kit.pdf|\.claude/)|\.env' | rsync -a --files-from=- . $S
 cp docs/submission/README.submission.md $S/README.md   # TEAM and MEMBERS are no longer substituted: the README names the team directly
 cp $S/README.md $OUT/Document/README.md
 (cd $T/src && zip -qr "$OLDPWD/$OUT/Document/Innate-source-code.zip" Innate_Odylytics -x '*/__pycache__/*' '*.pyc' '*/node_modules/*')

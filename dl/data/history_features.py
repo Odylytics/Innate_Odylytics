@@ -3,8 +3,8 @@ training and the live API cannot drift apart; tests/test_pipeline.py checks it a
 
 import datetime as dt
 
-from app.scoring import history
-from app.scoring.history import KEYS, Prior  # noqa: F401  (re-exported)
+from innate_dl import history
+from innate_dl.history import KEYS, Prior  # noqa: F401  (re-exported)
 
 
 def build(records: list["Record"]) -> None:  # noqa: F821

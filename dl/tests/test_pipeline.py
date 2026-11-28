@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from app.scoring.history import KEYS
+from innate_dl.history import KEYS
 from data import episodes, splits, synth, tensors
 from eval import calibrate, metrics
 from export import to_numpy, verify_parity
@@ -59,5 +59,5 @@ def test_numpy_runtime_matches_torch_within_1e5(tmp_path):
 def test_dry_run_end_to_end(tmp_path):
     import dryrun
     res = dryrun.run(people=12, epochs=2, out=tmp_path, log=lambda *_: None)
-    assert res["parity"]["ok"] and res["backend"]["shadow"]["dl"]["k"] == 5
+    assert res["parity"]["ok"] and res["runtime"]["genuine"]["k"] == 5 and res["runtime"]["bot"]["human"] < res["runtime"]["genuine"]["human"]
     assert (tmp_path / "bundle" / "weights.npz").exists()

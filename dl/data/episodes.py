@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from app.scoring.dl_adapter import K_MAX
+from innate_dl.dl_adapter import K_MAX
 
 from .splits import by_person
 

@@ -115,7 +115,6 @@ html[data-page='collect'], html[data-page='collect'] body { overscroll-behavior:
 .cl-acc-bar { height: 10px; margin: 8px 0; border-radius: 999px; background: #e6eef4; overflow: hidden; }
 .cl-acc-bar i { display: block; height: 100%; border-radius: inherit; background: #0b6e99; transition: width .5s ease; }
 .cl-acc p { margin: 0; font-size: .8rem; color: #5b6878; line-height: 1.4; }
-.cl-acc .cl-tele { margin-top: 6px; font-size: .75rem; font-variant-numeric: tabular-nums; }
 .cl-acc .cl-btn { margin-top: 12px; padding: 12px; }
 /* transfer result */
 .cl-tick.step_up { background: #c77700; } .cl-tick.hold { background: #b3261e; }

@@ -104,14 +104,6 @@ class CollectionMeta(BaseModel):
         return self
 
 
-class AttemptMeta(BaseModel):
-    """Client-side attempt telemetry (no content): which flow, wrong/aborted tries before this entry, gap to the previous entry."""
-
-    flow_stage: Literal["signup_enroll", "login_enroll", "transfer"] | None = None
-    retries: int = Field(default=0, ge=0, le=50)
-    client_dt_prev_ms: Annotated[float, Field(allow_inf_nan=False, ge=0, le=7 * 24 * 3600 * 1000)] | None = None
-
-
 class SessionIn(BaseModel):
     """Interaction session sent by the SDK. Only time + coordinates, no PIN content."""
 
@@ -122,7 +114,6 @@ class SessionIn(BaseModel):
     screens: list[ScreenVisit] = Field(default_factory=list, max_length=50)
     fields: list[TextField] = Field(default_factory=list, max_length=10)  # input fields other than the PIN
     meta: CollectionMeta | None = None  # sent only during data collection
-    attempt_meta: AttemptMeta | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -164,7 +155,6 @@ class EnrollOut(BaseModel):
     enrolled_sessions: int
     template_ready: bool
     enroll_open: bool = True
-    history_summary: dict | None = None  # enrolment telemetry: n_entries, dt_mean_sec, dt_cv, span_sec, client_dt_mean_ms
     consistency: float | None = None  # mean match score of each attempt against the template built from the other attempts
 
 

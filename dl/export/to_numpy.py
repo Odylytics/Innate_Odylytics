@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from app.scoring.dl_adapter import F_NAMES
+from innate_dl.dl_adapter import F_NAMES
 
 
 def export(model, out_dir: str | Path, f_mean: np.ndarray, f_std: np.ndarray, tau: dict, human_threshold: float,

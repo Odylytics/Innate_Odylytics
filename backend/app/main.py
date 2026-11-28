@@ -1,4 +1,3 @@
-import datetime as dt
 import hashlib
 import json
 import os
@@ -16,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .db import DATABASE_URL, Account, Base, ChallengeNonce, Participant, SessionLocal, TouchSession, User, engine
-from .scoring import challenge, dl_adapter, explain, features, fusion, history, human, human_model, owner, owner_model, replay
+from .scoring import challenge, explain, features, fusion, human, human_model, owner, owner_model, replay
 
 # preload both learned models at startup: avoids ~1 s on the first /score call (E26); if the library or file is missing, _load() falls back to the rules
 human_model.loaded()
@@ -40,7 +39,6 @@ MAX_ENROLL = 10  # open enrollment (keep_open) locks itself at this attempt
 EXPORT_BYTE_BUDGET = 3 * 1024 * 1024  # each export page stops at ~3 MB of raw data: under Vercel's 4.5 MB response limit
 UPDATE_MIN_OWNER = 0.8  # update the template only after a session that was allowed through with a high match score
 UPDATE_MIN_HUMAN = 0.8
-HISTORY_LIMIT = 200  # earlier sessions read per new session for HistoryContext
 REPLAY_HISTORY = 50  # number of most recent sessions used for matching; FPR grows with the session count (E5: 4-digit PIN; E5b: real people, extrapolated ~3.0% at 50 with threshold 0.07)
 
 
@@ -105,10 +103,6 @@ def _enrolled(db: Session, user_id: str) -> list[TouchSession]:
         TouchSession.user_id == user_id, TouchSession.is_enrollment).order_by(TouchSession.created_at)).all()
 
 
-def _utc(t: dt.datetime) -> dt.datetime:
-    return t.replace(tzinfo=dt.timezone.utc) if t.tzinfo is None else t  # SQLite returns naive datetimes
-
-
 def _enroll_closed(user: User) -> bool:
     # an old template without the "open" flag => treat as locked (keeps the 409 security fix)
     return user.template is not None and not user.template.get("open", False)
@@ -116,11 +110,8 @@ def _enroll_closed(user: User) -> bool:
 
 def _enroll_status(db: Session, user: User) -> dict:
     enrolled = _enrolled(db, user.id)
-    hs = history.summary([history.Prior(e.created_at, e.device_id, True, e.action) for e in enrolled],
-                         [((e.raw or {}).get("attempt_meta") or {}).get("client_dt_prev_ms") for e in enrolled])
     return {"user_id": user.id, "enrolled_sessions": len(enrolled), "template_ready": user.template is not None,
-            "enroll_open": not _enroll_closed(user), "history_summary": hs,
-            "consistency": owner.consistency([e.features for e in enrolled])}
+            "enroll_open": not _enroll_closed(user), "consistency": owner.consistency([e.features for e in enrolled])}
 
 
 @app.get("/", include_in_schema=False)
@@ -132,8 +123,7 @@ def root():
 @app.get("/health", tags=["system"])
 def health():
     # models: whether the learned models loaded (false = running on rules/distance only, e.g. lightgbm or libgomp missing on the server)
-    # "models" keeps its {human, owner} shape; the DL bundle state is reported under its own key
-    return {"status": "ok", "models": {"human": human_model.loaded(), "owner": owner_model.loaded()}, "dl_pipeline": dl_adapter.status()}
+    return {"status": "ok", "models": {"human": human_model.loaded(), "owner": owner_model.loaded()}}
 
 
 v1 = APIRouter(prefix="/v1")
@@ -188,11 +178,6 @@ def create_session(body: schemas.SessionIn, db: Session = Depends(get_db)):
                 db.add(User(id=body.user_id))
         except IntegrityError:
             pass  # another request just created the same user
-    # HistoryContext goes into raw["_history"], NOT into features: owner.py builds its template from features
-    prior = [history.Prior(*r) for r in db.execute(
-        select(TouchSession.created_at, TouchSession.device_id, TouchSession.is_enrollment, TouchSession.action)
-        .where(TouchSession.user_id == body.user_id).order_by(TouchSession.created_at.desc()).limit(HISTORY_LIMIT))]
-    raw["_history"] = history.compute(prior, body.device_id, dt.datetime.now(dt.timezone.utc), raw.get("attempt_meta"))
     sid = "s_" + secrets.token_hex(6)
     db.add(TouchSession(id=sid, user_id=body.user_id, device_id=body.device_id, raw=raw, features=feats))
     db.commit()
@@ -294,15 +279,8 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
     feats = s.features
 
     h, bot_reasons = human.score(feats)
-    # optional DL bundle (NumPy runtime): used when NHIP_*_BACKEND=dl, only logged when NHIP_DL_SHADOW=1; None = keep the lgbm/rule path
-    dl = None
-    if dl_adapter.wanted() and dl_adapter.load() is not None:
-        gallery = [(e.raw, e.created_at) for e in _enrolled(db, s.user_id) if e.id != s.id]
-        dl = dl_adapter.predict(s.raw, s.raw.get("_history"), [(g, _utc(t)) for g, t in gallery], _utc(s.created_at))
-    use_dl_h = dl is not None and dl_adapter.human_backend() == "dl" and dl["human"] is not None
-    use_dl_o = dl is not None and dl_adapter.owner_backend() == "dl" and dl["owner"] is not None
     # learned model (optional): replaces the rule only when the rule lacks data, otherwise take the more pessimistic score
-    p = dl["human"] if use_dl_h else human_model.predict(s.raw)
+    p = human_model.predict(s.raw)
     if p is not None:
         h = p if bot_reasons == ["insufficient_data"] else min(h, p)
         if p < 0.5 and not [r for r in bot_reasons if r in explain._BOT_VI]:
@@ -315,12 +293,12 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
         h, bot_reasons = min(h, 0.1), [*bot_reasons, "replayed_session"]
     o, z = owner.score(feats, tpl) if tpl else (None, {})
     if o:  # learned model (optional) replaces the distance score when applicable; o == 0 means missing PIN evidence: keep it as is
-        m = dl["owner"] if use_dl_o else owner_model.predict(z)
+        m = owner_model.predict(z)
         o = o if m is None else m
-    amounts = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
+    history = [c["amount"] for c in db.scalars(select(TouchSession.context).where(
         TouchSession.user_id == s.user_id, TouchSession.action == "allow",
         TouchSession.id != s.id)).all() if c]
-    amt = fusion.amount_anomaly(ctx.amount, amounts)
+    amt = fusion.amount_anomaly(ctx.amount, history)
     risk, action, _ = fusion.fuse(h, o, ctx.recipient_is_new, amt)
     reasons, text = explain.explain(h, bot_reasons, o, feats, tpl, z, ctx.recipient_is_new, amt, action)
 
@@ -335,8 +313,6 @@ def score_session(session_id: str, ctx: schemas.ScoreContext, db: Session = Depe
         "explanation_vi": text,
     }
 
-    if dl is not None and dl_adapter.shadow():
-        result["shadow"] = {"dl": {k: v for k, v in dl.items()}, "bundle": dl_adapter.status()["version"]}
     first_score = s.result is None
     s.context, s.result, s.risk, s.action = ctx.model_dump(), result, risk, action
     if (first_score and tpl and not s.is_enrollment and action == "allow"
@@ -385,7 +361,7 @@ def export_sessions(response: Response, participant_id: str | None = None, colle
         if participant_id and (meta or {}).get("participant_id") != participant_id:
             continue
         out.append({"session_id": r.id, "user_id": r.user_id, "device_id": r.device_id,
-                    "created_at": r.created_at.isoformat(), "meta": meta, "history": r.raw.get("_history"), "raw": r.raw,
+                    "created_at": r.created_at.isoformat(), "meta": meta, "raw": r.raw,
                     "features": r.features, "is_enrollment": r.is_enrollment, "result": r.result,
                     "label": r.label})
         size += len(json.dumps(r.raw)) + len(json.dumps(r.features))
