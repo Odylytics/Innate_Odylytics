@@ -53,6 +53,8 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 
 - Learned models (human/owner LightGBM) are evaluated by `backend/app/scoring/lgbm_text.py` (pure Python parser of the `.txt` model, no lightgbm/numpy/libgomp; equals lightgbm within 1e-9, `tests/test_lgbm_text.py`). Why: on Vercel lightgbm failed to import (no libgomp) so the online API ran rules only (`/health` models false). lightgbm is now a dev/research dependency only. `/health` showed models true on the live API on 26/11 after the fix; `tests/test_api.py::test_learned_models_load_by_default` guards the default install.
 
+- DL pipeline (28/11, synthetic dry run only): `training/` (torch, NOT a backend dependency; `uv run python dryrun.py`), design in `docs/plan/dl-training-pipeline.md` + `docs/research/four-layer-dl-architecture.md`. Runtime = `backend/app/scoring/dl_adapter.py` (NumPy, optional bundle, shadow mode, falls back to lgbm/rules). HistoryContext (`scoring/history.py`) lives in `TouchSession.raw["_history"]`, never in `features`; `#/collect` sends `attempt_meta`.
+
 ## Commands (PowerShell-style in READMEs; uses `uv`)
 - Backend: `cd backend; uv sync; uv run uvicorn app.main:app --reload --port 8000` (Swagger at /docs, key `demo-key`)
 - Backend tests: `cd backend; uv run pytest -q`
@@ -61,7 +63,7 @@ Start at `docs/INDEX.md` (folder map + which doc answers what) and `research/EXP
 - Deploy: `cd backend; vercel deploy --prod`
 
 ## Env vars (backend)
-`DATABASE_URL`, `NHIP_API_KEYS`, `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A` (0.25), `NHIP_THRESHOLD_B` (0.55).
+`DATABASE_URL`, `NHIP_API_KEYS`, `NHIP_CORS_ORIGINS`, `NHIP_THRESHOLD_A` (0.25), `NHIP_THRESHOLD_B` (0.55). DL bundle (all optional, off by default): `NHIP_DL_BUNDLE`, `NHIP_OWNER_BACKEND` / `NHIP_HUMAN_BACKEND` (`lgbm` | `dl`), `NHIP_DL_SHADOW=1`.
 
 ## Design rules — do not break
 - ML/rules decide; an LLM may only explain, never sit on the decision path.

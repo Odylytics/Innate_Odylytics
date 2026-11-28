@@ -51,7 +51,8 @@ Python 3.11+, FastAPI, SQLAlchemy (SQLite locally, Postgres in production), Ligh
 | Library | Used for |
 |---|---|
 | FastAPI, Uvicorn, SQLAlchemy, psycopg (LGPL-3.0, used unmodified) | Backend API and storage |
-| LightGBM, NumPy, scikit-learn, pandas | Training and experiments in `research/` only; the backend reads the model file with `lgbm_text.py` (our code) |
+| LightGBM, NumPy, scikit-learn, pandas | Training and experiments in `research/`; the backend reads the LightGBM model file with `lgbm_text.py` (our code). NumPy is also used by the optional DL runtime below |
+| PyTorch, ONNX, ONNX Runtime | `training/` only: a 4-layer deep model (`training/models/innate4.py`) trained on a developer machine and exported to plain NumPy weights. The API runs it with NumPy (`backend/app/scoring/dl_adapter.py`) in shadow mode only; it is off by default and was tried on synthetic data only, so it is not part of any reported result |
 | React, React DOM, Vite, TypeScript, Vitest, Lenis, Tailwind CSS, qrcode-generator, DiceBear | Website and demo wallet in `web/`. Avatars are Notionists by Zoish, CC0 1.0 |
 | pytest, httpx | Tests |
 

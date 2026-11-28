@@ -22,7 +22,8 @@ Python (`backend/pyproject.toml`, `attacker/pyproject.toml`; licences from insta
 | Uvicorn, Starlette, httpx | BSD-3-Clause | |
 | **psycopg / psycopg-binary** | **LGPL-3.0-only** | Used unmodified as a dependency (Postgres driver); not copied into this repo. Keep it replaceable (do not vendor it) |
 | LightGBM | MIT | Model training (`research/`) and equivalence checks in tests (dev dependency). **Not run in the product:** `backend/app/scoring/lgbm_text.py` (the team's code) reads the text model file in pure Python |
-| NumPy, scikit-learn, pandas | BSD-3-Clause (NumPy bundles BSD/0BSD/MIT/Zlib/CC0 parts) | `research/` only (not a runtime dependency of the backend since 26/11) |
+| NumPy, scikit-learn, pandas | BSD-3-Clause (NumPy bundles BSD/0BSD/MIT/Zlib/CC0 parts) | `research/`; NumPy is again a backend dependency since 28/11, used only by the optional DL runtime `backend/app/scoring/dl_adapter.py` (off by default; the lgbm/rule path does not import it) |
+| PyTorch, ONNX, ONNX Runtime | BSD-3-Clause / Apache-2.0 / MIT | `training/` only (training and export of the 4-layer model, run on a developer machine). **Not in the API:** the API runs the exported weights with NumPy |
 
 Web (`web/package.json`; licences from the npm registry):
 
